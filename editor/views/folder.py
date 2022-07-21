@@ -93,13 +93,13 @@ class MoveProjectView(editor.views.generic.CanEditMixin, ProjectQuerysetMixin, g
             ngettext('folder','folders',num_folders),
             num_items,
             ngettext('item','items',num_items),
-            self.get_project().name
+            self.get_access_object().name
             )
         )
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        return redirect(reverse('project_browse',args=(self.get_project().pk,'')))
+        return redirect(reverse('project_browse',args=(self.get_access_object().pk,'')))
 
     def get_success_url(self):
         return reverse('project_browse',args=(self.form.cleaned_data.get('project').pk,''))

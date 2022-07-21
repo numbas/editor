@@ -22,13 +22,42 @@
 {% block queue_content %}
 {% with can_edit=entry|can_be_edited_by:user %}
 <section id="item">
-    <p class="lead text-center">
+    <div class="lead text-center">
     {% if can_edit %}
-    Please review <em>{% editoritem_link entry.item.rel_obj show_icon=True new_tab=True %}</em>
+        {% if not entry.complete %}
+            {% if not entry.assigned_user %}
+                <p>Please review <em>{% editoritem_link entry.item.rel_obj show_icon=True new_tab=True %}</em></p>
+                <form method="POST" action="{% url 'queue_entry_assign_user' entry.pk %}">{% csrf_token %}<button type="submit" class="btn btn-primary">I'll review it!</button></form></p>
+            {% elif entry.assigned_user == request.user %}
+                <p>You're reviewing <em>{% editoritem_link entry.item.rel_obj show_icon=True new_tab=True %}</em></p>
+                <form method="POST" action="{% url 'queue_entry_unassign_user' entry.pk %}">{% csrf_token %}<button type="submit" class="btn btn-warning">Let someone else take over</button></form></p>
+            {% else %}
+                <p><em>{% editoritem_link entry.item.rel_obj show_icon=True new_tab=True %}</em> has been submitted for review</p>
+                <p>
+                    Under review by 
+                    {% user_thumbnail entry.assigned_user 40 36 link=True %}
+                    {% user_link entry.assigned_user %}
+                </p>
+            {% endif %}
+        {% else %}
+        <p><em>{% editoritem_link entry.item.rel_obj show_icon=True new_tab=True %}</em></p>
+        {% endif %}
     {% else %}
-    <em>{% editoritem_link entry.item.rel_obj show_icon=True new_tab=True %}</em> has been submitted for review
+        <p><em>{% editoritem_link entry.item.rel_obj show_icon=True new_tab=True %}</em> has been submitted for review</p>
+        {% if entry.assigned_user %}
+            <p>
+                Under review by 
+                {% user_thumbnail entry.assigned_user 40 36 link=True %}
+                {% user_link entry.assigned_user %}
+            </p>
+        {% endif %}
     {% endif %}
-    </p>
+    {% with status=entry.status %}
+    {% if status %}
+        <span class="label label-default">{{status}}</span>
+    {% endif %}
+    {% endwith %}
+    </div>
 </section>
 
 <section id="note">
@@ -67,18 +96,44 @@
                 <label for="item-{{item.pk}}">
                     {{item.label|strip_html|safe}}
                 </label>
+                <button data-bind="click: comment_on_checklist_item" title="Comment on this item" class="btn btn-xs btn-link" type="button"><span class="glyphicon glyphicon-comment"></span></button>
             </li>
             {% endfor %}
             </ul>
 
             <hr>
 
-            <p>
-                <input type="checkbox" name="remove" id="remove">
-                <label for="remove">This entry is complete - remove it from the queue</label>
-            </p>
+            <div class="form-group">
+                <label for="status" class="col-sm-2">Status</label>
 
-            <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-save"></span> Save</button>
+                <div class="col-sm-10">
+                    {% with current_status=entry.status %}
+                    <select id="status" name="status" class="form-control">
+                        <option value="" {% if current_status is None %}selected{% endif %}></option>
+                        {% for tag in entry.queue.statuses.all %}
+                        <option value="{{tag.name}}" {% if current_status == tag.name %}selected{% endif %}>{{tag.name}}</option>
+                        {% endfor %}
+                    </select>
+                    {% endwith %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-sm-10 col-sm-offset-2">
+                    <div class="checkbox">
+                        <label for="remove">
+                            <input type="checkbox" name="remove" id="remove" {% if entry.complete %}checked{% endif %}>
+                            This entry is complete - remove it from the queue
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-sm-10 col-sm-offset-2">
+                    <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-save"></span> Save</button>
+                </div>
+            </div>
         </form>
     </div>
     {% else %}

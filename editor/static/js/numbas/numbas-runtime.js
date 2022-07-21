@@ -899,11 +899,11 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
                     v = jme.tokenToDisplayString(v,scope);
                 } else {
                     if(jme.isType(v,'number')) {
-                        v = '('+Numbas.jme.display.treeToJME({tok:v},{niceNumber: false},scope)+')';
+                        v = '('+Numbas.jme.display.treeToJME({tok:v},{nicenumber: false, noscientificnumbers: true},scope)+')';
                     } else if(v.type=='string') {
                         v = "'"+v.value+"'";
                     } else {
-                        v = jme.display.treeToJME({tok:v},{niceNumber: false},scope);
+                        v = jme.display.treeToJME({tok:v},{nicenumber: false, noscientificnumbers: true},scope);
                     }
                 }
                 out += v;
@@ -1445,9 +1445,9 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
         re_bool: /^(true|false)(?![a-zA-Z_0-9'])/i,
         re_integer: /^[0-9]+(?!\x2E|[0-9])/,
         re_number: /^[0-9]+(?:\x2E[0-9]+)?/,
-        re_name: /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z_][a-zA-Z0-9_]*'*)|\?\??|[π∞])}?/i,
+        re_name: /^\{?((?:(?:[\p{Ll}\p{Lu}\p{Lo}\p{Lt}]+):)*)((?:\$?[\p{Ll}\p{Lu}\p{Lo}\p{Lt}_][\p{Ll}\p{Lu}\p{Lo}\p{Lt}\p{Nl}\p{Nd}_]*'*)|\?\??|[π∞])\}?/iu,
         re_punctuation: /^([\(\),\[\]])/,
-        re_string: /^("""|'''|['"])((?:[^\1\\]|\\.)*?)\1/,
+        re_string: util.re_jme_string,
         re_comment: /^\/\/.*?(?:\n|$)/,
         re_keypair: /^:/,
     },
@@ -2079,8 +2079,8 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
     },
 }
 /** Regular expression to match whitespace (because '\s' doesn't match *everything*) */
-jme.Parser.prototype.re.re_whitespace = '(?:[\\s \\f\\n\\r\\t\\v\\u00A0\\u2028\\u2029]|(?:\&nbsp;))';
-jme.Parser.prototype.re.re_strip_whitespace = new RegExp('^'+jme.Parser.prototype.re.re_whitespace+'+');
+jme.Parser.prototype.re.re_whitespace = '(?:\\p{White_Space}|(?:\&nbsp;))';
+jme.Parser.prototype.re.re_strip_whitespace = new RegExp('^'+jme.Parser.prototype.re.re_whitespace+'+', 'u');
 
 /** Regular expressions for parser tokens.
  * Included for backwards-compatibility.
@@ -3936,8 +3936,8 @@ function varnamesAgree(array1, array2) {
 /** Decide if two numbers are close enough to count as equal.
  *
  * @callback Numbas.jme.checkingFunction
- * @param {number} r1
- * @param {number} r2
+ * @param {number|Numbas.math.ComplexDecimal} r1
+ * @param {number|Numbas.math.ComplexDecimal} r2
  * @param {number} tolerance - A measure of how close the results need to be to count as equal. What this means depends on the checking function.
  * @returns {boolean} - True if `r1` and `r2` are close enough to be equal.
  */
@@ -3951,25 +3951,37 @@ var checkingFunctions = jme.checkingFunctions =
 {
     /** Absolute difference between variables - fail if `Math.abs(r1-r2)` is bigger than `tolerance`.
      *
-     * @param {number} r1
-     * @param {number} r2
+     * @param {number|Numbas.math.ComplexDecimal} r1
+     * @param {number|Numbas.math.ComplexDecimal} r2
      * @param {number} tolerance
      * @returns {boolean}
      */
     absdiff: function(r1,r2,tolerance)
     {
+        if(math.isComplexDecimal(r1) || math.isComplexDecimal(r2)) {
+            r1 = math.ensure_decimal(r1);
+            r2 = math.ensure_decimal(r2);
+            return r1.minus(r2).absoluteValue().re.lessThan(Math.abs(tolerance));
+        }
+
         if(r1===Infinity || r1===-Infinity)
             return r1===r2;
         return math.leq(math.abs(math.sub(r1,r2)), Math.abs(tolerance));
     },
     /** Relative (proportional) difference between variables - fail if `r1/r2 - 1` is bigger than `tolerance`.
      *
-     * @param {number} r1
-     * @param {number} r2
+     * @param {number|Numbas.math.ComplexDecimal} r1
+     * @param {number|Numbas.math.ComplexDecimal} r2
      * @param {number} tolerance
      * @returns {boolean}
      */
     reldiff: function(r1,r2,tolerance) {
+        if(math.isComplexDecimal(r1) || math.isComplexDecimal(r2)) {
+            r1 = math.ensure_decimal(r1);
+            r2 = math.ensure_decimal(r2);
+            return r1.minus(r2).absoluteValue().re.lessThan(r2.times(tolerance));
+        }
+
         if(r1===Infinity || r1===-Infinity)
             return r1===r2;
         //
@@ -3981,12 +3993,18 @@ var checkingFunctions = jme.checkingFunctions =
     },
     /** Round both values to `tolerance` decimal places, and fail if unequal.
      *
-     * @param {number} r1
-     * @param {number} r2
+     * @param {number|Numbas.math.ComplexDecimal} r1
+     * @param {number|Numbas.math.ComplexDecimal} r2
      * @param {number} tolerance
      * @returns {boolean}
      */
     dp: function(r1,r2,tolerance) {
+        if(math.isComplexDecimal(r1) || math.isComplexDecimal(r2)) {
+            r1 = math.ensure_decimal(r1);
+            r2 = math.ensure_decimal(r2);
+            return r1.toDecimalPlaces(tolerance).equals(r2.toDecimalPlaces(tolerance));
+        }
+
         if(r1===Infinity || r1===-Infinity)
             return r1===r2;
         tolerance = Math.floor(Math.abs(tolerance));
@@ -3994,12 +4012,18 @@ var checkingFunctions = jme.checkingFunctions =
     },
     /** Round both values to `tolerance` significant figures, and fail if unequal. 
      *
-     * @param {number} r1
-     * @param {number} r2
+     * @param {number|Numbas.math.ComplexDecimal} r1
+     * @param {number|Numbas.math.ComplexDecimal} r2
      * @param {number} tolerance
      * @returns {boolean}
      */
     sigfig: function(r1,r2,tolerance) {
+        if(math.isComplexDecimal(r1) || math.isComplexDecimal(r2)) {
+            r1 = math.ensure_decimal(r1);
+            r2 = math.ensure_decimal(r2);
+            return r1.toSignificantDigits(tolerance).equals(r2.toSignificantDigits(tolerance));
+        }
+
         if(r1===Infinity || r1===-Infinity)
             return r1===r2;
         tolerance = Math.floor(Math.abs(tolerance));
@@ -4129,10 +4153,12 @@ var resultsEqual = jme.resultsEqual = function(r1,r2,checkingFunction,checkingAc
     var v1 = r1.value, v2 = r2.value;
 
     switch(type) {
+        case 'rational':
+            return checkingFunction( v1.toDecimal(), v2.toDecimal(), checkingAccuracy );
+            break;
         case 'number':
         case 'decimal':
         case 'integer':
-        case 'rational':
             if(v1.complex || v2.complex)
             {
                 if(!v1.complex)
@@ -5575,6 +5601,23 @@ newBuiltin('transpose',[TMatrix],TMatrix, matrixmath.transpose);
 newBuiltin('is_zero',[TVector],TBool, vectormath.is_zero);
 newBuiltin('id',[TNum],TMatrix, matrixmath.id);
 newBuiltin('sum_cells',[TMatrix],TNum,matrixmath.sum_cells);
+newBuiltin('numrows', [TMatrix], TNum,function(m) {return matrixmath.numrows(m)});
+newBuiltin('numcolumns', [TMatrix], TNum,function(m) {return matrixmath.numcolumns(m)});
+newBuiltin('combine_vertically',[TMatrix,TMatrix],TMatrix,function(m1,m2) {
+    return matrixmath.combine_vertically(m1,m2)
+});
+newBuiltin('stack',[TMatrix,TMatrix],TMatrix,function(m1,m2) {
+    return matrixmath.combine_vertically(m1,m2)
+});
+newBuiltin('combine_horizontally',[TMatrix,TMatrix],TMatrix,function(m1,m2) {
+    return matrixmath.combine_horizontally(m1,m2)
+});
+newBuiltin('augment',[TMatrix,TMatrix],TMatrix,function(m1,m2) {
+    return matrixmath.combine_horizontally(m1,m2)
+});
+newBuiltin('combine_diagonally',[TMatrix,TMatrix],TMatrix,function(m1,m2) {
+    return matrixmath.combine_diagonally(m1,m2)
+});
 newBuiltin('..', [TNum,TNum], TRange, math.defineRange);
 newBuiltin('#', [TRange,TNum], TRange, math.rangeSteps);
 newBuiltin('in',[TNum,TRange],TBool,function(x,r) {
@@ -6003,6 +6046,14 @@ newBuiltin('rational_approximation',[TNum,TNum],TList,function(n,accuracy) {
 });
 newBuiltin('factorise',[TNum],TList,function(n) {
         return math.factorise(n).map(function(n){return new TNum(n)});
+    }
+);
+newBuiltin('divisors',[TNum],TList,function(n) {
+        return math.divisors(n).map(function(n){return new TNum(n)});
+    }
+);
+newBuiltin('proper_divisors',[TNum],TList,function(n) {
+        return math.proper_divisors(n).map(function(n){return new TNum(n)});
     }
 );
 
@@ -8659,6 +8710,7 @@ function flatten(tree,op) {
  * @property {boolean} flatfractions - Display fractions horizontally?
  * @property {boolean} barematrices - Render matrices without wrapping them in parentheses.
  * @property {boolean} nicenumber - Run numbers through {@link Numbas.math.niceNumber}?
+ * @property {boolean} noscientificnumbers - If true, don't write numbers in scientific notation.
  * @property {number} accuracy - Accuracy to use when finding rational approximations to numbers. See {@link Numbas.math.rationalApproximation}.
  * @property {boolean} timesdot - Use a dot for the multiplication symbol instead of a cross?
  */
@@ -9646,12 +9698,12 @@ JMEifier.prototype = {
         if(this.common_constants.pi && (piD = math.piDegree(n)) > 0)
             n /= Math.pow(Math.PI*this.common_constants.pi.scale, piD);
         var out;
-        if(this.settings.niceNumber===false) {
+        if(this.settings.nicenumber===false) {
             out = n+'';
         } else {
             out = this.niceNumber(n);
         }
-        if(out.length>20) {
+        if(out.length>20 && !this.settings.noscientificnumbers) {
             var bits = math.parseScientific(n.toExponential());
             return bits.significand+'*10^('+bits.exponent+')';
         }
@@ -9689,7 +9741,7 @@ JMEifier.prototype = {
         if(this.common_constants.pi && (piD = math.piDegree(n,false)) > 0)
             n /= Math.pow(Math.PI*this.common_constants.pi.scale, piD);
         var out;
-        if(this.settings.niceNumber===false) {
+        if(this.settings.nicenumber===false) {
             out = n+'';
             if(out.match(/e/)) {
                 out = math.unscientific(out);
@@ -9697,10 +9749,10 @@ JMEifier.prototype = {
         } else {
             out = this.niceNumber(n,{style:'plain'});
         }
-        if(out.length>20) {
-            if(Math.abs(n)<1e-15) {
-                return '0';
-            }
+        if(Math.abs(n)<1e-15) {
+            return '0';
+        }
+        if(out.length>20 && !this.settings.noscientificnumbers) {
             var bits = math.parseScientific(n.toExponential());
             return bits.significand+'*10^('+bits.exponent+')';
         }
@@ -9748,22 +9800,25 @@ JMEifier.prototype = {
             }
             var im = this.jmeDecimal(n.im)+'*'+imaginary_unit;
             if(n.re.isZero()) {
-                if(n.im.eq(1))
+                if(n.im.eq(1)) {
                     return imaginary_unit;
-                else if(n.im.eq(-1))
+                } else if(n.im.eq(-1)) {
                     return '-'+imaginary_unit;
-                else
+                } else {
                     return im;
+                }
             } else if(n.im.lt(0)) {
-                if(n.im.eq(-1))
+                if(n.im.eq(-1)) {
                     return re+' - '+imaginary_unit;
-                else
-                    return re+' - '+im.slice(1);
+                } else {
+                    return re+' - '+im.replace(/^(dec\(\")?\-/,'$1');
+                }
             } else {
-                if(n.im.eq(1))
+                if(n.im.eq(1)) {
                     return re+' + '+imaginary_unit;
-                else
+                } else {
                     return re+' + '+im;
+                }
             }
         } else if(n instanceof Decimal) {
             var out = n.toString();
@@ -11947,7 +12002,8 @@ var simplificationRules = jme.rules.simplificationRules = {
         ['(-?;x)/?;y','s','-(x/y)'],            // Take negation to the left of a fraction
         ['?;x/(-?;y)','s','-(x/y)'],
         ['-(`! complex:$n);x * (-?;y)','asg','x*y'], // Cancel the product of two negated things that aren't complex numbers
-        ['`!-? `& (-(real:$n/real:$n`? `| `!$n);x) * ?`+;y','asgc','-(x*y)'],            // Take negation to the left of multiplication
+        ['`!-? `& (-(real:$n/real:$n`? `| imaginary:$n `| `!$n);x) * ?`+;y','sgc','-(x*y)'],            // Take negation to the left of multiplication
+        ['imaginary:$n;z * ?;y `where im(z)<0', 'acsg', '-(eval(-z)*y)'], // Pull negation out of products involving negative imaginary numbers
         ['-(?;a+?`+;b)','','-a-b'],             // Expand negated brackets
         ['?;a+(-?;b-?;c)','','a-b-c'],          // Remove brackets involving subtraction
         ['?;a/?;b/?;c','','a/(b*c)']            // Prefer a product on the denominator to a string of divisions
@@ -11975,6 +12031,9 @@ var simplificationRules = jme.rules.simplificationRules = {
     ],
     zeroPower: [
         ['?;x^0','','1']
+    ],
+    powerPower: [
+        ['(?;x^$n;a)^$n;b', '', 'x^eval(a*b)']
     ],
     noLeadingMinus: [
         ['-?;x + ?;y','s','y-x'],   // Don't start with a unary minus
@@ -12364,7 +12423,10 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         var multi_acc = 0;
         var ntodo = {};
         Object.keys(todo).forEach(function(name) {
-            var names = name.split(/\s*,\s*/);
+            var names = name.split(/\s*,\s*/).filter(function(n) { return n.trim(); });
+            if(names.length==0) {
+                return;
+            }
             if(names.length>1) {
                 var mname;
                 while(true) {
@@ -12661,6 +12723,9 @@ jme.variables = /** @lends Numbas.jme.variables */ {
                     out.push(v);
             }
             else {
+                if($(v).parent().length>0) {
+                    throw(new Numbas.Error('jme.subvars.html inserted twice'))
+                }
                 out.push(v);
             }
         }
@@ -13370,6 +13435,7 @@ var partConstructors = Numbas.partConstructors = {};
  * @param {Numbas.parts.Part} [parentPart]
  * @param {Numbas.storage.BlankStorage} [store] - The storage engine to use.
  * @param {Numbas.jme.Scope} [scope] - Scope in which the part should evaluate JME expressions. If not given, the question's scope or {@link Numbas.jme.builtinScope} are used.
+ * @fires Numbas.Part#event:finaliseLoad
  * @returns {Numbas.parts.Part}
  * @throws {Numbas.Error} "part.missing type attribute" if the top node in `xml` doesn't have a "type" attribute.
  */
@@ -13383,6 +13449,7 @@ var createPartFromXML = Numbas.createPartFromXML = function(index, xml, path, qu
     try {
         part.loadFromXML(xml);
         part.finaliseLoad();
+        part.signals.trigger('finaliseLoad');
         if(Numbas.display && part.question && part.question.display) {
             part.initDisplay();
         }
@@ -13404,6 +13471,7 @@ var createPartFromXML = Numbas.createPartFromXML = function(index, xml, path, qu
  * @param {Numbas.parts.Part} [parentPart]
  * @param {Numbas.storage.BlankStorage} [store] - The storage engine to use.
  * @param {Numbas.jme.Scope} [scope] - Scope in which the part should evaluate JME expressions. If not given, the question's scope or {@link Numbas.jme.builtinScope} are used.
+ * @fires Numbas.Part#event:finaliseLoad
  * @returns {Numbas.parts.Part}
  * @throws {Numbas.Error} "part.missing type attribute" if `data` doesn't have a "type" attribute.
  */
@@ -13414,6 +13482,7 @@ var createPartFromJSON = Numbas.createPartFromJSON = function(index, data, path,
     var part = createPart(index, data.type, path, question, parentPart, store, scope);
     part.loadFromJSON(data);
     part.finaliseLoad();
+    part.signals.trigger('finaliseLoad');
     return part;
 }
 /** Create a new question part.
@@ -13689,6 +13758,8 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
     },
     /** Load saved data about this part from storage.
      * The part is not resubmitted - you must do this afterwards, once any steps or gaps have been resumed.
+     * 
+     * @fires Numbas.Part#event:resume
      */
     resume: function() {
         this.resuming = true;
@@ -13715,26 +13786,31 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         this.display && this.question && this.question.signals.on(['ready','HTMLAttached'], function() {
             part.display.restoreAnswer(part.resume_stagedAnswer!==undefined ? part.resume_stagedAnswer : part.studentAnswer);
         })
+        this.signals.trigger('resume');
         this.resuming = false;
     },
     /** Add a step to this part.
      *
      * @param {Numbas.parts.Part} step
      * @param {number} index - Position of the step.
+     * @fires Numbas.Part#event:addStep
      */
     addStep: function(step, index) {
         step.isStep = true;
         this.steps.splice(index,0,step);
         this.stepsMarks += step.marks;
+        this.events.trigger('addStep', step, index);
     },
     /** Add an alternative to this part.
      *
      * @param {Numbas.parts.Part} alternative
      * @param {number} index - Position of the alternative.
+     * @fires Numbas.Part#event:addAlternative
      */
     addAlternative: function(alternative, index) {
         alternative.isAlternative = true;
         this.alternatives.splice(index,0,alternative);
+        this.events.trigger('addAlternative', alternative, index);
     },
 
     /** A definition of a variable replacement for adaptive marking.
@@ -13750,6 +13826,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @param {string} variable - The name of the variable to replace.
      * @param {string} part - The path of the part to use.
      * @param {boolean} must_go_first - Must the referred part be answered before this part can be marked?
+     * @fires Numbas.Part#event:addVariableReplacement
      */
     addVariableReplacement: function(variable, part, must_go_first) {
         var vr = {
@@ -13759,6 +13836,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         };
         this.settings.hasVariableReplacements = true;
         this.settings.errorCarriedForwardReplacements.push(vr);
+        this.events.trigger('addVariableReplacement', variable, part);
     },
     /** The base marking script for this part.
      *
@@ -13778,7 +13856,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         // check that the required notes are present
         var requiredNotes = ['mark','interpreted_answer'];
         requiredNotes.forEach(function(name) {
-            if(!(name in algo.notes)) {
+            if(!(name in algo.notes)) {interpreted_answer
                 p.error("part.marking.missing required note",{note:name});
             }
         });
@@ -14047,6 +14125,7 @@ if(res) { \
      * @param {string} message
      * @param {object} args - Arguments for the error message.
      * @param {Error} [originalError] - If this is a re-thrown error, the original error object.
+     * @fires Numbas.Part#event:error
      * @throws {Numbas.Error}
      */
     error: function(message, args, originalError) {
@@ -14056,6 +14135,7 @@ if(res) { \
             originalError.originalMessages = [message].concat(originalError.originalMessages || []);
         }
         var niceName = this.name;
+        this.events.trigger('error', message, args, originalError);
         throw(new Numbas.Error('part.error',{path: niceName, message: nmessage},originalError));
     },
     /** The name of the input widget this part uses, if any.
@@ -14145,12 +14225,14 @@ if(res) { \
     /** Give the student a warning about this part.
      *
      * @param {string} warning
+     * @fires Numbas.Part#event:giveWarning
      * @see Numbas.display.PartDisplay.warning
      */
     giveWarning: function(warning)
     {
         this.warnings.push(warning);
         this.display && this.display.warning(warning);
+        this.events.trigger('giveWarning', warning);
     },
     /** Set the list of warnings.
      *
@@ -14193,6 +14275,8 @@ if(res) { \
     /** Calculate the student's score based on their submitted answers.
      *
      * Calls the parent part's `calculateScore` method at the end.
+     * 
+     * @fires Numbas.Part#event:calculateScore
      */
     calculateScore: function()
     {
@@ -14231,6 +14315,7 @@ if(res) { \
         }
         if(this.parentPart && !this.parentPart.submitting)
             this.parentPart.calculateScore();
+        this.events.trigger('calculateScore');
         this.display && this.display.showScore(this.answered);
     },
 
@@ -14255,6 +14340,7 @@ if(res) { \
      *
      * @param {*} answer
      * @param {boolean} dontStore - Don't tell the storage that this is happening - use when loading from storage to avoid callback loops.
+     * @fires Numbas.Part#event:storeAnswer
      * @see {Numbas.parts.Part.stagedAnswer}
      */
     storeAnswer: function(answer,dontStore) {
@@ -14276,6 +14362,7 @@ if(res) { \
     /** Call when the student changes their answer, or submits - update {@link Numbas.parts.Part.isDirty}.
      *
      * @param {boolean} dirty
+     * @fires Numbas.Part#event:setDirty
      */
     setDirty: function(dirty) {
         this.isDirty = dirty;
@@ -14286,6 +14373,7 @@ if(res) { \
             }
             this.question && this.question.display && this.question.display.isDirty(this.question.isDirty());
         }
+        this.events.trigger('setDirty', dirty);
     },
     /** Get a JME scope for this part.
      * If `this.question` is set, use the question's scope. Otherwise, use {@link Numbas.jme.builtinScope}.
@@ -14302,6 +14390,7 @@ if(res) { \
     /** Make the scope for this part. 
      *
      * @param {Numbas.jme.Scope} [parentScope] - An optional parent scope. If not given, the following are tried: a parent part, the question this part belongs to, `Numbas.jme.builtinScope`.
+     * @fires Numbas.Part#event:makeScope
      * @returns {Numbas.jme.Scope}
      */
     makeScope: function(parentScope) {
@@ -14317,14 +14406,18 @@ if(res) { \
         var scope = new Numbas.jme.Scope([parentScope]);
         scope.setVariable('part_path',new Numbas.jme.types.TString(this.path));
         scope.part = this;
+        this.events && this.events.trigger('makeScope');
         return scope;
     },
 
     /** Mark this part, using adaptive marking when appropriate.
-     *
+     * @fires Numbas.Part#event:pre-markAdaptive
+     * @fires Numbas.Part#event:post-markAdaptive
      * @returns {Numbas.parts.marking_results}
      */
     markAdaptive: function() {
+        this.events.trigger('pre-markAdaptive');
+        
         if(!this.doesMarking) {
             return;
         }
@@ -14397,6 +14490,7 @@ if(res) { \
                 }
             }
         }
+        this.events.trigger('post-markAdaptive');
         return result;
     },
 
@@ -14420,8 +14514,11 @@ if(res) { \
     },
 
     /** Submit the student's answers to this part - remove warnings. save answer, calculate marks, update scores.
+     * @fires Numbas.Part#event:pre-submit
+     * @fires Numbas.Part#event:post-submit
      */
     submit: function() {
+        this.events.trigger('pre-submit');
         var p = this;
         this.shouldResubmit = false;
 
@@ -14552,6 +14649,7 @@ if(res) { \
                 }
             }
         }
+        this.events.trigger('post-submit');
     },
     /** Has the student entered an answer to this part?
      *
@@ -14620,9 +14718,11 @@ if(res) { \
          *
          * @param {Numbas.parts.Part} alt
          * @param {string} exec_path - A description of the path of execution, for caching pre-submit tasks.
+         * @fires Numbas.Part#event:mark_alternative
          * @returns {Numbas.parts.alternative_result}
          */
         function mark_alternative(alt, exec_path) {
+            part.events.trigger('mark_alternative', alt, exec_path);
             alt.restore_feedback(feedback);
             var values;
             var finalised_result = {states: [], valid: false, credit: 0};
@@ -14708,6 +14808,7 @@ if(res) { \
                     valid: true
                 };
                 this.restore_feedback(feedback);
+                this.credit = 0;
                 this.apply_feedback(res.finalised_result);
                 this.warnings = best_alternative.alternative.warnings.slice();
                 res.values['used_alternative'] = new Numbas.jme.types.TNum(best_alternative.index);
@@ -14737,9 +14838,11 @@ if(res) { \
      * @param {Numbas.jme.Scope} scope - Scope in which to calculate the correct answer.
      * @param {object.<Array.<string>>} feedback - Dictionary of existing `warnings` and `markingFeedback` lists, to add to - copies of these are returned with any additional feedback appended.
      * @param {string} exec_path - A description of the path of execution, for caching pre-submit tasks.
+     * @fires Numbas.Part#event:markAgainstScope
      * @returns {Numbas.parts.marking_results}
      */
-    markAgainstScope: function(scope,feedback, exec_path) {
+    markAgainstScope: function(scope, feedback, exec_path) {
+        this.events.trigger('markAgainstScope', scope, feedback, exec_path);
         var altres = this.markAlternatives(scope,feedback, exec_path);
         if(altres.waiting_for_pre_submit) {
             return altres;
@@ -14838,9 +14941,12 @@ if(res) { \
      * @see Numbas.parts.Part#answered
      * @param {Numbas.jme.Scope} scope
      * @param {string} exec_path - A description of the path of execution, for caching pre-submit tasks.
+     * @fires Numbas.Part#event:pre-mark
+     * @fires Numbas.Part#event:post-mark
      * @returns {Numbas.parts.mark_result}
      */
     mark: function(scope, exec_path) {
+        this.events.trigger('pre-mark', scope, exec_path);
         var studentAnswer = this.rawStudentAnswerAsJME();
         var result;
         result = this.mark_answer(studentAnswer,scope, exec_path);
@@ -14854,6 +14960,7 @@ if(res) { \
             this.apply_feedback(finalised_result);
             this.interpretedStudentAnswer = result.values['interpreted_answer'];
         }
+        this.events.trigger('post-mark', result, finalised_result);
         return {finalised_result: finalised_result, values: result.values, script_result: result};
     },
 
@@ -15031,9 +15138,11 @@ if(res) { \
      * @param {Numbas.jme.token} studentAnswer
      * @param {Numbas.jme.Scope} scope
      * @param {string} exec_path
+     * @fires Numbas.Part#event:do_pre_submit_tasks
      * @returns {object}
      */
     do_pre_submit_tasks: function(studentAnswer, scope, exec_path) {
+        this.events.trigger('do_pre_submit_tasks');
         if(this.markingScript.notes.pre_submit===undefined) {
             return {parameters: []};
         }
@@ -15073,9 +15182,12 @@ if(res) { \
      * @param {Numbas.jme.Scope} scope
      * @param {string} exec_path - A description of the path of execution, for caching pre-submit tasks.
      * @see Numbas.parts.Part#mark
-     * @returns {Numbas.marking.marking_script_result}
+     * @fires Numbas.Part#event:pre-mark_answer
+     * @fires Numbas.Part#event:post-mark_answer
+    * @returns {Numbas.marking.marking_script_result}
      */
     mark_answer: function(studentAnswer,scope, exec_path) {
+        this.events.trigger('pre-mark_answer', studentAnswer, scope, exec_path);
         try {
             this.getCorrectAnswer(scope);
             var pre_submit_result = this.do_pre_submit_tasks(studentAnswer, scope, exec_path);
@@ -15089,6 +15201,7 @@ if(res) { \
         } catch(e) {
             throw(new Numbas.Error("part.marking.error in marking script",{message:e.message},e));
         }
+        this.events.trigger('post-mark_answer', result);
         return result;
     },
     /** Set the `credit` to an absolute value.
@@ -15096,6 +15209,7 @@ if(res) { \
      * @param {number} credit
      * @param {string} message - Message to show in feedback to explain this action.
      * @param {string} reason - Why was the credit set to this value? If given, either 'correct' or 'incorrect'.
+     * @fires Numbas.Part#event:setCredit
      */
     setCredit: function(credit,message,reason)
     {
@@ -15109,11 +15223,13 @@ if(res) { \
                 reason: reason
             });
         }
+        this.events.trigger('setCredit', credit, message, reason);
     },
     /** Add an absolute value to `credit`.
      *
      * @param {number} credit - Amount to add.
      * @param {string} message - Message to show in feedback to explain this action.
+     * @fires Numbas.Part#event:addCredit
      */
     addCredit: function(credit,message)
     {
@@ -15126,11 +15242,13 @@ if(res) { \
                 message: message
             });
         }
+        this.events.trigger('addCredit', credit, message);
     },
     /** Subtract an absolute value from `credit`.
      *
      * @param {number} credit - Amount to subtract.
      * @param {string} message - Message to show in feedback to explain this action.
+     * @fires Numbas.Part#event:subCredit
      */
     subCredit: function(credit,message)
     {
@@ -15143,11 +15261,13 @@ if(res) { \
                 message: message
             });
         }
+        this.events.trigger('subCredit', credit, message);
     },
     /** Multiply `credit` by the given amount - use to apply penalties.
      *
      * @param {number} factor
      * @param {string} message - Message to show in feedback to explain this action.
+     * @fires Numbas.Part#event:multCredit
      */
     multCredit: function(factor,message)
     {
@@ -15160,6 +15280,7 @@ if(res) { \
                 factor: factor,
                 message: message
             });
+            this.events.trigger('multCredit', factor, message);
         }
     },
     /** Add a comment to the marking feedback.
@@ -15167,6 +15288,7 @@ if(res) { \
      * @param {string} message
      * @param {string} reason
      * @param {string} format - The format of the message: `"html"` or `"string"`.
+     * @fires Numbas.Part#event:markingComment
      */
     markingComment: function(message, reason, format)
     {
@@ -15176,11 +15298,13 @@ if(res) { \
             reason: reason,
             format: format || 'string'
         });
+        this.events.trigger('markingComment', message, reason, format);
     },
     /** Show the steps, as a result of the student asking to show them.
      * If the answers have not been revealed, we should apply the steps penalty.
      *
      * @param {boolean} dontStore - Don't tell the storage that this is happening - use when loading from storage to avoid callback loops.
+     * @fires Numbas.Part#event:showSteps
      */
     showSteps: function(dontStore)
     {
@@ -15203,18 +15327,25 @@ if(res) { \
         if(!dontStore) {
             this.store && this.store.stepsShown(this);
         }
+        this.events.trigger('showSteps');
     },
     /** Open the steps, either because the student asked or the answers to the question are being revealed. This doesn't affect the steps penalty.
+     *
+     * @fires Numbas.Part#event:openSteps
      */
     openSteps: function() {
         this.stepsOpen = true;
+        this.events.trigger('openSteps');
         this.display && this.display.showSteps();
     },
     /** Close the steps box. This doesn't affect the steps penalty.
+     *
+     * @fires Numbas.Part#event:hideSteps
      */
     hideSteps: function()
     {
         this.stepsOpen = false;
+        this.events.trigger('hideSteps');
         this.display && this.display.hideSteps();
         this.store && this.store.stepsHidden(this);
     },
@@ -15248,9 +15379,11 @@ if(res) { \
     /** Make an instance of the selected next part.
      *
      * @param {Numbas.parts.NextPart} np
-     * @param {number} [index]
+     * @param {number} [index] - The position of the part in the question's parts list (added to the end if not given).
+     * @fires Numbas.Part#event:makeNextPart
      */
     makeNextPart: function(np,index) {
+        this.events.trigger('makeNextPart', np, index);
         var p = this;
         var scope = this.getScope();
 
@@ -15285,8 +15418,10 @@ if(res) { \
     /** Remove the existing instance of the given next part.
      *
      * @param {Numbas.parts.NextPart} np
+     * @fires Numbas.Part#event:removeNextPart
      */
     removeNextPart: function(np) {
+        this.events.trigger('removeNextPart', np);
         if(!np.instance) {
             return;
         }
@@ -15305,6 +15440,7 @@ if(res) { \
     /** Reveal the correct answer to this part.
      *
      * @param {boolean} dontStore - Don't tell the storage that this is happening - use when loading from storage to avoid callback loops.
+     * @fires Numbas.Part#event:revealAnswer
      */
     revealAnswer: function(dontStore)
     {
@@ -15319,15 +15455,18 @@ if(res) { \
                 this.steps[i].revealAnswer(dontStore);
             }
         }
+        this.events.trigger('revealAnswer', dontStore);
     },
 
     /** Lock this part.
+     * @fires Numbas.Part#event:lock
      */
     lock: function() {
         this.locked = true;
         if(this.display) {
             this.display.lock();
         }
+        this.events.trigger('lock');
     }
 };
 
@@ -15843,6 +15982,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
      * @param {object.<Numbas.jme.token>} variables
      * @param {Numbas.parts.Part} [previousPart] - The part that this part follows on from.
      * @param {number} [index] - The position of the part in the parts list (added to the end if not given).
+     * @fires Numbas.Question#event:addExtraPart
      * @returns {Numbas.parts.Part}
      */
     addExtraPart: function(def_index,scope,variables,previousPart,index) {
@@ -15864,6 +16004,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         p.previousPart = previousPart;
         this.setCurrentPart(p);
         this.updateScore();
+        this.events.trigger('addExtraPart', p);
         return p;
     },
 
@@ -15884,12 +16025,14 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     /** Set the currently displayed part.
      *
      * @param {Numbas.parts.Part} part
+     * @fires Numbas.Question#event:setCurrentPart
      */
     setCurrentPart: function(part) {
         this.currentPart = part;
         if(this.display) {
             this.display.currentPart(part.display);
         }
+        this.events.trigger('setCurrentPart', part);
     },
 
     /** Load the question's settings from a JSON object.
@@ -16063,6 +16206,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
      *
      * @param {Numbas.parts.Part} part
      * @param {number} index
+     * @fires Numbas.Question#event:addPart
      */
     addPart: function(part, index) {
         this.parts.splice(index, 0, part);
@@ -16070,12 +16214,13 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             this.display.addPart(part);
         }
         this.updateScore();
-        this.events.trigger('add part',part);
+        this.events.trigger('addPart', part, index);
     },
 
     /** Remove a part from the question.
      *
      * @param {Numbas.parts.Part} part
+     * @fires Numbas.Question#event:removePart
      */
     removePart: function(part) {
         this.parts = this.parts.filter(function(p2) { return p2!=part; });
@@ -16088,6 +16233,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                 this.setCurrentPart(this.parts[0]);
             }
         }
+        this.events.trigger('removePart', part);
     },
 
     /** Perform any tidying up or processing that needs to happen once the question's definition has been loaded.
@@ -16193,7 +16339,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             q.scope = new jme.Scope([q.scope]);
             q.scope.flatten();
             q.local_definitions = {
-                variables: q.variableDefinitions.map(function(d) { return d.name; }),
+                variables: q.variableDefinitions.map(function(d) { return d.name; }).filter(function(n) { return n.trim(); }),
                 functions: Object.keys(q.functionsTodo),
                 rulesets: Object.keys(q.rulesets)
             };
@@ -16281,8 +16427,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                     }
                 });
                 */
-                qobj.parts.slice(1).forEach(function(pobj) {
-                    console.log('recreating',pobj.name,pobj.index,pobj.path);
+                qobj.parts.slice(1).forEach(function(pobj,qindex) {
                     var index = pobj.index;
                     var previousPart = q.getPart(pobj.previousPart);
                     var ppobj = q.store.loadPart(previousPart);
@@ -16295,7 +16440,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                     var np = previousPart.nextParts[i];
                     var npobj = ppobj.nextParts[i];
                     np.instanceVariables = q.store.loadVariables(npobj.variableReplacements,previousPart.getScope());
-                    previousPart.makeNextPart(np,npobj.index);
+                    previousPart.makeNextPart(np,qindex+1);
                     np.instance.resume();
                 });
             }
@@ -16338,6 +16483,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             if(q.partsMode=='explore') {
                 q.setCurrentPart(q.getPart(qobj.currentPart));
             }
+            this.signals.trigger('resume');
         });
     },
     /** XML definition of this question.
@@ -16439,11 +16585,12 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     callbacks: {
     },
     /** Leave this question - called when moving to another question, or showing an info page.
-     *
+     * @fires Numbas.Question#event:leave
      * @see Numbas.display.QuestionDisplay.leave
      */
     leave: function() {
         this.display && this.display.leave();
+        this.events.trigger('leave');
     },
     /** Execute the question's JavaScript preamble - should happen as soon as the configuration has been loaded from XML, before variables are generated.
      *
@@ -16522,6 +16669,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     /** Reveal the correct answers to the student.
      *
      * @param {boolean} dontStore - Don't tell the storage that the advice has been shown - use when loading from storage!
+     * @fires Numbas.Question#event:revealAnswer
      */
     revealAnswer: function(dontStore)
     {
@@ -16590,15 +16738,18 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     /** Show a warning and return true if the question is dirty.
      *
      * @see Numbas.Question#isDirty
+     * @fires Numbas.Question#event:leavingDirtyQuestion
      * @returns {boolean}
      */
     leavingDirtyQuestion: function() {
         if(this.answered && this.isDirty()) {
             Numbas.display && Numbas.display.showAlert(R('question.unsubmitted changes',{count:this.parts.length}));
+            this.events.trigger('leavingDirtyQuestion');
             return true;
         }
     },
     /** Calculate the student's total score for this question - adds up all part scores.
+     * @fires Numbas.Question#event:calculateScore
      */
     calculateScore: function()
     {
@@ -16658,14 +16809,19 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                 credit = marks>0 ? score/marks : 0;
                 break;
         }
+        
         this.score = score;
         this.marks = marks;
         this.answered = this.validate();
+        this.events.trigger('calculateScore');
     },
     /** Submit every part in the question.
+     * @fires Numbas.Question#event:pre-submit
+     * @fires Numbas.Question#event:post-submit
      */
     submit: function()
     {
+        this.events.trigger('pre-submit');
         //submit every part
         for(var i=0; i<this.parts.length; i++)
         {
@@ -16683,8 +16839,13 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             this.getAdvice();
         }
         this.store && this.store.questionSubmitted(this);
+        this.events.trigger('post-submit');
     },
-    /** Recalculate the student's score, update the display, and notify storage. */
+    /** 
+     * Recalculate the student's score, update the display, and notify storage. 
+     *
+     * @fires Numbas.Question#event:updateScore
+    */
     updateScore: function()
     {
         //calculate score
@@ -16695,6 +16856,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         this.display && this.display.showScore();
         //notify storage
         this.store && this.store.saveQuestion(this);
+        this.events.trigger('updateScore');
     },
     /** Add a callback function to run when the question's HTML is attached to the page.
      *
@@ -19865,6 +20027,39 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 
     /** The first 1000 primes. */
     primes: [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257,263,269,271,277,281,283,293,307,311,313,317,331,337,347,349,353,359,367,373,379,383,389,397,401,409,419,421,431,433,439,443,449,457,461,463,467,479,487,491,499,503,509,521,523,541,547,557,563,569,571,577,587,593,599,601,607,613,617,619,631,641,643,647,653,659,661,673,677,683,691,701,709,719,727,733,739,743,751,757,761,769,773,787,797,809,811,821,823,827,829,839,853,857,859,863,877,881,883,887,907,911,919,929,937,941,947,953,967,971,977,983,991,997,1009,1013,1019,1021,1031,1033,1039,1049,1051,1061,1063,1069,1087,1091,1093,1097,1103,1109,1117,1123,1129,1151,1153,1163,1171,1181,1187,1193,1201,1213,1217,1223,1229,1231,1237,1249,1259,1277,1279,1283,1289,1291,1297,1301,1303,1307,1319,1321,1327,1361,1367,1373,1381,1399,1409,1423,1427,1429,1433,1439,1447,1451,1453,1459,1471,1481,1483,1487,1489,1493,1499,1511,1523,1531,1543,1549,1553,1559,1567,1571,1579,1583,1597,1601,1607,1609,1613,1619,1621,1627,1637,1657,1663,1667,1669,1693,1697,1699,1709,1721,1723,1733,1741,1747,1753,1759,1777,1783,1787,1789,1801,1811,1823,1831,1847,1861,1867,1871,1873,1877,1879,1889,1901,1907,1913,1931,1933,1949,1951,1973,1979,1987,1993,1997,1999,2003,2011,2017,2027,2029,2039,2053,2063,2069,2081,2083,2087,2089,2099,2111,2113,2129,2131,2137,2141,2143,2153,2161,2179,2203,2207,2213,2221,2237,2239,2243,2251,2267,2269,2273,2281,2287,2293,2297,2309,2311,2333,2339,2341,2347,2351,2357,2371,2377,2381,2383,2389,2393,2399,2411,2417,2423,2437,2441,2447,2459,2467,2473,2477,2503,2521,2531,2539,2543,2549,2551,2557,2579,2591,2593,2609,2617,2621,2633,2647,2657,2659,2663,2671,2677,2683,2687,2689,2693,2699,2707,2711,2713,2719,2729,2731,2741,2749,2753,2767,2777,2789,2791,2797,2801,2803,2819,2833,2837,2843,2851,2857,2861,2879,2887,2897,2903,2909,2917,2927,2939,2953,2957,2963,2969,2971,2999,3001,3011,3019,3023,3037,3041,3049,3061,3067,3079,3083,3089,3109,3119,3121,3137,3163,3167,3169,3181,3187,3191,3203,3209,3217,3221,3229,3251,3253,3257,3259,3271,3299,3301,3307,3313,3319,3323,3329,3331,3343,3347,3359,3361,3371,3373,3389,3391,3407,3413,3433,3449,3457,3461,3463,3467,3469,3491,3499,3511,3517,3527,3529,3533,3539,3541,3547,3557,3559,3571,3581,3583,3593,3607,3613,3617,3623,3631,3637,3643,3659,3671,3673,3677,3691,3697,3701,3709,3719,3727,3733,3739,3761,3767,3769,3779,3793,3797,3803,3821,3823,3833,3847,3851,3853,3863,3877,3881,3889,3907,3911,3917,3919,3923,3929,3931,3943,3947,3967,3989,4001,4003,4007,4013,4019,4021,4027,4049,4051,4057,4073,4079,4091,4093,4099,4111,4127,4129,4133,4139,4153,4157,4159,4177,4201,4211,4217,4219,4229,4231,4241,4243,4253,4259,4261,4271,4273,4283,4289,4297,4327,4337,4339,4349,4357,4363,4373,4391,4397,4409,4421,4423,4441,4447,4451,4457,4463,4481,4483,4493,4507,4513,4517,4519,4523,4547,4549,4561,4567,4583,4591,4597,4603,4621,4637,4639,4643,4649,4651,4657,4663,4673,4679,4691,4703,4721,4723,4729,4733,4751,4759,4783,4787,4789,4793,4799,4801,4813,4817,4831,4861,4871,4877,4889,4903,4909,4919,4931,4933,4937,4943,4951,4957,4967,4969,4973,4987,4993,4999,5003,5009,5011,5021,5023,5039,5051,5059,5077,5081,5087,5099,5101,5107,5113,5119,5147,5153,5167,5171,5179,5189,5197,5209,5227,5231,5233,5237,5261,5273,5279,5281,5297,5303,5309,5323,5333,5347,5351,5381,5387,5393,5399,5407,5413,5417,5419,5431,5437,5441,5443,5449,5471,5477,5479,5483,5501,5503,5507,5519,5521,5527,5531,5557,5563,5569,5573,5581,5591,5623,5639,5641,5647,5651,5653,5657,5659,5669,5683,5689,5693,5701,5711,5717,5737,5741,5743,5749,5779,5783,5791,5801,5807,5813,5821,5827,5839,5843,5849,5851,5857,5861,5867,5869,5879,5881,5897,5903,5923,5927,5939,5953,5981,5987,6007,6011,6029,6037,6043,6047,6053,6067,6073,6079,6089,6091,6101,6113,6121,6131,6133,6143,6151,6163,6173,6197,6199,6203,6211,6217,6221,6229,6247,6257,6263,6269,6271,6277,6287,6299,6301,6311,6317,6323,6329,6337,6343,6353,6359,6361,6367,6373,6379,6389,6397,6421,6427,6449,6451,6469,6473,6481,6491,6521,6529,6547,6551,6553,6563,6569,6571,6577,6581,6599,6607,6619,6637,6653,6659,6661,6673,6679,6689,6691,6701,6703,6709,6719,6733,6737,6761,6763,6779,6781,6791,6793,6803,6823,6827,6829,6833,6841,6857,6863,6869,6871,6883,6899,6907,6911,6917,6947,6949,6959,6961,6967,6971,6977,6983,6991,6997,7001,7013,7019,7027,7039,7043,7057,7069,7079,7103,7109,7121,7127,7129,7151,7159,7177,7187,7193,72077211,7213,7219,7229,7237,7243,7247,7253,7283,7297,7307,7309,7321,7331,7333,7349,7351,7369,7393,7411,7417,7433,7451,7457,7459,7477,7481,7487,7489,7499,7507,7517,7523,7529,7537,7541,7547,7549,7559,7561,7573,7577,7583,7589,7591,7603,7607,7621,7639,7643,7649,7669,7673,7681,7687,7691,7699,7703,7717,7723,7727,7741,7753,7757,7759,7789,7793,7817,7823,7829,7841,7853,7867,7873,7877,7879,7883,7901,7907,7919],
+ 
+    /** Divisors of `n`. When `n = 210`, this returns the divisors `[1, 2, 3, 5, 6, 7, 10, 14, 15, 21, 30, 35, 42, 70, 105, 210]`.
+     *
+     * @param {number} n
+     * @returns {Array.<number>} - Divisors of n.
+     */
+    divisors: function(n) {
+        n = Math.abs(n);
+        if(n < 1) {
+            return [];
+        }
+        var divisor_arr = [1];
+        var exponents = math.factorise(n);
+        for (var i=0; i < exponents.length; i++) {
+            var divisor_arr_copy = [];
+            for (var j=0; j<=exponents[i]; j++) {
+                divisor_arr_copy = divisor_arr_copy.concat(divisor_arr.map((number) => number*math.primes[i]**j));
+            }
+            divisor_arr = divisor_arr_copy;
+        }
+        return divisor_arr;
+    },
+
+
+    /** Proper divisors of `n`: the divisors of `n`, excluding `n` itself. When `n = 210`, this returns the divisors `[2, 3, 5, 6, 7, 10, 14, 15, 21, 30, 35, 42, 70, 105]`.
+     *
+     * @param {number} n
+     * @returns {Array.<number>} - Proper divisors of n.
+     */
+    proper_divisors: function(n) {
+        var divisors = math.divisors(n);
+        return divisors.slice(0, divisors.length-1);
+    },
 
     /** Factorise `n`. When `n=2^(a1)*3^(a2)*5^(a3)*...`, this returns the powers `[a1,a2,a3,...]`.
      *
@@ -19872,7 +20067,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      * @returns {Array.<number>} - Exponents of the prime factors of n.
      */
     factorise: function(n) {
-        if(n<=0) {
+        n = Math.floor(Math.abs(n));
+        if(n <= 0) {
             return [];
         }
         var factors = [];
@@ -19947,6 +20143,9 @@ Fraction.prototype = {
     },
     toFloat: function() {
         return this.numerator / this.denominator;
+    },
+    toDecimal: function() {
+        return (new Decimal(this.numerator)).div(new Decimal(this.denominator));
     },
     reduce: function() {
         if(this.denominator==0) {
@@ -20105,7 +20304,7 @@ Fraction.max = function() {
  * @param {number|Decimal|Numbas.math.ComplexDecimal} n
  * @returns {Numbas.math.ComplexDecimal}
  */
-function ensure_decimal(n) {
+var ensure_decimal = math.ensure_decimal = function(n) {
     if(n instanceof ComplexDecimal) {
         return n;
     } else if(n instanceof Decimal) {
@@ -20115,6 +20314,17 @@ function ensure_decimal(n) {
     }
     return new ComplexDecimal(new Decimal(n));
 }
+
+/**
+ * Is the given argument a `ComplexDecimal` value?
+ *
+ * @param {object} n
+ * @returns {boolean}
+ */
+var isComplexDecimal = math.isComplexDecimal = function(n) {
+    return n instanceof ComplexDecimal;
+}
+
 /** A complex number with components stored as `Decimal` objects.
  *
  * @param {Decimal} re
@@ -20258,10 +20468,22 @@ ComplexDecimal.prototype = {
         }
     },
 
+    reciprocal: function() {
+        var denominator = this.re.pow(2).add(this.im.pow(2));
+        return new ComplexDecimal(this.re.dividedBy(denominator), this.im.dividedBy(denominator));
+    },
+
     absoluteValue: function() {
         return new ComplexDecimal(this.re.times(this.re).plus(this.im.times(this.im)).squareRoot());
     },
 
+    argument: function() {
+        return new ComplexDecimal(Decimal.atan2(this.im,this.re));
+    },
+
+    ln: function() {
+        return new ComplexDecimal(this.absoluteValue().re.ln(), this.argument());
+    },
     isInt: function() {
         return this.re.isInt() && this.im.isInt();
     },
@@ -20302,12 +20524,12 @@ ComplexDecimal.prototype = {
     },
 
     toPrecision: function(sf) {
-        var re = this.re.toPrecision(dp);
+        var re = this.re.toPrecision(sf);
         if(this.isReal()) {
             return re;
         } else {
             var symbol = this.im.isNegative() ? '-' : '+';
-            var im = this.im.absoluteValue().toPrecision(dp);
+            var im = this.im.absoluteValue().toPrecision(sf);
             return re+' '+symbol+' '+im+'i';
         }
     },
@@ -20853,6 +21075,82 @@ var matrixmath = Numbas.matrixmath = {
         });
         return t;
     },
+    /** Returns number of row in a matrix.
+     * 
+     * @param {matrix} m
+     * @returns {number}
+     */
+    numrows: function(m){
+        return m.rows;
+    },
+    /** Returns number of columns in a matrix.
+     * 
+     * @param {matrix} m
+     * @returns {number}
+     */
+    numcolumns: function(m){
+        return m.columns;
+    },
+    /** Combines two matrices vertically
+     * 
+     * @param {matrix} m1
+     * @param {matrix} m2
+     * @returns {matrix}
+     */
+    combine_vertically: function(m1,m2){
+        var out = [];
+        out.rows = m1.rows + m2.rows;
+        out.columns = m1.columns > m2.columns ? m1.columns : m2.columns;
+        for(var i = 0; i < out.rows; i++){
+            var row = [];
+            out.push(row);
+            for(var j = 0; j < out.columns; j++)
+            {
+                row.push(i < m1.rows && j < m1.columns ? m1[i][j]
+                    : i >= m1.rows && j < m2.columns ? m2[i-m1.rows][j] : 0);
+            }
+        } return out;
+    },
+    /** Combines two matrices horizontally
+     * 
+     * @param {matrix} m1
+     * @param {matrix} m2
+     * @returns {matrix}
+     */
+    combine_horizontally: function(m1,m2){
+        var out = [];
+        out.columns = m1.columns + m2.columns;
+        out.rows = m1.rows > m2.rows ? m1.rows : m2.rows;
+        for(var i = 0; i < out.rows; i++){
+            var row = [];
+            out.push(row);
+            for(var j = 0; j < out.columns; j++)
+            {
+                row.push(j < m1.columns && i < m1.rows ? m1[i][j]
+                    : j >= m1.columns && i < m2.rows ? m2[i][j-m1.columns] : 0);
+            }
+        } return out;  
+    },
+    /** Combines two matrices diagonally
+     * 
+     * @param {matrix} m1
+     * @param {matrix} m2
+     * @returns {matrix}
+     */
+    combine_diagonally: function(m1,m2){
+        var out = [];
+        out.rows = m1.rows + m2.rows;
+        out.columns = m1.columns + m2.columns;
+        for(var i = 0; i < out.rows; i++){
+            var row = [];
+            out.push(row);
+            for(var j = 0; j < out.columns; j++)
+            {
+                row.push(i < m1.rows && j < m1.columns ? m1[i][j]
+                    : i >= m1.rows && j >= m1.columns ? m2[i-m1.rows][j-m1.columns] : 0);
+            }
+        } return out;
+    },
 
     /** Apply given function to each element.
      *
@@ -20887,6 +21185,7 @@ var matrixmath = Numbas.matrixmath = {
         return matrixmath.map(m,function(n){return math.siground(n,sf);});
     }
 }
+
 /** A set of objects: no item occurs more than once.
  *
  * @typedef set
@@ -20967,6 +21266,7 @@ var setmath = Numbas.setmath = {
     size: function(set) {
         return set.length;
     }
+    
 }
 
 });
@@ -21145,7 +21445,7 @@ var util = Numbas.util = /** @lends Numbas.util */ {
             var seen = {};
             for(var x in a.value) {
                 seen[x] = true;
-                if(!util.eq(a.value[x],b.value[x],scope)) {
+                if(b.value[x]===undefined || !util.eq(a.value[x],b.value[x],scope)) {
                     return false;
                 }
             }
@@ -21854,6 +22154,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
         nestrb = nestrb || '';
         var bits = [];
         var start = 0;
+        var depth = 0;
+        var m;
         for(var i=0;i<length;i++) {
             if(str.charAt(i)=='\\') {
                 i += 1;
@@ -21865,23 +22167,35 @@ var util = Numbas.util = /** @lends Numbas.util */ {
                 bits.push({kind:'lb'});
                 i += lb.length-1;
                 start = i+1;
+                depth += 1;
             } else if(str.slice(i,i+rb.length)==rb) {
                 bits.push({kind:'str',str:str.slice(start,i)});
                 bits.push({kind:'rb'});
                 i += rb.length-1;
                 start = i+1;
+                depth -= 1;
+            } else if(depth>0 && (m = re_jme_string.exec(str.slice(i)))) {
+                bits.push({kind:'str',str: str.slice(start,i)});
+                bits.push({kind:'jme_str', str: m[0]});
+                i += m[0].length-1;
+                start = i + 1;
             }
         }
         if(start<str.length) {
             bits.push({kind:'str',str:str.slice(start)});
         }
+
+        depth = 0;
         var out = [];
-        var depth = 0;
         var s = '';
         var s_plain = '';
         var s_unclosed = '';
+        var in_string = false;
         for(var i=0;i<bits.length;i++) {
             switch(bits[i].kind) {
+                case 'jme_str':
+                    s += bits[i].str;
+                    break;
                 case 'str':
                     s += bits[i].str;
                     s_unclosed += bits[i].str;
@@ -22241,6 +22555,14 @@ var util = Numbas.util = /** @lends Numbas.util */ {
         }
     }
 };
+
+/** 
+ * A regular expression matching JME string tokens
+ * 
+ * @type {string}
+ */
+var re_jme_string = util.re_jme_string = /^("""|'''|['"])((?:[^\1\\]|\\.)*?)\1/;
+
 /** Different styles of writing a decimal.
  *
  * Objects of the form `{re,format}`, where `re` is a regex recognising numbers in this style, and `format(integer,decimal)` renders the number in this style.
@@ -29577,6 +29899,7 @@ var jme = Numbas.jme;
 var math = Numbas.math;
 var types = Numbas.jme.types;
 var Part = Numbas.parts.Part;
+var jme = Numbas.jme;
 
 /**
  * Register a custom input type.
@@ -29740,7 +30063,7 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
                     return jme.unwrapValue(this.correctAnswer);
                 }
             default:
-                return this.correctAnswer.value;
+                return jme.unwrapValue(this.correctAnswer);
         }
     },
     setStudentAnswer: function() {
@@ -30324,7 +30647,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         var mustMatchNode = xml.selectSingleNode('answer/mustmatchpattern');
         if(mustMatchNode) {
             //partial credit for failing not-allowed test
-            tryGetAttribute(settings,xml,mustMatchNode,['pattern','partialCredit','nameToCompare'],['mustMatchPattern','mustMatchPC','nameToCompare']);
+            tryGetAttribute(settings,xml,mustMatchNode,['pattern','partialCredit','nameToCompare'],['mustMatchPatternString','mustMatchPC','nameToCompare']);
             var messageNode = mustMatchNode.selectSingleNode('message');
             if(messageNode) {
                 var mustMatchMessage = Numbas.xml.transform(Numbas.xml.templates.question,messageNode);
@@ -30353,7 +30676,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         tryLoad(data.minlength, ['length', 'partialCredit', 'message'], settings, ['minLength', 'minLengthPC', 'minLengthMessage']);
         tryLoad(data.musthave, ['strings', 'showStrings', 'partialCredit', 'message'], settings, ['mustHave', 'mustHaveShowStrings', 'mustHavePC', 'mustHaveMessage']);
         tryLoad(data.notallowed, ['strings', 'showStrings', 'partialCredit', 'message'], settings, ['notAllowed', 'notAllowedShowStrings', 'notAllowedPC', 'notAllowedMessage']);
-        tryLoad(data.mustmatchpattern, ['pattern', 'partialCredit', 'message', 'nameToCompare'], settings, ['mustMatchPattern', 'mustMatchPC', 'mustMatchMessage', 'nameToCompare']);
+        tryLoad(data.mustmatchpattern, ['pattern', 'partialCredit', 'message', 'nameToCompare'], settings, ['mustMatchPatternString', 'mustMatchPC', 'mustMatchMessage', 'nameToCompare']);
         settings.mustMatchPC /= 100;
         tryLoad(data, ['checkVariableNames', 'singleLetterVariables', 'allowUnknownFunctions', 'implicitFunctionComposition', 'showPreview','caseSensitive'], settings);
         var valuegenerators = tryGet(data,'valuegenerators');
@@ -30420,6 +30743,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
      * @property {number} notAllowedPC - Partial credit to award if any not-allowed string is present.
      * @property {string} notAllowedMessage - Message to add to the marking feedback if the student's answer contains a not-allowed string.
      * @property {boolean} notAllowedShowStrings - Tell the students which strings must not be included in the marking feedback, if they've used a not-allowed string?
+     * @property {string} mustMatchPatternString - String defining the pattern the student's answer must match, before variables are substituted in.
      * @property {string} mustMatchPattern - A pattern that the student's answer must match.
      * @property {number} mustMatchPC - Partial credit to award if the student's answer does not match the pattern.
      * @property {string} mustMatchMessage - Message to add to the marking feedback if the student's answer does not match the pattern.
@@ -30498,6 +30822,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
             answerSimplification,
             scope
         );
+        settings.mustMatchPattern = jme.subvars(settings.mustMatchPatternString || '', scope);
         if(settings.correctAnswer == '' && this.marks>0) {
             this.error('part.jme.answer missing');
         }
@@ -31818,13 +32143,15 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
 
         var isNumber = ominvalue.type=='number' || omaxvalue.type=='number';
 
-        if(minvalue.type=='number') {
-            minvalue = new jme.types.TNum(minvalue.value - 1e-12);
+        if(minvalue.type=='number' && isFinite(minvalue.value)) {
+            var size = Math.floor(Math.log10(Math.abs(minvalue.value)));
+            minvalue = new jme.types.TNum(minvalue.value - Math.pow(10,size-12));
         }
         minvalue = jme.castToType(minvalue,'decimal').value;
         settings.minvalue = minvalue;
-        if(maxvalue.type=='number') {
-            maxvalue = new jme.types.TNum(maxvalue.value + 1e-12);
+        if(maxvalue.type=='number' && isFinite(maxvalue.value)) {
+            var size = Math.floor(Math.log10(Math.abs(maxvalue.value)));
+            maxvalue = new jme.types.TNum(maxvalue.value + Math.pow(10,size-12));
         }
         maxvalue = jme.castToType(maxvalue,'decimal').value;
         settings.maxvalue = maxvalue;

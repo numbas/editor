@@ -82,14 +82,18 @@
 
     <section class="tab-pane" data-bind="activeIf: ko.unwrap(tabber.currentTab().id)=='marking-algorithm'">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
+            <!-- ko if: type().name!='extension' -->
             {% booleanproperty 'use_custom_algorithm' 'Use custom marking algorithm?' help_url='question/parts/reference.html#term-Use-custom-marking-algorithm' %}
+            <!-- /ko -->
 
             <div data-bind="fadeVisible: use_custom_algorithm">
-                {% booleanproperty 'extendBaseMarkingAlgorithm' 'Extend base marking algorithm?' help_url='question/parts/reference.html#term-Extend-base-marking-algorithm' %}
+                <!-- ko if: type().name!='extension' -->
+                    {% booleanproperty 'extendBaseMarkingAlgorithm' 'Extend base marking algorithm?' help_url='question/parts/reference.html#term-Extend-base-marking-algorithm' %}
                 <div class="base-marking-algorithm" data-bind="fadeVisible: extendBaseMarkingAlgorithm">
                     <h5>Base marking algorithm</h5>
                     <pre data-bind="text: baseMarkingAlgorithm"></pre>
                 </div>
+                <!-- /ko -->
                 <h5>Custom marking algorithm</h5>
                 <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: customMarkingAlgorithm, codemirrorMode: 'jme', jmeScope: $root.markingScope"></textarea>
                 <p class="alert alert-danger" data-bind="html: markingScriptError, visible: markingScriptError" aria-live="polite"></p>
@@ -108,8 +112,7 @@
             <!-- ko if: question_error -->
             <div class="alert alert-danger" aria-live="polite">
                 <p>There's an error which means the marking algorithm can't run:</p>   
-                <p data-bind="html: question_error"></p>
-                <pre data-bind="visible: ko.unwrap(question_error).stack, text: ko.unwrap(question_error).stack"></pre>
+                <pre data-bind="html: question_error"></pre>
             </div>
             <!-- /ko -->
 
@@ -138,10 +141,19 @@
                                 </div>
                             </label>
                         </div>
-                        <div class="col-md-offset-3">
-                            <button type="submit" class="btn btn-primary" data-bind="disabled: waiting_for_pre_submit">Submit this answer</button>
-                            <span class="text-info" data-bind="visible: waiting_for_pre_submit">Your answer is being marked.</span>
+                        <div class="form-group">
+                            <div class="col-md-offset-3">
+                                <button type="submit" class="btn btn-primary" data-bind="disabled: waiting_for_pre_submit">Submit this answer</button>
+                                <span class="text-info" data-bind="visible: waiting_for_pre_submit">Your answer is being marked.</span>
+                            </div>
                         </div>
+                        <section class="last-run-feedback" data-bind="if: last_run() && last_run().message_displays">
+                            <h5>Feedback</h5>
+                            <ul class="list-unstyled" data-bind="foreach: last_run().message_displays">
+                                <li class="feedbackMessage" data-bind="attr: {'data-credit-change': credit_change}"><span data-bind="css: 'feedback-icon glyphicon '+icon" aria-hidden="true"></span> <!-- ko if: format=='html' --><span data-bind="dom: message"></span><!-- /ko --><!-- ko if: format=='string' --><span data-bind="html: message"></span><!-- /ko --></li>
+                            </ul>
+                            <p><strong>Score:</strong> <span data-bind="text: last_run().marks"></span></p>
+                        </section>
                     </form>
                 <!-- /ko -->
                 <!-- ko if: $parent.type().name=='gapfill' -->
@@ -245,11 +257,12 @@
                         <p>This feedback is based on your last submitted answer. Submit your changed answer to get updated feedback.</p>
                     </div>
                     <!-- ko if: ko.unwrap($data.runtime_part)!==undefined -->
-                    <div data-bind="if: last_run_error">
-                        <div class="alert alert-danger" aria-live="polite">
+                    <div data-bind="if: last_run_error() || last_run_warnings().length">
+                        <div class="alert alert-danger last-run-error" aria-live="polite">
                             <p data-bind="html: last_run_error"></p>
-                            <!-- ko if: last_run().warnings -->
-                            <ul data-bind="foreach: last_run().warnings">
+                            <!-- ko if: last_run_warnings().length -->
+                            <h5>Warnings:</h5>
+                            <ul data-bind="foreach: last_run_warnings">
                                 <li data-bind="html: $data"></li>
                             </ul>
                             <!-- /ko -->
@@ -272,15 +285,19 @@
                                 <tr>
                                     <th>
                                         Note
-                                        <br>
+                                    </th>
+                                    <th>Value</th>
+                                    <th>Feedback</th>
+                                </tr>
+                                <tr>
+                                    <th>
                                         <div class="btn-group" role="group">
                                             <button type="button" class="btn btn-sm btn-link" data-bind="click: showAllNotes"><span class="glyphicon glyphicon-eye-open"></span> Show all</button> 
                                             <button type="button" class="btn btn-sm btn-link" data-bind="click: hideAllNotes"><span class="glyphicon glyphicon-eye-close"></span> Hide all</button>
                                         </div>
                                     </th>
-                                    <th>Value</th>
-                                    <th>Feedback</th>
-                                </tr>
+                                    <th></th>
+                                    <th></th>
                             </thead>
                             <tbody data-bind="foreach: sortedNotes">
                                 <tr class="note" data-bind="css: {'show-note': show(), 'invalid': !valid()}">
@@ -291,8 +308,8 @@
                                         <div class="value jme-value" data-bind="jmevalue: value, error: error"></div>
                                     </td>
                                     <td class="only-when-shown">
-                                        <ul class="list-unstyled" data-bind="foreach: messages">
-                                            <li data-bind="html: $data"></li>
+                                        <ul class="list-unstyled" data-bind="foreach: message_displays">
+                                            <li class="feedbackMessage" data-bind="attr: {'data-credit-change': credit_change}"><span data-bind="css: 'feedback-icon glyphicon '+icon" aria-hidden="true"></span> <!-- ko if: format=='html' --><span data-bind="dom: message"></span><!-- /ko --><!-- ko if: format=='string' --><span data-bind="html: message"></span><!-- /ko --></li>
                                         </ul>
                                     </td>
                                 </tr>
@@ -429,8 +446,8 @@
                                                             <span class="value jme-value" data-bind="jmevalue: value, error: error"></span>
                                                         </td>
                                                         <td>
-                                                            <ul class="list-unstyled" data-bind="foreach: messages">
-                                                                <li data-bind="html: $data"></li>
+                                                            <ul class="list-unstyled" data-bind="foreach: message_displays">
+                                                                <li class="feedbackMessage" data-bind="attr: {'data-credit-change': credit_change}"><span data-bind="css: 'feedback-icon glyphicon '+icon" aria-hidden="true"></span> <!-- ko if: format=='html' --><span data-bind="dom: message"></span><!-- /ko --><!-- ko if: format=='string' --><span data-bind="html: message"></span><!-- /ko --></li>
                                                             </ul>
                                                         </td>
                                                     </tr>
@@ -440,8 +457,8 @@
                                                             <span class="value jme-value" data-bind="jmevalue: expected.computedValue"></span>
                                                         </td>
                                                         <td>
-                                                            <ul class="list-unstyled" data-bind="foreach: expected.messages">
-                                                                <li data-bind="html: $data"></li>
+                                                            <ul class="list-unstyled" data-bind="foreach: expected.message_displays">
+                                                                <li class="feedbackMessage" data-bind="attr: {'data-credit-change': credit_change}"><span data-bind="css: 'feedback-icon glyphicon '+icon" aria-hidden="true"></span> <!-- ko if: format=='html' --><span data-bind="dom: message"></span><!-- /ko --><!-- ko if: format=='string' --><span data-bind="html: message"></span><!-- /ko --></li>
                                                             </ul>
                                                         </td>
                                                     </tr>

@@ -144,7 +144,7 @@ $(document).ready(function() {
     $.noty.defaultOptions.theme = 'noty_theme_twitter';
 
     slugify = function(s) {
-        return s.trim().replace(/[^\w\s]/g,'').toLowerCase().replace(/\s/g,'-');
+        return s.trim().replace(/[^\w\s]/g,'').toLowerCase().replace(/\s/g,'-') || 'empty-slug';
     };
 
     var tryGetAttribute = Editor.tryGetAttribute = function(data,name) {
@@ -1683,16 +1683,19 @@ $(document).ready(function() {
                 content_area.classList.add('content-area');
                 well.appendChild(content_area);
 
-                var click_to_edit = document.createElement('p');
-                click_to_edit.classList.add('click-to-edit');
-                click_to_edit.textContent = 'Click to edit';
-                well.appendChild(click_to_edit);
+                if (!element.hasAttribute('disabled')){
+                    var click_to_edit = document.createElement('p');
+                    click_to_edit.classList.add('click-to-edit');
+                    click_to_edit.textContent = 'Click to edit';
+                    well.appendChild(click_to_edit);
+                }
 
                 well.setAttribute('tabindex',0);
                 well.setAttribute('role','button');
                 element.appendChild(well);
 
-                well.addEventListener('click',function() {
+                well.addEventListener('click',function(e) {
+                    e.stopPropagation();
                     if(!element.hasAttribute('disabled')) {
                         make_tinymce();
                     }
@@ -2289,6 +2292,9 @@ $(document).ready(function() {
             this.writingComment(false);
         }
 
+        this.add_text = function(text) {
+            this.commentText(this.commentText()+'\n'+text);
+        }
     }
 
     $('body').on('click','.timeline-item .hide-item',function(e) {

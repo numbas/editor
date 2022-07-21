@@ -12,11 +12,10 @@ header {
     /*! border-bottom: 0.2rem solid hsl(0, 70%, 10%); */
     display: grid;
     color: white;
-    box-shadow: 0 0px 1px 2px hsl(0, 70%, 10%);
     z-index: 100;
-    line-height: 1.5em;
+    line-height: 1em;
     grid-template-columns: [row-start] 1fr repeat(4,max-content) [row-end];
-    grid-gap: 0.2em 2em;
+    grid-gap: 0.2em 0.75em;
     align-items: center;
 }
 header .description {
@@ -24,6 +23,33 @@ header .description {
     font-size: 1em;
     font-weight: normal;
 }
+
+
+.licence a {
+    text-decoration: none;
+}
+
+.text-muted, .text-muted a {
+    color: hsl(0, 0%, 80%);
+}
+
+#copied {
+    padding-left: 0.15em;
+    padding-right: 0.15em;
+    visibility: hidden;
+}
+#copied.shown {
+    visibility: visible;
+}
+
+.close-button{
+    background-color: hsl(0, 33%, 87%);
+    color:hsl(0, 70%, 30%);
+    border-radius: 10px;
+    font-size: 1em;
+}
+
+
 #embed-url {
     grid-column: row;
     text-align: right;
@@ -32,12 +58,16 @@ header .description {
 #embed-url:not(.shown) {
     display: none;
 }
-#embed-url code {
-    background: hsl(0,0%,95%);
-    color: black;
+#embed-url .url {
     display: inline-block;
-    padding: 0em 0.5em;
+    margin: 0.5em;
+    user-select: contain;
 }
+#embed-url.copied .not-copied,
+#embed-url:not(.copied) .copied {
+    display: none;
+}
+
 header button {
     padding: 0 0.5em;
     border: none;
@@ -47,9 +77,15 @@ header button {
     font-size: 1em;
     text-decoration: none;
     height: 1.5em;
-    line-height: 1.5em;
+    line-height: 1em;
     font-family: inherit;
     cursor: pointer;
+    margin: 0.1em;
+}
+header button.like-link {
+    padding: 0;
+    background: none;
+    color: inherit;
 }
 header .user-thumbnail > img {
     vertical-align: bottom;
@@ -57,6 +93,11 @@ header .user-thumbnail > img {
 }
 header a {
     color: white;
+}
+
+.action {
+    text-decoration: none;
+    font-weight: bold;
 }
 
 header abbr a {

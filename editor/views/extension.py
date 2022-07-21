@@ -70,11 +70,11 @@ class DeleteFileView(ExtensionViewMixin,editable_package.DeleteFileView):
 class AccessView(ExtensionViewMixin,editable_package.AccessView):
     model = Extension
     form_class = forms.IndividualAccessFormset
-    single_form_class = forms.AddEditablePackageAccessForm
+    single_form_class = forms.AddExtensionAccessForm
     success_view = 'extension_access'
 
 class AddAccessView(ExtensionViewMixin,editable_package.AddAccessView):
-    form_class = forms.AddEditablePackageAccessForm
+    form_class = forms.AddExtensionAccessForm
 
     def get_package(self):
         return Extension.objects.get(pk=self.kwargs['extension_pk'])

@@ -24,7 +24,7 @@ The exam editor
 
 At the top of the exam editor is the exam's name, as well as a stamp showing the status of the exam.
 
-Click on the status stamp to give feedback about the quality of an exam, after test running it. 
+Click on the status stamp to give feedback about the quality of an exam, after running it. 
 The options are listed in descending order of "suitability for use":
 
 * **Ready to use** - this exam is of sufficient quality to give to students.
@@ -45,7 +45,7 @@ Admin controls
     :alt: The admin controls.
 
 .. glossary::
-    Test Run
+    Run
         Opens a preview of the exam in a new window.
 
         .. warning:: 

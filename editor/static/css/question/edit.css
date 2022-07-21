@@ -249,6 +249,9 @@ table.variable-list .value-cell .value {
 .marking-test .answer-input {
     margin: 1em 0;
 }
+.marking-test .answer-input .form-group ~ .form-group {
+    margin-top: 1em;
+}
 
 .marking-test .nav-tabs,
 .unit-test .nav-tabs {
@@ -333,4 +336,31 @@ table.variable-list .value-cell .value {
 #previewModal .modal-body {
     flex-grow: 1;
     overflow-y: auto;
+}
+
+.feedbackMessage {
+    display: flex;
+    grid-gap: 0.5em;
+    justify-content: flex-end;
+}
+
+.feedbackMessage ~ .feedbackMessage {
+    margin-top: 0.5em;
+}
+
+[data-credit-change="neutral"] .feedback-icon {
+    visibility: hidden;
+    width: 1em;
+}
+
+.last-run-error h5 {
+    font-weight: bold;
+}
+
+.last-run-feedback h5 {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+.last-run-feedback {
+    text-align: right;
 }

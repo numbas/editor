@@ -4,15 +4,17 @@ import os
 import traceback
 import urllib.parse
 import importlib
+import pathlib
 
 def print_notice(s):
     print('\033[92m'+s+'\033[0m\n')
 
 def path_exists(path):
-    if not os.path.exists(path):
+    path = pathlib.Path(path)
+    if not path.exists():
         answer = input("That path doesn't exist. Create it? [y/n]").strip().lower()
         if answer=='y':
-            os.makedirs(path)
+            path.mkdir(parents=True, exist_ok=True)
             return True
         else:
             return False
@@ -37,8 +39,24 @@ class Question(object):
 
 class Command(object):
 
+    dev = False
+
+    dev_question = Question('DEBUG', 'Is this installation for development?', False)
+
+    dev_values = {
+        'DB_ENGINE': 'sqlite3',
+        'DB_NAME': 'db.sqlite3',
+        'PYTHON_EXEC': 'python3',
+        'STATIC_ROOT': 'editor/static',
+        'MEDIA_ROOT': 'media',
+        'PREVIEW_PATH': 'editor/static/previews',
+        'PREVIEW_URL': '/static/previews/',
+        'SITE_TITLE': 'Numbas development',
+        'ALLOW_REGISTRATION': True,
+        'DEFAULT_FROM_EMAIL': '',
+    }
+
     questions = [
-        Question('DEBUG', 'Is this installation for development?', False),
         Question('NUMBAS_PATH', 'Path of the Numbas compiler:','/srv/numbas/compiler/', validation=path_exists),
         Question('DB_ENGINE', 'Which database engine are you using? (Common options: postgres, mysql, sqlite3)', lambda v: 'sqlite3' if v['DEBUG'] else 'mysql'),
         Question('STATIC_ROOT', 'Where are static files stored?','/srv/numbas/static/', validation=path_exists),
@@ -123,9 +141,11 @@ class Command(object):
         try:
             domain = Site.objects.first().domain
         except Site.DoesNotExist:
-            domain = 'numbas.example.com'
+            domain = 'localhost' if self.dev else 'numbas.example.com'
 
-        domain = self.get_input('What domain will the site be accessed from?', domain)
+        if not self.dev:
+            domain = self.get_input('What domain will the site be accessed from?', domain)
+
         try:
             url = urllib.parse.urlparse(domain)
             self.domain = url.netloc if url.netloc else domain
@@ -148,6 +168,13 @@ class Command(object):
         self.values['SECRET_KEY'] =''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50))
         self.values['PWD'] = os.getcwd()
 
+        self.get_value(self.dev_question)
+
+        self.dev = self.values['DEBUG']
+
+        if self.dev:
+            self.values.update(self.dev_values)
+
         for question in self.questions:
             self.get_value(question)
             if question.key=='DB_ENGINE':
@@ -168,7 +195,7 @@ class Command(object):
 
     def get_default_value(self, question):
         default = question.get_default(self.values)
-        if os.path.exists('numbas/settings.py'):
+        if pathlib.Path('numbas', 'settings.py').exists():
             import numbas.settings
             try:
                 if question.key=='DB_ENGINE':
@@ -187,6 +214,8 @@ class Command(object):
         return default
 
     def get_value(self, question):
+        if self.dev and question.key in self.dev_values:
+            return
         self.values[question.key] = self.get_input(question.question, self.get_default_value(question), question.validation)
 
     def write_files(self):
@@ -194,21 +223,21 @@ class Command(object):
         self.sub_settings()
 
         if not self.values['DEBUG']:
-            self.sub_file('web/django.wsgi',[ (r"sys.path.append\('(.*?)'\)", 'PWD') ])
+            self.sub_file(pathlib.Path('web', 'django.wsgi'),[ (r"sys.path.append\('(.*?)'\)", 'PWD') ])
 
         index_subs = [
             (r"Welcome to (the Numbas editor)", 'SITE_TITLE'),
         ]
-        self.sub_file('editor/templates/index_message.html', index_subs)
+        self.sub_file(pathlib.Path('editor', 'templates', 'index_message.html'), index_subs)
 
-        self.sub_file('editor/templates/terms_of_use_content.html', [])
+        self.sub_file(pathlib.Path('editor', 'templates', 'terms_of_use_content.html'), [])
 
-        self.sub_file('editor/templates/privacy_policy_content.html', [])
+        self.sub_file(pathlib.Path('editor', 'templates', 'privacy_policy_content.html'), [])
 
         if len(self.written_files):
             print_notice("The following files have been written. You should look at them now to see if you need to make any more changes.")
             for f in self.written_files:
-                print_notice(' * '+f)
+                print_notice(' * '+str(f))
             print('')
 
     def sub_settings(self, confirm_overwrite=True):
@@ -231,17 +260,17 @@ class Command(object):
             (r"^DEFAULT_FROM_EMAIL = '(.*?)'", 'DEFAULT_FROM_EMAIL'),
             (r"^SITE_ID = (\d+)", 'SITE_ID'),
         ]
-        self.sub_file('numbas/settings.py', settings_subs, confirm_overwrite)
+        self.sub_file(pathlib.Path('numbas', 'settings.py'), settings_subs, confirm_overwrite)
 
     def sub_file(self, fname, subs, confirm_overwrite=True):
-        if os.path.exists(fname) and confirm_overwrite:
+        if fname.exists() and confirm_overwrite:
             overwrite = self.get_input("{} already exists. Overwrite it?".format(fname),True)
             if not overwrite:
                 return
 
         self.written_files.append(fname)
 
-        with open(fname+'.dist') as f:
+        with open(str(fname)+'.dist') as f:
             text = f.read()
 
         for pattern, key in subs:

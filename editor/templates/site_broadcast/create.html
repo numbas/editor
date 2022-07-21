@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block title %}Create a new site broadcast- {{block.super}}{% endblock title %}
+
+{% block javascripts %}
+{{block.super}}
+<script type="text/javascript">
+    $(document).ready(function() {
+        Editor.tinymce({selector:'#id_text'});
+    });
+</script>
+{% endblock javascripts %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Create a new site broadcast</h1>
+</div>
+
+<form method="post" class="form-horizontal" action="">
+    {% csrf_token %}
+    {% for field in form.hidden_fields %}{{field}}{% endfor %}
+
+    {% for field in form.visible_fields %}
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+        <label class="col-sm-2 control-label">{{field.label}}</label>
+        <div class="col-sm-10">
+            {{field.as_widget}}
+            {% if field.errors %}
+            <ul class="errorlist list-unstyled">
+                {% for error in field.errors %}
+                <li>{{error}}</li>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="col-sm-offset-2 col-sm-10">
+        <button type="submit" class="btn btn-primary">Create</button></p>
+    </div>
+</form>
+{% endblock content %}

@@ -20,11 +20,12 @@
     <body>
         <header role="banner">
             <h1 class="description">
-                PREVIEW of <a href="{{item.get_absolute_url}}">{{item.name}}</a>
-                in <a href="{{item.project.get_absolute_url}}">{{item.project.name}}</a>
+                <a href="{{item.get_absolute_url}}">{{item.name}}</a>
+                <span class="text-muted">in</span>
+                <a href="{{item.project.get_absolute_url}}">{{item.project.name}}</a>
             </h1>
 
-            <span class="licence">
+            <span class="licence text-muted">
             {% if item.licence %}
                 &copy;
                 <abbr title="{{item.licence.name}}">
@@ -37,14 +38,18 @@
             {% endif %}
             </span>
 
-            <a href="{{item.get_absolute_url}}">Edit</a>
+            <a class="action" href="{{item.get_absolute_url}}">Edit</a>
 
-            <a href="{% editoritem_url 'download' item.rel_obj %}?scorm">Download</a>
+            <a class="action" href="{% editoritem_url 'download' item.rel_obj %}?scorm">Download</a>
 
-            <button class="btn" id="share" type="button">Share</button>
+            <button class="like-link action" id="share">Share</button>
 
             <span id="embed-url">
-                <code tabindex="0">{{SITE_ROOT}}{{embed_url}}</code>
+                <code class="url text-muted" tabindex="0">{{SITE_ROOT}}{{embed_url}}</code>
+                <button id="link-label"><span class="" id="copy-text" aria-live="polite">
+                    <span class="not-copied">Copy this link</span>
+                    <span class="copied">Link copied!</span>
+                </button>
             </span>
 
         </header>
@@ -54,12 +59,26 @@
 
 
         <script>
-var share_button = document.getElementById('share');
-var embed_display = document.getElementById('embed-url');
-share_button.addEventListener('click',function() {
-    embed_display.classList.toggle('shown');
-    embed_display.focus();
-});
+            var share_button = document.getElementById('share');
+            var embed_display = document.getElementById('embed-url');
+            var copy_text = document.getElementById('copy-text');
+
+            /* To toggle the embedded URL area */
+            share_button.addEventListener('click',function() {
+                embed_display.classList.toggle('shown'); 
+                embed_display.focus();
+            });
+
+            if(!(navigator.clipboard && navigator.clipboard.writeText)) {
+                copy_text.style['display'] = 'none';
+            } else {
+                copy_text.addEventListener('click',function() {
+                    var url = document.querySelector('#embed-url .url').textContent;
+                    navigator.clipboard.writeText(url);
+                    embed_display.classList.add('copied');
+                });
+            }
+
             var get_numbas_interval = setInterval(function() {
                 var w = window.frames[0];
                 if(w && w.Numbas) {

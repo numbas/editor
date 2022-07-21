@@ -34,7 +34,7 @@ You are taken to the *editing page* for your new question.
 It is worth spending a few moments finding your way around this page.
 
 At the top of the page are the question's name and, above that, a link to the project which it belongs to.
-Below are buttons to test run and download the question.
+Below are buttons to run and download the question.
 Below this there are options to navigate through the various steps involved in editing a question.
 
 .. figure:: screenshots/write-question/blank-question.png
@@ -90,7 +90,7 @@ in the :guilabel:`Question statement` box.
 
    Writing a question statement.
 
-Notice that you can click :guilabel:`Test run` to preview your question at any time.
+Notice that you can click :guilabel:`Run` to preview your question at any time.
 A new browser tab opens, showing the question as a student would see it.
 Switch back to the editor tab when you're ready to make more changes.
 
@@ -137,7 +137,7 @@ For this question the answer is exactly :math:`49`, so put that in both fields.
 
    Specifying the correct answer.
 
-Now press :guilabel:`Test Run` again to try out the question.
+Now press :guilabel:`Run` again to try out the question.
 
 If you put ``49`` in the entry box and press :guilabel:`Submit part`, the answer is marked correct; any other number is marked incorrect.
 
@@ -206,7 +206,7 @@ When planning this question, we noted that the student might divide the number o
 If the number of apples per day is not a multiple of seven, this will produce a fraction, which the student should be allowed to enter.
 Tick the :guilabel:`Allow the student to enter a fraction?` box.
 
-Test run your question again. 
+Run your question again. 
 You can click the :guilabel:`Try another question like this one` button to 
 start the question afresh, with a new value of the random variable.
 
@@ -224,7 +224,7 @@ Move to the :guilabel:`Advice` tab, and write:
 
     Chris eats {7*num_apples} apples per week.
 
-Now click :guilabel:`Test Run` again; if you press the :guilabel:`Reveal answers` button at the bottom of the question page, the number input is filled in with the correct answer, and the advice text you wrote is displayed at the bottom.
+Now click :guilabel:`Run` again; if you press the :guilabel:`Reveal answers` button at the bottom of the question page, the number input is filled in with the correct answer, and the advice text you wrote is displayed at the bottom.
 
 .. image:: screenshots/write-question/advice.png
     :alt: The question, after the student has submitted an answer and then revealed 

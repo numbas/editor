@@ -1489,6 +1489,31 @@ Number theory
         * ``factorise(18)`` → ``[1,2]``
         * ``factorise(70)`` → ``[1,0,1,1]``
 
+.. jme:function:: divisors(n)
+   :keywords: divisors, factors, number, factorisation
+
+    Returns the divisors of `n` as a list: positive integers :math:`d` such that :math:`d \| n`.
+
+    **Definitions**:
+        * :data:`number` → :data:`list`
+
+    **Examples**
+        * ``divisors(18)`` → ``[1,2,3,6,9,18]``
+        * ``divisors(100)`` → ``[1,2,4,5,10,20,25,50,100]``
+
+.. jme:function:: proper_divisors(n)
+   :keywords: divisors, factors, number, factorisation
+
+    Returns the proper divisors of `n` as a list: positive integers :math:`d < n` such that :math:`d \| n`.
+    That is, the divisors of `n`, excluding `n` itself.
+
+    **Definitions**:
+        * :data:`number` → :data:`list`
+
+    **Examples**
+        * ``proper_divisors(18)`` → ``[1,2,3,6,9]``
+        * ``proper_divisors(100)`` → ``[1,2,4,5,10,20,25,50]``
+
 .. jme:function:: gamma(x)
     :keywords: number
 
@@ -1873,6 +1898,41 @@ Vector and matrix arithmetic
 
     **Example**:
         * ``sum_cells(matrix([1,2],[3,4]))`` → ``10``
+
+.. jme:function:: augment(m1,m2)
+                  combine_horizontally(m1,m2)
+    :keywords: augmented, combine, horizontally, matrices, matrix
+
+    Combine two matrices horizontally: given a :math:`r_1 \times c_1` matrix ``m1`` and a :math:`r_2 \times c_2` matrix ``m2``, returns a new :math:`\max(r_1,r_2) \times (c_1+c_2)` matrix formed by putting the two matrices side, and padding with zeros where necessary.
+
+    **Definitions**:
+        * :data:`matrix`, :data:`matrix` → :data:`matrix`
+
+    **Example**:
+        * ``augment(id(2), matrix([3],[4],[5]))`` → ``matrix([1,0,3],[0,1,4],[0,0,5])``
+
+.. jme:function:: stack(m1,m2)
+                  combine_vertically(m1,m2)
+    :keywords: stacked, combine, vertically, matrices, matrix
+
+    Combine two matrices vertically: given a :math:`r_1 \times c_1` matrix ``m1`` and a :math:`r_2 \times c_2` matrix ``m2``, returns a new :math:`(r_1 + r_2) \times \max(c_1,c_2)` matrix formed by putting ``m1`` above ``m2``, and padding with zeros where necessary.
+
+    **Definitions**:
+        * :data:`matrix`, :data:`matrix` → :data:`matrix`
+
+    **Example**:
+        * ``stack(id(3), matrix([3,4]))`` → ``matrix([1,0,0],[0,1,0],[0,0,1],[3,4,0])``
+
+.. jme:function:: combine_diagonally(m1,m2)
+    :keywords: stacked, combine, vertically, matrices, matrix
+
+    Combine two matrices diagonally: given a :math:`r_1 \times c_1` matrix ``m1`` and a :math:`r_2 \times c_2` matrix ``m2``, returns a new :math:`(r_1 + r_2) \times (c_1 + c_2)` matrix whose top-left quadrant is ``m1`` and bottom-right quadrant is ``m2``.
+
+    **Definitions**:
+        * :data:`matrix`, :data:`matrix` → :data:`matrix`
+
+    **Example**:
+        * ``combine_diagonally(id(3), matrix([3,4],[5,6]))`` → ``matrix([1,0,0,0,0],[0,1,0,0,0],[0,0,1,0,0],[0,0,0,3,4],[0,0,0,5,6])``
 
 .. _jme-fns-strings:
 

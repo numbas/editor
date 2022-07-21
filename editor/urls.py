@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from .views import project, folder, editoritem, exam, question, HomeView, \
     GlobalStatsView, ExploreView, TermsOfUseView, PrivacyPolicyView, TopSearchView, \
     theme, extension, generic, notification, resource, basket, timeline, \
-    custom_part_type, queue
+    custom_part_type, queue, site_broadcast
 
 urlpatterns = [
 
@@ -31,6 +31,9 @@ urlpatterns = [
     # Explore
 
     url(r'^explore/$', ExploreView.as_view(), name='explore'),
+
+    # Site broadcasts
+    path(r'site-broadcast/new', site_broadcast.CreateView.as_view(), name='site_broadcast_new'),
 
     # Projects
 
@@ -233,6 +236,7 @@ urlpatterns = [
     # Queues
     path('queue/new/', queue.CreateView.as_view(), name='queue_new'),
     path('queue/<pk>/', queue.DetailView.as_view(), name='queue_view'),
+    path('queue/<pk>/complete', queue.CompleteItemsView.as_view(), name='queue_view_complete'),
     path('queue/<pk>/settings/options', queue.UpdateView.as_view(), name='queue_settings_options'),
     path('queue/<pk>/settings/members', queue.ManageMembersView.as_view(), name='queue_settings_members'),
     path('queue/<queue_pk>/settings/add_member', queue.AddMemberView.as_view(), name='queue_settings_add_member'),
@@ -242,6 +246,8 @@ urlpatterns = [
     path('queue-item/<pk>/comment/', queue.CommentView.as_view(), name='queue_entry_comment'),
     path('queue-item/<pk>/edit/', queue.UpdateEntryView.as_view(), name='queue_entry_edit'),
     path('queue-item/<pk>/delete/', queue.DeleteEntryView.as_view(), name='queue_entry_delete'),
+    path('queue-item/<pk>/assign_user/', queue.EntryAssignUserView.as_view(), name='queue_entry_assign_user'),
+    path('queue-item/<pk>/unassign_user/', queue.EntryUnassignUserView.as_view(), name='queue_entry_unassign_user'),
 
     # Notifications
 

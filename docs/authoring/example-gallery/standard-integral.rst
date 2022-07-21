@@ -116,7 +116,7 @@ Finally, in the question's :ref:`Advice <advice>` tab, write a short explanation
 
     \[ \int f(x) \, \mathrm{d}x = \frac{1}{3+1} x^{3+1} + C = \frac{1}{4} x^4 + C \]
 
-Try this question out by clicking :guilabel:`Test run`.
+Try this question out by clicking :guilabel:`Run`.
 
 This question works, but it only ever asks about one function, so isn't a good assessment of the whole table of standard integrals.
 We could randomly choose from 
@@ -161,7 +161,7 @@ Finally, change the advice to::
 
     \[ \int f(x) \, \mathrm{d}x = \simplify[basic]{ 1/({k}+1) * x^({k} + 1)} + C = \simplify{ 1/{k+1} * x^{k+1} + C \]
 
-Try this question out by clicking :guilabel:`Test run`.
+Try this question out by clicking :guilabel:`Run`.
 Confirm that everything works as you'd expect for different values of :math:`k`.
 
 .. note::

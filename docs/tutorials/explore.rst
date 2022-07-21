@@ -21,7 +21,7 @@ Look at published projects
 Click on a project's name to view its homepage.
 
 Click on the :guilabel:`Browse this project's content` button, and have a look at the questions and exams within.
-You can click the :guilabel:`Test run` button (a rightward-pointing "Play" icon) to have a go at an item as if you were a student.
+You can click the :guilabel:`Run` button (a rightward-pointing "Play" icon) to have a go at an item as if you were a student.
 
 .. figure:: browse-project.png
     :alt: Screenshot of a folder in a project. There's a table of items, with play icons next to each name.

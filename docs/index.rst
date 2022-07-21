@@ -78,3 +78,11 @@ If you have any questions, please `email us <mailto:numbas@ncl.ac.uk>`_ or join 
     :maxdepth: 2
 
     server-installation/index
+
+.. toctree::
+    :caption: Development
+    :maxdepth: 2
+
+    development/installation.rst
+    development/runtime.rst
+    development/documentation.rst

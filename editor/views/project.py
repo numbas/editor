@@ -22,7 +22,7 @@ from editor.tables import ProjectTable, EditorItemTable, BrowseProjectTable
 
 class MustBeMemberMixin(RestrictAccessMixin):
     def can_access(self, request):
-        return self.get_object().access.filter(user=request.user).exists()
+        return self.get_project().access.filter(user=request.user).exists()
 
 class MustBeOwnerMixin(RestrictAccessMixin):
     no_access_template_name = 'project/must_be_owner.html'

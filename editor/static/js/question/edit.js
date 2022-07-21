@@ -3836,21 +3836,22 @@ $(document).ready(function() {
                             var out = {script: part.markingScript, error: 'The marking algorithm did not return a result.'};
                         } else {
                             var alternative_used = alternatives_result.best_alternative ? alternatives_result.best_alternative.path : null;
-                            var out = {script: part.markingScript, result: res, marking_result: part.marking_result, marks: part.marks, alternative_used: alternative_used};
+                            var out = {script: part.markingScript, result: res, marking_result: part.marking_result, message_displays: make_message_displays(part.markingFeedback.slice()), marks: part.marks, alternative_used: alternative_used};
                             if(res.state_errors.mark) {
                                 out.error = 'Error when computing the <code>mark</code> note: '+res.state_errors.mark.message;
                             } else if(!res.state_valid.mark) {
                                 out.error = 'This answer is not valid.';
-                                var feedback = compile_feedback(Numbas.marking.finalise_state(res.states.mark), part.marks);
-                                out.warnings = feedback.warnings;
+                                out.warnings = part.warnings;
                             }
                         }
                         mt.last_run(out);
                     } catch(e) {
+                        console.error(e);
                         mt.last_run({error: 'Error marking: '+e.message});
                     }
                 });
             } catch(e) {
+                console.error(e);
                 mt.last_run({error: 'Error marking: '+e.message});
             };
         }
@@ -3868,6 +3869,21 @@ $(document).ready(function() {
                 return this.last_run().error;
             }
         },this);
+
+        this.last_run_warnings = ko.pureComputed(function() {
+            if(!this.last_run()) {
+                return [];
+            }
+            var last_run = this.last_run();
+            if(last_run.warnings !== undefined) {
+                return last_run.warnings;
+            }
+            var marking_result = last_run.marking_result;
+            if(!marking_result) {
+                return [];
+            }
+            return marking_result.warnings;
+        }, this);
 
         // When the script is evaluated, add new notes to the list and update existing ones
         ko.computed(function() {
@@ -3923,15 +3939,25 @@ $(document).ready(function() {
                         this.notes.push(note);
                     }
 
+                    var p = part.marking_test().runtime_part();
                     // Compile feedback messages
-                    var feedback = compile_feedback(Numbas.marking.finalise_state(result.states[x]), last_run.marks);
+                    var messages = [];
+                    var warnings = [];
+                    var credit = 0;
+                    if(p) {
+                        p.restore_feedback();
+                        p.apply_feedback(Numbas.marking.finalise_state(result.states[x]));
+                        messages = p.markingFeedback;
+                        warnings = p.warnings;
+                        credit = p.credit;
+                    }
 
                     // Save the results for this note
                     note.note(script.notes[x]);
                     note.value(result.values[x]);
-                    note.messages(feedback.messages);
-                    note.warnings(feedback.warnings);
-                    note.credit(feedback.credit);
+                    note.messages(messages);
+                    note.warnings(warnings);
+                    note.credit(credit);
                     note.error(result.state_errors[x] ? result.state_errors[x].message : '');
                     note.valid(result.state_valid[x]);
                     note.missing(false);
@@ -3942,7 +3968,7 @@ $(document).ready(function() {
             if(mark_note) {
                 if(marking_result) {
                     mark_note.credit(marking_result.credit);
-                    mark_note.messages(marking_result.markingFeedback.map(function(m){ return m.message }));
+                    mark_note.messages(marking_result.markingFeedback);
                     mark_note.warnings(marking_result.warnings);
                 } else {
                     mark_note.credit(0);
@@ -4059,6 +4085,19 @@ $(document).ready(function() {
 
     }
 
+    function make_message_displays(messages) {
+        return messages.filter(function(action) { return Numbas.util.isNonemptyHTML(action.message) || action.credit!=0; }).map(function(action) {
+            var icons = {
+                'positive': 'glyphicon-ok text-success',
+                'negative': 'glyphicon-remove text-danger',
+                'neutral': '',
+                'invalid': 'glyphicon-exclamation-sign text-warning'
+            }
+            return {credit_change: action.credit_change, message: action.message, icon: icons[action.credit_change], format: action.format || 'string'};
+        });
+    }
+
+
     function MarkingNote(name, in_unit_test) {
         var mn = this;
         this.name = name;
@@ -4076,6 +4115,11 @@ $(document).ready(function() {
 
         this.value = ko.observable(null);
         this.messages = ko.observableArray([]);
+        
+        this.message_displays = ko.pureComputed(function() {
+            return make_message_displays(this.messages());
+        },this);
+
         this.warnings = ko.observableArray([]);
         this.error = ko.observable('');
         this.valid = ko.observable(true);
@@ -4094,6 +4138,9 @@ $(document).ready(function() {
             valid: ko.observable(true),
             credit: ko.observable(0)
         };
+        this.expected.message_displays = ko.pureComputed(function() {
+            return make_message_displays(this.expected.messages());
+        },this);
         this.expected.computedValue = ko.pureComputed(function() {
             try {
                 return Numbas.jme.builtinScope.evaluate(this.expected.value());
@@ -4131,7 +4178,11 @@ $(document).ready(function() {
             } catch(e) {
                 differentValue = false;
             }
-            var differentMessages = this.messages().join('\n') != this.expected.messages().join('\n');
+            var expected_messages = this.expected.messages();
+            var differentMessages = this.messages().find(function(action,i) { 
+                var expected_action = expected_messages[i];
+                return expected_action.credit_change != action.credit_change || expected_action.message != action.message;
+            });
             var differentWarnings = this.warnings().join('\n') != this.expected.warnings().join('\n');
             var differentError = this.error() != this.expected.error();
             var differentValidity = this.valid() != this.expected.valid();
@@ -4173,101 +4224,6 @@ $(document).ready(function() {
         this.matchesExpected = ko.pureComputed(function() {
             return !this.noMatchReason();
         },this);
-    }
-
-    function compile_feedback(feedback, maxMarks) {
-        var valid = true;
-        var part = this;
-        var end = false;
-        var states = feedback.states.slice();
-        var i=0;
-        var lifts = [];
-        var scale = 1;
-        maxMarks = maxMarks===undefined ? 0 : maxMarks;
-
-        var messages = [];
-        var warnings = [];
-        var credit = 0;
-
-        function addCredit(change,message) {
-            if(change<-credit) {
-                change = -credit;
-            }
-            credit += change;
-            change *= maxMarks;
-
-            var message = message || '';
-            if(Numbas.util.isNonemptyHTML(message)) {
-                var marks = Math.abs(change);
-
-                if(change>0)
-                    message+='\n\n'+R('feedback.you were awarded',{count:marks});
-                else if(change<0)
-                    message+='\n\n'+R('feedback.taken away',{count:marks});
-            }
-            if(Numbas.util.isNonemptyHTML(message)) {
-                messages.push(message);
-            }
-        }
-
-        while(i<states.length) {
-            var state = states[i];
-            switch(state.op) {
-                case 'set_credit':
-                    addCredit(scale*state.credit-credit,state.message);
-                    break;
-                case 'multiply_credit':
-                    addCredit((scale*state.factor-1)*credit,state.message);
-                    break;
-                case 'add_credit':
-                    addCredit(scale*state.credit, state.message);
-                    break;
-                case 'sub_credit':
-                    addCredit(-scale*state.credit, state.message);
-                    break;
-                case 'warning':
-                    warnings.push(state.message);
-                    break;
-                case 'feedback':
-                    messages.push(state.message);
-                    break;
-                case 'end':
-                    if(lifts.length) {
-                        while(i+1<states.length && states[i+1].op!='end_lift') {
-                            i += 1;
-                        }
-                    } else {
-                        end = true;
-                        if(state.invalid) {
-                            valid = false;
-                        }
-                    }
-                    break;
-                case 'start_lift':
-                    lifts.push({credit: this.credit,scale:scale});
-                    this.credit = 0;
-                    scale = state.scale;
-                    break;
-                case 'end_lift':
-                    var last_lift = lifts.pop();
-                    var lift_credit = credit;
-                    credit = last_lift.credit;
-                    addCredit(lift_credit*last_lift.scale);
-                    scale = last_lift.scale;
-                    break;
-            }
-            i += 1;
-            if(end) {
-                break;
-            }
-        }
-
-        return {
-            valid: valid,
-            credit: credit,
-            messages: messages,
-            warnings: warnings
-        }
     }
 
     function PartType(part,data) {

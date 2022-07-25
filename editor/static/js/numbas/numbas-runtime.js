@@ -6282,7 +6282,7 @@ newBuiltin('decimal',[TString],TDecimal,function(x){return new Decimal(x)});
 newBuiltin('+u', [TDecimal], TDecimal, function(a){return a;});
 newBuiltin('-u', [TDecimal], TDecimal, function(a){ return a.negated(); });
 newBuiltin('+', [TDecimal,TDecimal], TDecimal, function(a,b){ return a.plus(b); });
-newBuiltin('+', [TNum,TDecimal], TDecimal, function(a,b){ return (new math.ComplexDecimal(new Decimal(a))).plus(b); });
+newBuiltin('+', [TNum,TDecimal], TDecimal, function(a,b){ return math.ensure_decimal(a).plus(b); });
 newBuiltin('-', [TDecimal,TDecimal], TDecimal, function(a,b){ return a.minus(b); });
 newBuiltin('-', [TNum,TDecimal], TDecimal, function(a,b){ return (new math.ComplexDecimal(new Decimal(a))).minus(b); });
 newBuiltin('*', [TDecimal,TDecimal], TDecimal, function(a,b){ return a.times(b); });
@@ -9822,9 +9822,6 @@ JMEifier.prototype = {
             }
         } else if(n instanceof Decimal) {
             var out = n.toString();
-            if(n.absoluteValue().toNumber()<Infinity && ((n.isInteger() && n.absoluteValue().lt(Number.MAX_SAFE_INTEGER)) || n.decimalPlaces()<10)) {
-                return out;
-            }
             if(out.length>20) {
                 out = n.toExponential().replace(/e\+0$/,'');
             }
@@ -12678,6 +12675,10 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         function doToken(token) {
             if(jme.isType(token,'html')) {
                 token = jme.castToType(token,'html');
+                if(token.value.numbas_embedded) {
+                    throw(new Numbas.Error('jme.subvars.html inserted twice'))
+                }
+                token.value.numbas_embedded = true;
                 return token.value;
             } else if(jme.isType(token,'string')) {
                 token = jme.castToType(token,'string');
@@ -12697,10 +12698,8 @@ jme.variables = /** @lends Numbas.jme.variables */ {
             }
         }
         var out = [];
-        for(var i=0; i<bits.length; i++)
-        {
-            if(i % 2)
-            {
+        for(var i=0; i<bits.length; i++) {
+            if(i % 2) {
                 try {
                     var tree = jme.compile(bits[i]);
                 } catch(e) {
@@ -12711,21 +12710,17 @@ jme.variables = /** @lends Numbas.jme.variables */ {
                     throw(new Numbas.Error('jme.subvars.null substitution',{str:bits[i]}));
                 }
                 v = doToken(v);
-            }
-            else
-            {
+            } else {
                 v = bits[i];
             }
             if(typeof v == 'string') {
-                if(out.length>0 && typeof out[out.length-1]=='string')
+                if(out.length>0 && typeof out[out.length-1]=='string') {
                     out[out.length-1]+=v;
-                else
+                } else {
                     out.push(v);
+                }
             }
             else {
-                if($(v).parent().length>0) {
-                    throw(new Numbas.Error('jme.subvars.html inserted twice'))
-                }
                 out.push(v);
             }
         }
@@ -14356,7 +14351,7 @@ if(res) { \
                     p.store.storeStagedAnswer(p);
                 })
             }
-            this.events.trigger('storeAnswer');
+            this.events.trigger('storeAnswer', answer, dontStore);
         }
     },
     /** Call when the student changes their answer, or submits - update {@link Numbas.parts.Part.isDirty}.
@@ -16483,7 +16478,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             if(q.partsMode=='explore') {
                 q.setCurrentPart(q.getPart(qobj.currentPart));
             }
-            this.signals.trigger('resume');
+            q.signals.trigger('resume');
         });
     },
     /** XML definition of this question.

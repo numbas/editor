@@ -1150,8 +1150,8 @@ Number operations
         * :data:`string`, :data:`list` of :data:`string` → :data:`decimal`
 
     **Examples**:
-        * ``parsedecimal("1 234,567","si-fr")`` → ``1234.567``
-        * ``parsedecimal("1.001",["si-fr","eu"])`` → ``1001``
+        * ``parsedecimal("1 234,567","si-fr")`` → ``dec("1234.567")``
+        * ``parsedecimal("1.001",["si-fr","eu"])`` → ``dec("1001")``
 
 .. jme:function:: parsedecimal_or_fraction(string,style)
     :keywords: parse, convert, number, decimal, string, fraction
@@ -1162,7 +1162,7 @@ Number operations
         * :data:`string`, :data:`string` → :data:`number`
 
     **Example**:
-        * ``parsedecimal_or_fraction("1/2")`` → ``0.5``
+        * ``parsedecimal_or_fraction("1/2")`` → ``dec("0.5")``
 
 .. jme:function:: tobinary(n)
     :keywords: convert, number, binary, string, base

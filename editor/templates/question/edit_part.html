@@ -107,8 +107,8 @@
                 <p class="alert alert-danger" data-bind="html: markingScriptError, visible: markingScriptError" aria-live="polite"></p>
             </div>
         </form>
-
-        <hr>
+    </section>
+    <section class="tab-pane" data-bind="activeIf: ko.unwrap(tabber.currentTab().id)=='testing'">
         <h4>Test that the marking algorithm works</h4>
 
         <div class="help-block">

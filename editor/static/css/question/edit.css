@@ -73,7 +73,7 @@
     margin-left: 1em;
 }
 
-.part-tabs > li:not(.more-important):not(.active) > a {
+.part-tabs > li:not(.in-use):not(.more-important):not(.active) > a {
     color: hsl(204, 40%, 55%);
 }
 

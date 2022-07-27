@@ -3113,8 +3113,12 @@ $(document).ready(function() {
             var marking_algorithm_tab_in_use = ko.pureComputed(function() {
                 return this.use_custom_algorithm();
             },this);
+            var testing_tab_in_use = ko.pureComputed(function() {
+                return this.unit_tests().length > 0;
+            },this);
             if(this.type().has_marks) {
                 tabs.push(new Editor.Tab('marking-algorithm','Marking algorithm','ok',{in_use: marking_algorithm_tab_in_use}));
+                tabs.push(new Editor.Tab('testing','Testing','check',{in_use: testing_tab_in_use}));
             }
 
             tabs = tabs.concat(this.type().tabs);

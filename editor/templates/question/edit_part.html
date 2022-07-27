@@ -344,7 +344,9 @@
             <p>No unit tests have been defined. Enter an answer above, select one or more notes, and click the "Create a unit test" button.</p>
         </div>
         <div data-bind="fadeVisible: unit_tests().length>0">
-            <p>The following tests check that the question is behaving as desired.</p>
+            <div class="help-block">
+                <p>The following tests check that the question is behaving as desired.</p>
+            </div>
             <button class="btn btn-default" data-bind="click: run_all_tests"><span class="glyphicon glyphicon-play"></span> Run all unit tests</button>
         </div>
         <div class="panel-group unit-tests">

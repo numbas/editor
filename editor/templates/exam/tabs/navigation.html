@@ -1,0 +1,30 @@
+{% load can_edit %}
+{% load helplink %}
+{% load editor_controls %}
+
+<section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='navigation'}">
+    <form class="form-horizontal" data-bind="submit: Editor.noop">
+        {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
+        {% property 'startpassword' 'Password to begin the exam' help_url='exam/reference.html#term-Password-to-begin-the-exam' %}
+        {% booleanproperty 'allowregen' 'Allow user to regenerate questions?' help_url='exam/reference.html#term-Allow-user-to-regenerate-questions' %}
+        {% selectproperty 'navigatemode' 'Question navigation mode' options='navigateModeOptions' options_text='niceName' help_url='exam/reference.html#term-Question-navigation-mode' %}
+        <div data-bind="fadeVisible: navigatemode().name=='sequence'">
+            {% booleanproperty 'reverse' 'Allow move to previous question?' help_url='exam/reference.html#term-Allow-move-to-previous-question' %}
+            {% booleanproperty 'browse' 'Allow to jump to any question?' help_url='exam/reference.html#term-Allow-jump-to-any-question' %}
+        </div>
+        {% booleanproperty 'allowsteps' 'Enable steps?' help_url='exam/reference.html#term-Enable-steps' %}
+        {% booleanproperty 'showfrontpage' 'Show front page?' help_url='exam/reference.html#term-Show-front-page' %}
+        <div data-bind="fadeVisible: navigatemode().name=='sequence'">
+            {% selectproperty 'showresultspage' 'Reveal answers to all questions' options='showResultsPageOptions' options_text='niceName' help_url='exam/reference.html#term-Reveal-answers-to-all-questions' %}
+        </div>
+        {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='exam/reference.html#term-Confirm-before-leaving-the-exam-while-it-s-running' %}
+        <div data-bind="fadeVisible: navigatemode().name=='sequence' || navigatemode().name=='diagnostic'">
+            {% exam_event 'onleave' 'On leaving a question' help_url='exam/reference.html#term-On-leaving-a-question' %}
+        </div>
+        {% endwith %}
+    </form>
+
+    {% if editable %}
+    <editor-pager params="editor: $root, previousTab: 'display', nextTab: 'timing', task_group: 'navigation'"></editor-pager>
+    {% endif %}
+</section>

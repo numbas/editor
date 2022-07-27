@@ -1,0 +1,38 @@
+{% load can_edit %}
+{% load helplink %}
+{% load editor_controls %}
+
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.mainTabber.currentTab().id)=='resources'}">
+    {% if editable %}
+    <form class="alert alert-info" data-bind="fileupload: resources" data-url="{% url 'upload_resource' %}">
+        {% csrf_token %}
+        <h4 class="control-label">Upload a file</h4>
+        <p><input id="fileupload" type="file" name="files[]"></p>
+    </form>
+    {% endif %}
+    <ul class="media-list" data-bind="foreach: resources">
+        <li class="media resource">
+            {% if editable %}<button type="button" class="pull-left btn btn-lg btn-link text-warning delete" data-bind="click: $root.deleteResource" title="Delete this resource"><span class="glyphicon glyphicon-remove"></span></button>{% endif %}
+            <div class="media-left">
+                <div data-bind="visible: progress()<1" class="progress progress-striped active">
+                    <div class="bar" data-bind="style: {width: progress()+'%'}"></div>
+                </div>
+                <div data-bind="visible: progress()==1">
+                    <a data-bind="attr: {href: url}" target="_blank"><img class="thumbnail" data-bind="if: filetype()=='img', attr: {src: url, title: name, alt: alt_text}"/></a>
+                </div>
+            </div>
+            <div class="media-body">
+                <form class="form" data-bind="submit: Editor.noop">
+                    {% with form_label_class="" form_control_class="" %}
+                        {% property "'resources/'+name()" "URL" disable=True %}
+                        <!-- ko if: filetype()=='img' -->
+                        {% property 'alt_text' 'Text alternative' placeholder="'Describe this image for someone who can\'t see it'" %}
+                        <!-- /ko -->
+                    {% endwith %}
+                </form>
+            </div>
+        </li>
+    </ul>
+
+    {{resource_form}}
+</section>

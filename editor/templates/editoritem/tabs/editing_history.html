@@ -1,0 +1,103 @@
+{% load user_link %}
+{% load links %}
+{% load stamp %}
+{% load humanize %}
+{% load can_edit %}
+{% load helplink %}
+{% load editor_controls %}
+
+<section class="editing-history tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='history'}">
+    <div class="contributors">
+        <h3>Contributors</h3>
+        <ul class="list-inline">
+            {% for contributor in object.editoritem.contributors.all %}
+            <li class="contributor">
+                {% contributor_thumbnail contributor 40 36 link=True %}
+                {% if contributor.user %}
+                    {% user_link contributor.user %}
+                {% else %}
+                    <a class="user-link" target="_blank" href="{{contributor.profile_url}}">{{contributor.name}}</a>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    {% if individual_stamps_in_project or individual_stamps_outside_project %}
+    <h3>Feedback</h3>
+
+    {% if individual_stamps_in_project %}
+    <p>From users who are members of {% project_link object.editoritem.project %}:</p>
+    <table class="individual-feedback">
+        <tbody>
+            {% for stamp in individual_stamps_in_project %}
+            <tr>
+                <td>
+                    {% user_thumbnail stamp.user %}
+                    {% user_link stamp.user %}
+                </td>
+                <td>said</td>
+                <td>{% stamp stamp.status %}</td>
+                <td>{{stamp.date|naturaltime}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </table>
+    {% endif %}
+
+    {% if individual_stamps_outside_project %}
+    <p>From users who are not members of {% project_link object.editoritem.project %}:</p>
+    <table class="individual-feedback">
+        <tbody>
+            {% for stamp in individual_stamps_outside_project %}
+            <tr>
+                <td>
+                    {% user_thumbnail stamp.user %}
+                    {% user_link stamp.user %}
+                </td>
+                <td>said</td>
+                <td>{% stamp stamp.status %}</td>
+                <td>{{stamp.date|naturaltime}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </table>
+    {% endif %}
+    {% endif %}
+
+    <h3>History</h3>
+
+    <div data-bind="visible: !commentwriter.writingComment() && !restorepointwriter.writingComment()">
+        <button class="btn btn-primary" data-bind="click: commentwriter.writingComment" type="button"><span class="glyphicon glyphicon-comment"></span> Write a comment</button>
+        <button class="btn btn-success" data-bind="click: restorepointwriter.writingComment" type="button"><span class="glyphicon glyphicon-save"></span> Set a checkpoint</button>
+    </div>
+    <div class="timeline-write-comment" data-bind="with: commentwriter">
+        <form action="{% url 'comment_on_'|add:item_type object.pk object.editoritem.slug %}" data-bind="fadeVisible: writingComment, submit: submitComment">
+            <h4>Comment</h4>
+            <div data-bind="writemaths: commentText, editImmediately: true"></div>
+            <div class="buttons">
+                <button type="Submit" class="btn btn-primary" data-bind="attr: {disabled: commentIsEmpty}">Submit</button>
+                <button type="button" class="btn btn-default" data-bind="click: cancelComment">Cancel</button>
+            </div>
+        </form>
+    </div>
+    <div class="timeline-write-comment" data-bind="with: restorepointwriter">
+        <form action="{% url 'set_restore_point_on_'|add:item_type object.pk object.editoritem.slug %}" data-bind="fadeVisible: writingComment, submit: submitComment">
+            <h4>Checkpoint description</h4>
+            <div data-bind="writemaths: commentText, editImmediately: true"></div>
+            <p class="help-block">Describe what's changed since the last checkpoint.</p>
+            <div class="buttons">
+                <button type="Submit" class="btn btn-primary" data-bind="attr: {disabled: commentIsEmpty}">Submit</button>
+                <button type="button" class="btn btn-default" data-bind="click: cancelComment">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="timeline">
+        {% with current_timeline=object %}
+        {% for item in object.editoritem.timeline.all %}
+            {% include item.object.timelineitem_template %}
+        {% endfor %}
+        {% endwith %}
+    </div>
+</section>

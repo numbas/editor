@@ -1,0 +1,20 @@
+{% load can_edit %}
+{% load helplink %}
+{% load editor_controls %}
+
+<section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='statement'}, variableReferenceLandmark: {kind: 'tab', tab: 'statement'}">
+    <div class="form-group">
+        <label class="label-block">
+            <span class="label-text">Question statement</span>
+            <div id="statement-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: statement, preambleCSS: $root.preamble.css,, tinymce_plugins: ['jmevisible','jmepreview'], variableReferrer: {value: statement, description: 'Statement', kind: 'html'}"></div>
+        </label>
+        <p class="help-block">
+            {% helplink 'question/reference.html#statement' subject='the question statement' %}
+            Give any introductory information the student needs. 
+        </p>
+    </div>
+
+    {% if editable %}
+    <editor-pager params="visible: !$root.published(), editor: $root, nextTab: 'parts', task_group: 'statement'"></editor-pager>
+    {% endif %}
+</section>

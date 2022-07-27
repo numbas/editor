@@ -1,0 +1,64 @@
+{% load links %}
+{% load user_link %}
+{% load sanitizer %}
+{% load can_edit %}
+{% load helplink %}
+{% load editor_controls %}
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.mainTabber.currentTab().id)=='network'}">
+    {% if object.editoritem.network|length == 1 %}
+        <p>There is only one version of this {{item_type}}.<p>
+    {% else %}
+        <table class="network table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th><span class="glyphicon glyphicon-comment"></span> Status</th>
+                    <th><span class="glyphicon glyphicon-user"></span> Author</th>
+                    <th><span class="glyphicon glyphicon-time"></span> Last Modified</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ei2 in object.editoritem.network %}
+                <tr class="network-item{% if ei2 == object.editoritem %} active{% endif %}">
+                    <td>{% if ei2 != object.editoritem %}{% editoritem_link ei2.rel_obj %}{% else %}{{ei2.name}}{% endif %}</td>
+                    <td>{% include "stamp_column.html" with record=ei2 %}</td>
+                    <td>{% user_link ei2.author %}</td>
+                    <td>{{ ei2.last_modified|date:"d/m/Y H:i" }}</td>
+
+                    <td class="admin">
+                        {% if ei2 != object.editoritem %}
+                        <a class="btn btn-link" href="{% editoritem_url 'preview' ei2.rel_obj %}" target="_blank" title="Preview this version"><span class="glyphicon glyphicon-play"></span></a>
+                        <a class="btn btn-link" href="{% url 'editoritem_compare' object.editoritem.pk ei2.pk %}" title="Compare with this version"><span class="glyphicon glyphicon-transfer"></span></a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if editable %}
+    {% with object.editoritem.incoming_pull_requests.open as pull_requests %}
+    {% if pull_requests.exists %}
+    <h2>Request{{pull_requests.count|pluralize}} to merge</h2>
+    <ul>
+        {% for pr in pull_requests %}
+        <li class="pull-request">
+            <p>{% user_link pr.owner %} would like you to replace this {{item_type}} with {% editoritem_link pr.source.rel_obj %}.</p>
+            <p>Here's what's changed:</p>
+            <blockquote class="comment">{{ pr.comment|strip_html|safe }}</blockquote>
+            <div class="responses">
+                <form method="post" action="{% url 'pullrequest_close' pr.pk %}">{% csrf_token %}
+                    <button type="submit" name="action" class="btn btn-danger accept-pr" value="accept" title="Replace this {{item_type}} with the proposed version">Accept</button>
+                    <button type="submit" name="action" class="btn btn-default accept-pr" value="reject" title="Close this request and keep this {{item_type}} as it is">Reject</button>
+                </form>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+    {% endif %}
+</section>
+

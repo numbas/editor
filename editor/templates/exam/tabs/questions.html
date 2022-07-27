@@ -1,0 +1,198 @@
+{% load can_edit %}
+{% load helplink %}
+{% load editor_controls %}
+
+<section class="tab-pane questions-tab" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='questions'}">
+    <div class="questions row">
+        <div class="col-sm-12 col-md-8 col-lg-8" data-bind="visible: question_groups().length==0">
+            <p class="nothing-here">No question groups have been defined.</p>
+        </div>
+        <div class="col-sm-12 col-md-8 col-lg-8 question-group">
+            <!-- ko if: question_view()=='add_question' -->
+            <div class="add-questions">
+                <h3>
+                    Add a question to <strong data-bind="latex: name"></strong>
+                    <button class="btn btn-sm btn-link" type="button" data-bind="click: cancel_add_questions">Cancel</button>
+                </h3>
+                <ul class="nav nav-tabs" data-bind="foreach: questionTabs">
+                    <li data-bind="css: {active: $root.currentQuestionTab() == $data}">
+                        <a href="#" data-bind="click: $root.currentQuestionTab, text: title"></a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentQuestionTab().id)=='mine'}">
+                        <ul class="results tab-pane" data-bind="
+                            template: {
+                                name: 'questionResult',
+                                foreach: recentQuestions,
+                            }
+                        "></ul>
+                    </div>
+                    <div class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentQuestionTab().id)=='basket'}">
+                        <ul class="results tab-pane" data-bind="
+                            template: {
+                                name: 'questionResult',
+                                foreach: basketQuestions,
+                            }
+                        "></ul>
+                        <div class="nothing-here" data-bind="visible: basketQuestions().length==0">
+                            <p>There's nothing in your basket at the moment.</p>
+                            <p><a target="_blank" href="{% url 'search' %}">Search for questions you'd like to use</a>, and click on the basket icon. They'll show up here so you can easily add them to this exam.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /ko -->
+
+
+            <!-- ko if: $root.question_view()=='groups' -->
+            <div class="panel panel-info" data-bind="with: current_question_group">
+                <div class="panel-heading clearfix">
+                    <!-- ko if: $root.navigatemode().change_question_groups -->
+                    <form class="form-inline" data-bind="submit: Editor.noop">
+                        <div>
+                            <label>Group name: <input {% if not editable %}disabled{% endif %} class="form-control group-name" data-bind="textInput: name"></label>
+                            <span class="controls pull-right">
+                              {% if editable %}
+                                <button class="delete btn btn-link btn-lg" title="Remove this group of questions" data-bind="visible: $parent.question_groups().length>0, click: remove"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                              {% endif %}
+                            </span>
+                        </div>
+                    </form>
+                    <!-- /ko -->
+                    <!-- ko if: !$root.navigatemode().change_question_groups -->
+                    <h4><span data-bind="latex: name"></span><span data-bind="if: $root.navigatemode().name=='diagnostic'"><button class="btn btn-link" data-bind="click: edit_topic" alt="Edit this topic"><span class="glyphicon glyphicon-pencil text-success"></span></button></h4>
+                    <!-- /ko -->
+                </div>
+                <div class="panel-body">
+                    <form class="form-inline" data-bind="submit: Editor.noop">
+                        <div data-bind="visible: questions().length>1">
+                            {% with form_label_class='' form_control_class='' %}
+                            <div class="form-group" data-bind="fadeVisible: $root.navigatemode().name!='diagnostic'">
+                                <label class="">
+                                    <div class="control-label">Questions to use {% helplink 'exam/reference.html#term-Questions-to-use' %}</div>
+                                    <select class="form-control" data-bind="options: pickingStrategies, optionsText: 'niceName', value: pickingStrategy" {% if not editable %}disabled{% endif %}></select>
+                                </label>
+                            </div>
+                            <span data-bind="visible: pickingStrategy().name=='random-subset'">
+                                {% property 'pickQuestions' 'Number of questions to choose' type='number' min=1 max='questions().length' help_url='exam/reference.html#term-Number-of-questions-to-choose' %}
+                            </span>
+                            {% endwith %}
+                        </div>
+                    </form>
+
+                    <ul class="list-group" data-bind="
+                        visible: questions().length,
+                        sortable: {
+                        foreach: questions,
+                        options: {handle: '.handle', group: 'questions'}
+                        }
+                        ">
+                        <li class="question list-group-item">
+                            <span role="button" tabindex="0" class="handle btn btn-link btn-lg" data-bind="visible: item_json.editable"><span class="glyphicon glyphicon-move"></span></span>
+                            <div class="controls">
+                                <a class="btn btn-link" data-bind="attr:{href: url}" target="_blank" title="Edit this question"><span class="glyphicon glyphicon-pencil"></span></a>
+                                <a class="preview btn btn-link" data-bind="attr: {href: previewURL()}" target="_blank" title="Preview this question"><span class="glyphicon glyphicon-play text-success"></span></a>
+                                <button type="button" class="copy btn btn-link" data-bind="click:replaceWithCopy, visible: item_json.editable" title="Replace this question with a copy"><span class="glyphicon glyphicon-duplicate text-warning"></span></button>
+                                <button class="btn btn-link btn-sm basket add-to-basket" title="Add this to your basket" data-bind="attr: {'data-question-id': id}"><span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span></button>
+                                <button type="button" class="delete btn btn-link" data-bind="click:remove, visible: item_json.editable" title="Remove this question from the exam"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                            </div>
+                            <div class="title">
+                                <span>
+                                    <!-- ko if: $root.navigatemode().number_questions -->
+                                        <strong class="number" data-bind="text: number()===undefined ? '' : number()+'.'"></strong>
+                                    <!-- /ko -->
+                                    <!-- ko if: !$root.navigatemode().edit_question_names -->
+                                        <a data-bind="attr:{href: url}, latex: name" target="_blank"></a>
+                                    <!-- /ko -->
+                                    <!-- ko if: $root.navigatemode().edit_question_names -->
+                                        <input class="form-control name" data-bind="textInput: displayName">
+                                    <!-- /ko -->
+                                </span>
+                                <span class="label label-default stamp" data-bind="visible: current_stamp, text: current_stamp_display, attr: {'data-stamp':current_stamp()}"></span>
+                            </div>
+                            <div class="description" data-bind="visible: description().length>0, latex: description"></div>
+                            <!-- ko if: variable_overrides().length>0 -->
+                            <table class="variable-overrides table">
+                                <thead>
+                                    <th>Variable</th>
+                                    <th>Value</th>
+                                    <th>Description</th>
+                                </thead>
+                                <tbody data-bind="foreach: variable_overrides">
+                                    <tr>
+                                        <td><span data-bind="text: name" class="monospace"></span></td>
+                                        <td><input class="form-control monospace" data-bind="textInput: definition, attr: {placeholder: original_definition}"></td>
+                                        <td data-bind="latex: description"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <!-- /ko -->
+                        </li>
+                    </ul>
+                    <p class="nothing-here" data-bind="visible: questions().length==0">There are no questions in this group.</p>
+                </div>
+                <div class="panel-body empty-receiver" data-bind="visible: questions().length==0, sortable: {
+                    foreach: $data.receivedQuestions, 
+                    options: {
+                    group: 'questions'
+                    }
+                    }">
+                    <span data-bind="text: $data.name"></span>
+                </div>
+                {% if editable %}
+                <div class="panel-footer">
+                    <button class="btn btn-primary btn-block" data-bind="click: add_questions"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: questions().length==0 ? 'Add a question to this group' : 'Add another question to this group'"></span></button>
+                </div>
+                {% endif %}
+            </div>
+            <!-- /ko -->
+        </div>
+
+        <div class="col-sm-12 col-md-4 col-lg-4 question-groups">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h4 class="panel-title">Question groups</h4>
+                </div>
+                <div class="panel-body">
+                    <form class="form-horizontal" data-bind="submit: Editor.noop">
+                        {% with form_label_class='col-sm-8' form_control_class='col-sm-4' %}
+                            {% booleanproperty 'showQuestionGroupNames' 'Show group names to student?' help_url='exam/reference.html#term-Show-group-names-to-student' %}
+                            <div data-bind="visible: question_groups().length>1">
+                                {% booleanproperty 'shuffleQuestionGroups' 'Shuffle question groups?' help_url='exam/reference.html#term-Shuffle-question-groups' %}
+                            </div>
+                        {% endwith %}
+                    </form>
+                </div>
+                
+                <div class="list-group" data-bind="
+                    visible: question_groups().length,
+                    sortable: {
+                        foreach: question_groups,
+                        options: {handle: '.handle-grp', group: 'question_groups'}
+                    }
+                ">
+                    <a href="#" role="button" tabindex="0" class="list-group-item handle-grp question-group" data-bind="click: $parent.current_question_group, css: {active: $data==$parent.current_question_group()}">
+                        <strong data-bind="text: name"></strong>
+                        <span class="num-questions" data-bind="visible: questions().length>0, text: num_questions_text"></span>
+                        <ul class="questions" data-bind="sortable: {
+                            foreach: questions,
+                            options: {group: 'questions'}
+                        }">
+                        </ul>
+                    </a>
+                </div>
+
+                {% if editable %}
+                <div class="panel-footer" data-bind="fadeVisible: navigatemode().name!='diagnostic'">
+                    <button class="btn btn-primary btn-block" data-bind="click: addQuestionGroup"><span class="glyphicon glyphicon-plus"></span> Add another question group</button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if editable %}
+    <editor-pager params="editor: $root, nextTab: 'display', task_group: 'questions'"></editor-pager>
+    {% endif %}
+</section>

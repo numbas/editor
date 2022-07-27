@@ -1,0 +1,20 @@
+{% load can_edit %}
+{% load helplink %}
+{% load editor_controls %}
+
+<section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='advice'}">
+    <div class="form-group">
+        <label class="label-block">
+            <span class="label-text">Advice</span>
+            <div id="advice-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: advice, preambleCSS: $root.preamble.css,, tinymce_plugins: ['jmevisible','jmepreview']"></div>
+        </label>
+        <p class="help-block">
+            {% helplink 'question/reference.html#advice' subject='the advice section' %}
+            Give a worked solution to the whole question. 
+        </p>
+    </div>
+
+    {% if editable %}
+    <editor-pager params="visible: !$root.published(), editor: $root, previousTab: 'variables', nextTab: 'settings', task_group: 'advice'"></editor-pager>
+    {% endif %}
+</section>

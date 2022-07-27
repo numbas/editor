@@ -1,0 +1,278 @@
+{% load can_edit %}
+{% load helplink %}
+{% load editor_controls %}
+
+<section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='extensions'}">
+    <div class="container-fluid">
+        <nav class="navbar navbar-blank">
+            <ul class="nav nav-tabs extension-tabs" data-bind="foreach: extensionTabs.tabs">
+                <li data-bind="css: {active: ko.unwrap($parent.extensionTabs.currentTab().id) == $data.id, 'more-important': $data.more_important, 'in-use': $data.in_use}">
+                    <a href="#" data-bind="click: $parent.extensionTabs.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> <span class="hidden-sm" data-bind="text: title"></span></a>
+                </li>
+            </ul>
+        </nav>
+        <div class="tab-content">
+            <section class="tab-pane" data-bind="activeIf: ko.unwrap(extensionTabs.currentTab().id)=='extensions'">
+                <p class="help-block">
+                    {% helplink 'question/reference.html#extensions' subject='extensions' %}
+                    Select extensions to use in this question.
+                </p>
+                <ul class="extensions" data-bind="foreach: extensions">
+                    <li class="extension" data-bind="css: {error: error, 'text-warning': error}">
+                        <label>
+                            <span class="checkbox"><input type="checkbox" data-bind="checked: used_or_required, disable: !item_json.editable || required() || error(), attr: { title: required() ? 'This extension is required by one or more question parts' : '' }"></span>
+                            <span data-bind="text:name"></span> 
+                            <a data-bind="if: url, attr: {href:url, title: 'Documentation on the '+name+' extension'}" target="_blank"><small class="glyphicon glyphicon-book"></small></a>
+                            {% if not user.is_anonymous %}<a data-bind="if: author=={{user.pk}}, attr: {href: edit_url, title: 'Edit the '+name+' extension'}" target="_blank"><small class="glyphicon glyphicon-pencil"></small></a>{% endif %}
+                            <span class="text-warning" data-bind="fadeVisible: loading">Loading...</span>
+                        </label>
+                        <div class="text-warning" data-bind="fadeVisible: error">
+                            There was an error loading this extension.
+                        </div>
+                    </li>
+                </ul>
+                {% if editable and not user.is_anonymous %}
+                <p>
+                    <a target="_blank" href="{% url 'extension_list_profile' user.pk %}"><span class="glyphicon glyphicon-wrench"></span> Your extensions</a>
+                </p>
+                {% endif %}
+            </section>
+            <section class="tab-pane" data-bind="activeIf: ko.unwrap(extensionTabs.currentTab().id)=='rulesets'">
+                <p class="help-block">
+                    {% helplink 'question/reference.html#rulesets' subject='rulesets' %}
+                    Define rulesets for simplification and display of mathematical expressions.
+                </p>
+                <ul class="list-group">
+                    <!-- ko foreach: {data: rulesets, afterAdd: Editor.afterAdd} -->
+                    <li class="list-group-item ruleset">
+                        {% if editable %}<button type="button" class="pull-right btn btn-link btn-sm" data-bind="click:remove" title="Delete this ruleset"><span class="glyphicon glyphicon-remove"></span></button>{% endif %}
+                        <div class="form-group">
+                            <label class="label-block">
+                                <span class="label-text">Name</span>
+                                <input {% if not editable %}disabled{% endif %} type="text" placeholder="Name" class="name form-control" data-bind="textInput: name"/>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="label-block">
+                                <span class="label-text">Definition</span>
+                                <listbox params="items: sets{% if not editable %}, disabled: true{% endif %}"></listbox>
+                            </label>
+                        </div>
+                    </li>
+                    <!-- /ko -->
+                </ul>
+                {% if editable %}
+                <p>
+                    <button type="button" class="btn btn-primary" data-bind="click:addRuleset"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></span></button>
+                </p>
+                {% endif %}
+            </section>
+            <section class="tab-pane" data-bind="activeIf: ko.unwrap(extensionTabs.currentTab().id)=='functions'">
+                <div class="panel-group functions" role="tablist">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-sm-12 col-md-3 col-lg-2" data-bind="visible: parts().length>0">
+                                <div class="panel panel-info functions">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title">Functions</h3>
+                                    </div>
+                                    <div class="list-group">
+                                        <div data-bind="sortable: {
+                                            foreach: functions,
+                                            options: {
+                                                group: 'functions',
+                                                handle: '.root'
+                                            }
+                                        }">
+                                            <a role="button" class="list-group-item function root" data-bind="
+                                                click: $parent.currentFunction, 
+                                                css: {
+                                                    active: $data==$parent.currentFunction()
+                                                }
+                                            ">
+                                                <strong data-bind="text: displayName"></strong>
+                                                {% if editable %}<button type="button" class="delete btn btn-sm btn-link pull-right" data-bind="click:remove" title="Delete this function"><span class="text-danger glyphicon glyphicon-remove"></span></button>{% endif %}
+                                            </a>
+                                        </div>
+                                    </div>
+                                    {% if editable %}
+                                        <div class="panel-footer">
+                                            <button type="button" class="btn btn-block btn-primary" data-bind="click:addFunction"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: functions().length ? 'Add another function' : 'Add a function'"></span></button>
+                                        </div>
+                                    {% endif %}
+
+                                </div>
+                                <p class="help-block">
+                                    {% helplink 'question/reference.html#functions' subject='functions' %}
+                                    Define functions to use in JME expressions.
+                                </p>
+                            </div>
+                            <div class="col-sm-12 col-md-9 col-lg-10 function">
+                                <!-- ko if: !currentFunction() -->
+                                    <!-- ko if: functions().length -->
+                                        <p class="nothing-here">Select a function to edit.</p>
+                                    <!-- /ko -->
+                                    <!-- ko if: !functions().length -->
+                                        <p class="nothing-here">No functions have been defined in this question.</p>
+                                    <!-- /ko -->
+                                <!-- /ko -->
+                                <!-- ko with: currentFunction -->
+                                <div class="row">
+                                    <div class="form-group col-sm-9">
+                                        <label>
+                                            Name {% helplink 'question/reference.html#term-Name' %}
+                                            <input {% if not editable %}disabled{% endif %} class="form-control" placeholder="Name" type="text" data-bind="textInput: name">
+                                        </label>
+                                    </div>
+                                    <div class="form-group col-sm-3">
+                                        <label>
+                                            Language {% helplink 'question/reference.html#term-Language' subject='languages' %}
+                                            <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: languages, value: language"></select>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group form-inline">
+                                    <table class="parameters table">
+                                        <caption>Parameters</caption>
+                                        <thead>
+                                            <tr>
+                                                <th id="function-parameters-label-name">Name</th>
+                                                <th id="function-parameters-label-type">Type</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody data-bind="foreach: parameters">
+                                            <tr class="parameter">
+                                                <td>
+                                                    <input {% if not editable %}disabled{% endif %} placeholder="Name" type="text" class="form-control monospace" aria-labelledby="function-parameters-label-name" data-bind="textInput: name, autosize: name">
+                                                </td>
+                                                <td>
+                                                    <select {% if not editable %}disabled{% endif %} class="form-control" aria-labelledby="function-parameters-label-type" data-bind="options: $parent.parameterTypes, value: type" title"Type of this parameter"></select>
+                                                    <!-- ko if: show_of -->
+                                                    <span id="function-parameter-of">of</span>
+                                                    <select {% if not editable %}disabled{% endif %} class="form-control" aria-labelledby="function-parameter-of" data-bind="options: $parent.parameterTypes, value: of_type" title"Type of the contents"></select>
+                                                    <!-- /ko -->
+                                                    <!-- ko if: show_custom_type -->
+                                                    <input {% if not editable %}disabled{% endif %} class="form-control monospace" placeholder="Name" type="text" aria-labelledby="function-parameters-label-type" class="form-control monospace" data-bind="textInput: custom_type, autosize: custom_type">
+                                                    <!-- /ko -->
+                                                </td>
+                                                <td>
+                                                    {% if editable %}<button type="button" class="btn btn-danger btn-xs" title="Remove this parameter" data-bind="click: remove"><span class="glyphicon glyphicon-remove"></span></button>{% endif %}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                        {% if editable %}
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="3">
+                                                    <button type="button" class="btn btn-sm btn-info" title="Add a parameter" data-bind="click: addParameter"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></span></button>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                        {% endif %}
+                                    </table>
+                                </div>
+
+                                <div class="form-group form-inline output">
+                                    <label class="label-block">
+                                        <span class="label-text">Output type</span>
+                                        <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: outputTypes, value: type" title="Output type"></select>
+                                    </label>
+                                </div>
+
+                                <div clas="form-group">
+                                    <label>
+                                        Definition:
+                                    </label>
+                                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: definition, codemirrorMode: language"></textarea>
+                                    <div class="alert alert-danger" data-bind="visible: error().length>0" aria-live="polite">
+                                        <span class="glyphicon glyphicon-alert"></span> <span class="errortext" data-bind="html: error"></span>
+                                    </div>
+                                </div>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <ul class="list-group">
+                    <!-- ko foreach: {data: functions, afterAdd: Editor.afterAdd} -->
+                    <li class="function list-group-item">
+                    <!-- /ko -->
+                </ul>
+            </section>
+            <section class="tab-pane" data-bind="activeIf: ko.unwrap(extensionTabs.currentTab().id)=='constants'">
+                <h2>Built-in constants</h2>
+                <div class="help-block">
+                    Tick the built-in constants you wish to include in this question.
+                </div>
+                <ul data-bind="foreach: builtin_constants">
+                    <li>
+                        <label>
+                            <input type="checkbox" data-bind="checked: enabled">
+                            <code data-bind="text: name"></code> - <span class="help-text" data-bind="latex: description"></span>
+                        </label>
+                    </li>
+                </ul>
+                <h2>Custom constants</h2>
+                <div class="help-block">
+                    You can define constants in terms of the built-in constants, even if they're disabled.
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Names</th>
+                            <th>Value</th>
+                            <th>LaTeX</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="foreach: constants">
+                        <tr>
+                            <td>
+                                {% text_input 'name' monospace=True %}
+                                <span class="name-error text-danger" data-bind="html: nameError, visible: nameError" aria-live="polite"></span>
+                            </td>
+                            <td>
+                                {% jme_input 'value' %}
+                            </td>
+                            <td>
+                                {% text_input 'tex' monospace=True %}
+                                <span class="jme-preview" data-bind="inline_latex: tex"></span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-danger" data-bind="click: remove"><span class="glyphicon glyphicon-remove"></span> Delete this constant</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" class="btn btn-primary" data-bind="click: addConstant"><span class="glyphicon glyphicon-plus"></span><span data-bind="text: constants().length ? 'Add another constant' : 'Add a constant' "></span></button>
+            </section>
+            <section class="tab-pane" data-bind="activeIf: ko.unwrap(extensionTabs.currentTab().id)=='preamble'">
+                <p class="help-block">
+                    {% helplink 'question/reference.html#preamble' subject='the preamble' %}
+                    Add styling to the question's display and write a script to run when the question is created.
+                </p>
+                <form data-bind="submit: Editor.noop">
+                    <div class="form-group">
+                        <label class="label-block">
+                            <span class="label-text">Javascript</span>
+                            <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: preamble.js, codemirrorMode: 'javascript'"></textarea>
+                        </label>
+                        <div class="help-block">
+                            This script will run after the question's variable have been generated but before the HTML is attached.
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="label-block">
+                            <span class="label-text">CSS</span>
+                            <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: preamble.css, codemirrorMode: 'css'"></textarea>
+                        </label>
+                        <div class="help-block">
+                            Apply styling rules to the question's content.
+                        </div>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </div>
+</section>

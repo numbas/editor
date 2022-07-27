@@ -1,0 +1,19 @@
+{% load user_link %}
+{% load can_edit %}
+{% load helplink %}
+{% load editor_controls %}
+
+<section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='exams'}">
+    {% if object.exams_using_this.count %}
+    <p>This question is used in the following exam{{object.exams_using_this.count|pluralize}}:</p>
+        <ul class="exams-list">
+        {% for exam in object.exams_using_this.all %}
+            <li class="exam">
+                <a href="{% url 'exam_edit' exam.pk exam.editoritem.slug %}">{{exam.editoritem.name}}</a> by {% user_link exam.editoritem.author %} in <a href="{% url 'project_index' exam.editoritem.project.pk %}">{{exam.editoritem.project.name}}</a>.
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        This question is not used in any exams.
+    {% endif %}
+</section>

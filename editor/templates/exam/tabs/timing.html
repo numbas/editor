@@ -1,0 +1,18 @@
+{% load can_edit %}
+{% load helplink %}
+{% load editor_controls %}
+
+<section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='timing'}">
+    <form class="form-horizontal" data-bind="submit: Editor.noop">
+        {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
+        {% property 'duration' 'Exam duration (minutes)' min=0 help_url='exam/reference.html#term-Exam-duration' %}
+        {% booleanproperty 'allowPause' 'Allow pausing?' help_url='exam/reference.html#term-Allow-pausing' %}
+        {% exam_event 'timeout' 'On timeout' help_url='exam/reference.html#term-On-timeout-event' %}
+        {% exam_event 'timedwarning' '5 minutes before timeout' help_url='exam/reference.html#term-5-minutes-before-timeout-event' %}
+        {% endwith %}
+    </form>
+
+    {% if editable %}
+    <editor-pager params="editor: $root, previousTab: 'navigation', nextTab: 'feedback', task_group: 'timing'"></editor-pager>
+    {% endif %}
+</section>

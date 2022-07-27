@@ -540,6 +540,7 @@
                                                         click: $parents[1].currentPart, 
                                                         css: {active: $data==$parents[1].currentPart()}
                                                     ">
+                                                        <span class="unused-gap text-warning" data-bind="if: unusedGap"><span class="glyphicon glyphicon-exclamation-sign"></span><span class="sr-only">This gap is not used in the parent part's prompt.</span></span>
                                                         <strong data-bind="text: header"></strong>
                                                         <span class="type-name" data-bind="text: type().niceName"></span>
                                                         <small class="children-description text-muted" data-bind="text: childrenDescription"></small>

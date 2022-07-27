@@ -2815,6 +2815,14 @@ $(document).ready(function() {
         },this);
 
         this.isGap = ko.pureComputed(function(){ return this.levelName()=='gap'; },this);
+        this.unusedGap = ko.pureComputed(function() {
+            if(!this.isGap()) {
+                return;
+            }
+            var p = this.parent();
+            var n = this.parentList.indexOf(this);
+            return p.prompt().indexOf('[['+n+']]')==-1;
+        },this);
         this.isStep = ko.pureComputed(function(){ return this.levelName()=='step'; },this);
         this.isAlternative = ko.pureComputed(function(){ return this.levelName()=='alternative'; },this);
 

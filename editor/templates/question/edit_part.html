@@ -13,19 +13,27 @@
 <!-- /ko -->
 
 <!-- ko with: currentPart -->
-<h3>
-    <input type="text" class="custom-name" data-bind="textInput: customName, autosize: name, attr: {placeholder: standardName}">
-    <span data-bind="text: type().niceName"></span>
-    {% if editable %}
-    <div class="pull-right">
-        <button type="button" class="btn btn-sm btn-default" data-bind="click: copy"><span class="glyphicon glyphicon-duplicate"></span> Copy this <span data-bind="text: levelName"></span></button>
-        <button type="button" class="btn btn-sm btn-default" data-bind="click: replaceWithGapfill, visible: canBeReplacedWithGap"><span class="glyphicon glyphicon-tasks"></span> Replace this part with a gapfill</button>
-        <button type="button" class="btn btn-sm btn-danger" data-bind="click: remove">
-            <span class="glyphicon glyphicon-remove"></span> Delete this <span data-bind="text: levelName"></span>
-        </button>
+    <h3>
+        <input type="text" class="custom-name" data-bind="textInput: customName, autosize: name, attr: {placeholder: standardName}">
+        <span data-bind="text: type().niceName"></span>
+        {% if editable %}
+        <div class="pull-right">
+            <button type="button" class="btn btn-sm btn-default" data-bind="click: copy"><span class="glyphicon glyphicon-duplicate"></span> Copy this <span data-bind="text: levelName"></span></button>
+            <button type="button" class="btn btn-sm btn-default" data-bind="click: replaceWithGapfill, visible: canBeReplacedWithGap"><span class="glyphicon glyphicon-tasks"></span> Replace this part with a gapfill</button>
+            <button type="button" class="btn btn-sm btn-danger" data-bind="click: remove">
+                <span class="glyphicon glyphicon-remove"></span> Delete this <span data-bind="text: levelName"></span>
+            </button>
+        </div>
+        {% endif %}
+    </h3>
+
+    <!-- ko if: unusedGap -->
+    <div class="alert alert-warning">
+        <p>This gap is not used in the parent part's prompt.</p>
+        <p>The student will not be able to enter an answer to this gap.</p>
     </div>
-    {% endif %}
-</h3>
+    <!-- /ko -->
+
     <ul class="nav nav-tabs part-tabs">
         <!-- ko foreach: tabber.tabs -->
         <li data-bind="css: {active: ko.unwrap($parent.tabber.currentTab().id) == $data.id, 'more-important': $data.more_important, 'in-use': $data.in_use}">

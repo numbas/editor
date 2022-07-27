@@ -197,6 +197,7 @@ jQuery(function() {
 
             function updatePreview(e) {
                 previewElement.hide();
+                el.removeClass('in-maths');
 
                 if(textarea) {
                     sel = jQuery(this).getSelection();
@@ -245,6 +246,7 @@ jQuery(function() {
                     return;
 
                 previewElement.show();
+                el.addClass('in-maths');
 
                 if(math!=$(this).data('writemaths-lastMath')) {
                     var script = document.createElement('script');

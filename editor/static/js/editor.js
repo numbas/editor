@@ -1616,6 +1616,23 @@ $(document).ready(function() {
                             remove_empty_spans(args.node);
                         },
 
+                        setup: function(ed) {
+                            ed.on('keydown', function(oe) {
+                                // when inside a math environment, pressing the enter key adds a <br> instead of a paragraph break.
+                                if(oe.key != 'Enter' || oe.shiftKey || oe.ctrlKey || oe.altKey || oe.metaKey || !ed.getBody().classList.contains('in-maths')) {
+                                    return;
+                                }
+                                oe.preventDefault();
+                                ed.insertContent('<br data-math-br-hack="true"/>');
+                                ed.dom.fire(ed.selection.getNode(),'keydown',{keyCode:37,key:'ArrowDown'});
+                                var br = ed.getBody().querySelector('[data-math-br-hack="true"]');
+                                ed.selection.select(br);
+                                ed.selection.getRng(1).collapse(0);
+                                br.removeAttribute('data-math-br-hack');
+                            });
+
+                        },
+
                         init_instance_callback: function(ed) { 
                             $(element).writemaths({iFrame: true, position: 'center top', previewPosition: 'center bottom'}); 
                             function onMCEChange() {

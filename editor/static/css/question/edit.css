@@ -364,3 +364,8 @@ table.variable-list .value-cell .value {
 .last-run-feedback {
     text-align: right;
 }
+
+.marking-matrix {
+    width: 100%;
+    overflow-x: auto;
+}

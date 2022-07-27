@@ -127,8 +127,8 @@
         <p>For each combination of answer and choice, write 1 if the student should tick it, or 0 if they should leave it unticked.</p>
     </div>
 
-    <div class="matrix" data-bind="fadeVisible: showMarkingMatrix">
-        <table class="marking-matrix table form-inline">
+    <div class="marking-matrix" data-bind="fadeVisible: showMarkingMatrix">
+        <table class="table form-inline">
             <thead>
                 <tr>
                     <td></td>
@@ -144,7 +144,7 @@
 
                     <!-- ko foreach: $data -->
                     <td>
-                        <input {% if not editable %}disabled{% endif %} class="form-control" type="text" class="marks monospace" data-bind="textInput: marks"/>
+                        <input {% if not editable %}disabled{% endif %} class="form-control" type="text" class="marks monospace" data-bind="textInput: marks, autosize: marks"/>
                     </td>
                     <!-- /ko -->
                 </tr>

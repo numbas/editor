@@ -662,11 +662,13 @@
     <!-- Extensions and scripts -->
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='extensions'}">
         <div class="container-fluid">
-            <ul class="nav nav-tabs extension-tabs" data-bind="foreach: extensionTabs.tabs">
-                <li data-bind="css: {active: ko.unwrap($parent.extensionTabs.currentTab().id) == $data.id, 'more-important': $data.more_important, 'in-use': $data.in_use}">
-                    <a href="#" data-bind="click: $parent.extensionTabs.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> <span class="hidden-sm" data-bind="text: title"></span></a>
-                </li>
-            </ul>
+            <nav class="navbar navbar-blank">
+                <ul class="nav nav-tabs extension-tabs" data-bind="foreach: extensionTabs.tabs">
+                    <li data-bind="css: {active: ko.unwrap($parent.extensionTabs.currentTab().id) == $data.id, 'more-important': $data.more_important, 'in-use': $data.in_use}">
+                        <a href="#" data-bind="click: $parent.extensionTabs.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> <span class="hidden-sm" data-bind="text: title"></span></a>
+                    </li>
+                </ul>
+            </nav>
             <div class="tab-content">
                 <section class="tab-pane" data-bind="activeIf: ko.unwrap(extensionTabs.currentTab().id)=='extensions'">
                     <p class="help-block">
@@ -724,78 +726,137 @@
                     {% endif %}
                 </section>
                 <section class="tab-pane" data-bind="activeIf: ko.unwrap(extensionTabs.currentTab().id)=='functions'">
-                    <p class="help-block">
-                        {% helplink 'question/reference.html#functions' subject='functions' %}
-                        Define functions to use in JME expressions.
-                    </p>
+                    <div class="panel-group functions" role="tablist">
+                        <div class="container-fluid">
+                            <div class="row">
+                                <div class="col-sm-12 col-md-3 col-lg-2" data-bind="visible: parts().length>0">
+                                    <div class="panel panel-info functions">
+                                        <div class="panel-heading">
+                                            <h3 class="panel-title">Functions</h3>
+                                        </div>
+                                        <div class="list-group">
+                                            <div data-bind="sortable: {
+                                                foreach: functions,
+                                                options: {
+                                                    group: 'functions',
+                                                    handle: '.root'
+                                                }
+                                            }">
+                                                <a role="button" class="list-group-item function root" data-bind="
+                                                    click: $parent.currentFunction, 
+                                                    css: {
+                                                        active: $data==$parent.currentFunction()
+                                                    }
+                                                ">
+                                                    <strong data-bind="text: displayName"></strong>
+                                                    {% if editable %}<button type="button" class="delete btn btn-sm btn-link pull-right" data-bind="click:remove" title="Delete this function"><span class="text-danger glyphicon glyphicon-remove"></span></button>{% endif %}
+                                                </a>
+                                            </div>
+                                        </div>
+                                        {% if editable %}
+                                            <div class="panel-footer">
+                                                <button type="button" class="btn btn-block btn-primary" data-bind="click:addFunction"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: functions().length ? 'Add another function' : 'Add a function'"></span></button>
+                                            </div>
+                                        {% endif %}
+
+                                    </div>
+                                    <p class="help-block">
+                                        {% helplink 'question/reference.html#functions' subject='functions' %}
+                                        Define functions to use in JME expressions.
+                                    </p>
+                                </div>
+                                <div class="col-sm-12 col-md-9 col-lg-10 function">
+                                    <!-- ko if: !currentFunction() -->
+                                        <!-- ko if: functions().length -->
+                                            <p class="nothing-here">Select a function to edit.</p>
+                                        <!-- /ko -->
+                                        <!-- ko if: !functions().length -->
+                                            <p class="nothing-here">No functions have been defined in this question.</p>
+                                        <!-- /ko -->
+                                    <!-- /ko -->
+                                    <!-- ko with: currentFunction -->
+                                    <div class="row">
+                                        <div class="form-group col-sm-9">
+                                            <label>
+                                                Name {% helplink 'question/reference.html#term-Name' %}
+                                                <input {% if not editable %}disabled{% endif %} class="form-control" placeholder="Name" type="text" data-bind="textInput: name">
+                                            </label>
+                                        </div>
+                                        <div class="form-group col-sm-3">
+                                            <label>
+                                                Language {% helplink 'question/reference.html#term-Language' subject='languages' %}
+                                                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: languages, value: language"></select>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-inline">
+                                        <table class="parameters table">
+                                            <caption>Parameters</caption>
+                                            <thead>
+                                                <tr>
+                                                    <th id="function-parameters-label-name">Name</th>
+                                                    <th id="function-parameters-label-type">Type</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody data-bind="foreach: parameters">
+                                                <tr class="parameter">
+                                                    <td>
+                                                        <input {% if not editable %}disabled{% endif %} placeholder="Name" type="text" class="form-control monospace" aria-labelledby="function-parameters-label-name" data-bind="textInput: name, autosize: name">
+                                                    </td>
+                                                    <td>
+                                                        <select {% if not editable %}disabled{% endif %} class="form-control" aria-labelledby="function-parameters-label-type" data-bind="options: $parent.parameterTypes, value: type" title"Type of this parameter"></select>
+                                                        <!-- ko if: show_of -->
+                                                        <span id="function-parameter-of">of</span>
+                                                        <select {% if not editable %}disabled{% endif %} class="form-control" aria-labelledby="function-parameter-of" data-bind="options: $parent.parameterTypes, value: of_type" title"Type of the contents"></select>
+                                                        <!-- /ko -->
+                                                        <!-- ko if: show_custom_type -->
+                                                        <input {% if not editable %}disabled{% endif %} class="form-control monospace" placeholder="Name" type="text" aria-labelledby="function-parameters-label-type" class="form-control monospace" data-bind="textInput: custom_type, autosize: custom_type">
+                                                        <!-- /ko -->
+                                                    </td>
+                                                    <td>
+                                                        {% if editable %}<button type="button" class="btn btn-danger btn-xs" title="Remove this parameter" data-bind="click: remove"><span class="glyphicon glyphicon-remove"></span></button>{% endif %}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                            {% if editable %}
+                                            <tfoot>
+                                                <tr>
+                                                    <td colspan="3">
+                                                        <button type="button" class="btn btn-sm btn-info" title="Add a parameter" data-bind="click: addParameter"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></span></button>
+                                                    </td>
+                                                </tr>
+                                            </tfoot>
+                                            {% endif %}
+                                        </table>
+                                    </div>
+
+                                    <div class="form-group form-inline output">
+                                        <label class="label-block">
+                                            <span class="label-text">Output type</span>
+                                            <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: outputTypes, value: type" title="Output type"></select>
+                                        </label>
+                                    </div>
+
+                                    <div clas="form-group">
+                                        <label>
+                                            Definition:
+                                        </label>
+                                        <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: definition, codemirrorMode: language"></textarea>
+                                        <div class="alert alert-danger" data-bind="visible: error().length>0" aria-live="polite">
+                                            <span class="glyphicon glyphicon-alert"></span> <span class="errortext" data-bind="html: error"></span>
+                                        </div>
+                                    </div>
+                                    <!-- /ko -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <ul class="list-group">
                         <!-- ko foreach: {data: functions, afterAdd: Editor.afterAdd} -->
                         <li class="function list-group-item">
-                            <div class="row">
-                                <div class="form-group col-sm-8">
-                                    <label>
-                                        Name {% helplink 'question/reference.html#term-Name' %}
-                                    </label>
-                                    <input {% if not editable %}disabled{% endif %} class="form-control" placeholder="Name" type="text" data-bind="textInput: name">
-                                </div>
-                                <div class="form-group col-sm-3">
-                                    <label>
-                                        Language {% helplink 'question/reference.html#term-Language' subject='languages' %}
-                                    </label>
-                                    <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: languages, value: language"></select>
-                                </div>
-                                <div class="col-sm-1">
-                                    {% if editable %}<button type="button" class="delete btn btn-sm btn-link pull-right" data-bind="click:remove" title="Delete this function"><span class="glyphicon glyphicon-remove"></span></button>{% endif %}
-                                </div>
-                            </div>
-                            <div class="form-group form-inline">
-                                <strong>Parameters</strong>
-                                <ul class="parameters">
-                                    <!-- ko foreach: parameters -->
-                                    <li class="parameter">
-                                        <input {% if not editable %}disabled{% endif %} placeholder="Name" type="text" class="form-control" data-bind="textInput: name, autosize: name">
-                                        :
-                                        <select {% if not editable %}disabled{% endif %} class="btn btn-info" data-bind="options: $parent.parameterTypes, value: type" title"Type of this parameter"></select>
-                                        <!-- ko if: show_of -->
-                                        of
-                                        <select {% if not editable %}disabled{% endif %} class="btn btn-info" data-bind="options: $parent.parameterTypes, value: of_type" title"Type of the contents"></select>
-                                        <!-- /ko -->
-                                        <!-- ko if: show_custom_type -->
-                                        <input {% if not editable %}disabled{% endif %} placeholder="Name" type="text" class="form-control monospace" data-bind="textInput: custom_type, autosize: custom_type">
-                                        <!-- /ko -->
-                                        {% if editable %}<button type="button" class="btn btn-danger btn-xs" title="Remove this parameter" data-bind="click: remove"><span class="glyphicon glyphicon-remove"></span></button>{% endif %}
-                                    </li>
-                                    <!-- /ko -->
-                                </ul>
-                                {% if editable %}
-                                <button type="button" class="btn btn-sm btn-info" title="Add a parameter" data-bind="click: addParameter"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></span></button>
-                                {% endif %}
-                            </div>
-
-                            <div class="form-group form-inline output">
-                                <label class="label-block">
-                                    <span class="label-text">Output type</span>
-                                    <select {% if not editable %}disabled{% endif %} class="form-control btn-info" data-bind="options: outputTypes, value: type" title="Output type"></select>
-                                </label>
-                            </div>
-
-                            <div clas="form-group">
-                                <label>
-                                    Definition:
-                                </label>
-                                <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: definition, codemirrorMode: language"></textarea>
-                                <div class="alert alert-danger" data-bind="visible: error().length>0" aria-live="polite">
-                                    <span class="glyphicon glyphicon-alert"></span> <span class="errortext" data-bind="html: error"></span>
-                                </div>
-                            </div>
-                        </li>
                         <!-- /ko -->
                     </ul>
-                    {% if editable %}
-                    <p>
-                        <button type="button" class="btn btn-primary" data-bind="click:addFunction"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: functions().length ? 'Add another function' : 'Add a function'"></span></button>
-                    </p>
-                    {% endif %}
                 </section>
                 <section class="tab-pane" data-bind="activeIf: ko.unwrap(extensionTabs.currentTab().id)=='constants'">
                     <h2>Built-in constants</h2>

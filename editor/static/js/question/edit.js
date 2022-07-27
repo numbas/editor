@@ -148,6 +148,7 @@ $(document).ready(function() {
         this.advice = Editor.contentObservable('');
         var rulesets = this.rulesets = ko.observableArray([]);
         this.functions = ko.observableArray([]);
+        this.currentFunction = ko.observable(null);
         this.variables = ko.observableArray([]);
         this.builtin_constants = [
             {name: 'e', description: 'Base of the natural logarithm'},
@@ -795,6 +796,12 @@ $(document).ready(function() {
             if('currentExtensionTab' in state) {
                 this.extensionTabs.setTab(state.currentExtensionTab)();
             }
+            if('currentFunction' in state) {
+                this.currentFunction(this.getFunction(state.currentFunction));
+            }
+            if('partsTabMode' in state) {
+                this.partsTabMode(state.partsTabMode);
+            }
             Editor.computedReplaceState('currentPart',ko.pureComputed(function() {
                 var p = this.currentPart();
                 if(p) {
@@ -811,9 +818,12 @@ $(document).ready(function() {
             Editor.computedReplaceState('currentExtensionTab',ko.pureComputed(function() {
                 return q.extensionTabs.currentTab().id;
             }));
-            if('partsTabMode' in state) {
-                this.partsTabMode(state.partsTabMode);
-            }
+            Editor.computedReplaceState('currentFunction', ko.pureComputed(function() {
+                var f = q.currentFunction();
+                if(f) {
+                    return f.name();
+                }
+            }));
             Editor.computedReplaceState('partsTabMode',this.partsTabMode);
         }
 
@@ -831,10 +841,12 @@ $(document).ready(function() {
 
         addFunction: function(q,e,n) {
             var f = new CustomFunction(this);
-            if(n!=undefined)
+            if(n!=undefined) {
                 this.functions.splice(n,0,f);
-            else
+            } else {
                 this.functions.push(f);
+                this.currentFunction(f);
+            }
             return f;
         },
 
@@ -883,7 +895,7 @@ $(document).ready(function() {
         },
 
         getFunction: function(name) {
-            name = Numbas.jme.normaliseName(name);
+            name = Numbas.jme.normaliseName(name || '');
             var functions = this.functions();
             for(var i=0;i<functions.length;i++) {
                 if(Numbas.jme.normaliseName(functions[i].name())==name) {
@@ -2569,6 +2581,9 @@ $(document).ready(function() {
         this.languages = ['jme','javascript'];
         this.language = ko.observable('jme');
         this.error = ko.observable('');
+        this.displayName = ko.pureComputed(function() {
+            return this.name().trim() || 'Unnamed function';
+        },this);
 
         this.remove = function() {
             if(confirm("Remove this function?"))

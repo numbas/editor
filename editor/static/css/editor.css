@@ -272,11 +272,12 @@ editor-pager nav {
 }
 
 .name-header {
-    display: flex;
+    display: grid;
+    grid-template: "icon name edit-name . status" auto / auto auto auto 1fr auto;
+    grid-gap: 0.2em;
 }
-.name-header > .name {
-    flex-grow: 1;
-    margin: 0 0.2em;
+.name-header > .status {
+    grid-area: status;
 }
 
 .taxonomy .panel-heading {

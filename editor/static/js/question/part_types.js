@@ -476,7 +476,8 @@ part_types.models = [
                 precision: ko.observable(0),
                 precisionPartialCredit: ko.observable(0),
                 precisionMessage: ko.observable('You have not given your answer to the correct precision.'),
-                strictPrecision: ko.observable(true)
+                strictPrecision: ko.observable(true),
+                prefilledCells: ko.observable('')
             }
             model.precisionType = ko.observable(model.precisionTypes[0]);
             model.precisionWord = ko.computed(function() {
@@ -508,6 +509,7 @@ part_types.models = [
             data.maxColumns = this.maxColumns();
             data.minRows = this.minRows();
             data.maxRows = this.maxRows();
+            data.prefilledCells = this.prefilledCells();
 
             if(this.precisionType().name!='none') {
                 data.precisionType = this.precisionType().name;
@@ -547,7 +549,8 @@ part_types.models = [
                 'minColumns',
                 'maxColumns',
                 'minRows',
-                'maxRows'
+                'maxRows',
+                'prefilledCells'
             ],this);
             for(var i=0;i<this.precisionTypes.length;i++) {
                 if(this.precisionTypes[i].name == this.precisionType())

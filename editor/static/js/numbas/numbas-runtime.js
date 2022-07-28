@@ -3204,22 +3204,21 @@ jme.registerType(TBool,'boolean');
  * @param {Element} html
  */
 var THTML = types.THTML = function(html) {
-    if(html.ownerDocument===undefined && !html.jquery) {
+    if(html.ownerDocument===undefined && !html.jquery && !(typeof html == 'string' || Array.isArray(html))) {
         throw(new Numbas.Error('jme.thtml.not html'));
     }
-    if(window.jQuery) {
-        this.value = $(html);
-        this.html = this.value.clone().wrap('<div>').parent().html();
-    } else {
-        var elem = document.createElement('div');
-        if(typeof html == 'string') {
-            elem.innerHTML = html;
-        } else {
-            elem.appendChild(html);
+    var elem = document.createElement('div');
+    if(typeof html == 'string') {
+        elem.innerHTML = html;
+    } else if(Array.isArray(html)) {
+        for(let child of html) {
+            elem.appendChild(child);
         }
-        this.value = elem.children;
-        this.html = elem.innerHTML;
+    } else {
+        elem.appendChild(html);
     }
+    this.value = elem.childNodes;
+    this.html = elem.innerHTML;
 }
 jme.registerType(THTML,'html');
 
@@ -5743,12 +5742,11 @@ newBuiltin('unpercent',[TString],TNum,util.unPercent);
 newBuiltin('letterordinal',[TNum],TString,util.letterOrdinal);
 newBuiltin('html',[TString],THTML,null, {
     evaluate: function(args, scope) { 
-        var elements = $(args[0].value);
+        var container = document.createElement('div');
+        container.innerHTML = args[0].value;
         var subber = new jme.variables.DOMcontentsubber(scope);
-        elements = $(elements).map(function(i,element) {
-            return subber.subvars(element);
-        });
-        return new THTML(elements);
+        subber.subvars(container);
+        return new THTML(Array.from(container.childNodes));
     }
 });
 newBuiltin('isnonemptyhtml',[TString],TBool,function(html) {
@@ -7601,7 +7599,7 @@ Numbas.jme.lazyOps.push('try');
 jme.findvarsOps.try = function(tree,boundvars,scope) {
     var try_boundvars = boundvars.slice();
     try_boundvars.push(jme.normaliseName(tree.args[1].tok.name,scope));
-    vars = jme.findvars(tree.args[0],boundvars,scope);
+    var vars = jme.findvars(tree.args[0],boundvars,scope);
     vars = vars.merge(jme.findvars(tree.args[2],try_boundvars,scope));
     return vars;
 }
@@ -12249,9 +12247,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         var util = Numbas.util;
         withEnv = withEnv || {};
         try {
-            with(withEnv) {
-                var jfn = eval(preamble+fn.definition+'\n})');
-            }
+            var jfn = new Function(paramNames,fn.definition);
         } catch(e) {
             throw(new Numbas.Error('jme.variables.syntax error in function definition'));
         }
@@ -12659,13 +12655,13 @@ jme.variables = /** @lends Numbas.jme.variables */ {
      * @param {string} str - The contents of the text node.
      * @param {Numbas.jme.Scope} scope
      * @param {Document} doc - The document the text node belongs to.
-     * @returns {Node[]} - Array of DOM nodes to replace the string with.
+     * @returns {Array.<Array.<Node>>} - Array of DOM nodes to replace the string with.
      */
     DOMsubvars: function(str,scope,doc) {
         doc = doc || document;
         var bits = util.splitbrackets(str,'{','}','(',')');
         if(bits.length==1) {
-            return [doc.createTextNode(str)];
+            return [[doc.createTextNode(str)]];
         }
         /** Get HTML content for a given JME token.
          *
@@ -12729,7 +12725,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
                 var d = document.createElement('div');
                 d.innerHTML = out[i];
                 d = doc.importNode(d,true);
-                out[i] = $(d).contents();
+                out[i] = Array.from(d.childNodes);
             }
         }
         return out;
@@ -12995,14 +12991,13 @@ DOMcontentsubber.prototype = {
         }
         var subber = this;
         var o_re_end = this.re_end;
-        $(element).contents().each(function() {
-            subber.subvars(this);
-        });
+        for(let child of Array.from(element.childNodes)) {
+            subber.subvars(child);
+        }
         this.re_end = o_re_end; // make sure that any maths environment only applies to children of this element; otherwise, an unended maths environment could leak into later tags
         return element;
     },
     sub_text: function(node) {
-        var selector = $(node);
         var str = node.nodeValue;
         var bits = util.contentsplitbrackets(str,this.re_end);    //split up string by TeX delimiters. eg "let $X$ = \[expr\]" becomes ['let ','$','X','$',' = ','\[','expr','\]','']
         this.re_end = bits.re_end;
@@ -13011,15 +13006,17 @@ DOMcontentsubber.prototype = {
         for(var i=0; i<l; i+=4) {
             var textsubs = jme.variables.DOMsubvars(bits[i],this.scope,node.ownerDocument);
             for(var j=0;j<textsubs.length;j++) {
-                selector.before(textsubs[j]);
+                textsubs[j].forEach(function(t) {
+                    node.parentElement.insertBefore(t,node);
+                });
             }
             var startDelimiter = bits[i+1] || '';
             var tex = bits[i+2] || '';
             var endDelimiter = bits[i+3] || '';
             var n = node.ownerDocument.createTextNode(startDelimiter+tex+endDelimiter);
-            selector.before(n);
+            node.parentElement.insertBefore(n,node);
         }
-        selector.remove();
+        node.parentElement.removeChild(node);
         return node;
     },
 
@@ -13087,12 +13084,12 @@ DOMcontentsubber.prototype = {
         }
         var subber = this;
         var o_re_end = this.re_end;
-        $(element).contents().each(function() {
-            var vars = subber.findvars(this,scope);
+        for(let child of Array.from(element.childNodes)) {
+            var vars = subber.findvars(child,scope);
             if(vars.length) {
                 foundvars = foundvars.merge(vars);
             }
-        });
+        }
         this.re_end = o_re_end; // make sure that any maths environment only applies to children of this element; otherwise, an unended maths environment could leak into later tags
         return foundvars;
     },
@@ -13864,11 +13861,8 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @see {Numbas.parts.Part#applyScripts}
      */
     setScript: function(name,order,script) {
-        var withEnv = {
-            variables: this.question ? this.question.unwrappedVariables : {},
-            question: this.question,
-            part: this
-        };
+        var p = this;
+
         if(name=='mark') {
             // hack on a finalised_state for old marking scripts
             script = 'var res = (function(studentAnswer,scope) {'+script+'\n}).apply(this,arguments); \
@@ -13890,8 +13884,13 @@ if(res) { \
 ';
             name = 'mark_answer';
         }
-        with(withEnv) {
-            script = eval('(function(){try{'+script+'\n}catch(e){e = new Numbas.Error(\'part.script.error\',{path:this.name,script:name,message:e.message}); Numbas.showError(e); throw(e);}})');
+        var fn = new Function(['variables','question','part'], 'return (function(){try{'+script+'\n}catch(e){e = new Numbas.Error(\'part.script.error\',{path:this.name,script:name,message:e.message}); Numbas.showError(e); throw(e);}})');
+        var script = function() {
+            return fn(
+                p.question ? p.question.unwrappedVariables : {},
+                p.question,
+                p
+            ).apply(this,arguments);
         }
         this.scripts[name] = {script: script, order: order};
     },
@@ -13932,6 +13931,7 @@ if(res) { \
      * @param {number} index - The number of parts before this one that have names.
      * @param {number} siblings - The number of siblings this part has.
      * @returns {boolean} `true` if this part has a name that should increment the label counter.
+     * @fires Numbas.Part#event:assignName
      */
     assignName: function(index,siblings) {
         var p = this;
@@ -13968,6 +13968,7 @@ if(res) { \
         assign_child_names(this.alternatives);
 
         this.display && this.display.setName(this.name);
+        this.events.trigger('assignName',index,siblings);
         return this.name != '';
     },
     /** This part's type, e.g. "jme", "numberentry", ...
@@ -14223,8 +14224,7 @@ if(res) { \
      * @fires Numbas.Part#event:giveWarning
      * @see Numbas.display.PartDisplay.warning
      */
-    giveWarning: function(warning)
-    {
+    giveWarning: function(warning) {
         this.warnings.push(warning);
         this.display && this.display.warning(warning);
         this.events.trigger('giveWarning', warning);
@@ -14308,8 +14308,9 @@ if(res) { \
         if(this.revealed) {
             this.score = 0;
         }
-        if(this.parentPart && !this.parentPart.submitting)
+        if(this.parentPart && !this.parentPart.submitting) {
             this.parentPart.calculateScore();
+        }
         this.events.trigger('calculateScore');
         this.display && this.display.showScore(this.answered);
     },
@@ -14435,7 +14436,7 @@ if(res) { \
                 return result_original;
             }
             result = result_original;
-            var try_replacement = settings.hasVariableReplacements && (!result.answered || result.credit<1);
+            var try_replacement = hasReplacements && (!result.answered || result.credit<1);
         }
         if(settings.variableReplacementStrategy=='alwaysreplace' && hasReplacements) {
             try_replacement = true;
@@ -14492,6 +14493,8 @@ if(res) { \
     /** Wait for a promise to resolve before submitting.
      *
      * @param {Promise} promise
+     * @fires Numbas.Part#event:waiting_for_pre_submit
+     * @fires Numbas.Part#event:completed_pre_submit
      */
     wait_for_pre_submit: function(promise) {
         var p = this;
@@ -14499,12 +14502,14 @@ if(res) { \
         if(this.display) {
             this.display.waiting_for_pre_submit(true);
         }
+        this.events.trigger('waiting_for_pre_submit');
         promise.then(function() {
             p.waiting_for_pre_submit = false;
             p.submit();
             if(p.display) {
                 p.display.waiting_for_pre_submit(false);
             }
+            p.events.trigger('completed_pre_submit');
         });
     },
 
@@ -14865,7 +14870,11 @@ if(res) { \
      * @returns {Array.<Numbas.parts.adaptive_variable_replacement_definition>}
      */
     getErrorCarriedForwardReplacements: function() {
-        return this.isAlternative ? this.parentPart.settings.errorCarriedForwardReplacements : this.settings.errorCarriedForwardReplacements
+        var replacements = this.settings.errorCarriedForwardReplacements;
+        if(this.parentPart) {
+            replacements = this.parentPart.getErrorCarriedForwardReplacements().concat(replacements);
+        }
+        return replacements;
     },
 
     /** Replace variables with student's answers to previous parts.
@@ -14891,7 +14900,7 @@ if(res) { \
                 throw(new Numbas.Error("part.marking.variable replacement part not answered",{part:p2.name}));
             }
         }
-        scope = Numbas.jme.variables.remakeVariables(this.question.variablesTodo, new_variables, this.getScope());
+        var scope = Numbas.jme.variables.remakeVariables(this.question.variablesTodo, new_variables, this.getScope());
         return scope;
     },
     /** Compute the correct answer, based on the given scope.
@@ -15322,7 +15331,7 @@ if(res) { \
         if(!dontStore) {
             this.store && this.store.stepsShown(this);
         }
-        this.events.trigger('showSteps');
+        this.events.trigger('showSteps', dontStore);
     },
     /** Open the steps, either because the student asked or the answers to the question are being revealed. This doesn't affect the steps penalty.
      *
@@ -15378,7 +15387,6 @@ if(res) { \
      * @fires Numbas.Part#event:makeNextPart
      */
     makeNextPart: function(np,index) {
-        this.events.trigger('makeNextPart', np, index);
         var p = this;
         var scope = this.getScope();
 
@@ -15396,7 +15404,7 @@ if(res) { \
 
         np.instance = this.question.addExtraPart(np.index,scope,values,p,index);
         np.instance.useCustomName = true;
-        np.instance.customName = np.label;
+        np.instance.customName = np.label || '';
         np.instance.assignName();
         if(np.lockAfterLeaving) {
             this.lock();
@@ -15404,6 +15412,7 @@ if(res) { \
         if(this.display) {
             this.display.updateNextParts();
         }
+        this.events.trigger('makeNextPart',np,index);
         if(index===undefined) {
             this.store && this.store.initPart(np.instance);
             this.question.updateScore();
@@ -15416,7 +15425,6 @@ if(res) { \
      * @fires Numbas.Part#event:removeNextPart
      */
     removeNextPart: function(np) {
-        this.events.trigger('removeNextPart', np);
         if(!np.instance) {
             return;
         }
@@ -15430,6 +15438,7 @@ if(res) { \
             this.display.updateNextParts();
         }
         this.question.updateScore();
+        this.events.trigger('removeNextPart', np);
     },
 
     /** Reveal the correct answer to this part.
@@ -15831,13 +15840,13 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     /** Load the question's settings from an XML <question> node.
      *
      * @param {Element} xml
-     * @fires Numbas.Question#preambleLoaded
-     * @fires Numbas.Question#constantsLoaded
-     * @fires Numbas.Question#functionsLoaded
-     * @fires Numbas.Question#rulesetsLoaded
-     * @fires Numbas.Question#variableDefinitionsLoaded
-     * @fires Numbas.Question#partsGenerated
-     * @listens Numbas.Question#event:variablesGenerated
+     * @fires Numbas.Question#signal:preambleLoaded
+     * @fires Numbas.Question#signal:constantsLoaded
+     * @fires Numbas.Question#signal:functionsLoaded
+     * @fires Numbas.Question#signal:rulesetsLoaded
+     * @fires Numbas.Question#signal:variableDefinitionsLoaded
+     * @fires Numbas.Question#signal:partsGenerated
+     * @listens Numbas.Question#signal:variablesGenerated
      */
     loadFromXML: function(xml) {
         var q = this;
@@ -16024,21 +16033,19 @@ Question.prototype = /** @lends Numbas.Question.prototype */
      */
     setCurrentPart: function(part) {
         this.currentPart = part;
-        if(this.display) {
-            this.display.currentPart(part.display);
-        }
+        this.display && this.display.currentPart(part.display);
         this.events.trigger('setCurrentPart', part);
     },
 
     /** Load the question's settings from a JSON object.
      *
      * @param {object} data
-     * @fires Numbas.Question#preambleLoaded
-     * @fires Numbas.Question#functionsLoaded
-     * @fires Numbas.Question#rulesetsLoaded
-     * @fires Numbas.Question#variableDefinitionsLoaded
-     * @fires Numbas.Question#partsGenerated
-     * @listens Numbas.Question#event:variablesGenerated
+     * @fires Numbas.Question#signal:preambleLoaded
+     * @fires Numbas.Question#signal:functionsLoaded
+     * @fires Numbas.Question#signal:rulesetsLoaded
+     * @fires Numbas.Question#signal:variableDefinitionsLoaded
+     * @fires Numbas.Question#signal:partsGenerated
+     * @listens Numbas.Question#signal:variablesGenerated
      */
     loadFromJSON: function(data) {
         this.json = data;
@@ -16205,9 +16212,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
      */
     addPart: function(part, index) {
         this.parts.splice(index, 0, part);
-        if(this.display) {
-            this.display.addPart(part);
-        }
+        this.display && this.display.addPart(part);
         this.updateScore();
         this.events.trigger('addPart', part, index);
     },
@@ -16219,7 +16224,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
      */
     removePart: function(part) {
         this.parts = this.parts.filter(function(p2) { return p2!=part; });
-        this.display.removePart(part);
+        this.display && this.display.removePart(part);
         this.updateScore();
         if(this.partsMode=='explore' && this.currentPart==part) {
             if(part.previousPart) {
@@ -16233,24 +16238,27 @@ Question.prototype = /** @lends Numbas.Question.prototype */
 
     /** Perform any tidying up or processing that needs to happen once the question's definition has been loaded.
      *
-     * @fires Numbas.Question#functionsMade
-     * @fires Numbas.Question#rulesetsMade
-     * @fires Numbas.Question#variablesSet
-     * @fires Numbas.Question#variablesGenerated
-     * @fires Numbas.Question#ready
-     * @listens Numbas.Question#event:preambleLoaded
-     * @listens Numbas.Question#event:functionsLoaded
-     * @listens Numbas.Question#event:rulesetsLoaded
-     * @listens Numbas.Question#event:generateVariables
-     * @listens Numbas.Question#event:constantsMade
-     * @listens Numbas.Question#event:functionsMade
-     * @listens Numbas.Question#event:rulesetsMade
-     * @listens Numbas.Question#event:variableDefinitionsLoaded
-     * @listens Numbas.Question#event:variablesSet
-     * @listens Numbas.Question#event:variablesGenerated
-     * @listens Numbas.Question#event:partsGenerated
-     * @listens Numbas.Question#event:ready
-     * @listens Numbas.Question#event:HTMLAttached
+     * @fires Numbas.Question#signal:functionsMade
+     * @fires Numbas.Question#signal:constantsMade
+     * @fires Numbas.Question#signal:rulesetsMade
+     * @fires Numbas.Question#signal:variablesSet
+     * @fires Numbas.Question#signal:variablesGenerated
+     * @fires Numbas.Question#signal:ready
+     * @fires Numbas.Question#signal:variablesTodoMade
+     * @listens Numbas.Question#signal:preambleLoaded
+     * @listens Numbas.Question#signal:functionsLoaded
+     * @listens Numbas.Question#signal:rulesetsLoaded
+     * @listens Numbas.Question#signal:generateVariables
+     * @listens Numbas.Question#signal:constantsMade
+     * @listens Numbas.Question#signal:functionsMade
+     * @listens Numbas.Question#signal:rulesetsMade
+     * @listens Numbas.Question#signal:variableDefinitionsLoaded
+     * @listens Numbas.Question#signal:variablesSet
+     * @listens Numbas.Question#signal:variablesGenerated
+     * @listens Numbas.Question#signal:variablesTodoMade
+     * @listens Numbas.Question#signal:partsGenerated
+     * @listens Numbas.Question#signal:ready
+     * @listens Numbas.Question#signal:HTMLAttached
      */
     finaliseLoad: function() {
         var q = this;
@@ -16285,7 +16293,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             Numbas.jme.variables.makeRulesets(q.rulesets,q.scope);
             q.signals.trigger('rulesetsMade');
         });
-        q.signals.on(['variableDefinitionsLoaded', 'functionsMade', 'rulesetsMade'], function() {
+        q.signals.on(['variableDefinitionsLoaded', 'functionsMade', 'rulesetsMade', 'constantsMade'], function() {
             var todo = q.variablesTodo = {};
             q.variableDefinitions.forEach(function(def) {
                 var name = jme.normaliseName(def.name.trim());
@@ -16312,7 +16320,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             });
             q.signals.trigger('variablesTodoMade')
         });
-        q.signals.on(['generateVariables','functionsMade','rulesetsMade', 'variablesTodoMade'], function() {
+        q.signals.on(['generateVariables','functionsMade','rulesetsMade', 'constantsMade', 'variablesTodoMade'], function() {
             var conditionSatisfied = false;
             var condition = jme.compile(q.variablesTest.condition);
             var runs = 0;
@@ -16382,16 +16390,18 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     },
 
     /** Generate this question's variables.
+     *
+     * @fires Numbas.Question#signal:generateVariables
      */
     generateVariables: function() {
         this.signals.trigger('generateVariables');
     },
     /** Load saved data about this question from storage.
      *
-     * @fires Numbas.Question#variablesSet
-     * @fires Numbas.Question#partsResumed
-     * @listens Numbas.Question#event:partsGenerated
-     * @listens Numbas.Question#event:ready
+     * @fires Numbas.Question#signal:variablesSet
+     * @fires Numbas.Question#signal:partsResumed
+     * @listens Numbas.Question#signal:partsGenerated
+     * @listens Numbas.Question#signal:ready
      */
     resume: function() {
         if(!this.store) {
@@ -16412,16 +16422,6 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                 part.resume();
             });
             if(q.partsMode=='explore') {
-                /*
-                this.nextParts.forEach(function(np,i) {
-                    var npobj = pobj.nextParts[i];
-                    if(npobj.instance !== null) {
-                        np.instanceVariables = part.store.loadVariables(npobj.variableReplacements,scope);
-                        part.makeNextPart(np,npobj.index);
-                        np.instance.resume();
-                    }
-                });
-                */
                 qobj.parts.slice(1).forEach(function(pobj,qindex) {
                     var index = pobj.index;
                     var previousPart = q.getPart(pobj.previousPart);
@@ -16589,19 +16589,15 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     },
     /** Execute the question's JavaScript preamble - should happen as soon as the configuration has been loaded from XML, before variables are generated.
      *
-     * @fires Numbas.Question#preambleRun
+     * @fires Numbas.Question#signal:preambleRun
      */
     runPreamble: function() {
-        with({
-            question: this
-        }) {
-            var js = '(function() {'+this.preamble.js+'\n})()';
-            try{
-                eval(js);
-            } catch(e) {
-                var errorName = e.name=='SyntaxError' ? 'question.preamble.syntax error' : 'question.preamble.error';
-                throw(new Numbas.Error(errorName,{'number':this.number+1,message:e.message}));
-            }
+        var jfn = new Function(['question'], this.preamble.js);
+        try {
+            jfn(this);
+        } catch(e) {
+            var errorName = e.name=='SyntaxError' ? 'question.preamble.syntax error' : 'question.preamble.error';
+            throw(new Numbas.Error(errorName,{'number':this.number+1,message:e.message}));
         }
         this.signals.trigger('preambleRun');
     },
@@ -16636,35 +16632,37 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     /** Show the question's advice.
      *
      * @param {boolean} dontStore - Don't tell the storage that the advice has been shown - use when loading from storage!
+     * @fires Numbas.Question#signal:adviceDisplayed
      */
     getAdvice: function(dontStore)
     {
         if(!Numbas.is_instructor && this.exam && !this.exam.settings.reviewShowAdvice) {
             return;
         }
-        this.signals.trigger('adviceDisplayed');
         this.adviceDisplayed = true;
         this.display && this.display.showAdvice(true);
         if(this.store && !dontStore) {
             this.store.adviceDisplayed(this);
         }
+        this.signals.trigger('adviceDisplayed', dontStore);
     },
 
     /** Lock this question - the student can no longer change their answers.
+     *
+     * @fires Numbas.Question#event:locked
      */
     lock: function() {
         this.locked = true;
         this.allParts().forEach(function(part) {
             part.lock();
         });
-        if(this.display) {
-            this.display.end();
-        }
+        this.display && this.display.end();
+        this.events.trigger('locked');
     },
     /** Reveal the correct answers to the student.
      *
      * @param {boolean} dontStore - Don't tell the storage that the advice has been shown - use when loading from storage!
-     * @fires Numbas.Question#event:revealAnswer
+     * @fires Numbas.Question#signal:revealed
      */
     revealAnswer: function(dontStore)
     {
@@ -16685,7 +16683,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             this.store.answerRevealed(this);
         }
         this.exam && this.exam.updateScore();
-        this.signals.trigger('revealed');
+        this.signals.trigger('revealed', dontStore);
     },
     /** Validate the student's answers to the question. True if all parts are either answered or have no marks available.
      *
@@ -16818,8 +16816,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     {
         this.events.trigger('pre-submit');
         //submit every part
-        for(var i=0; i<this.parts.length; i++)
-        {
+        for(var i=0; i<this.parts.length; i++) {
             this.parts[i].submit();
         }
         //validate every part
@@ -16857,7 +16854,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
      *
      * @param {Function} fn
      * @deprecated Use {@link Numbas.Question#signals} instead.
-     * @listens Numbas.Question#event:HTMLAttached
+     * @listens Numbas.Question#signal:HTMLAttached
      */
     onHTMLAttached: function(fn) {
         this.signals.on('HTMLAttached',fn);
@@ -16866,7 +16863,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
      *
      * @param {Function} fn
      * @deprecated Use {@link Numbas.Question#signals} instead.
-     * @listens Numbas.Question#event:variablesGenerated
+     * @listens Numbas.Question#signal:variablesGenerated
      */
     onVariablesGenerated: function(fn) {
         this.signals.on('variablesGenerated',fn);
@@ -17167,18 +17164,44 @@ EventBox.prototype = {
         var ev = this.events[name] = {
             listeners: []
         }
+        this.setEventPromise(ev);
         return ev;
     },
+
+    setEventPromise: function(ev) {
+        ev.next = new Promise(function(resolve,reject) {
+            ev.next_resolve = resolve;
+        });
+    },
+
+    /** Register a callback function which is called every time the event is triggered.
+     * 
+     * @param {string} name
+     * @param {function} callback
+     */
     on: function(name, callback) {
         var ev = this.getEvent(name);
         ev.listeners.push(callback);
     },
+
+    /** Returns a promise which is resolved the next time the event is triggered.
+     *
+     * @param {string} name
+     * @returns {Promise}
+     */
+    once: function(name) {
+        var ev = this.getEvent(name);
+        return ev.next;
+    },
+
     trigger: function(name) {
         var ev = this.getEvent(name);
         var args = Array.from(arguments).slice(1);
         ev.listeners.forEach(function(callback) {
             callback.apply(this,args);
         });
+        ev.next_resolve(...arguments);
+        this.setEventPromise(ev);
     }
 }
 /** Signals produced by the Numbas runtime.
@@ -17207,11 +17230,11 @@ Numbas.queueScript('diagnostic',['util','jme','localisation','jme-variables'], f
     var KnowledgeGraph = diagnostic.KnowledgeGraph = function(data) {
         this.data = data;
         var topicdict = this.topicdict = {};
-        this.topics = data.topics.map(function(t) {
+        this.topics = (data.topics || []).map(function(t) {
             var topic = {
                 name: t.name,
-                learning_objectives: t.learning_objectives.slice(),
-                depends_on: t.depends_on.slice(),
+                learning_objectives: (t.learning_objectives || []).slice(),
+                depends_on: (t.depends_on || []).slice(),
                 leads_to: []
             };
             topicdict[topic.name] = topic;
@@ -17219,12 +17242,12 @@ Numbas.queueScript('diagnostic',['util','jme','localisation','jme-variables'], f
         });
 
         this.topics.forEach(function(t) {
-            t.depends_on.forEach(function(name) {
+            (t.depends_on || []).forEach(function(name) {
                 topicdict[name].leads_to.push(t.name);
             });
         });
 
-        this.learning_objectives = data.learning_objectives.slice();
+        this.learning_objectives = (data.learning_objectives || []).slice();
     }
 
     var DiagnosticController = diagnostic.DiagnosticController = function(knowledge_graph,exam,script) {
@@ -17534,7 +17557,7 @@ Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables','math
             state: [feedback.set_credit(0, 'incorrect', message)]
         };
     }));
-    correctif = function(condition,correctMessage,incorrectMessage) {
+    var correctif = function(condition,correctMessage,incorrectMessage) {
         var state;
         if(condition) {
             state = feedback.set_credit(1, 'correct', correctMessage || R('part.marking.correct'));
@@ -21727,7 +21750,7 @@ var util = Numbas.util = /** @lends Numbas.util */ {
         if(window.document) {
             var d = document.createElement('div');
             d.innerHTML = html;
-            return $(d).text().trim().length>0 || d.querySelector('img,iframe,object');
+            return d.textContent.trim().length>0 || d.querySelector('img,iframe,object');
         } else {
             return html.replace(/<\/?[^>]*>/g,'').trim() != '';
         }
@@ -29141,6 +29164,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.maxColumns = this.options.maxColumns || 0;
             this.minRows = this.options.minRows || 0;
             this.maxRows = this.options.maxRows || 0;
+            this.prefilledCells = this.options.prefilledCells || [];
             this.showBrackets = this.options.showBrackets===undefined ? true : this.options.showBrackets;
             this.rowHeaders = this.options.rowHeaders || [];
             this.columnHeaders = this.options.columnHeaders || [];
@@ -29233,6 +29257,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                 maxColumns: maxColumns,\
                 minRows: minRows,\
                 maxRows: maxRows,\
+                prefilledCells: prefilledCells,\
                 showBrackets: showBrackets,\
                 rowHeaders: rowHeaders,\
                 columnHeaders: columnHeaders,\
@@ -29252,6 +29277,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.showBrackets = defaultObservable(params.showBrackets,true);
             this.rowHeaders = defaultObservable(params.rowHeaders,[]);
             this.columnHeaders = defaultObservable(params.columnHeaders,[]);
+            this.prefilledCells = defaultObservable(params.prefilledCells,[]);
             this.hasRowHeaders = Knockout.computed(function() {
                 return Knockout.unwrap(this.rowHeaders).length>0;
             },this);
@@ -29311,7 +29337,10 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
              * @returns {object} - `cell` is an observable holding the cell's value.
              */
             function make_cell(c,row,column) {
-                var cell = {cell: Knockout.observable(c), label: R('matrix input.cell label',{row:row+1,column:column+1})};
+                var prefilled = ((Knockout.unwrap(vm.prefilledCells) || [])[row] || [])[column];
+                var use_prefilled = prefilled != '' && prefilled !== undefined;
+                c = use_prefilled ? prefilled : c;
+                var cell = {cell: Knockout.observable(c), prefilled: use_prefilled, label: R('matrix input.cell label',{row:row+1,column:column+1})};
                 cell.cell.subscribe(make_result);
                 return cell;
             }
@@ -29460,7 +29489,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
         +'                <tr>'
         +'                    <th data-bind="visible: $parent.hasRowHeaders"><span data-bind="latex: $parent.rowHeaders()[$index()+1] || \'\'"></span></th>'
         +'                    <!-- ko foreach: $data -->'
-        +'                    <td class="cell"><input type="text" autocapitalize="off" inputmode="text" spellcheck="false" data-bind="attr: {\'aria-label\': label}, textInput: cell, autosize: true, disable: $parents[1].disable, event: $parents[1].events"/></td>'
+        +'                    <td class="cell"><input type="text" autocapitalize="off" inputmode="text" spellcheck="false" data-bind="attr: {\'aria-label\': label}, textInput: cell, autosize: true, disable: prefilled || $parents[1].disable, event: $parents[1].events"/></td>'
         +'                    <!-- /ko -->'
         +'                </tr>'
         +'            </tbody>'
@@ -30909,20 +30938,22 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
                 'maxcolumns',
                 'minrows',
                 'maxrows',
+                'prefilledcells',
                 'tolerance',
                 'markpercell',
                 'allowfractions'
             ],
             [
                 'correctAnswerFractions',
-                'numRows',
-                'numColumns',
+                'numRowsString',
+                'numColumnsString',
                 'allowResize',
-                'minColumns',
-                'maxColumns',
-                'minRows',
-                'maxRows',
-                'tolerance',
+                'minColumnsString',
+                'maxColumnsString',
+                'minRowsString',
+                'maxRowsString',
+                'prefilledCellsString',
+                'toleranceString',
                 'markPerCell',
                 'allowFractions'
             ]
@@ -30948,6 +30979,7 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
                 'maxColumns',
                 'minRows',
                 'maxRows',
+                'prefilledCells',
                 'tolerance',
                 'markPerCell',
                 'allowFractions'
@@ -30956,14 +30988,15 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
             [
                 'correctAnswerString',
                 'correctAnswerFractions',
-                'numRows',
-                'numColumns',
+                'numRowsString',
+                'numColumnsString',
                 'allowResize',
-                'minColumns',
-                'maxColumns',
-                'minRows',
-                'maxRows',
-                'tolerance',
+                'minColumnsString',
+                'maxColumnsString',
+                'minRowsString',
+                'maxRowsString',
+                'prefilledCellsString',
+                'toleranceString',
                 'markPerCell',
                 'allowFractions'
             ]
@@ -30983,6 +31016,7 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
         }
     },
     finaliseLoad: function() {
+        var p = this;
         var settings = this.settings;
         var scope = this.getScope();
 
@@ -30991,13 +31025,52 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
          * @param {JME} setting
          */
         function eval_setting(setting) {
-            var expr = jme.subvars(settings[setting]+'', scope);
-            settings[setting] = scope.evaluate(expr).value;
+            var expr = jme.subvars(settings[setting+'String']+'', scope);
+            var value = scope.evaluate(expr);
+            settings[setting] = value===null ? value : jme.unwrapValue(value);
         }
-        ['numRows','numColumns','tolerance'].map(eval_setting);
+        ['numRows','numColumns','tolerance','prefilledCells'].map(eval_setting);
         if(settings.allowResize) {
             ['minColumns','maxColumns','minRows','maxRows'].map(eval_setting);
         }
+
+        var prefilled_fractions = settings.allowFractions && settings.correctAnswerFractions;
+        var prefilledCells = jme.castToType(scope.evaluate(jme.subvars(settings.prefilledCellsString+'',scope)), 'list');
+        if(prefilledCells) {
+            settings.prefilledCells = prefilledCells.value.map(function(row) {
+                row = jme.castToType(row,'list');
+                return row.value.map(function(cell) {
+                    if(jme.isType(cell,'rational') && !prefilled_fractions) {
+                        cell = jme.castToType(cell,'decimal');
+                    }
+                    if(jme.isType(cell,'string')) {
+                        var s = jme.castToType(cell,'string');
+                        return s.value;
+                    }
+                    if(jme.isType(cell,'number')) {
+                        if(prefilled_fractions) {
+                            var frac;
+                            if(jme.isType(cell,'rational')) {
+                                frac = jme.castToType(cell,'rational').value;
+                            } else if(jme.isType(cell,'decimal')) {
+                                cell = jme.castToType(cell,'decimal');
+                                frac = math.Fraction.fromDecimal(cell.value.re);
+                            } else {
+                                var n = jme.castToType(cell,'number');
+                                var approx = math.rationalApproximation(cell.value.toNumber(),35);
+                                frac = new math.Fraction(approx[0],approx[1]);
+                            }
+                            return frac.toString();
+                        } else {
+                            cell = jme.castToType(cell,'number');
+                            return math.niceRealNumber(cell.value,scope);
+                        }
+                    }
+                    p.error('part.matrix.invalid type in prefilled',{type: cell.type});
+                })
+            });
+        }
+
         settings.tolerance = Math.max(settings.tolerance,0.00000000001);
         if(settings.precisionType!='none') {
             settings.allowFractions = false;
@@ -31061,7 +31134,12 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
         precision: 0,
         precisionPC: 0,
         precisionMessage: R('You have not given your answer to the correct precision.'),
-        strictPrecision: true
+        strictPrecision: true,
+        minRows: 0,
+        maxRows: 0,
+        minColumns: 0,
+        maxColumns: 0,
+        prefilledCells: []
     },
     /** The name of the input widget this part uses, if any.
      *
@@ -31407,7 +31485,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         tryLoad(data.layout, ['type', 'expression'], settings, ['layoutType', 'layoutExpression']);
         if('choices' in data) {
             if(typeof(data.choices)=='string') {
-                choices = jme.evaluate(data.choices, scope);
+                var choices = jme.evaluate(data.choices, scope);
                 if(!choices || !jme.isType(choices,'list')) {
                     this.error('part.mcq.options def not a list',{properties: 'choice'});
                 }

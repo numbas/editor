@@ -61,6 +61,17 @@
         {% booleanproperty 'allowFractions' 'Allow the student to enter fractions?' help_url='question/parts/matrixentry.html#term-Allow-the-student-to-enter-fractions' %}
         {% booleanproperty 'correctAnswerFractions' 'Display numbers in the correct answer as fractions?' help_url='question/parts/matrixentry.html#term-Display-numbers-in-the-correct-answer-as-fractions' %}
     </div>
+    
+    <hr>
+
+    <div class="form-group">
+        <label class="{{form_label_class}} control-label">
+            Pre-filled cells {% helplink 'question/parts/matrixentry.html#term-Pre-filled-cells' %}
+        </label>
+        <div class="{{form_control_class}}">
+            <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: prefilledCells, codemirrorMode: 'jme'"></textarea>
+        </div>
+    </div>
 
 </form>
 </section>

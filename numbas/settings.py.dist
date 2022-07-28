@@ -193,3 +193,13 @@ DEFAULT_FROM_EMAIL = 'admin@numbas'
 
 # Must users be able to view all the questions in an exam in order to view the exam?
 EXAM_ACCESS_REQUIRES_QUESTION_ACCESS = False
+
+# The prefix for all URLs on this server.
+# If the editor is accessed through https://mydomain.com/editor/, then URL_PREFIX should be '/editor/'.
+# If it's accessed from the top of the domain, then it should be '/'.
+URL_PREFIX = '/'
+
+# CSS variables for the interface.
+CSS_VARIABLES = {
+    'brand-color': '#acdeff',   # The colour of the top nav bar.
+}

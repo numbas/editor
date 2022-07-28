@@ -28,6 +28,14 @@
             <link href="{% sstatic 'css/jquery-ui.css' %}" rel="stylesheet" type="text/css" />
 
             <link href="{% sstatic 'css/main.css' %}" type="text/css" rel="stylesheet" />
+
+            <style>
+            :root {
+            {% for name,value in CUSTOM_COLORS.items %}
+                --{{name}}: {{value}};
+            {% endfor %}
+            }
+            </style>
         {% endblock stylesheets %}
 
         {% analytical_head_bottom %}

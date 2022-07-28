@@ -12,6 +12,11 @@ def global_settings(request):
         'MATHJAX_URL': settings.MATHJAX_URL,
         'NUMBAS_LOCALES': settings.GLOBAL_SETTINGS['NUMBAS_LOCALES'],
         'URL_PREFIX': getattr(settings,'URL_PREFIX','/'),
+        'CUSTOM_COLORS': getattr(settings, 'CUSTOM_COLORS',
+            {
+                'brand-color': '#acdeff',
+            }
+        ),
     }
 
 def site_root_url(request):

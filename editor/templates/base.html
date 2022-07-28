@@ -133,9 +133,11 @@
             <script>
                 Editor.wrapLines = {% if not user.is_anonymous and user.userprofile.wrap_lines %}true{% else %}false{% endif %};
                 Editor.SITE_TITLE = {{SITE_TITLE|jsonscript|safe}};
+                Editor.url_prefix = {{URL_PREFIX|jsonscript|safe}};
             </script>
         {% endblock %}
 
+			  <div id="csrftoken">{% csrf_token %}</div>
         {% analytical_body_bottom %}
     </body>
 </html>

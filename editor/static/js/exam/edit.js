@@ -176,7 +176,7 @@ $(document).ready(function() {
             if(!is_logged_in) {
                 return;
             }
-            var cookie = getCookie('csrftoken');
+            var cookie = getCSRFtoken();
             if(cookie!==null) {
                 $.get('/exam/question-lists/'+e.id)
                     .success(function(d) {
@@ -827,7 +827,7 @@ $(document).ready(function() {
             if(!q.question_group()) {
                 return;
             }
-            $.get(this.url()+'copy/',{csrfmiddlewaretoken: getCookie('csrftoken'),project:viewModel.project_id}).success(function(data) {
+            $.get(this.url()+'copy/',{csrfmiddlewaretoken: getCSRFtoken(),project:viewModel.project_id}).success(function(data) {
                 var newq = new Question(data,q.exam);
                 var i = q.question_group().questions.indexOf(q)
                 q.question_group().questions.splice(i,1,newq);

@@ -26,7 +26,7 @@ function get_selection() {
 function move_to(target_pk,selection) {
     selection.folders = selection.folders.filter(function(pk) { return pk!=target_pk; });
     var data = {
-        csrfmiddlewaretoken: getCookie('csrftoken'),
+        csrfmiddlewaretoken: getCSRFtoken(),
         project: project_pk,
         parent: target_pk,
         folders: selection.folders,

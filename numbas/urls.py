@@ -50,3 +50,7 @@ if settings.DEBUG:
         ] + urlpatterns
     except ImportError:
         pass
+
+URL_PREFIX = getattr(settings,'URL_PREFIX','/')
+if URL_PREFIX != '/':
+				urlpatterns = [path(URL_PREFIX[1:], include(urlpatterns)),]

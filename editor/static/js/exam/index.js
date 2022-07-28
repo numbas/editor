@@ -38,7 +38,7 @@ $(document).ready(function() {
         e.preventDefault();
         e.stopPropagation();
         if(window.confirm('Really delete this exam? You won\'t be able to get it back.')) {
-            $.post($(this).parent('a').attr('href'),{csrfmiddlewaretoken: getCookie('csrftoken')})
+            $.post($(this).parent('a').attr('href'),{csrfmiddlewaretoken: getCSRFtoken()})
                 .success(function() {
                     window.location.reload();
                 })

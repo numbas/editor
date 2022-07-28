@@ -11,7 +11,7 @@ $(document).ready(function() {
         e.preventDefault();
         e.stopPropagation();
         if(window.confirm('Really delete this question? You won\'t be able to get it back.')) {
-            $.post($(this).attr('href'),{csrfmiddlewaretoken: getCookie('csrftoken')})
+            $.post($(this).attr('href'),{csrfmiddlewaretoken: getCSRFtoken()})
                 .success(function() {
                     window.location.reload();
                 })

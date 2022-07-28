@@ -665,7 +665,7 @@ $(document).ready(function() {
                     return pt.toJSON();
                 },
                 function(data) {
-                    var promise = $.post(pt.save_url, {json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')})
+                    var promise = $.post(pt.save_url, {json: JSON.stringify(data), csrfmiddlewaretoken: getCSRFtoken()})
                         .success(function(data) {
                         })
                         .error(function(response,type,message) {

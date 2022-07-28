@@ -511,7 +511,7 @@ $(document).ready(function() {
         save: function() {
             var data = this.obs();
             Editor.startSave();
-            data.csrfmiddlewaretoken = getCookie('csrftoken');
+            data.csrfmiddlewaretoken = getCSRFtoken();
             try {
                 var def = this.savefn(data);
                 def
@@ -765,7 +765,7 @@ $(document).ready(function() {
                 }
             });
             this.saveAccess = new Editor.Saver(this.access_data,function(data) {
-                return $.post('/item/'+ei.editoritem_id+'/set-access',data);
+                return $.post(Editor.url_prefix+'item/'+ei.editoritem_id+'/set-access',data);
             });
             this.userAccessSearch=ko.observable('');
 
@@ -794,7 +794,7 @@ $(document).ready(function() {
 
         this.addStamp = function(status_code) {
             return function() {
-                $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(response) {
+                $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCSRFtoken()}).success(function(response) {
                     $('.timeline').prepend(response.html).mathjax();
                     ei.current_stamp(response.object_json);
                 });
@@ -847,8 +847,8 @@ $(document).ready(function() {
                         throw(new Error("We can't save changes while the name field is empty."));
                     }
                     var promise = $.post(
-                        '/'+ei.item_type+'/'+ei.id+'/'+slugify(ei.realName())+'/',
-                        {json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}
+                        Editor.url_prefix+ei.item_type+'/'+ei.id+'/'+slugify(ei.realName())+'/',
+                        {json: JSON.stringify(data), csrfmiddlewaretoken: getCSRFtoken()}
                     )
                         .success(function(data){
                             var address = location.protocol+'//'+location.host+data.url;
@@ -1011,7 +1011,7 @@ $(document).ready(function() {
                     this.firstGo = false;
                     return;
                 }
-                $.post(this.update_url,{csrfmiddlewaretoken: getCookie('csrftoken'), comment: comment});
+                $.post(this.update_url,{csrfmiddlewaretoken: getCSRFtoken(), comment: comment});
             },this);
         }
     } 
@@ -2297,7 +2297,7 @@ $(document).ready(function() {
             }
 
             var text = this.commentText();
-            $.post(form.getAttribute('action'),{'text': text, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(response) {
+            $.post(form.getAttribute('action'),{'text': text, csrfmiddlewaretoken: getCSRFtoken()}).success(function(response) {
                 $('.timeline').prepend(response.html).mathjax();
             });
 
@@ -2318,7 +2318,7 @@ $(document).ready(function() {
         var element = this;
         e.preventDefault();
         e.stopPropagation();
-        $.post(element.getAttribute('href'),{csrfmiddlewaretoken: getCookie('csrftoken')})
+        $.post(element.getAttribute('href'),{csrfmiddlewaretoken: getCSRFtoken()})
             .success(function(data) {
                 $(element).parents('.timeline-item').first().slideUp(150,function(){$(this).remove()});
             })
@@ -2346,7 +2346,7 @@ $(document).ready(function() {
         var element = this;
         e.preventDefault();
         e.stopPropagation();
-        $.post(element.getAttribute('href'),{csrfmiddlewaretoken: getCookie('csrftoken')})
+        $.post(element.getAttribute('href'),{csrfmiddlewaretoken: getCSRFtoken()})
             .success(function(data) {
                 $(element).parents('.timeline-item').first().slideUp(150,function(){$(this).remove()});
                 if(window.viewModel && data.current_stamp!==undefined) {
@@ -2431,7 +2431,7 @@ $(document).ready(function() {
         e.preventDefault();
 
         var url = $(this).attr('href');
-        $.post(url,{csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(response) {
+        $.post(url,{csrfmiddlewaretoken: getCSRFtoken()}).success(function(response) {
             update_notifications(response);
         });
         return false;
@@ -2446,7 +2446,7 @@ $(document).ready(function() {
         if(!is_logged_in) {
             return;
         }
-        $.get('/notifications/unread_json/').success(function(response) {
+        $.get(Editor.url_prefix+'notifications/unread_json/').success(function(response) {
             if(response.last_notification != last_notification) {
                 last_notification = response.last_notification;
                 update_notifications(response);
@@ -2484,7 +2484,7 @@ $(document).ready(function() {
     update_basket();
 
     Editor.add_question_to_basket = function(id) {
-        $.post('/question_basket/add/',{csrfmiddlewaretoken: getCookie('csrftoken'), id: id})
+        $.post(Editor.url_prefix+'question_basket/add/',{csrfmiddlewaretoken: getCSRFtoken(), id: id})
             .success(function(response) {
                 $('#question_basket .dropdown-menu').html(response);
                 update_basket();
@@ -2492,7 +2492,7 @@ $(document).ready(function() {
         ;
     }
     Editor.remove_question_from_basket = function(id) {
-        $.post('/question_basket/remove/',{csrfmiddlewaretoken: getCookie('csrftoken'), id: id})
+        $.post(Editor.url_prefix+'question_basket/remove/',{csrfmiddlewaretoken: getCSRFtoken(), id: id})
             .success(function(response) {
                 $('#question_basket .dropdown-menu').html(response);
                 update_basket();
@@ -2500,7 +2500,7 @@ $(document).ready(function() {
         ;
     }
     Editor.empty_basket = function() {
-        $.post('/question_basket/empty/',{csrfmiddlewaretoken: getCookie('csrftoken')})
+        $.post(Editor.url_prefix+'question_basket/empty/',{csrfmiddlewaretoken: getCSRFtoken()})
             .success(function(response) {
                 $('#question_basket .dropdown-menu').html(response);
                 update_basket();

@@ -14,5 +14,5 @@ django-uuslug==1.2.0
 git+https://github.com/numbas/django-thumbs
 python-slugify==4.0.1
 six==1.15.0
-mistune==0.8.4
+mistune==2.0.3
 emoji==0.6.0

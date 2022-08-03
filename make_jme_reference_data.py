@@ -4,7 +4,7 @@ from collections import OrderedDict
 from docutils import nodes
 from docutils.core import publish_parts
 from docutils.parsers.rst import Directive, directives, roles
-from docutils.parsers.rst.directives import body, misc
+from docutils.parsers.rst.directives import body, misc, flag
 from docutils.parsers import rst
 import docutils
 import io
@@ -20,7 +20,7 @@ class JMEFunctionDirective(Directive):
     required_arguments = 0
     optional_arguments = 0
     final_argument_whitespace = True
-    option_spec = {'op': str, 'keywords': str}
+    option_spec = {'op': str, 'keywords': str, 'noexamples': flag}
     has_content = True
 
     def run(self):

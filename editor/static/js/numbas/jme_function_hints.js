@@ -2316,7 +2316,7 @@ var jme_function_hints =
             "assign"
         ],
         "calling_patterns": [
-            "make_variables(definitions)"
+            "make_variables(definitions, vRange)"
         ],
         "doc": "jme-reference"
     },

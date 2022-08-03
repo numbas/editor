@@ -116,7 +116,7 @@ docs_%:
 check_help_links:
 	@python check_help_links.py
 
-editor/static/js/numbas/jme_function_hints.js: $(wildcard docs/**/*.rst)
+editor/static/js/numbas/jme_function_hints.js: $(wildcard docs/*.rst) $(wildcard docs/**/*.rst)
 	@echo "var jme_function_hints = " > $@
 	@python make_jme_reference_data.py >> $@
 	@echo ";" >> $@

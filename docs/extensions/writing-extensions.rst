@@ -86,8 +86,11 @@ Here's an example which adds a single JME function::
         var funcObj = Numbas.jme.funcObj;
         var TNum = Numbas.jme.types.TNum;
 
-        extension.scope.addFunction(new funcObj('difference',[TNum,TNum],TNum,function(a,b){ return Math.abs(a-b); }, {unwrapValues:true}));
+        extension.scope.addFunction(new funcObj('difference',[TNum,TNum],TNum,function(a,b){ return Math.abs(a-b); }, {unwrapValues:true, random: false}));
     })
+
+The ``random`` attribute specifies whether the function behaves randomly or not.
+The editor uses this to show variable definitions that introduce randomisation, and the runtime uses it to determine which variables can be deterministically re-calculated from their definitions.
 
 (Download this extension: :download:`difference.zip <_static/difference.zip>`)
 

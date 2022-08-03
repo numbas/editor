@@ -1,6 +1,7 @@
 import re
 
 from docutils import nodes
+from docutils.parsers.rst.directives import flag
 from sphinx import addnodes
 from sphinx.roles import XRefRole
 from sphinx.locale import _
@@ -185,6 +186,7 @@ class JMEFunction(JMEObject):
     option_spec = {
         'op': str,
         'keywords': str,
+        'noexamples': str,
     }
 
     def needs_arglist(self):

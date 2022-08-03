@@ -641,6 +641,9 @@ Arithmetic
     **Definitions**:
         * :data:`number` → :data:`number`
 
+    **Examples**:
+        * ``exp(1)`` → ``e``
+
 .. _jme-fns-number-operations:
 
 Number operations
@@ -649,6 +652,7 @@ Number operations
 .. jme:function:: decimal(n)
                   decimal(x)
                   dec(x)
+    :noexamples:
 
     Construct a :data:`decimal` value.
     Any string accepted by `Decimal.js <https://github.com/MikeMcl/decimal.js/>`_ is accepted.
@@ -769,6 +773,12 @@ Number operations
 
     **Definitions**:
         * :data:`decimal` → :data:`boolean`
+
+    **Examples**:
+        * ``iszero(0)`` → ``true``
+        * ``iszero(1)`` → ``false``
+        * ``iszero(dec(0))`` → ``true``
+        * ``iszero(sin(pi/2)-1)`` → ``true``
 
 .. jme:function:: sqrt(x)
               sqr(x)
@@ -1287,6 +1297,10 @@ Trigonometric functions all work in radians, and have as their domain the comple
         * :data:`number` → :data:`number`
         * :data:`decimal` → :data:`decimal`
 
+    **Examples**:
+        * ``sin(0)`` → ``0``
+        * ``sin(pi/2)`` → ``1``
+
 .. jme:function:: cos(x)
     :keywords: cosine, trigonometry, trigonometric
 
@@ -1295,6 +1309,10 @@ Trigonometric functions all work in radians, and have as their domain the comple
     **Definitions**:
         * :data:`number` → :data:`number`
         * :data:`decimal` → :data:`decimal`
+
+    **Examples**:
+        * ``cos(0)`` → ``1``
+        * ``cos(pi/2)`` → ``0``
 
 .. jme:function:: tan(x)
     :keywords: tangent, trigonometry, trigonometric
@@ -1305,6 +1323,10 @@ Trigonometric functions all work in radians, and have as their domain the comple
         * :data:`number` → :data:`number`
         * :data:`decimal` → :data:`decimal`
 
+    **Examples**:
+        * ``tan(0)`` → ``0``
+        * ``tan(pi/4)`` → ``1``
+
 .. jme:function:: cosec(x)
     :keywords: cosecant, trigonometry, trigonometric
 
@@ -1312,6 +1334,10 @@ Trigonometric functions all work in radians, and have as their domain the comple
 
     **Definitions**:
         * :data:`number` → :data:`number`
+
+    **Examples**:
+        * ``cosec(pi/2)`` → ``1``
+        * ``cosec(pi/6)`` → ``2``
 
 .. jme:function:: sec(x)
     :keywords: trigonometry, trigonometric, secant
@@ -1321,6 +1347,10 @@ Trigonometric functions all work in radians, and have as their domain the comple
     **Definitions**:
         * :data:`number` → :data:`number`
 
+    **Examples**:
+        * ``sec(0)`` → ``1``
+        * ``sec(pi/3)`` → ``2``
+
 .. jme:function:: cot(x)
     :keywords: trigonometry, trigonometric, cotangent
 
@@ -1328,6 +1358,9 @@ Trigonometric functions all work in radians, and have as their domain the comple
 
     **Definitions**:
         * :data:`number` → :data:`number`
+
+    **Example**:
+        * ``cot(pi/4)`` → ``1``
 
 .. jme:function:: arcsin(x)
     :keywords: trigonometry, trigonometric, arcsine, inverse
@@ -1339,6 +1372,10 @@ Trigonometric functions all work in radians, and have as their domain the comple
         * :data:`number` → :data:`number`
         * :data:`decimal` → :data:`decimal`
 
+    **Example**:
+        * ``arcsin(0)`` → ``0``
+        * ``arcsin(1)`` → ``1.5707963268``
+
 .. jme:function:: arccos(x)
     :keywords: trigonometry, trigonometric, arccosine, inverse
 
@@ -1349,6 +1386,10 @@ Trigonometric functions all work in radians, and have as their domain the comple
         * :data:`number` → :data:`number`
         * :data:`decimal` → :data:`decimal`
 
+    **Example**:
+        * ``arccos(1)`` → ``0``
+        * ``arccos(0)`` → ``1.5707963268``
+
 .. jme:function:: arctan(x)
     :keywords: trigonometry, trigonometric, arctangent, inverse
 
@@ -1358,6 +1399,10 @@ Trigonometric functions all work in radians, and have as their domain the comple
     **Definitions**:
         * :data:`number` → :data:`number`
         * :data:`decimal` → :data:`decimal`
+
+    **Example**:
+        * ``arctan(0)`` → ``0``
+        * ``arctan(1)`` → ``0.7853981634``
 
 .. jme:function:: atan2(y,x)
     :keywords: trigonometry, trigonometric, arctangent, inverse
@@ -1384,6 +1429,10 @@ Trigonometric functions all work in radians, and have as their domain the comple
         * :data:`number` → :data:`number`
         * :data:`decimal` → :data:`decimal`
 
+    **Examples**:
+        * ``sinh(0)`` → ``0``
+        * ``sinh(1)`` → ``1.1752011936``
+
 .. jme:function:: cosh(x)
     :keywords: hyperbolic, cosine
 
@@ -1392,6 +1441,10 @@ Trigonometric functions all work in radians, and have as their domain the comple
     **Definitions**:
         * :data:`number` → :data:`number`
         * :data:`decimal` → :data:`decimal`
+
+    **Examples**:
+        * ``cosh(0)`` → ``1``
+        * ``cosh(1)`` → ``1.5430806348``
 
 .. jme:function:: tanh(x)
     :keywords: hyperbolic, tangent
@@ -1402,6 +1455,10 @@ Trigonometric functions all work in radians, and have as their domain the comple
         * :data:`number` → :data:`number`
         * :data:`decimal` → :data:`decimal`
 
+    **Examples**:
+        * ``tanh(0)`` → ``0``
+        * ``tanh(1)`` → ``0.761594156``
+
 .. jme:function:: cosech(x)
     :keywords: hyperbolic, cosecant
 
@@ -1409,6 +1466,9 @@ Trigonometric functions all work in radians, and have as their domain the comple
 
     **Definitions**:
         * :data:`number` → :data:`number`
+
+    **Example**:
+        * ``cosech(1)`` → ``0.8509181282``
 
 .. jme:function:: sech(x)
     :keywords: hyperbolic, secant
@@ -1418,6 +1478,10 @@ Trigonometric functions all work in radians, and have as their domain the comple
     **Definitions**:
         * :data:`number` → :data:`number`
 
+    **Examples**:
+        * ``sech(0)`` → ``1``
+        * ``sech(1)`` → ``0.6480542737``
+
 .. jme:function:: coth(x)
     :keywords: hyperbolic, tangent
 
@@ -1425,6 +1489,9 @@ Trigonometric functions all work in radians, and have as their domain the comple
 
     **Definitions**:
         * :data:`number` → :data:`number`
+
+    **Example**:
+        * ``coth(1)`` → ``1.3130352855``
 
 .. jme:function:: arcsinh(x)
     :keywords: hyperbolic, arcsine, inverse
@@ -1435,6 +1502,10 @@ Trigonometric functions all work in radians, and have as their domain the comple
         * :data:`number` → :data:`number`
         * :data:`decimal` → :data:`decimal`
 
+    **Examples**:
+        * ``arcsinh(0)`` → ``0``
+        * ``arcsinh(1)`` → ``0.881373587``
+
 .. jme:function:: arccosh(x)
     :keywords: hyperbolic, arccosine, inverse
 
@@ -1444,6 +1515,10 @@ Trigonometric functions all work in radians, and have as their domain the comple
         * :data:`number` → :data:`number`
         * :data:`decimal` → :data:`decimal`
 
+    **Examples**:
+        * ``arccosh(1)`` → ``0``
+        * ``arccosh(2)`` → ``1.3169578969``
+
 .. jme:function:: arctanh(x)
     :keywords: hyperbolic, arctangent, inverse
 
@@ -1452,6 +1527,10 @@ Trigonometric functions all work in radians, and have as their domain the comple
     **Definitions**:
         * :data:`number` → :data:`number`
         * :data:`decimal` → :data:`decimal`
+
+    **Examples**:
+        * ``arctanh(0)`` → ``0``
+        * ``arctanh(0.5)`` → ``0.5493061443``
 
 .. _jme-fns-number-theory:
 
@@ -1716,6 +1795,7 @@ Vector and matrix arithmetic
 
 .. jme:function:: vector(a1,a2,...,aN)
     :keywords: column
+    :noexamples:
 
     Create a vector with given components.
     Alternately, you can create a vector from a single list of numbers.
@@ -1730,6 +1810,7 @@ Vector and matrix arithmetic
 
 .. jme:function:: matrix(row1,row2,...,rowN)
     :keywords: array
+    :noexamples:
 
     Create a matrix with given rows, which should be either vectors or lists of numbers.
     Or, you can pass in a single list of lists of numbers.
@@ -2011,6 +2092,7 @@ Strings
 
 .. jme:function:: safe(x)
     :keywords: raw, string
+    :noexamples:
 
     Mark string ``x`` as safe: don't substitute variable values into it when this expression is evaluated.
 
@@ -2053,7 +2135,7 @@ Strings
         * :data:`string` → :data:`string`
 
     **Example**:
-        * ``capitalise('hello there')``.
+        * ``capitalise('hello there')`` → ``"Hello there"``
 
 .. jme:function:: pluralise(n,singular,plural)
     :keywords: singular, plural
@@ -2064,7 +2146,9 @@ Strings
         * :data:`number`, :data:`string`, :data:`string` → :data:`string`
 
     **Example**:
-        * ``pluralise(num_things,"thing","things")``
+        * ``pluralise(0,"thing","things")`` → ``"things"``
+        * ``pluralise(1,"thing","things")`` → ``"thing"``
+        * ``pluralise(2,"thing","things")`` → ``"things"``
 
 .. jme:function:: upper(x)
     :keywords: upper, case, capitalise, convert
@@ -2075,7 +2159,7 @@ Strings
         * :data:`string` → :data:`string`
 
     **Example**:
-        * ``upper('Hello there')``.
+        * ``upper('Hello there')`` → ``"HELLO THERE"``
 
 .. jme:function:: lower(x)
     :keywords: case, convert
@@ -2086,7 +2170,7 @@ Strings
         * :data:`string` → :data:`string`
 
     **Example**:
-        * ``lower('CLAUS, Santa')``.
+        * ``lower('CLAUS, Santa')`` → ``"claus, santa"``
 
 .. jme:function:: join(strings, delimiter)
     :keywords: implode, delimiter, concatenate
@@ -2314,8 +2398,9 @@ Logic
         * :data:`number`, :data:`number` → :data:`boolean`
         * :data:`decimal`, :data:`decimal` → :data:`boolean`
 
-    **Example**:
-        * ``4<5``
+    **Examples**:
+        * ``4 < 5`` → ``true``
+        * ``-4 < -5`` → ``false``
 
 .. jme:function:: x>y
     :keywords: greater, than, more, comparison, order, compare, bigger, larger
@@ -2327,8 +2412,9 @@ Logic
         * :data:`number`, :data:`number` → :data:`boolean`
         * :data:`decimal`, :data:`decimal` → :data:`boolean`
 
-    **Example**:
-        * ``5>4``
+    **Examples**:
+        * ``5 > 4`` → ``true``
+        * ``-5 > -4`` → ``false``
 
 .. jme:function:: x<=y
     :keywords: less, than, equals, smaller, comparison, order
@@ -2341,8 +2427,10 @@ Logic
         * :data:`decimal`, :data:`decimal` → :data:`boolean`
         * :data:`decimal`, :data:`number` → :data:`boolean`
 
-    **Example**:
-        * ``4<=4``
+    **Examples**:
+        * ``3 <= 4`` → ``true``
+        * ``4 <= 4`` → ``true``
+        * ``5 <= 4`` → ``false``
 
 .. jme:function:: x>=y
     :keywords: greater, than, more, comparison, order, compare, bigger, larger, equals
@@ -2355,8 +2443,10 @@ Logic
         * :data:`decimal`, :data:`decimal` → :data:`boolean`
         * :data:`decimal`, :data:`number` → :data:`boolean`
 
-    **Example**:
-        * ``4>=4``
+    **Examples**:
+        * ``3 >= 4`` → ``false``
+        * ``4 >= 4`` → ``true``
+        * ``5 >= 4`` → ``true``
 
 .. jme:function:: x<>y
     :keywords: not, equal, inequality, same
@@ -2369,9 +2459,10 @@ Logic
         * anything, anything → :data:`boolean`
 
     **Examples**:
-        * ``'this string' <> 'that string'``
-        * ``1<>2``
-        * ``'1' <> 1``
+        * ``'this string' <> 'that string'`` → ``true``
+        * ``1<>2`` → ``true``
+        * ``'1' <> 1`` → ``true``
+        * ``1 <> 1`` → ``false``
 
 .. jme:function:: x=y
     :keywords: equal, same, equality
@@ -2384,8 +2475,9 @@ Logic
         * anything, anything → :data:`boolean`
 
     **Examples**:
-        * ``vector(1,2)=vector(1,2,0)``
-        * ``4.0=4``
+        * ``vector(1,2) = vector(1,2,0)`` → ``true``
+        * ``4.0 = 4`` → ``true``
+        * ``1/3 = 0.3`` → ``false``
 
 .. jme:function:: isclose(x,y,[rel_tol],[abs_tol])
     :keywords: close, approximation, test, tolerance, relative, absolute, equals, same
@@ -2400,6 +2492,13 @@ Logic
 
     **Definitions**:
         * :data:`number`, :data:`number`, :data:`number`, :data:`number` → :data:`boolean`
+
+    **Examples**:
+        * ``isclose(1/3, 0.3)`` → ``false``
+        * ``isclose(1/3, 0.3, 0.01)`` → ``false``
+        * ``isclose(1/3, 0.3, 0.1)`` → ``true``
+        * ``isclose(1/3, 0.3, 0.01, 0.1)`` → ``true``
+        * ``isclose(10/3, 3, 0.01, 0.1)`` → ``false``
 
 .. jme:function:: resultsequal(a,b,checkingFunction,accuracy)
     :keywords: same, equal, test, tolerance, expression
@@ -2432,9 +2531,11 @@ Logic
         * :data:`set`, :data:`set` → :data:`set`
 
     **Examples**:
-        * ``true and true``
-        * ``true && true``
-        * ``true & true``
+        * ``true and true`` → ``true``
+        * ``true && true`` → ``true``
+        * ``true & true`` → ``true``
+        * ``true and false`` → ``false``
+        * ``false and false`` → ``false``
 
 .. jme:function:: not x
     :keywords: logical, not, negation, negate, negative
@@ -2446,8 +2547,9 @@ Logic
         * :data:`boolean` → :data:`boolean`
 
     **Examples**:
-        * ``not true``
-        * ``!true``
+        * ``not true`` → ``false``
+        * ``not false`` → ``true``
+        * ``!true`` → ``false``
 
 .. jme:function:: x or y
                 x || y
@@ -2463,8 +2565,9 @@ Logic
         * :data:`set`, :data:`set` → :data:`set` - equivalent to ``union(x,y)``
 
     **Examples**:
-        * ``true or false``
-        * ``true || false``
+        * ``true or false`` → ``true``
+        * ``false or false`` → ``false``
+        * ``true || false`` → ``true``
 
 .. jme:function:: x xor y
     :keywords: exclusive, or, logical
@@ -2477,8 +2580,10 @@ Logic
     **Definitions**:
         * :data:`boolean`, :data:`boolean` → :data:`boolean`
 
-    **Example**:
-        * ``true XOR false``.
+    **Examples**:
+        * ``true XOR false`` → ``true``
+        * ``true XOR true`` → ``false``
+        * ``false XOR false`` → ``false``
 
 .. jme:function:: x implies y
     :keywords: logical, implication
@@ -2492,7 +2597,10 @@ Logic
         * :data:`boolean`, :data:`boolean` → :data:`boolean`
 
     **Example**:
-        * ``false implies true``.
+        * ``true implies true`` → ``true``
+        * ``true implies false`` → ``false``
+        * ``false implies true`` → ``true``
+        * ``false implies false`` → ``true``
 
 .. _jme-fns-collections:
 
@@ -2569,6 +2677,7 @@ Ranges
 .. jme:function:: a .. b
     :keywords: range, interval
     :op: ..
+    :noexamples:
 
     Define a range.
     Includes all integers between and including ``a`` and ``b``.
@@ -2583,6 +2692,7 @@ Ranges
 .. jme:function:: range # step
     :keywords: step, interval
     :op: #
+    :noexamples:
 
     Set the step size for a range.
     Default is 1.
@@ -2611,7 +2721,7 @@ Ranges
         * :data:`list`, anything → :data:`list` - exclude the given element
 
     **Examples**:
-        * ``-9..9 except 0``
+        * ``-2..2 except 0`` → ``[-2,-1,1,2]``
         * ``-9..9 except [-1,1]``
         * ``3..8 except 4..6``
         * ``[1,2,3,4,5] except [2,3]``
@@ -2630,7 +2740,8 @@ Lists
         * anything, :data:`number` → :data:`list`
 
     **Example**:
-        * ``repeat(random(1..4),5)`` :no-test:`→` ``[2, 4, 1, 3, 4]``
+        * ``repeat(0,3)`` → ``[0,0,0]``
+        * ``repeat(random(1..4),5)`` :no-test:`→` ``[2, 4, 1, 3, 4]`` (other values can be produced)
 
 .. jme:function:: all(list)
     :keywords: every, test
@@ -2890,7 +3001,7 @@ Lists
         * ``list(vector(1,2))`` → ``[1,2]``
         * ``list(matrix([1,2],[3,4]))`` → ``[[1,2], [3,4]]``
 
-.. jme:function:: make_variables(definitions)
+.. jme:function:: make_variables(definitions, vRange)
     :keywords: evaluate, variables, assign
 
     Evaluate a dictionary of variable definitions and return a dictionary containing the generated values.
@@ -2900,14 +3011,18 @@ Lists
     The definitions can refer to other variables to be evaluated, or variables already defined in the current scope.
     Variables named in the dictionary which have already been defined will be removed before evaluation begins.
 
+    If the optional parameter ``vRange`` is given, then a variable ``vRange`` is defined in the given scope with that value.
+
     **Definitions**:
         * :data:`dict` of :data:`expression`, :data:`range` → :data:`dict`
 
     **Example**:
-        * ``make_variables(["a": expression("random(1..5)"), "b": expression("a^2")])`` :no-test:`→` ``["a": 3, "b": 9]``
+        * ``make_variables(["a": expression("3"), "b": expression("a^2")])`` → ``["a": 3, "b": 9]``
+        * ``make_variables(["a": expression("random(1..5)"), "b": expression("a^2")])`` :no-test:`→` ``["a": 3, "b": 9]`` (other values can be produced)
 
 .. jme:function:: satisfy(names,definitions,conditions,maxRuns)
     :keywords: test, satisfies, conditions
+    :noexamples:
 
     Each variable name in ``names`` should have a corresponding definition expression in ``definitions``.
     ``conditions`` is a list of expressions which you want to evaluate to ``true``.
@@ -3071,6 +3186,7 @@ Dictionaries
 .. jme:function:: dict(a:b, c:d, ...) 
         dict(pairs)
     :keywords: dictionary, convert, key, value, structure
+    :noexamples:
 
     Create a dictionary with the given key-value pairs.
     Equivalent to ``[ .. ]``, except when no key-value pairs are given: ``[]`` creates an empty *list* instead.
@@ -3129,6 +3245,7 @@ Sets
 
 .. jme:function:: set(elements)
     :keywords: distinct, unique, different
+    :noexamples:
 
     Create a set with the given elements.
     Either pass the elements as individual arguments, or as a list.
@@ -3217,7 +3334,7 @@ Randomisation
         * :data:`number` → :data:`list`
 
     **Example**:
-        * ``deal(3)`` :no-test:`→` ``[2,0,1]``
+        * ``deal(3)`` :no-test:`→` ``[2,0,1]`` (other values can be produced)
 
 .. jme:function:: reorder(list,order)
     :keywords: arrange, permutation, permute, order
@@ -3241,8 +3358,8 @@ Randomisation
         * :data:`list` → :data:`list`
 
     **Examples**:
-        * ``shuffle(["a","b","c"])`` :no-test:`→` ``["c","b","a"]``
-        * ``shuffle(0..4)`` :no-test:`→` ``[2,3,0,4,1]``
+        * ``shuffle(["a","b","c"])`` :no-test:`→` ``["c","b","a"]`` (other values can be produced)
+        * ``shuffle(0..4)`` :no-test:`→` ``[2,3,0,4,1]`` (other values can be produced)
 
 .. jme:function:: shuffle_together(lists)
     :keywords: random, rearrange
@@ -3254,7 +3371,7 @@ Randomisation
         * :data:`list` → :data:`list`
 
     **Example**:
-        * ``shuffle_together([ ["a","b","c","d"], [0,1,2,3] ])`` :no-test:`→` ``[ ["d","a","c","b"], [3,0,2,1] ]``
+        * ``shuffle_together([ ["a","b","c","d"], [0,1,2,3] ])`` :no-test:`→` ``[ ["d","a","c","b"], [3,0,2,1] ]`` (other values can be produced)
 
 .. _jme-fns-control-flow:
 
@@ -3309,6 +3426,8 @@ Control flow
         * :data:`boolean`, anything → unspecified
 
     **Example**:
+        * ``assert(1 < 2, "oops")`` → ``false``
+        * ``assert(1 > 2, "oops")`` → ``"oops"``
         * ``assert(studentAnswer<=0, correct("Student answer is positive"))``
 
 .. jme:function:: try(expression, name, except)
@@ -3332,6 +3451,7 @@ HTML
 
 .. jme:function:: html(x)
     :keywords: parse
+    :noexamples:
 
     Parse string ``x`` as HTML.
 
@@ -3357,6 +3477,7 @@ HTML
 .. jme:function:: table(data)
                   table(data,headers)
     :keywords: grid, data, html
+    :noexamples:
 
     Create an HTML with cell contents defined by ``data``, which should be a list of lists of data, and column headers defined by the list of strings ``headers``.
 
@@ -3370,6 +3491,7 @@ HTML
 
 .. jme:function:: image(url,[width],[height])
     :keywords: picture, display
+    :noexamples:
 
     Create an HTML ``img`` element loading the image from the given URL.
     Images uploaded through the resources tab are stored in the relative URL ``resources/images/<filename>.png``, where ``<filename>`` is the name of the original file.
@@ -3390,6 +3512,7 @@ HTML
 
 .. jme:function:: max_width(width,element)
     :keywords: width, maximum, size, html
+    :noexamples:
 
     Apply a CSS ``max-width`` attribute to the given element.
     You can use this to ensure that an image is not displayed too wide.
@@ -3403,6 +3526,7 @@ HTML
 
 .. jme:function:: max_height(width,element)
     :keywords: height, maximum, size, html
+    :noexamples:
 
     Apply a CSS ``max-height`` attribute to the given element. 
     You can use this to ensure that an image is not displayed too long.
@@ -3471,6 +3595,7 @@ Once you've got a sub-expression, you can evaluate it to a normal JME data type,
 .. jme:function:: expression(string)
                   parse(string)
     :keywords: parse, jme, compile
+    :noexamples:
 
     Parse a string as a JME expression.
     The expression can be substituted into other expressions, such as the answer to a mathematical expression part, or the ``\simplify`` LaTeX command.
@@ -3548,6 +3673,7 @@ Once you've got a sub-expression, you can evaluate it to a normal JME data type,
 
 .. jme:function:: op(name)
     :keywords: operator, operation, token
+    :noexamples:
 
     Construct an operator with the given name.
 
@@ -3559,6 +3685,7 @@ Once you've got a sub-expression, you can evaluate it to a normal JME data type,
 
 .. jme:function:: function(name)
     :keywords: token
+    :noexamples:
 
     Construct a function token with the given name.
 
@@ -3888,6 +4015,7 @@ Inspecting the evaluation scope
 
 .. jme:function:: definedvariables()
     :keywords: variables, list, scope
+    :noexamples:
 
     Returns a list containing the names of every variable defined in the current scope, as strings.
 
@@ -3896,6 +4024,7 @@ Inspecting the evaluation scope
 
 .. jme:function:: isset(name)
     :keywords: variable, set, test
+    :noexamples:
 
     Returns ``true`` if the variable with the given name has been defined in the current scope.
 
@@ -3904,6 +4033,7 @@ Inspecting the evaluation scope
 
 .. jme:function:: unset(names, expression)
     :keywords: delete, remove, variables
+    :noexamples:
 
     Temporarily remove the named variables, functions and rulesets from the scope, and evaluate the given expression.
 

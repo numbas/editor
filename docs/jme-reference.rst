@@ -930,7 +930,8 @@ Number operations
 
     **Examples**:
         * ``precround(pi,5)`` → ``3.14159``
-        * ``precround(matrix([[0.123,4.56],[54,98.765]]),2)`` → ``matrix([0.12,4.56],[54,98.77])``
+        * ``precround(21.3,5)`` → ``21.30000``
+        * ``precround(matrix([[0.123,4.56],[54,98.765]]),2)`` → ``matrix([0.12,4.56],[54.00,98.77])``
         * ``precround(vector(1/3,2/3),1)`` → ``vector(0.3,0.7)``
 
 .. jme:function:: siground(n,f)
@@ -947,8 +948,9 @@ Number operations
 
     **Examples**:
         * ``siground(pi,3)`` → ``3.14``
+        * ``siground(21.3,5)`` → ``21.300``
         * ``siground(matrix([[0.123,4.56],[54,98.765]]),2)`` → ``matrix([0.12,4.6],[54,99])``
-        * ``siground(vector(10/3,20/3),2)`` → ``vector(3.3,6.7)``
+        * ``siground(vector(10/3,20/3,1),2)`` → ``vector(3.3,6.7,1.0)``
 
 .. jme:function:: withintolerance(a,b,t)
     :keywords: close, near, tolerance
@@ -1039,6 +1041,34 @@ Number operations
         * ``togivenprecision("1.0","dp",1,true)`` → ``true``
         * ``togivenprecision("100","sigfig",1,true)`` → ``true``
         * ``togivenprecision("100","sigfig",3,true)`` → ``true``
+
+.. jme:function:: togivenprecision_scientific(str, precisionType, precision)
+    :keywords: test, precision, significant, figures, decimal, places
+
+    Returns ``true`` if ``str`` is a string representing a number given to the desired number of decimal places or significant figures in scientific notation.
+
+    This looks only at the significand part.
+
+    A significand of the form ``D.DD`` is considered to be given to 2 decimal places, or three significant figures.
+
+    Trailing zeros must be given: ``1.2`` is only considered to be given to 1 decimal place, and ``1.20`` is only considered to be given to 2 decimal places.
+
+    ``precisionType`` is either ``"dp"``, for decimal places, or ``"sigfig"``, for significant figures.
+
+    If ``strict`` is ``true``, then trailing zeroes **must** be included.
+
+    **Definitions**:
+        * :data:`string`, :data:`string`, :data:`number`, :data:`boolean` → :data:`boolean`
+
+    **Examples**:
+        * ``togivenprecision_scientific("1e2","dp",0)`` → ``true``
+        * ``togivenprecision_scientific("1.0e2","dp",0)`` → ``false``
+        * ``togivenprecision_scientific("1.0e2","dp",1)`` → ``true``
+        * ``togivenprecision_scientific("1e2","sigfig",1)`` → ``true``
+        * ``togivenprecision_scientific("1.0e2","sigfig",1)`` → ``false``
+        * ``togivenprecision_scientific("1.0e2","sigfig",2)`` → ``true``
+        * ``togivenprecision_scientific("1.23e2","sigfig",3)`` → ``true``
+        * ``togivenprecision_scientific("1.23e2","dp",2)`` → ``true``
 
 .. jme:function:: tonearest(a,b)
     :keywords: round, multiple, nearest

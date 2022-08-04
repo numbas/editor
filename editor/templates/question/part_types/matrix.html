@@ -21,8 +21,8 @@
     <h4>Advanced settings</h4>
     <hr>
 
-    {% property 'numRows' 'Number of rows' min=1 help_url='question/parts/matrixentry.html#term-Number-of-rows' %}
-    {% property 'numColumns' 'Number of columns' min=1 help_url='question/parts/matrixentry.html#term-Number-of-columns' %}
+    {% property 'numRows' 'Number of rows' min=1 help_url='question/parts/matrixentry.html#term-Number-of-rows' zero_means='Same as correct answer' %}
+    {% property 'numColumns' 'Number of columns' min=1 help_url='question/parts/matrixentry.html#term-Number-of-columns' zero_means='Same as correct answer' %}
     {% booleanproperty 'allowResize' 'Allow student to change size of matrix?' help_url='question/parts/matrixentry.html#term-Allow-student-to-change-size-of-matrix' %}
     <div data-bind="fadeVisible: allowResize">
         {% property 'minRows' 'Minimum number of rows' help_url='question/parts/matrixentry.html#term-Minimum-number-of-rows' zero_means='No limit' %}

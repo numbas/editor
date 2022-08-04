@@ -430,6 +430,22 @@ var jme_function_hints =
         "doc": "jme-reference"
     },
     {
+        "name": "togivenprecision_scientific",
+        "description": "Returns <code>true</code> if <code>str</code> is a string representing a number given to the desired number of decimal places or significant figures in scientific notation.",
+        "keywords": [
+            "test",
+            "precision",
+            "significant",
+            "figures",
+            "decimal",
+            "places"
+        ],
+        "calling_patterns": [
+            "togivenprecision_scientific(str, precisionType, precision)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
         "name": "tonearest",
         "description": "Round <code>a</code> to the nearest multiple of <code>b</code>.",
         "keywords": [

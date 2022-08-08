@@ -606,6 +606,7 @@
                         {% selectproperty 'penalty' 'Penalty to apply when visited' options_text='name' options='$parent.q.penalties' allow_blank=True help_url='question/explore.html#term-Penalty-to-apply-when-visited' %}
                         <div data-bind="fadeVisible: penalty">
                             {% property 'penaltyAmount' 'Amount of penalty' help_url='question/explore.html#term-Amount-of-penalty' %}
+                            {% booleanproperty 'showPenaltyHint' 'Show penalty hint?' help_url='question/explore.html#term-Show-penalty-hint' %}
                         </div>
                     </form>
                     <div class="variable-replacements">

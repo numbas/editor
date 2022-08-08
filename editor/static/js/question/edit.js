@@ -3538,6 +3538,7 @@ $(document).ready(function() {
         this.availabilityCondition = ko.observable(this.availability_conditions()[0]);
         this.penalty = ko.observable(null);
         this.penaltyAmount = ko.observable(0);
+        this.showPenaltyHint = ko.observable(true);
         this.lockAfterLeaving = ko.observable(false);
 
         this.variable_references = ko.pureComputed(function() {
@@ -3571,6 +3572,7 @@ $(document).ready(function() {
                 availabilityCondition: ko.unwrap(this.availabilityCondition().value),
                 penalty: this.penalty() ? this.penalty().name() : '',
                 penaltyAmount: this.penaltyAmount(),
+                showPenaltyHint: this.showPenaltyHint(),
                 lockAfterLeaving: this.lockAfterLeaving()
             };
         },
@@ -3579,7 +3581,7 @@ $(document).ready(function() {
             if(!data) {
                 return;
             }
-            tryLoad(data,['rawLabel','penaltyAmount','lockAfterLeaving'],this);
+            tryLoad(data,['rawLabel','penaltyAmount','showPenaltyHint','lockAfterLeaving'],this);
             tryLoad(data,'availabilityCondition',this,'availabilityExpression');
             this.availability_conditions().find(function(condition) {
                 if(ko.unwrap(condition.value)==np.availabilityExpression()) {

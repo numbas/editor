@@ -151,6 +151,9 @@ If the student changes their answer to a previous part, this could invalidate an
 
         Only shown if :term:`Penalty to apply when visited` is not "None".
 
+    Show penalty hint??
+        If ticked, the label of this option will have a hint of the form "*(lose N marks)*" added on the end, describing the number of marks that will be added to the chosen penalty when this option is chosen.
+
 Variable replacements
 ---------------------
 

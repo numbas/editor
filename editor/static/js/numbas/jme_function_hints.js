@@ -1020,6 +1020,19 @@ var jme_function_hints =
         "doc": "jme-reference"
     },
     {
+        "name": "largest_square_factor",
+        "description": "The largest perfect square factor of the given number.",
+        "keywords": [
+            "divisor",
+            "square",
+            "factorisation"
+        ],
+        "calling_patterns": [
+            "largest_square_factor(n)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
         "name": "gamma",
         "description": "Gamma function.",
         "keywords": [
@@ -2665,6 +2678,19 @@ var jme_function_hints =
         ],
         "calling_patterns": [
             "shuffle_together(lists)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "random_integer_partition",
+        "description": "Produce a randomly-chosen partition of the integer <code>n</code> into <code>k</code> non-zero parts.",
+        "keywords": [
+            "subsets",
+            "random",
+            "number"
+        ],
+        "calling_patterns": [
+            "random_integer_partition(n,k)"
         ],
         "doc": "jme-reference"
     },

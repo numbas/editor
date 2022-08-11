@@ -32,8 +32,8 @@ def setup(app):
 
 templates_path = ['_templates']
 
-version = '6.1'
-release = '6.1'
+version = '6.3'
+release = '6.3'
 
 html_theme = 'sphinx_book_theme'
 

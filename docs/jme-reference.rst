@@ -1623,6 +1623,21 @@ Number theory
         * ``proper_divisors(18)`` → ``[1,2,3,6,9]``
         * ``proper_divisors(100)`` → ``[1,2,4,5,10,20,25,50]``
 
+.. jme:function:: largest_square_factor(n)
+    :keywords: divisor, square, factorisation
+
+    The largest perfect square factor of the given number.
+
+    When the prime factorisation of :math:`n` is :math:`p_1^{x_1} \times \ldots \times p_k^{x_k}`, the largest perfect square factor is `p_1^{2 \lfloor x_1/2 \rfloor} \times ... \times p_k^{2 \lfloor x_k/2}`.
+
+    **Definitions**:
+        * :data:`number` → :data:`number`
+
+    **Examples**
+        * ``largest_square_factor(15)`` → ``1``
+        * ``largest_square_factor(18)`` → ``9``
+        * ``largest_square_factor(144)`` → ``144``
+
 .. jme:function:: gamma(x)
     :keywords: number
 
@@ -3402,6 +3417,17 @@ Randomisation
 
     **Example**:
         * ``shuffle_together([ ["a","b","c","d"], [0,1,2,3] ])`` :no-test:`→` ``[ ["d","a","c","b"], [3,0,2,1] ]`` (other values can be produced)
+
+.. jme:function:: random_integer_partition(n,k)
+    :keywords: subsets, random, number
+
+    Produce a randomly-chosen partition of the integer ``n`` into ``k`` non-zero parts.
+
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`list`
+
+    **Examples**:
+        * ``random_integer_partition(6,3)`` :no-test:`→` ``[1, 3, 2]`` (other values can be produced)
 
 .. _jme-fns-control-flow:
 

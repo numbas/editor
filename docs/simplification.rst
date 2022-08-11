@@ -122,6 +122,14 @@ The following display options are available:
     rowVector
         This rule doesn't rewrite expressions, but tells the maths renderer that you'd like vectors to be rendered as rows instead of columns.
 
+    matrixCommas
+        When not set, the default behaviour is that row-vectors and matrices with one row have commas between horizontally adjacent elements.
+        Matrices with more than one row don't have commas.
+
+        When turned on, all matrices and row-vectors have commas between horizontally adjacent elements.
+
+        When turned off, commas are never used between elements of matrices or vectors.
+
     alwaysTimes
         The multiplication symbol is always included between multiplicands.
 
@@ -353,6 +361,17 @@ The following simplification rules are available:
 
         * ``(x+y)*z`` → ``x*z + y*z``
         * ``3*(x-y)`` → ``3x - 3y``
+
+    rationalDenominators
+        Multiply top and bottom of fractions so that there are no square roots in the denominator.
+
+        * ``1/sqrt(2)`` → ``sqrt(2)/2``
+
+    reduceSurds
+        Extract square numbers or factors from square roots.
+
+        * ``sqrt(12)`` → ``2*sqrt(3)``
+        * ``sqrt(x^2 * y^5)`` → ``x * y^2 * sqrt(y)``
 
 .. _display_only_functions:
 

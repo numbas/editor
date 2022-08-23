@@ -172,12 +172,18 @@ class DeleteView(generic.DeleteView):
     model = NewExam
     template_name = 'exam/delete.html'
     
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return self.try_delete()
+
+    def form_valid(self, form):
+        return self.try_delete()
+
     def do_delete(self):
         self.object.editoritem.delete()
         return http.HttpResponseRedirect(self.get_success_url())
 
-    def delete(self, request, *args, **kwargs):
-        self.object = self.get_object()
+    def try_delete(self):
         if self.object.editoritem.can_be_deleted_by(self.request.user):
             return self.do_delete()
         elif self.request.user.is_superuser:
@@ -336,7 +342,7 @@ class SetRestorePointView(editor.views.generic.SetRestorePointView):
     model = NewExam
 
 def question_lists(request, pk):
-    if not request.is_ajax():
+    if not request.accepts('application/json'):
         raise Http404
 
     exam = NewExam.objects.get(pk=pk)

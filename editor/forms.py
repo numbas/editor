@@ -10,7 +10,6 @@ from django.forms.models import inlineformset_factory, modelformset_factory
 from django.forms.widgets import SelectMultiple
 from django.utils.html import format_html, html_safe
 from django.utils.safestring import mark_safe
-from django.utils.encoding import force_text
 from django.db import transaction
 from django.db.models import Q, Count
 from django.contrib.auth.models import User

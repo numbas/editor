@@ -34,6 +34,12 @@ class DeleteTimelineItemView(generic.DeleteView):
 
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
+        return self.try_delete()
+
+    def form_valid(self, form):
+        return self.try_delete()
+
+    def try_delete(self):
         if self.object.can_be_deleted_by(self.request.user):
             self.object.delete()
             return http.HttpResponse('timeline item {} deleted'.format(self.object.pk))

@@ -3,7 +3,7 @@
 import json
 from django.db import models
 from django.core.serializers.json import DjangoJSONEncoder
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from django.forms.fields import CharField
 from django.forms.utils import ValidationError as FormValidationError

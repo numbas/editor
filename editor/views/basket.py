@@ -64,7 +64,7 @@ class BasketView(generic.ListView):
         return [bq.question.summary() for bq in query]
 
     def render_to_response(self, context, **response_kwargs):
-        if self.request.is_ajax():
+        if self.request.accepts('application/json'):
             return HttpResponse(json.dumps(context['object_list'][:10]),
                                 content_type='application/json',
                                 **response_kwargs)

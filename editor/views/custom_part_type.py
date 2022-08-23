@@ -57,7 +57,7 @@ class UpdateView(CanViewMixin, generic.UpdateView):
 
     def get_form_kwargs(self):
         kwargs = super(UpdateView, self).get_form_kwargs()
-        if self.request.is_ajax and self.request.method == 'POST':
+        if self.request.method == 'POST':
             kwargs.update({
                 'data': json.loads(self.request.POST['json'])
             })

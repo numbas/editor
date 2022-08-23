@@ -32,7 +32,7 @@ class MoveFolderView(MustBeEditorMixin, generic.FormView):
         return Project.objects.get(pk=project_pk)
 
     def form_invalid(self,form):
-        if self.request.is_ajax():
+        if self.request.accepts('application/json'):
             return http.JsonResponse(form.errors, status=400)
 
     def form_valid(self, form):
@@ -49,7 +49,7 @@ class MoveFolderView(MustBeEditorMixin, generic.FormView):
             folder_name = project.name
             folder_url = reverse('project_browse',args=(project.pk,''))
 
-        if self.request.is_ajax():
+        if self.request.accepts('application/json'):
             num_moved = len(folders) + len(items)
             message = render_to_string('folder/moved_message.html',{
                 'folder_name': folder_name, 
@@ -118,6 +118,12 @@ class DeleteFolderView(MustBeEditorMixin, generic.DeleteView):
 
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
+        return self.try_delete()
+
+    def form_valid(self, form):
+        return self.try_delete()
+
+    def try_delete(self):
         for folder in self.object.folders.all():
             folder.parent = self.object.parent
             folder.save()

@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.core import serializers
 
 def old_to_new_questions(apps, schema_editor):
@@ -236,7 +236,7 @@ def copy_revisions(apps, schema_editor):
     for v in Version.objects.exclude(revision__comment=''):
         if v.content_type == exam_ct:
             data = v.serialized_data
-            data = force_text(data.encode("utf8"))
+            data = force_str(data.encode("utf8"))
             e = list(serializers.deserialize(v.format, data, ignorenonexistent=True))[0].object
             try:
                 ne = NewExam.objects.get(pk=v.object_id)
@@ -289,7 +289,7 @@ def copy_revisions(apps, schema_editor):
             nvx.save()
         elif v.content_type == question_ct:
             data = v.serialized_data
-            data = force_text(data.encode("utf8"))
+            data = force_str(data.encode("utf8"))
             q = list(serializers.deserialize(v.format, data, ignorenonexistent=True))[0].object
             try:
                 nq = NewQuestion.objects.get(pk=v.object_id)

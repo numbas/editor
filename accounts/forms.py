@@ -4,7 +4,7 @@ from django import forms, apps
 from django.conf import settings
 from django.core.validators import validate_email
 from django.forms.widgets import PasswordInput, Textarea, TextInput
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User
 from accounts.models import UserProfile
 from accounts.util import find_users

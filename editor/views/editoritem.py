@@ -99,7 +99,7 @@ class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMix
         return super(CopyView, self).dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        if request.is_ajax():
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             form_class = self.get_form_class()
             data = self.get_initial()
             data.update(request.GET.dict())
@@ -142,14 +142,14 @@ class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMix
             except IntegrityError:
                 continue
 
-        if self.request.is_ajax():
+        if self.request.accepts('application/json'):
             return http.HttpResponse(json.dumps(obj2.summary()), content_type='application/json')
         else:
             return redirect(obj2.get_absolute_url())
 
     def form_invalid(self, form):
         response = super(CopyView, self).form_invalid(form)
-        if self.request.is_ajax():
+        if self.request.accepts('application/json'):
             return http.JsonResponse(form.errors, status=400)
         else:
             return response

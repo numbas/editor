@@ -70,6 +70,10 @@ a {
     margin-left: 0.5em;
 }
 
+#top-nav .logout {
+    padding: 0 1em;
+}
+
 #notifications .dropdown-menu {
   max-height: 80vh;
   overflow-y: auto;

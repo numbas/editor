@@ -13,7 +13,7 @@ class UserSearchView(ListView):
     model = User
     
     def render_to_response(self, context, **response_kwargs):
-        if self.request.is_ajax():
+        if self.request.accepts('application/json'):
             return HttpResponse(json.dumps(context['object_list']),
                                 content_type='application/json',
                                 **response_kwargs)

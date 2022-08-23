@@ -2744,6 +2744,10 @@ $(document).ready(function() {
             return this.customName().trim()!='';
         },this);
 
+        this.scope = ko.pureComputed(function() {
+            return this.q.baseScope();
+        },this);
+
         this.showChildren = ko.pureComputed(function() {
             var currentPart = q.currentPart();
             if(!currentPart) {
@@ -3135,10 +3139,6 @@ $(document).ready(function() {
             this.load(data);
     }
     Part.prototype = {
-
-        scope: function() {
-            return this.q.baseScope();
-        },
 
         copy: function() {
             var data = this.toJSON();

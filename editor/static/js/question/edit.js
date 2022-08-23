@@ -5,23 +5,23 @@ $(document).ready(function() {
 
     Editor.question = {};
 
-    var vars_used_in_html = Editor.vars_used_in_html = function(html) {
+    var vars_used_in_html = Editor.vars_used_in_html = function(html,scope) {
         var element = document.createElement('div');
         element.innerHTML = html;
         try {
-            var subber = new Numbas.jme.variables.DOMcontentsubber(Numbas.jme.builtinScope);
+            var subber = new Numbas.jme.variables.DOMcontentsubber(scope);
             return subber.findvars(element);
         } catch(e) {
             return [];
         }
     }
-    var vars_used_in_string = Editor.vars_used_in_string = function(str) {
+    var vars_used_in_string = Editor.vars_used_in_string = function(str,scope) {
         var bits = Numbas.util.splitbrackets(str,'{','}');
         var vars = [];
         for(var i=1;i<bits.length;i+=2) {
             try {
                 var tree = Numbas.jme.compile(bits[i]);
-                vars = vars.merge(Numbas.jme.findvars(tree));
+                vars = vars.merge(Numbas.jme.findvars(tree,[],scope));
             } catch(e) {
                 continue;
             }
@@ -394,6 +394,50 @@ $(document).ready(function() {
         }
         this.mainTabber.currentTab(this.mainTabber.tabs()[0]);
 
+        this.baseScopeWithoutConstants= ko.pureComputed(function() {
+            var jme = Numbas.jme;
+            var scope = new jme.Scope(jme.builtinScope);
+            var extensions = this.extensions().filter(function(e){return e.used_or_required()});
+            for(var i=0;i<extensions.length;i++) {
+                var extension = extensions[i].location;
+                if(extension in Numbas.extensions && 'scope' in Numbas.extensions[extension]) {
+                    scope = new jme.Scope([scope,Numbas.extensions[extension].scope]);
+                }
+            }
+
+            return scope;
+        },this);
+        
+        this.baseScope = ko.pureComputed(function() {
+            var jme = Numbas.jme;
+            var scope = this.baseScopeWithoutConstants();
+
+            var constants = this.constants().filter(function(c) { return !c.error(); }).map(function(c) {
+                return {
+                    name: c.name(),
+                    value: c.value(),
+                    tex: c.tex()
+                }
+            });
+            var defined_constants = Numbas.jme.variables.makeConstants(constants,scope);
+
+            this.builtin_constants.forEach(function(c) {
+                if(!c.enabled()) {
+                    c.name.split(',').forEach(function(name) {
+                        if(defined_constants.indexOf(jme.normaliseName(name,scope))==-1) {
+                            scope.deleteConstant(name);
+                        }
+                    });
+                }
+            });
+
+            document.body.classList.add('jme-scope');
+            $(document.body).data('jme-scope',scope);
+            $(document.body).data('jme-show-substitutions',true);
+
+            return scope;
+        },this);
+
         this.startAddingPart = function() {
             q.addingPart({kind:'part', parent:null, parentList: q.parts, availableTypes: q.partTypes});
         }
@@ -531,9 +575,9 @@ $(document).ready(function() {
 
         this.variable_references = ko.pureComputed(function() {
             var o = [];
-            o.push(new VariableReference({kind:'tab',tab:'statement',value:q.statement,type:'html',description:'Statement'}));
-            o.push(new VariableReference({kind:'tab',tab:'advice',value:q.advice,type:'html',description:'Advice'}));
-            o.push(new VariableReference({kind:'tab',tab:'variabletesting',value:q.variablesTest.condition,type:'jme',description:'Variable testing condition'}));
+            o.push(new VariableReference({kind:'tab',tab:'statement',value:q.statement,type:'html',description:'Statement', scope:q.baseScope}));
+            o.push(new VariableReference({kind:'tab',tab:'advice',value:q.advice,type:'html',description:'Advice', scope:q.baseScope}));
+            o.push(new VariableReference({kind:'tab',tab:'variabletesting',value:q.variablesTest.condition,type:'jme',description:'Variable testing condition', scope:q.baseScope}));
             q.allParts().forEach(function(p) {
                 o = o.concat(p.variable_references());
             });
@@ -1062,49 +1106,6 @@ $(document).ready(function() {
             this.questionScope(results.scope);
         },
 
-        baseScopeWithoutConstants : function() {
-            var jme = Numbas.jme;
-            var scope = new jme.Scope(jme.builtinScope);
-            var extensions = this.extensions().filter(function(e){return e.used_or_required()});
-            for(var i=0;i<extensions.length;i++) {
-                var extension = extensions[i].location;
-                if(extension in Numbas.extensions && 'scope' in Numbas.extensions[extension]) {
-                    scope = new jme.Scope([scope,Numbas.extensions[extension].scope]);
-                }
-            }
-
-            return scope
-        },
-        baseScope: function() {
-            var jme = Numbas.jme;
-            var scope = this.baseScopeWithoutConstants();
-
-            var constants = this.constants().filter(function(c) { return !c.error(); }).map(function(c) {
-                return {
-                    name: c.name(),
-                    value: c.value(),
-                    tex: c.tex()
-                }
-            });
-            var defined_constants = Numbas.jme.variables.makeConstants(constants,scope);
-
-            this.builtin_constants.forEach(function(c) {
-                if(!c.enabled()) {
-                    c.name.split(',').forEach(function(name) {
-                        if(defined_constants.indexOf(jme.normaliseName(name,scope))==-1) {
-                            scope.deleteConstant(name);
-                        }
-                    });
-                }
-            });
-
-            document.body.classList.add('jme-scope');
-            $(document.body).data('jme-scope',scope);
-            $(document.body).data('jme-show-substitutions',true);
-
-            return scope;
-        },
-
         // get everything ready to compute variables - make functions, and work out dependency graph
         prepareVariables: function() {
             var jme = Numbas.jme;
@@ -1245,7 +1246,7 @@ $(document).ready(function() {
                     if(!tree) {
                         throw(new Numbas.Error('jme.variables.empty definition',{name:name}));
                     }
-                    var vars = jme.findvars(tree);
+                    var vars = jme.findvars(tree,[],scope);
                     v.error('');
                 }
                 catch(e) {
@@ -2006,9 +2007,10 @@ $(document).ready(function() {
 
         this.usedInTestCondition = ko.pureComputed(function() {
             var name = this.name();
+            var scope = this.question.baseScope();
             try {
                 var condition = Numbas.jme.compile(this.question.variablesTest.condition());
-                var vars = Numbas.jme.findvars(condition);
+                var vars = Numbas.jme.findvars(condition,[],scope);
                 return vars.contains(name);
             }
             catch(e) {
@@ -2480,15 +2482,16 @@ $(document).ready(function() {
         },this);
         var raw_vars = ko.pureComputed(function() {
             var def = this.def;
+            var scope = def.scope();
             try {
                 var v = ko.unwrap(def.value);
                 switch(def.type) {
                     case 'html':
-                        return vars_used_in_html(v);
+                        return vars_used_in_html(v, scope);
                     case 'string':
-                        return vars_used_in_string(v);
+                        return vars_used_in_string(v, scope);
                     case 'jme-sub':
-                        return vars_used_in_string(v)
+                        return vars_used_in_string(v, scope)
                     case 'jme':
                         try {
                             var tree = Numbas.jme.compile(v);
@@ -2496,7 +2499,7 @@ $(document).ready(function() {
                             break;
                         }
                         if(tree) {
-                            var vars = Numbas.jme.findvars(tree);
+                            var vars = Numbas.jme.findvars(tree,[],scope);
                             if(def.defined_names) {
                                 vars = vars.filter(function(name) { return def.defined_names.indexOf(name)==-1; });
                             }
@@ -2754,6 +2757,10 @@ $(document).ready(function() {
         this.customName = ko.observable('');
         this.useCustomName = ko.pureComputed(function() {
             return this.customName().trim()!='';
+        },this);
+
+        this.scope = ko.pureComputed(function() {
+            return this.q.baseScope();
         },this);
 
         this.showChildren = ko.pureComputed(function() {
@@ -3076,7 +3083,7 @@ $(document).ready(function() {
 
         this.variable_references = ko.pureComputed(function() {
             var o = [];
-            o.push(new VariableReference({kind:'part',part:this,tab:'prompt',value:this.prompt,type:'html',description:'prompt'}));
+            o.push(new VariableReference({kind:'part',part:this,tab:'prompt',value:this.prompt,type:'html',description:'prompt', scope:this.scope}));
             if(this.use_custom_algorithm() && this.markingScript() && this.marking_test() && this.marking_test().last_run() && !this.marking_test().last_run().error) {
                 var s = this.markingScript();
                 var note_names = Object.keys(s.notes).map(function(name) { return Numbas.jme.normaliseName(name); });
@@ -3084,7 +3091,7 @@ $(document).ready(function() {
                 var defined_names = note_names.concat(parameters);
                 for(var x in s.notes) {
                     var vars = s.notes[x].vars.filter(function(y) { return !defined_names.contains(Numbas.jme.normaliseName(y)); });
-                    o.push(new VariableReference({kind:'part',part:this,tab:'marking-algorithm',value:vars,type:'list',description:'marking algorithm note '+x}));
+                    o.push(new VariableReference({kind:'part',part:this,tab:'marking-algorithm',value:vars,type:'list',description:'marking algorithm note '+x, scope:this.scope}));
                 }
             }
             this.nextParts().forEach(function(np) {
@@ -3093,6 +3100,7 @@ $(document).ready(function() {
             this.type().variable_references().forEach(function(def) {
                 def.kind = 'part';
                 def.part = p;
+                def.scope = p.scope;
                 o.push(new VariableReference(def));
             });
             return o;
@@ -3158,10 +3166,6 @@ $(document).ready(function() {
             this.load(data);
     }
     Part.prototype = {
-
-        scope: function() {
-            return this.q.baseScope();
-        },
 
         copy: function() {
             var data = this.toJSON();
@@ -3549,11 +3553,11 @@ $(document).ready(function() {
             }
             var o = [];
             if(this.availabilityCondition().id=='expression') {
-                o.push(new VariableReference({kind:'part',part:this.part,tab:'nextparts',value:this.availabilityExpression,type:'jme',description:'next part availability condition', defined_names: note_names.concat(['credit','answered', 'used_alternative'])}));
+                o.push(new VariableReference({kind:'part',part:this.part,tab:'nextparts',value:this.availabilityExpression,type:'jme',description:'next part availability condition', defined_names: note_names.concat(['credit','answered', 'used_alternative']), scope:this.part.scope}));
             }
             this.variableReplacements().forEach(function(vr) {
-                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.definition,type:'jme',description:'variable replacement', defined_names: note_names.concat(['credit', 'used_alternative'])}));
-                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.variable,type:'jme',description:'variable replacement', defined_names: note_names.concat(['credit', 'used_alternative'])}));
+                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.definition,type:'jme',description:'variable replacement', defined_names: note_names.concat(['credit', 'used_alternative']), scope:this.part.scope}));
+                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.variable,type:'jme',description:'variable replacement', defined_names: note_names.concat(['credit', 'used_alternative']), scope:this.part.scope}));
             });
             return o;
         },this);

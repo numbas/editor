@@ -61,7 +61,7 @@ urlpatterns = [
     path('project/<int:pk>/leave/', project.LeaveProjectView.as_view(), name='project_leave'),
 
     path('project/<int:pk>/search/', project.SearchView.as_view(), name='project_search'),
-    re_path(r'^project/<int:pk>/browse/(?P<path>(.*/)*)?$', project.BrowseView.as_view(), name='project_browse'),
+    re_path(r'^project/(?P<pk>\d+)/browse/(?P<path>(.*/)*)?$', project.BrowseView.as_view(), name='project_browse'),
     path('project/<int:project_pk>/new_folder', project.NewFolderView.as_view(), name='project_new_folder'),
 
     path('project/<int:pk>/comment',

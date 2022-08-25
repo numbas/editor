@@ -396,7 +396,7 @@ $(document).ready(function() {
         this.baseScopeWithoutConstants= ko.pureComputed(function() {
             var jme = Numbas.jme;
             var scope = new jme.Scope(jme.builtinScope);
-            var extensions = this.extensions().filter(function(e){return e.used_or_required()});
+            var extensions = this.extensions().filter(function(e){return e.used_or_required() && e.loaded()});
             for(var i=0;i<extensions.length;i++) {
                 var extension = extensions[i].location;
                 if(extension in Numbas.extensions && 'scope' in Numbas.extensions[extension]) {
@@ -1755,27 +1755,26 @@ $(document).ready(function() {
 
         ko.computed(function() {
             try {
-            if(this.used_or_required()) {
-                if(!this.loaded()) {
-                    try {
-                        ext.load();
-                    } catch(e) {
-                        console.error(e);
-                        setTimeout(function() {
-                            ext.error(true);
-                        },1);
+                if(this.used_or_required()) {
+                    if(!this.loaded()) {
+                        try {
+                            ext.load();
+                        } catch(e) {
+                            console.error(e);
+                            setTimeout(function() {
+                                ext.error(true);
+                            },1);
+                        }
                     }
+                    find_jme_types();
                 }
-                find_jme_types();
-            }
-            }catch(e) {
+            } catch(e) {
                 console.error(e);
             }
         },this);
     }
     Extension.prototype = {
         load: function() {
-            console.log('loading',this.name);
             this.loading(true);
             var ext = this;
             if(this.loaded()) {
@@ -1783,7 +1782,6 @@ $(document).ready(function() {
             }
             var script_promises = [];
             this.scripts.forEach(function(name) {
-                console.log('load script',name);
                 var script = document.createElement('script');
                 script.setAttribute('src', ext.script_url+name);
                 var promise = new Promise(function(resolve,reject) {
@@ -1809,7 +1807,6 @@ $(document).ready(function() {
             });
         }
     }
-
 
     function Ruleset(exam,data)
     {

@@ -355,35 +355,67 @@ $(document).ready(function() {
 
         this.cpt = cpt;
 
-        ["location","name","edit_url","hasScript","url","scriptURL","author","pk"].forEach(function(k) {
+        ["location","name","edit_url","hasScript","url","script_url","author","pk","scripts"].forEach(function(k) {
             ext[k] = data[k];
         });
 
         this.used = ko.observable(false);
+        this.loading = ko.observable(false);
         this.loaded = ko.observable(false);
         this.error = ko.observable(false);
 
         ko.computed(function() {
             try {
-            if(this.used()) {
-                if(!this.loaded()) {
-                    try {
-                        Numbas.activateExtension(this.location);
-                        this.loaded(true);
-                    } catch(e) {
-                        console.error(e);
-                        setTimeout(function() {
-                            this.error(true);
-                        },1);
+                if(this.used()) {
+                    if(!this.loaded()) {
+                        try {
+                            ext.load();
+                        } catch(e) {
+                            console.error(e);
+                            setTimeout(function() {
+                                this.error(true);
+                            },1);
+                        }
                     }
+                    this.cpt.find_input_widgets();
                 }
-                this.cpt.find_input_widgets();
-            }
-            }catch(e) {
+            } catch(e) {
                 console.error(e);
             }
         },this);
     }
+    Extension.prototype = {
+        load: function() {
+            this.loading(true);
+            var ext = this;
+            if(this.loaded()) {
+                return;
+            }
+            var script_promises = [];
+            this.scripts.forEach(function(name) {
+                var script = document.createElement('script');
+                script.setAttribute('src', ext.script_url+name);
+                var promise = new Promise(function(resolve,reject) {
+                    script.addEventListener('load',function(e) {
+                        resolve(e);
+                    });
+                    script.addEventListener('error',function(e) {
+                        reject(e);
+                    });
+                });
+                script_promises.push(promise);
+                document.head.appendChild(script);
+            });
+            Promise.all(script_promises).then(function() {
+                Numbas.activateExtension(ext.location);
+                ext.loaded(true);
+            }).catch(function(err) {
+                console.error(err);
+            }).finally(function() {
+                ext.loading(false);
+            });
+        }
+    };
 
 
     var CustomPartType = Editor.custom_part_type.CustomPartType = function(data, save_url, set_access_url) {
@@ -419,11 +451,11 @@ $(document).ready(function() {
             pt.setTab('description')();
         }
         
-        this.input_widgets = Editor.custom_part_type.input_widgets.map(function(data) {
+        this.input_widgets = ko.observableArray(Editor.custom_part_type.input_widgets.map(function(data) {
             return new InputWidget(pt,data);
-        });
+        }));
         this.find_input_widgets();
-        this.input_widget = ko.observable(this.input_widgets[0])
+        this.input_widget = ko.observable(this.input_widgets()[0])
         this.input_options = {
             correctAnswer: ko.observable(''),
             hint: new MaybeStaticOption('','""')
@@ -574,7 +606,7 @@ $(document).ready(function() {
         find_input_widgets: function() {
             var cpt = this;
             Object.values(Numbas.answer_widgets.custom_widgets).forEach(function(w) {
-                if(!cpt.input_widgets.find(function(iw) { return w.name==iw.name; })) {
+                if(!cpt.input_widgets().find(function(iw) { return w.name==iw.name; })) {
                     cpt.input_widgets.push(new InputWidget(cpt, {
                         name: w.name,
                         niceName: w.niceName,
@@ -621,7 +653,7 @@ $(document).ready(function() {
                 pt.current_marking_note(pt.marking_notes()[0]);
             }
 
-            tryLoadMatchingId(data,'input_widget','name',this.input_widgets,this);
+            tryLoadMatchingId(data,'input_widget','name',this.input_widgets(),this);
             if('input_options' in data) {
                 tryLoad(data.input_options,['correctAnswer'],this.input_options);
                 this.input_options.hint.load(data.input_options.hint);
@@ -1119,11 +1151,6 @@ $(document).ready(function() {
 
     Numbas.queueScript('knockout',[],function() {});
     var deps = ['jme-display','jme','answer-widgets'];
-    if('extensions' in item_json.data) {
-        item_json.data.extensions.forEach(function(extension) {
-            deps.push('extensions/'+extension+'/'+extension+'.js');
-        });
-    };
     Numbas.queueScript('start-editor',deps,function() {
         try {
             var item_json = window.item_json;

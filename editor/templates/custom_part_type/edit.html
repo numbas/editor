@@ -20,12 +20,6 @@
 
     {% include 'numbas_runtime.html' %}
 
-    {% for extension in extensions %}
-        {% if extension.hasScript %}
-            <script src="{% sstatic extension.scriptURL %}" type="text/javascript"></script>
-        {% endif %}
-    {% endfor %}
-
     <script type="text/javascript">
         $(document).ready(function() {
             Editor.custom_part_type = {};

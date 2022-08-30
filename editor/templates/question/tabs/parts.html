@@ -6,7 +6,7 @@
     <div class="panel-group parts" role="tablist" aria-multiselectable="true">
         <div class="container-fluid">
             <div class="row">
-                <div class="col-sm-12 col-md-4 col-lg-3" data-bind="visible: parts().length>0">
+                <div class="col-sm-12 col-md-4 col-lg-3">
                     <div class="panel panel-info parts-tree">
                         <div class="panel-heading">
                             <h3 class="panel-title">Parts</h3>
@@ -118,10 +118,15 @@
                             </div>
                         </div>
                         {% if editable %}
-                        <div class="panel-footer">
+                        <div class="panel-footer" data-bind="visible: parts().length>0">
                             <button type="button" class="btn btn-block btn-primary" data-bind="click: startAddingPart">
                                 <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parts().length ? 'Add another part' : 'Add a part'"></span>
                             </button>
+                        </div>
+                        <div class="panel-footer" data-bind="visible: parts().length==0">
+                            <p class="nothing-here">
+                                There are no parts yet.
+                            </p>
                         </div>
                         {% endif %}
                     </div>

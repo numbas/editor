@@ -7,7 +7,7 @@
     <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parentList().length ? 'Add another '+kind : 'Add a '+kind"></span>
     <span data-bind="if: $data.parent">to <span data-bind="text: $data.parent.levelName()+' '+$data.parent.indexLabel()"></span>
 </h3>
-<ul class="list-inline add-part">
+<ul class="list-unstyled add-part">
     <!-- ko foreach: availableTypes -->
     <li><button type="button" class="btn btn-default" data-bind="text: niceName, click: $parents[1].addPart"></button></li>
     <!-- /ko -->

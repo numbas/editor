@@ -33,18 +33,15 @@
     display: none;
 }
 
-.parts-tree .part-container.open {
-    border: 3px solid #397eac;
-}
-
 .parts-tree .list-group-item.add {
     border-top: none;
-    text-align: right;
     padding: 0.2em;
+    margin-left: 2em;
 }
 
 .parts-tree .children {
-    margin-left: 1em;
+    margin-left: 2em;
+    border-left: 1px solid #ddd;
 }
 
 .parts-tree .children-header {

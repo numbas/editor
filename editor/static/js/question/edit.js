@@ -2943,16 +2943,20 @@ $(document).ready(function() {
             p.exploreObjective(o);
         }
 
-        this.canAddGap = ko.computed(function() {
+        this.canAddGap = ko.pureComputed(function() {
             return this.type().name=='gapfill';
         },this);
 
-        this.canAddStep = ko.computed(function() {
+        this.canAddStep = ko.pureComputed(function() {
             return this.q.partsMode().value=='all' && this.isRootPart() && this.type().has_marks;
         },this);
 
-        this.canAddAlternative = ko.computed(function() {
+        this.canAddAlternative = ko.pureComputed(function() {
             return this.type().has_marks && !this.isAlternative();
+        },this);
+
+        this.showAddAlternative = ko.pureComputed(function() {
+            return this.canAddAlternative() && this==this.q.currentPart() || (this.q.currentPart() && this==this.q.currentPart().parent());
         },this);
 
         this.startAddingGap = function() {

@@ -255,6 +255,7 @@ class BaseUpdateView(generic.UpdateView):
             'previewURL': reverse('{}_preview'.format(self.object.editoritem.item_type), args=(self.object.pk, self.object.editoritem.slug)),
             'previewWindow': str(calendar.timegm(time.gmtime())),
             'current_stamp': editor.views.generic.stamp_json(self.object.editoritem.get_current_stamp()),
+            'helpURL': settings.GLOBAL_SETTINGS['HELP_URL'],
         }
 
         if self.editable:

@@ -49,93 +49,6 @@ $(document).ready(function() {
     },this);
 
 
-    function AddPartTypeModal(question,useFn, filter) {
-        var m = this;
-        this.question = question;
-        this.show = ko.observable(false);
-        this.open = function() {
-            m.show(true);
-        }
-        this.useFn = useFn;
-        var part_types = Editor.part_types.models;
-        if(filter) {
-            part_types = part_types.filter(filter);
-        }
-        this.part_types = part_types.filter(function(pt) { return pt.is_custom_part_type; });
-    }
-
-    ko.bindingHandlers.showModal = {
-        init: function(element, valueAccessor) {
-            $(element).modal({show:false});
-
-            var value = valueAccessor();
-            if (ko.isObservable(value)) {
-                $(element).on('hide.bs.modal', function() {
-                   value(false);
-                });
-            }
-        },
-        update: function (element, valueAccessor) {
-            var value = valueAccessor();
-            if (ko.unwrap(value)) {
-                $(element).modal('show');
-            } else {
-                $(element).modal('hide');
-            }
-        }
-    };                 
-
-
-    ko.components.register('part-type-modal', {
-        viewModel: function(params) {
-            var vm = this;
-            this.show = params.data.show;
-            this.part_types = params.data.part_types;
-            this.search = ko.observable('');
-            this.filtered_part_types = ko.pureComputed(function() {
-                var search = this.search();
-                var words = search.toLowerCase().split(/\s+/g).map(function(w){ return w.trim() });
-                return this.part_types.filter(function(pt) {
-                    return words.every(function(word){ return pt.search_text.contains(word) || !word; });
-                });
-            },this);
-            this.useFn = params.data.useFn;
-            this.use = function(pt) {
-                vm.show(false);
-                vm.useFn(pt);
-            }
-        },
-        template: '\
-            <div class="modal fade part-type-modal" tabindex="-1" role="dialog" aria-hidden="true" data-bind="showModal: show">\
-                <div class="modal-dialog">\
-                    <div class="modal-content">\
-                        <div class="modal-header">\
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>\
-                            <h3 class="modal-title">Choose a part type</h3>\
-                        </div>\
-                        <div class="modal-body">\
-                            <input type="text" class="form-control" data-bind="textInput: search" placeholder="Enter keywords to search for">\
-                            <ul class="list-unstyled part-types" data-bind="foreach: filtered_part_types">\
-                                <li class="part-type">\
-                                    <button class="btn btn-sm btn-link use" title="Use this part type" data-bind="click: $parent.use"><span class="glyphicon glyphicon-plus" ></span></button>\
-                                    <div class="details">\
-                                        <h4>\
-                                            <span role="button" class="name" data-bind="html: niceName, click: $parent.use"></span>\
-                                            <br>\
-                                            <small>by <span data-bind="text: source.author.name"></span></small>\
-                                        </h4>\
-                                        <div data-bind="html: description"></div>\
-                                        <p><a target="_blank" data-bind="attr: {href: help_url}"><span class="glyphicon glyphicon-question-sign"></span> More information</a></p>\
-                                    </div>\
-                                </li>\
-                            </ul>\
-                        </div>\
-                    </div>\
-                </div>\
-            </div>\
-        '
-    });
-
     var Question = Editor.question.Question = function(data)
     {
         var q = this;
@@ -250,7 +163,6 @@ $(document).ready(function() {
         },this);
 
         this.currentPart = ko.observable(null);
-        this.addingPart = ko.observable(null);
 
         this.partsTabMode = ko.observable('edit part');
         this.showPartOptions = function() {
@@ -272,16 +184,25 @@ $(document).ready(function() {
         });
 
         this.partTypes = ko.pureComputed(function() {
-            return Editor.part_types.models.filter(function(pt) {
-                if(pt.is_custom_part_type) {
-                    return q.allParts().some(function(p){ return p.type().name==pt.name });
-                } else {
-                    return true;
-                }
-            });
+            return Editor.part_types.models;
         }, this);
         this.gapTypes = ko.pureComputed(function(){ return q.partTypes().filter(function(t){ return t.can_be_gap!==false }); });
         this.stepTypes = ko.pureComputed(function(){ return q.partTypes().filter(function(t){ return t.can_be_step!==false }); });
+
+        this.addingPart = ko.observable(null);
+        this.part_search = ko.observable('');
+        this.filtered_part_types = ko.pureComputed(function() {
+            var search = this.part_search().trim();
+            var part_types = this.addingPart() ? this.addingPart().availableTypes() : this.partTypes();
+
+            if(!search) {
+                return part_types;
+            }
+            var words = search.toLowerCase().split(/\s+/g).map(function(w){ return w.trim() });
+            return part_types.filter(function(pt) {
+                return words.every(function(word){ return pt.search_text.contains(word) || !word; });
+            });
+        },this);
 
         this.usedPartTypes = ko.pureComputed(function() {
             return Editor.part_types.models.filter(function(pt) {
@@ -441,6 +362,13 @@ $(document).ready(function() {
         this.startAddingPart = function() {
             q.addingPart({kind:'part', parent:null, parentList: q.parts, availableTypes: q.partTypes});
         }
+        this.addingPartHere = ko.pureComputed(function() {
+            var a = q.addingPart();
+            if(!a) {
+                return false;
+            }
+            return a.kind == 'part' && a.parent == null;
+        },this);
 
         this.addPart = function(type) {
             var adding = q.addingPart();
@@ -466,8 +394,6 @@ $(document).ready(function() {
                 this.startAddingPart();
             }
         },this);
-
-        this.addPartTypeModal = new AddPartTypeModal(this,function(pt){ q.addPart(pt) });
 
         this.goToPart = function(path) {
             var p = q.getPart(path);
@@ -2956,15 +2882,36 @@ $(document).ready(function() {
         },this);
 
         this.showAddAlternative = ko.pureComputed(function() {
-            return this.canAddAlternative() && this==this.q.currentPart() || (this.q.currentPart() && this==this.q.currentPart().parent());
+            return this.canAddAlternative() && (this==q.currentPart() || (q.currentPart() && this==q.currentPart().parent()));
         },this);
 
         this.startAddingGap = function() {
             q.addingPart({kind:'gap',parent:p, parentList: p.gaps, availableTypes: q.gapTypes});
         }
+        this.addingGapHere = ko.pureComputed(function() {
+            var a = q.addingPart();
+            if(!a) {
+                return false;
+            }
+            return a.kind == 'gap' && a.parent == p;
+        },this);
+        this.showAddGap = ko.pureComputed(function() {
+            return this.canAddGap() && (this==q.currentPart() || (q.currentPart() && q.currentPart().isGap() && this==q.currentPart().parent()));
+        },this);
+
         this.startAddingStep = function() {
             q.addingPart({kind:'step',parent:p, parentList: p.steps, availableTypes: q.stepTypes});
         }
+        this.addingStepHere = ko.pureComputed(function() {
+            var a = q.addingPart();
+            if(!a) {
+                return false;
+            }
+            return a.kind == 'step' && a.parent == p;
+        },this);
+        this.showAddStep = ko.pureComputed(function() {
+            return this.canAddStep() && (this==q.currentPart() || (q.currentPart() && this==q.currentPart().parent()));
+        },this);
 
         this.showCorrectAnswer = ko.observable(true);
         this.showFeedbackIcon = ko.observable(true);

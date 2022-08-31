@@ -28,15 +28,22 @@
     max-height: 60vh;
     overflow-y: auto;
 }
-
-.parts-tree .part-container.sortable-chosen > .children {
-    display: none;
+.parts-tree > .list-group > ol {
+    margin-bottom: 1px;
 }
 
-.parts-tree .list-group-item.add {
+.parts-tree .add {
     border-top: none;
-    padding: 0.2em;
-    margin-left: 2em;
+    font-size: 0.8em;
+    padding: 0.3em 0.3em 0.8em 0.3em;
+}
+.parts-tree .add .btn {
+    vertical-align: baseline;
+}
+
+.parts-tree .part.adding {
+    font-style: italic;
+    padding: 0 1em;
 }
 
 .parts-tree .children {

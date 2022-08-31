@@ -2,21 +2,29 @@ $(document).ready(function() {
 var part_types = Editor.part_types = {};
 var tryGetAttribute = Editor.tryGetAttribute;
 
+var HELP_URL = item_json.helpURL;
+
 part_types.models = [
     {
         name: 'information', 
         niceName: 'Information only',
+        description: 'An information part contains only a prompt and no answer input. It is most often used as a Step to provide a hint for a parent part.',
+        help_url: HELP_URL + 'question/parts/information.html',
         can_be_gap: false
     },
     {
         name: 'extension', 
         niceName: 'Extension',
+        description: 'An extension part acts as a placeholder for any interactive element added by an extension, or custom code in the question, which awards marks to the student.',
+        help_url: HELP_URL + 'question/parts/extension.html',
         has_marks: true,
         has_marking_settings: true
     },
     {
         name: 'gapfill', 
         niceName: 'Gap-fill', 
+        description: 'Gap-fill parts allow you to include answer inputs inline with the prompt text, instead of at the end of the part.',
+        help_url: HELP_URL + 'question/parts/gapfill.html',
         has_marks: true,
         has_marking_settings: true,
         has_feedback_icon: true,
@@ -61,6 +69,8 @@ part_types.models = [
     {
         name:'jme', 
         niceName: 'Mathematical expression', 
+        description: 'Ask the student to enter an algebraic expression, using JME syntax.',
+        help_url: HELP_URL + 'question/parts/mathematical-expression.html',
         has_marks: true, 
         has_feedback_icon: true,
         has_correct_answer: true,
@@ -337,6 +347,8 @@ part_types.models = [
     {
         name:'numberentry', 
         niceName: 'Number entry', 
+        description: 'Ask the student to enter a number.',
+        help_url: HELP_URL + 'question/parts/numberentry.html',
         has_marks: true,
         has_feedback_icon: true,
         has_correct_answer: true,
@@ -448,6 +460,8 @@ part_types.models = [
     {
         name: 'matrix',
         niceName: 'Matrix entry',
+        description: 'Ask the student to enter a matrix of numbers.',
+        help_url: HELP_URL + 'question/parts/matrixentry.html',
         has_marks: true,
         has_feedback_icon: true,
         has_correct_answer: true,
@@ -561,6 +575,8 @@ part_types.models = [
     {
         name:'patternmatch', 
         niceName: 'Match text pattern', 
+        description: 'Ask the student to enter short, non-mathematical text.',
+        help_url: HELP_URL + 'question/parts/match-text-pattern.html',
         has_marks: true,
         has_feedback_icon: true,
         has_correct_answer: true,
@@ -615,6 +631,8 @@ part_types.models = [
         has_feedback_icon: true,
         has_correct_answer: true,
         niceName: 'Choose one from a list',
+        description: 'The student must choose one of several options.',
+        help_url: HELP_URL + 'question/parts/multiple-choice.html',
         tabs: function(parts,model) {
             return [
                 new Editor.Tab('choices','Choices','list',{visible:true,more_important:true,in_use: ko.computed(function() { return model.choices().length>0; })}),
@@ -756,6 +774,8 @@ part_types.models = [
         has_feedback_icon: true,
         has_correct_answer: true,
         niceName: 'Choose several from a list',
+        description: 'The student can choose any of a list of options.',
+        help_url: HELP_URL + 'question/parts/multiple-choice.html',
         tabs: function(part,model) {
             return [
                 new Editor.Tab('choices','Choices','list',{visible:true,more_important:true,in_use: ko.computed(function() { return model.choices().length>0;})}),
@@ -926,6 +946,8 @@ part_types.models = [
         has_feedback_icon: true,
         has_correct_answer: true,
         niceName: 'Match choices with answers',
+        description: 'The student is presented with a 2D grid of choices and answers. Depending on how the part is set up, they must either match up each choice with an answer, or select any number of choice-answer pairs.',
+        help_url: HELP_URL + 'question/parts/multiple-choice.html',
         tabs: function(part,model) {
             return [
                 new Editor.Tab('choices','Choices','list',{visible:true,more_important:true,in_use: ko.computed(function(){ return model.choices().length>0; })}),
@@ -1199,7 +1221,6 @@ function CustomPartType(data) {
     Numbas.custom_part_types[this.name] = data;
 
     var element = document.createElement('div');
-    this.search_text = [this.niceName, this.name, this.source.author.name, this.description].join(' ').toLowerCase();
 }
 CustomPartType.prototype = {
     is_custom_part_type: true,
@@ -1294,6 +1315,14 @@ CustomPartType.prototype = {
 
 item_json.custom_part_types.forEach(function(data) {
     part_types.models.push(new CustomPartType(data));
+});
+
+part_types.models.forEach(function(pt) {
+    var bits = [pt.niceName, pt.name, pt.description];
+    if(pt.source) {
+        bits.push(pt.source.author.name);
+    }
+    pt.search_text = bits.join(' ').toLowerCase();
 });
 
 });

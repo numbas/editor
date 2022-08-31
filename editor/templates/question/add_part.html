@@ -2,16 +2,33 @@
 {% load sanitizer %}
 {% load helplink %}
 
+<!-- ko if: addingPart -->
 <!-- ko with: addingPart -->
 <h3>
     <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parentList().length ? 'Add another '+kind : 'Add a '+kind"></span>
     <span data-bind="if: $data.parent">to <span data-bind="text: $data.parent.levelName()+' '+$data.parent.indexLabel()"></span>
 </h3>
-<ul class="list-unstyled add-part">
-    <!-- ko foreach: availableTypes -->
-    <li><button type="button" class="btn btn-default" data-bind="text: niceName, click: $parents[1].addPart"></button></li>
-    <!-- /ko -->
-    <li><button type="button" class="btn btn-link" data-bind="click: $parent.addPartTypeModal.open">… More part types</button></li>
-</ul>
-<button class="btn btn-link" type="button" data-bind="visible: $data.parent, click: function() {$parent.currentPart($data.parent)}">Cancel</button>
+
+<!-- /ko -->
+
+<input type="text" class="form-control" data-bind="textInput: part_search" placeholder="Enter keywords to search for">
+
+<table class="table table-condensed part-types">
+    <tbody data-bind="foreach: filtered_part_types">
+        <tr class="part-type">
+            <td>
+                <button class="btn btn-block btn-default use" title="Use this part type" data-bind="click: $root.addPart, css: { 'btn-default': $data.is_custom_part_type, 'btn-primary': !$data.is_custom_part_type }">
+                    <span class="name" data-bind="html: niceName"></span>
+                </button>
+                <!-- ko if: source.author -->
+                <small>by <span class="author" data-bind="text: source.author.name"></span></small>
+                <!-- /ko -->
+            </td>
+            <td class="details">
+                <div data-bind="html: description"></div>
+                <a target="_blank" data-bind="attr: {href: help_url}"><span class="glyphicon glyphicon-question-sign"></span> More information</a>
+            </td>
+        </tr>
+    </tbody>
+</table>
 <!-- /ko -->

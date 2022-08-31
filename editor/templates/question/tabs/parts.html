@@ -15,7 +15,7 @@
                             <a href="#" data-bind="click: showPartOptions"><span class="glyphicon glyphicon-cog"></span> Explore mode options</a>
                         </div>
                         <div class="list-group">
-                            <div data-bind="sortable: {
+                            <ol class="all-parts list-unstyled" data-bind="sortable: {
                                 foreach: parts,
                                 options: {
                                     group: 'parts',
@@ -23,7 +23,7 @@
                                     handle: '.root'
                                 }
                             }">
-                                <div class="part-container" data-bind="css: {open: showChildren()}">
+                                <li class="part-container" data-bind="css: {open: showChildren()}">
                                     <a role="button" class="list-group-item part root" data-bind="
                                         click: $parent.currentPart, 
                                         css: {
@@ -35,50 +35,50 @@
                                         <span class="type-name" data-bind="text: type().niceName"></span>
                                     </a>
                                     <div class="children">
-                                        <div class="alternatives" data-bind="visible: alternatives().length, sortable: { foreach: alternatives, options: {group: path()+'alternatives', handle: '.alternative'} }">
-                                            <a role="button" class="list-group-item part alternative" data-bind="
-                                                click: $root.currentPart, 
-                                                css: {active: $data==$root.currentPart()}
-                                            ">
-                                                <small class="sub-part-kind">Alt</small>
-                                                <strong data-bind="text: name"></strong>
-                                            </a>
-                                        </div>
-                                        <span class="list-group-item add alternative" data-bind="visible: showAddAlternative">
-                                            <button type="button" data-bind="click: addAlternative" class="btn btn-xs btn-warning"><span class="glyphicon glyphicon-plus"></span> Add an alternative answer</button>
-                                        </span>
-                                        <div class="gaps" data-bind="visible: gaps().length, sortable: { foreach: gaps, options: {group: path()+'gaps', handle: '.gap'} }">
-                                            <div class="part-container" data-bind="css: {open: showChildren()}">
-                                                <a role="button" class="list-group-item part gap" data-bind="
-                                                    click: $parents[1].currentPart, 
-                                                    css: {active: $data==$parents[1].currentPart()}
+                                        <ol class="list-unstyled alternatives" data-bind="visible: alternatives().length, sortable: { foreach: alternatives, options: {group: path()+'alternatives', handle: '.alternative'} }">
+                                            <li>
+                                                <a role="button" class="list-group-item part alternative" data-bind="
+                                                    click: $root.currentPart, 
+                                                    css: {active: $data==$root.currentPart()}
                                                 ">
-                                                    <small class="sub-part-kind">Gap</small>
-                                                    <span class="unused-gap text-warning" data-bind="if: unusedGap"><span class="glyphicon glyphicon-exclamation-sign"></span><span class="sr-only">This gap is not used in the parent part's prompt.</span></span>
-                                                    <strong data-bind="text: header"></strong>
-                                                    <span class="type-name" data-bind="text: type().niceName"></span>
+                                                    <small class="sub-part-kind">Alt</small>
+                                                    <strong data-bind="text: name"></strong>
                                                 </a>
-                                                <div class="children">
-                                                    <div class="alternatives" data-bind="visible: alternatives().length, sortable: { foreach: alternatives, options: {group: path()+'alternatives', handle: '.alternative'} }">
-                                                        <a role="button" class="list-group-item part alternative" data-bind="
-                                                            click: $root.currentPart, 
-                                                            css: {active: $data==$root.currentPart()}
-                                                        ">
-                                                            <small class="sub-part-kind">Alt</small>
-                                                            <strong data-bind="text: name"></strong>
-                                                        </a>
+                                            </li>
+                                        </ol>
+
+                                        <ol class="list-unstyled gaps" data-bind="visible: gaps().length, sortable: { foreach: gaps, options: {group: path()+'gaps', handle: '.gap'} }">
+                                            <li class="part-container" data-bind="css: {open: showChildren()}">
+                                                    <a role="button" class="list-group-item part gap" data-bind="
+                                                        click: $parents[1].currentPart, 
+                                                        css: {active: $data==$parents[1].currentPart()}
+                                                    ">
+                                                        <small class="sub-part-kind">Gap</small>
+                                                        <span class="unused-gap text-warning" data-bind="if: unusedGap"><span class="glyphicon glyphicon-exclamation-sign"></span><span class="sr-only">This gap is not used in the parent part's prompt.</span></span>
+                                                        <strong data-bind="text: header"></strong>
+                                                        <span class="type-name" data-bind="text: type().niceName"></span>
+                                                    </a>
+                                                    <div class="children">
+                                                        <ol class="list-unstyled alternatives" data-bind="visible: alternatives().length, sortable: { foreach: alternatives, options: {group: path()+'alternatives', handle: '.alternative'} }">
+                                                            <li>
+                                                                <a role="button" class="list-group-item part alternative" data-bind="
+                                                                    click: $root.currentPart, 
+                                                                    css: {active: $data==$root.currentPart()}
+                                                                ">
+                                                                    <small class="sub-part-kind">Alt</small>
+                                                                    <strong data-bind="text: name"></strong>
+                                                                </a>
+                                                            </li>
+                                                        </ol>
+                                                        <div class="add" data-bind="visible: showAddAlternative">
+                                                            <span class="glyphicon glyphicon-plus"></span> Add 
+                                                            <button type="button" data-bind="click: addAlternative" class="btn btn-xs btn-warning">an alternative answer</button>
+                                                        </div>
                                                     </div>
-                                                    <span class="list-group-item add alternative" data-bind="visible: showAddAlternative">
-                                                        <button type="button" data-bind="click: addAlternative" class="btn btn-xs btn-warning"><span class="glyphicon glyphicon-plus"></span> Add an alternative answer</button>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <span class="list-group-item add gap" data-bind="visible: canAddGap() && $data==$root.currentPart() || ($root.currentPart() && $root.currentPart().isGap() && $data==$root.currentPart().parent())">
-                                            <button type="button" data-bind="click: startAddingGap" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-plus"></span> Add a gap</button>
-                                        </span>
-                                        <div class="steps" data-bind="visible: steps().length, sortable: { foreach: steps, options: {group: path()+'steps', handle: '.step'} }">
-                                            <div class="part-container" data-bind="css: {open: showChildren()}">
+                                            </li>
+                                        </ol>
+                                        <ol class="list-unstyled steps" data-bind="visible: steps().length, sortable: { foreach: steps, options: {group: path()+'steps', handle: '.step'} }">
+                                            <li class="part-container" data-bind="css: {open: showChildren()}">
                                                 <a role="button" class="list-group-item part step" data-bind="
                                                     click: $parents[1].currentPart, 
                                                     css: {active: $data==$parents[1].currentPart()}
@@ -87,32 +87,50 @@
                                                     <strong data-bind="text: header"></strong>
                                                     <span class="type-name" data-bind="text: type().niceName"></span>
                                                 </a>
-                                                <!-- ko if: showChildren -->
                                                 <div class="children">
-                                                    <div class="alternatives" data-bind="visible: alternatives().length, sortable: { foreach: alternatives, options: {group: path()+'alternatives', handle: '.alternative'} }">
-                                                        <a role="button" class="list-group-item part alternative" data-bind="
-                                                            click: $root.currentPart, 
-                                                            css: {active: $data==$root.currentPart()}
-                                                        ">
-                                                            <small class="sub-part-kind">Alt</small>
-                                                            <strong data-bind="text: name"></strong>
-                                                        </a>
+                                                    <ol class="list-unstyled alternatives" data-bind="visible: alternatives().length, sortable: { foreach: alternatives, options: {group: path()+'alternatives', handle: '.alternative'} }">
+                                                        <li>
+                                                            <a role="button" class="list-group-item part alternative" data-bind="
+                                                                click: $root.currentPart, 
+                                                                css: {active: $data==$root.currentPart()}
+                                                            ">
+                                                                <small class="sub-part-kind">Alt</small>
+                                                                <strong data-bind="text: name"></strong>
+                                                            </a>
+                                                        </li>
+                                                    </ol>
+                                                    {% if editable %}
+                                                    <div class="add" data-bind="visible: showAddAlternative">
+                                                        <span class="glyphicon glyphicon-plus"></span> Add 
+                                                        <button type="button" data-bind="click: addAlternative" class="btn btn-xs btn-warning">an alternative answer</button>
                                                     </div>
-                                                    <span class="list-group-item add alternative" data-bind="visible: showAddAlternative">
-                                                        <button type="button" data-bind="click: addAlternative" class="btn btn-xs btn-warning"><span class="glyphicon glyphicon-plus"></span> Add an alternative answer</button>
-                                                    </span>
+                                                    {% endif %}
                                                 </div>
-                                                <!-- /ko -->
-                                            </div>
+                                            </li>
+                                        </ol>
+                                        {% if editable %}
+                                        <div class="add" data-bind="visible: showAddAlternative() || showAddGap() || showAddStep()">
+                                            <span class="glyphicon glyphicon-plus"></span> 
+                                            Add
+                                            <button type="button" data-bind="visible: showAddAlternative, click: addAlternative" class="btn btn-xs btn-warning">an alternative answer</button>
+                                            <button type="button" data-bind="visible: showAddGap, click: startAddingGap" class="btn btn-xs btn-default">a gap</button>
+                                            <button type="button" data-bind="visible: showAddStep, click: startAddingStep" class="btn btn-xs btn-info">a step</button>
                                         </div>
-                                        <span class="list-group-item add step" data-bind="visible: canAddStep() && $data==$root.currentPart() || ($root.currentPart() && $root.currentPart().isStep() && $data==$root.currentPart().parent())">
-                                            <button type="button" data-bind="click: startAddingStep" class="btn btn-xs btn-info"><span class="glyphicon glyphicon-plus"></span> Add a step</button>
-                                        </span>
+                                        <small class="part adding text-muted" data-bind="visible: addingGapHere">
+                                            Adding a gap
+                                        </small>
+                                        <small class="part adding text-muted" data-bind="visible: addingStepHere">
+                                            Adding a step
+                                        </small>
+                                        {% endif %}
                                     </div>
-                                </div>
-                            </div>
+                                </li>
+                            </ol>
                         </div>
                         {% if editable %}
+                        <small class="part adding text-muted" data-bind="visible: addingPartHere">
+                            Adding a part
+                        </small>
                         <div class="panel-footer" data-bind="visible: parts().length>0">
                             <button type="button" class="btn btn-block btn-primary" data-bind="click: startAddingPart">
                                 <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parts().length ? 'Add another part' : 'Add a part'"></span>
@@ -144,10 +162,6 @@
             </div>
         </div>
     </div>
-
-    {% if editable %}
-    <part-type-modal params="data: addPartTypeModal"></part-type-modal>
-    {% endif %}
 
     {% if editable %}
     <editor-pager params="visible: !$root.published(), editor: $root, previousTab: 'statement', nextTab: 'variables', task_group: 'parts'"></editor-pager>

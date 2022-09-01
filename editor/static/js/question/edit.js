@@ -107,7 +107,15 @@ $(document).ready(function() {
             running: ko.observable(false),
             time_remaining: ko.observable(0)
         };
-
+        this.variablesTabMode = ko.observable('edit variables');
+        this.showVariableTesting = function() {
+            this.variablesTabMode('testing');
+        };
+        this.currentVariable.subscribe(function(v) {
+            if(v) {
+                q.variablesTabMode('edit variables');
+            }
+        });
 
         this.partsModes = [
             {name: 'Show all parts', value: 'all'},
@@ -300,7 +308,6 @@ $(document).ready(function() {
             new Editor.Tab('statement','Statement','blackboard',{in_use: ko.pureComputed(function(){ return this.statement()!=''; },this)}),
             new Editor.Tab('parts','Parts','check',{in_use: ko.pureComputed(function() { return this.parts().length>0; },this)}),
             new Editor.Tab('variables','Variables','list',{in_use: ko.pureComputed(function() { return this.variables().length>0; },this), warning: ko.pureComputed(function() { return this.variableErrors(); },this)}),
-            new Editor.Tab('variabletesting','Variable testing','dashboard',{in_use: ko.pureComputed(function() { return this.variablesTest.condition()!=''; },this)}),
             new Editor.Tab('advice','Advice','blackboard',{in_use: ko.pureComputed(function() { return this.advice()!=''; },this)}),
             new Editor.Tab('extensions','Extensions & scripts','wrench',{in_use: extensions_tab_in_use}),
             new Editor.Tab('resources','Resources','picture',{in_use: ko.pureComputed(function() { return this.resources().length>0; },this)}),
@@ -503,7 +510,7 @@ $(document).ready(function() {
             var o = [];
             o.push(new VariableReference({kind:'tab',tab:'statement',value:q.statement,type:'html',description:'Statement', scope:q.baseScope}));
             o.push(new VariableReference({kind:'tab',tab:'advice',value:q.advice,type:'html',description:'Advice', scope:q.baseScope}));
-            o.push(new VariableReference({kind:'tab',tab:'variabletesting',value:q.variablesTest.condition,type:'jme',description:'Variable testing condition', scope:q.baseScope}));
+            o.push(new VariableReference({kind:'tab',tab:'variables',value:q.variablesTest.condition,type:'jme',description:'Variable testing condition', scope:q.baseScope}));
             q.allParts().forEach(function(p) {
                 o = o.concat(p.variable_references());
             });

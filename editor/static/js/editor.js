@@ -1031,17 +1031,32 @@ $(document).ready(function() {
 
         var rules = styleElement.sheet.cssRules;
         var new_rules = [];
-        Array.prototype.map.apply(rules,[function(rule) {
-          var selectorText = '.preview '+rule.selectorText;
-          for(var i=0;i<rule.style.length;i++) {
-            var name = rule.style.item(i);
-            var value = rule.style.getPropertyValue(name);
-            if(value) {
+
+        function fix_rule(rule) {
+            switch(rule.constructor.name) {
+                case 'CSSStyleRule':
+                    return selector+' '+rule.cssText;
+                case 'CSSMediaRule':
+                    var subrules = Array.from(rule.cssRules).map(fix_rule);
+                    return '@media '+rule.media.mediaText+' {\n'+subrules.join('\n')+'\n}';
+                case 'CSSSupportsRule':
+                    var subrules = Array.from(rule.cssRules).map(fix_rule);
+                    return '@supports '+rule.conditionText+' {\n'+subrules.join('\n')+'\n}';
+                case 'CSSImportRule':
+                case 'CSSFontFaceRule':
+                case 'CSSPageRule':
+                case 'CSSNamespaceRule':
+                case 'CSSCounterStyleRule':
+                case 'CSSDocumentRule':
+                case 'CSSFontFeatureValuesRule':
+                case 'CSSViewportRule':
+                    return rule.cssText;
+                default:
+                    throw(new Error("While rewriting CSS, an unrecognised rule type was encountered: "+rule.constructor.name));
             }
-          }
-          new_rules.push(selector+' '+rule.cssText);
-        }]);
-        return new_rules.join('\n');
+        }
+
+        return Array.from(rules).map(fix_rule).join('\n');
     };
 
 

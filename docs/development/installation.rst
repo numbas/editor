@@ -110,7 +110,7 @@ Run the "first setup" script:
 
 .. code-block:: console
   
-    $ cd numbas_editor
+    $ cd editor
     $ python first_setup.py
 
 This will configure the editor based on your answers to a few questions, and write the file ``numbas/settings.py``.

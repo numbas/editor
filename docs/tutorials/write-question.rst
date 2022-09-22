@@ -106,7 +106,7 @@ If you run the question now, you'll see there is a statement, but no prompt to d
 
 Let's ask the student to work out how many apples Chris eats in a week.
 
-Go back to the editing window and click on :guilabel:`Parts` in the sidebar, or follow the navigation buttons at the bottom of the page, skipping past :guilabel:`Variables`, which we will consider later.
+Go back to the editing window and click on :guilabel:`Parts` in the sidebar, or follow the navigation buttons at the bottom of the page.
 
 You're shown a list of part types.
 We want the student to give a number, so select :ref:`Number entry <number-entry>`.

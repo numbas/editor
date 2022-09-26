@@ -535,74 +535,77 @@ $(document).ready(function() {
         } else {
             this.load_promise = Promise.succeed(true);
         }
-        this.load_state();
 
-        var required_notes = [{name: 'mark', description: 'This is the main marking note. It should award credit and provide feedback based on the student\'s answer.'},{name: 'interpreted_answer', description: 'A value representing the student\'s answer to this part.'}];
-        required_notes.forEach(function(def) {
-            var note = pt.getNote(def.name);
-            if(!note) {
-                var note = new Note(pt);
-                note.name(def.name);
-                pt.marking_notes.push(note);
-            }
-            note.description(def.description);
-            note.required(true);
-        });
+        this.load_promise.then(() => {
+            this.load_state();
 
-        this.init_tasks();
-
-        this.ready_to_use = ko.computed(function() {
-            return this.task_list.all_sections_completed();
-        }, this);
-
-        this.canPublish = ko.computed(function() {
-            return !this.published() && this.ready_to_use();
-        }, this);
-
-        if(item_json.editable) {
-            //access control stuff
-            this.access_rights = ko.observableArray(item_json.access_rights.map(function(d){
-                var access = new Editor.UserAccess(pt,d.user)
-                access.access_level(d.access_level);
-                return access;
-            }));
-
-            this.access_data = ko.pureComputed(function() {
-                return {
-                    user_ids: pt.access_rights().map(function(u){return u.id}),
-                    access_levels: pt.access_rights().map(function(u){return u.access_level()})
+            var required_notes = [{name: 'mark', description: 'This is the main marking note. It should award credit and provide feedback based on the student\'s answer.'},{name: 'interpreted_answer', description: 'A value representing the student\'s answer to this part.'}];
+            required_notes.forEach(function(def) {
+                var note = pt.getNote(def.name);
+                if(!note) {
+                    var note = new Note(pt);
+                    note.name(def.name);
+                    pt.marking_notes.push(note);
                 }
+                note.description(def.description);
+                note.required(true);
             });
-            this.saveAccess = new Editor.Saver(this.access_data,function(data) {
-                return $.post(pt.set_access_url,data);
-            });
-            this.userAccessSearch = ko.observable('');
 
-            this.addUserAccess = function(data) {
-                var access_rights = pt.access_rights();
-                for(var i=0; i<access_rights.length; i++) {
-                    if(access_rights[i].id == data.id) {
-                        noty({
-                            text: "That user is already in the access list.",
-                            layout: "center",
-                            speed: 100,
-                            type: 'error',
-                            timeout: 2000,
-                            closable: true,
-                            animateOpen: {"height":"toggle"},
-                            animateClose: {"height":"toggle"},
-                            closeOnSelfClick: true
-                        });
-                        return;
+            this.init_tasks();
+
+            this.ready_to_use = ko.computed(function() {
+                return this.task_list.all_sections_completed();
+            }, this);
+
+            this.canPublish = ko.computed(function() {
+                return !this.published() && this.ready_to_use();
+            }, this);
+
+            if(item_json.editable) {
+                //access control stuff
+                this.access_rights = ko.observableArray(item_json.access_rights.map(function(d){
+                    var access = new Editor.UserAccess(pt,d.user)
+                    access.access_level(d.access_level);
+                    return access;
+                }));
+
+                this.access_data = ko.pureComputed(function() {
+                    return {
+                        user_ids: pt.access_rights().map(function(u){return u.id}),
+                        access_levels: pt.access_rights().map(function(u){return u.access_level()})
                     }
-                }
-                var access = new Editor.UserAccess(pt,data);
-                pt.access_rights.push(access);
-            };
-        }
+                });
+                this.saveAccess = new Editor.Saver(this.access_data,function(data) {
+                    return $.post(pt.set_access_url,data);
+                });
+                this.userAccessSearch = ko.observable('');
+
+                this.addUserAccess = function(data) {
+                    var access_rights = pt.access_rights();
+                    for(var i=0; i<access_rights.length; i++) {
+                        if(access_rights[i].id == data.id) {
+                            noty({
+                                text: "That user is already in the access list.",
+                                layout: "center",
+                                speed: 100,
+                                type: 'error',
+                                timeout: 2000,
+                                closable: true,
+                                animateOpen: {"height":"toggle"},
+                                animateClose: {"height":"toggle"},
+                                closeOnSelfClick: true
+                            });
+                            return;
+                        }
+                    }
+                    var access = new Editor.UserAccess(pt,data);
+                    pt.access_rights.push(access);
+                };
+            }
 
 
-        this.init_save();
+            this.init_save();
+        });
     }
     CustomPartType.prototype = {
         find_input_widgets: function() {
@@ -696,8 +699,7 @@ $(document).ready(function() {
             this.task_list = new Editor.TaskList(this.section_tasks);
         },
 
-        init_save: async function() {
-            await this.load_promise;
+        init_save: function() {
             var pt = this;
             this.autoSave = new Editor.Saver(
                 function() {
@@ -1158,10 +1160,11 @@ $(document).ready(function() {
 
     Numbas.queueScript('knockout',[],function() {});
     var deps = ['jme-display','jme','answer-widgets'];
-    Numbas.queueScript('start-editor',deps,function() {
+    Numbas.queueScript('start-editor',deps, async function() {
         try {
             var item_json = window.item_json;
             viewModel = new CustomPartType(item_json.data, item_json.save_url, item_json.set_access_url);
+            await viewModel.load_promise;
             ko.options.deferUpdates = true;
             ko.applyBindings(viewModel);
             try {

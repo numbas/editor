@@ -131,6 +131,16 @@ All the built-in :ref:`JME functions <jme-functions>` are available in marking n
 
     If ``credit`` is negative, credit is taken away, to a minimum of 0.
 
+.. jme:function:: add_credit_if(condition, credit, positive_message, negative_message)
+   :keywords: award, credit, score, if, condition
+
+    If ``condition`` evaluates to ``true``, add ``credit`` to the current total, and give the feedback message ``positive_message``.
+
+    If ``condition`` evaluates to false, show the feedback message ``negative_message``.
+    If ``credit > 0``, then this is considered to be negative feedback, otherwise it is neutral.
+
+    You can omit ``negative_feedback``, in which case no feedback will be shown when ``condition`` is false.
+
 .. jme:function:: sub_credit(credit, message)
     :keywords: subtract, credit, score, penalty, penalise
 
@@ -145,6 +155,15 @@ All the built-in :ref:`JME functions <jme-functions>` are available in marking n
 
     This operation is displayed to the student as an absolute change in marks awarded, not a multiplication. 
     For example, if the student already had 2 marks and `multiply_credit(0.5,message)` was applied, the message displayed would be along the lines of "1 mark was taken away".
+
+.. jme:function:: multiply_credit_if(condition, proportion, positive_message, negative_message)
+   :keywords: award, credit, score, if, condition
+
+    If ``condition`` evaluates to ``true``, multiply the current credit by``proportion``, and give the feedback message ``positive_message``.
+
+    If ``condition`` evaluates to false, show the feedback message ``negative_message``.
+
+    You can omit ``negative_feedback``, in which case no feedback will be shown when ``condition`` is false.
 
 .. jme:function:: end()
     :keywords: stop

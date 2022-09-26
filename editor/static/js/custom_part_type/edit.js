@@ -406,7 +406,7 @@ $(document).ready(function() {
                 script_promises.push(promise);
                 document.head.appendChild(script);
             });
-            Promise.all(script_promises).then(function() {
+            return Promise.all(script_promises).then(function() {
                 Numbas.activateExtension(ext.location);
                 ext.loaded(true);
             }).catch(function(err) {
@@ -531,7 +531,9 @@ $(document).ready(function() {
         this.published = ko.observable(false);
 
         if(data) {
-            this.load(data);
+            this.load_promise = this.load(data);
+        } else {
+            this.load_promise = Promise.succeed(true);
         }
         this.load_state();
 
@@ -629,16 +631,20 @@ $(document).ready(function() {
             },this));
         },
 
-        load: function(data) {
+        load: async function(data) {
             var pt = this;
             tryLoad(data,['name','short_name','description','help_url','published'],this);
 
+            var extensionPromises = [];
             if('extensions' in data) {
                 this.extensions().map(function(e) {
-                    if(data.extensions.indexOf(e.location)>=0)
+                    if(data.extensions.indexOf(e.location)>=0) {
                         e.used(true);
+                        extensionPromises.push(e.load());
+                    }
                 });
             }
+            await Promise.all(extensionPromises);
             if('settings' in data && data.settings.forEach) {
                 data.settings.forEach(function(sd) {
                     var setting = new Setting(pt, sd);
@@ -690,7 +696,8 @@ $(document).ready(function() {
             this.task_list = new Editor.TaskList(this.section_tasks);
         },
 
-        init_save: function() {
+        init_save: async function() {
+            await this.load_promise;
             var pt = this;
             this.autoSave = new Editor.Saver(
                 function() {

@@ -531,7 +531,9 @@ $(document).ready(function() {
         this.published = ko.observable(false);
 
         if(data) {
-            this.load(data);
+            this.load_promise = this.load(data);
+        } else {
+            this.load_promise = Promise.succeed(true);
         }
         this.load_state();
 
@@ -694,7 +696,8 @@ $(document).ready(function() {
             this.task_list = new Editor.TaskList(this.section_tasks);
         },
 
-        init_save: function() {
+        init_save: async function() {
+            await this.load_promise;
             var pt = this;
             this.autoSave = new Editor.Saver(
                 function() {

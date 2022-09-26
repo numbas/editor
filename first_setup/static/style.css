@@ -1,0 +1,60 @@
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+}
+
+body {
+    font-family: sans-serif;
+}
+
+.questions {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 1em;
+    align-items: center;
+}
+
+form label {
+    text-align: right;
+}
+
+form section ~ section {
+    margin-top: 3em;
+}
+
+input[type="text"] {
+    font-family: monospace;
+    width: 100%;
+}
+
+select {
+    background: white;
+}
+
+input[type="text"], select {
+    height: 2em;
+    padding: 0 0.5em;
+    border: 1px solid black;
+}
+
+.questions input {
+    justify-self: start;
+}
+
+button[type="submit"] {
+    grid-column: span 2;
+    justify-self: center;
+    padding: 0.5em 2em;
+    font-size: 1.1em;
+}
+
+/*
+label[for*="question-DB_"]:not([for="question-DB_ENGINE"]), *[id*="question-DB_"]:not([id="question-DB_ENGINE"]) {
+    display:none;
+}
+*/

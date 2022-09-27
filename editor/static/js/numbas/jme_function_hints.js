@@ -3275,6 +3275,21 @@ var jme_function_hints =
         "doc": "marking-algorithm"
     },
     {
+        "name": "add_credit_if",
+        "description": "If <code>condition</code> evaluates to <code>true</code>, add <code>credit</code> to the current total, and give the feedback message <code>positive_message</code>.",
+        "keywords": [
+            "award",
+            "credit",
+            "score",
+            "if",
+            "condition"
+        ],
+        "calling_patterns": [
+            "add_credit_if(condition, credit, positive_message, negative_message)"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
         "name": "sub_credit",
         "description": "Subtract <code>credit</code> from the current total and give the feedback message <code>message</code>.\nThe message should explain why the credit was taken away.",
         "keywords": [
@@ -3299,6 +3314,21 @@ var jme_function_hints =
         ],
         "calling_patterns": [
             "multiply_credit(proportion, message)"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "multiply_credit_if",
+        "description": "If <code>condition</code> evaluates to <code>true</code>, multiply the current credit by``proportion``, and give the feedback message <code>positive_message</code>.",
+        "keywords": [
+            "award",
+            "credit",
+            "score",
+            "if",
+            "condition"
+        ],
+        "calling_patterns": [
+            "multiply_credit_if(condition, proportion, positive_message, negative_message)"
         ],
         "doc": "marking-algorithm"
     },

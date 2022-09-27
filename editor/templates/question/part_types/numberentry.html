@@ -15,6 +15,17 @@
     <h4>Advanced settings</h4>
     <hr>
     <div class="form-group">
+        <label class="label-block">
+            <div class="{{form_label_class}} control-label">
+                Display answer {% helplink 'question/parts/numberentry.html#term-Display-answer' %}
+            </div>
+            <div class="{{form_control_class}}">
+                {% text_input 'displayAnswer' monospace=True %}
+                <div class="help-block" data-bind="visible: ko.unwrap(displayAnswer)==''">(The midpoint of the minimum and maximum accepted values)</div>
+            </div>
+        </label>
+    </div>
+    <div class="form-group">
         <label class="{{form_label_class}} control-label">
             Precision restriction {% helplink 'question/parts/numberentry.html#term-Precision-restriction' %}
         </label>

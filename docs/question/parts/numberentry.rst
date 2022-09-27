@@ -17,6 +17,30 @@ Marking
     Maximum accepted value
         The largest value accepted as correct.
 
+    Display answer
+        The value to use for the expected answer.
+
+        If this is left empty, then the displayed value depends on the minimum and maximum accepted values :math:`(min,max)`:
+
+        +----------------------------------------+---------------------------------+
+        | :math:`(min,max)`                      | Displayed value                 |
+        +========================================+=================================+
+        | Both finite                            | :math:`\frac{1}{2}(min + max)`  |
+        +----------------------------------------+---------------------------------+
+        | Only :math:`min` is finite             | :math:`min`                     |
+        +----------------------------------------+---------------------------------+
+        | Only :math:`max` is finite             | :math:`max`                     |
+        +----------------------------------------+---------------------------------+
+        | :math:`(-\infty, \infty)`              | :math:`0`                       |
+        +----------------------------------------+---------------------------------+
+        | :math:`(-\infty, -\infty)`             | :math:`-\infty`                 |
+        +----------------------------------------+---------------------------------+
+        | :math:`(+\infty, +\infty)`             | :math:`\infty`                  |
+        +----------------------------------------+---------------------------------+
+
+        If :term:`Display the correct answer as a fraction?` is ticked, then the value will be displayed as a fraction.
+        Otherwise, it will be displayed as a decimal using the part's precision settings and the :term:`Correct answer style`.
+
     Precision restriction
         You can insist that the student gives their answer to a particular number of decimal places or significant figures. 
         For example, if you want the answer to be given to 3 decimal places, :math:`3.1` will fail this restriction, while :math:`3.100` will pass. 

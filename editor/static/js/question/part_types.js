@@ -373,7 +373,8 @@ part_types.models = [
                 showPrecisionHint: ko.observable(true),
                 showFractionHint: ko.observable(true),
                 mustBeReduced: ko.observable(false),
-                mustBeReducedPC: ko.observable(0)
+                mustBeReducedPC: ko.observable(0),
+                displayAnswer: ko.observable('')
             };
 
             model.notationStyles = Editor.numberNotationStyles;
@@ -406,6 +407,7 @@ part_types.models = [
             data.allowFractions = this.fractionPossible() && this.allowFractions();
             data.mustBeReduced = this.fractionPossible() && this.allowFractions() && this.mustBeReduced();
             data.mustBeReducedPC = this.mustBeReducedPC();
+            data.displayAnswer = this.displayAnswer();
             if(this.precisionType().name!='none') {
                 data.precisionType = this.precisionType().name;
                 data.precision = this.precision();
@@ -428,12 +430,13 @@ part_types.models = [
                 {tab: 'marking-settings', value: model.maxValue, type: 'jme', description: 'Maximum accepted value'},
                 {tab: 'marking-settings', value: model.precision, type: 'jme', description: 'Required precision'},
                 {tab: 'marking-settings', value: model.precisionMessage, type: 'html', description: model.precisionWord},
+                {tab: 'marking-settings', value: model.displayAnswer, type: 'jme', description: 'Display answer'},
             ];
             return o;
         },
 
         load: function(data) {
-            tryLoad(data,['minValue','maxValue','correctAnswerFraction','allowFractions','mustBeReduced','mustBeReducedPC','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision','showPrecisionHint','showFractionHint'],this);
+            tryLoad(data,['minValue','maxValue','correctAnswerFraction','allowFractions','mustBeReduced','mustBeReducedPC','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision','showPrecisionHint','showFractionHint','displayAnswer'],this);
             if('answer' in data) {
                 this.minValue(data.answer);
                 this.maxValue(data.answer);

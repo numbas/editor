@@ -708,6 +708,15 @@ $(document).ready(function() {
             }
         },this);
 
+        // The number of questions in this group that will be numbered.
+        this.num_numbered_questions = ko.computed(function() {
+            switch(this.pickingStrategy().name) {
+                case 'random-subset':
+                    return parseInt(this.pickQuestions());
+                default:
+                    return this.questions().filter(function(q) { return !q.hasCustomName(); }).length;
+            }
+        },this);
         this.first_number = ko.computed(function() {
             if(!this.parent) {
                 return 0;
@@ -716,7 +725,7 @@ $(document).ready(function() {
             var index = all_groups.indexOf(this);
             var total = 0;
             all_groups.slice(0,index).forEach(function(g) {
-                total += g.num_questions();
+                total += g.num_numbered_questions();
             });
             return total;
         },this);
@@ -761,6 +770,9 @@ $(document).ready(function() {
         this.current_stamp = ko.observable();
         this.current_stamp_display = ko.observable();
         this.customName = ko.observable('');
+        this.hasCustomName = ko.pureComputed(function() {
+            return this.customName().trim()!='';
+        },this);
         this.displayName = ko.computed({
             write: function(v) {
                 if(v==this.name()) {
@@ -819,7 +831,9 @@ $(document).ready(function() {
                     case 'all-shuffled':
                         return undefined;
                     default:
-                        return g.first_number()+g.questions.indexOf(this)+1;
+                        var i = g.questions.indexOf(this);
+                        var n = g.questions.slice(0,i).filter(function(q2) { return !q2.hasCustomName(); }).length;
+                        return g.first_number()+n+1;
                 }
             }
         },this);

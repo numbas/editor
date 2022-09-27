@@ -16178,7 +16178,8 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         q.originalXML = q.xml;
 
         tryGetAttribute(q,q.xml,'.',['name','customName','partsMode','maxMarks','objectiveVisibility','penaltyVisibility']);
-        if(q.customName.trim()!='') {
+        q.hasCustomName = q.customName.trim() != '';
+        if(q.hasCustomName) {
             q.name = q.customName.trim();
         }
 
@@ -16411,7 +16412,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
 
         function get_part_extensions(pdata) {
             var type = pdata.type;
-            var cpt = Numbas.custom_part_types[type];
+            var cpt = Numbas.custom_part_types && Numbas.custom_part_types[type];
             if(!cpt) {
                 return;
             }
@@ -16425,7 +16426,10 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                 pdata.steps.forEach(get_part_extensions);
             }
         }
-        tryGet(data,'parts').forEach(get_part_extensions);
+        var parts = tryGet(data,'parts');
+        if(parts) {
+            parts.forEach(get_part_extensions);
+        }
 
         q.addExtensionScopes();
 
@@ -16653,6 +16657,9 @@ Question.prototype = /** @lends Numbas.Question.prototype */
      */
     finaliseLoad: function() {
         var q = this;
+
+        q.displayNumber = q.exam ? q.exam.questionList.filter(function(q2) { return q2.number<q.number && !q2.hasCustomName; }).length : 0;
+
         q.signals.on('preambleLoaded', function() {
             q.runPreamble();
             if(q.partsMode=='explore') {

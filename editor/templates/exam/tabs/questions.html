@@ -104,11 +104,15 @@
                                     <!-- /ko -->
                                     <!-- ko if: $root.navigatemode().edit_question_names -->
                                         <div class="input-group">
-                                            <!-- ko if: $root.navigatemode().number_questions -->
-                                                <strong class="input-group-addon number" data-bind="text: number()===undefined ? '' : number()+'.'"></strong>
-                                            <!-- /ko -->
+                                            <span class="input-group-addon text-info">
+                                                <!-- ko if: customName -->
+                                                <span title="This name has been changed" data-bind="fadeVisible: hasCustomName" class="glyphicon glyphicon-exclamation-sign"></span>
+                                                <!-- /ko -->
+                                                <!-- ko if: $root.navigatemode().number_questions && !customName() -->
+                                                    <strong class="number" data-bind="text: number()===undefined ? '' : number()+'.'"></strong>
+                                                <!-- /ko -->
+                                            </span>
                                             <input class="form-control name" data-bind="textInput: displayName">
-                                            <span class="input-group-addon text-info"><span title="This name has been changed" data-bind="fadeVisible: customName() != ''" class="glyphicon glyphicon-exclamation-sign"></span></span>
                                         </div>
                                     <!-- /ko -->
                                 </span>

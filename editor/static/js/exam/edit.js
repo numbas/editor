@@ -81,7 +81,7 @@ $(document).ready(function() {
             {
                 name: 'sequence', 
                 niceName: 'Sequential', 
-                edit_question_names: false, 
+                edit_question_names: true, 
                 change_question_groups: true, 
                 number_questions: true
             },
@@ -763,6 +763,9 @@ $(document).ready(function() {
         this.customName = ko.observable('');
         this.displayName = ko.computed({
             write: function(v) {
+                if(v==this.name()) {
+                    v = '';
+                }
                 return this.customName(v);
             },
             read: function() {

@@ -99,14 +99,17 @@
                             </div>
                             <div class="title">
                                 <span>
-                                    <!-- ko if: $root.navigatemode().number_questions -->
-                                        <strong class="number" data-bind="text: number()===undefined ? '' : number()+'.'"></strong>
-                                    <!-- /ko -->
                                     <!-- ko if: !$root.navigatemode().edit_question_names -->
                                         <a data-bind="attr:{href: url}, latex: name" target="_blank"></a>
                                     <!-- /ko -->
                                     <!-- ko if: $root.navigatemode().edit_question_names -->
-                                        <input class="form-control name" data-bind="textInput: displayName">
+                                        <div class="input-group">
+                                            <!-- ko if: $root.navigatemode().number_questions -->
+                                                <strong class="input-group-addon number" data-bind="text: number()===undefined ? '' : number()+'.'"></strong>
+                                            <!-- /ko -->
+                                            <input class="form-control name" data-bind="textInput: displayName">
+                                            <span class="input-group-addon text-info"><span title="This name has been changed" data-bind="fadeVisible: customName() != ''" class="glyphicon glyphicon-exclamation-sign"></span></span>
+                                        </div>
                                     <!-- /ko -->
                                 </span>
                                 <span class="label label-default stamp" data-bind="visible: current_stamp, text: current_stamp_display, attr: {'data-stamp':current_stamp()}"></span>
@@ -185,7 +188,7 @@
 
                 {% if editable %}
                 <div class="panel-footer" data-bind="fadeVisible: navigatemode().name!='diagnostic'">
-                    <button class="btn btn-primary btn-block" data-bind="click: addQuestionGroup"><span class="glyphicon glyphicon-plus"></span> Add another question group</button>
+                    <button class="btn btn-primary btn-block" data-bind="click: addQuestionGroup"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: question_groups().length==0 ? 'Add a question group' : 'Add another question group'"></span></button>
                 </div>
                 {% endif %}
             </div>

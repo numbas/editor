@@ -1509,6 +1509,18 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
         '⁰¹²³⁴⁵⁶⁷⁸⁹⁽⁾⁺⁻⁼ⁿⁱ'
     ],
 
+    /** Characters representing a left parenthesis.
+     *
+     * @type {Array.<string>}
+     */
+    left_parentheses: "(❨❪⟮﹙（﴾⦅",
+
+    /** Characters representing a right parenthesis.
+     *
+     * @type {Array.<string>}
+     */
+    right_parentheses: ")﹚）❩❫﴿⟯⦆｠",
+
     /** Regular expressions to match tokens.
      *
      * @type {object.<RegExp>}
@@ -1518,7 +1530,6 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
         re_integer: /^[0-9]+(?!\x2E|[0-9])/,
         re_number: /^[0-9]+(?:\x2E[0-9]+)?/,
         re_name: /^\{?((?:(?:[\p{Ll}\p{Lu}\p{Lo}\p{Lt}]+):)*)((?:\$?[\p{Ll}\p{Lu}\p{Lo}\p{Lt}_][\p{Ll}\p{Lu}\p{Lo}\p{Lt}\p{Nl}\p{Nd}_]*'*)|\?\??|[π∞])\}?/iu,
-        re_punctuation: /^([\(\),\[\]])/,
         re_string: util.re_jme_string,
         re_comment: /^\/\/.*?(?:\n|$)/,
         re_keypair: /^:/,
@@ -1729,8 +1740,14 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
         {
             re: 're_punctuation',
             parse: function(result,tokens,expr,pos) {
-                var new_tokens = [new TPunc(result[0])];
-                if(result[0]=='(' && tokens.length>0) {
+                var c = result[0];
+                if(this.left_parentheses.indexOf(c)>=0) {
+                    c = '(';
+                } else if(this.right_parentheses.indexOf(c)>=0) {
+                    c = ')';
+                }
+                var new_tokens = [new TPunc(c)];
+                if(c=='(' && tokens.length>0) {
                     var prev = tokens[tokens.length-1];
                     if(jme.isType(prev,'number') || jme.isType(prev,')') || (jme.isType(prev,'op') && prev.postfix)) {    //number, right bracket or postfix op followed by left parenthesis is also interpreted to mean multiplication
                         new_tokens.splice(0,0,this.op('*'));
@@ -1797,6 +1814,8 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
         var re_op_source = '^(?:'+any_op_bits.join('|')+')';
         this.re.re_op = new RegExp(re_op_source,'i');
         this.re.re_superscript = new RegExp('^['+this.superscript_replacements[1]+']+');
+
+        this.re.re_punctuation = new RegExp('^(['+this.left_parentheses+this.right_parentheses+',\\[\\]])','u');
     },
 
     /** Convert given expression string to a list of tokens. Does some tidying, e.g. inserts implied multiplication symbols.
@@ -3392,6 +3411,9 @@ jme.registerType(
  * @param {Array.<number>} value
  */
 var TVector = types.TVector = function(value) {
+    if(!(Array.isArray(value) && value.every(function(e) { return typeof e=='number'; }))) {
+        throw(new Numbas.Error('jme.vector.value not an array of numbers'));
+    }
     this.value = value;
 }
 jme.registerType(
@@ -3420,6 +3442,9 @@ jme.registerType(
  */
 var TMatrix = types.TMatrix = function(value) {
     this.value = value;
+    if(value.rows===undefined || value.columns===undefined || !(Array.isArray(value) && value.every(function(row) { return Array.isArray(row) && row.every(function(n) { return typeof n=='number'; }); }))) {
+        throw(new Numbas.Error("jme.matrix.value not the right type"));
+    }
     if(arguments.length>0) {
         if(value.length!=value.rows) {
             throw(new Numbas.Error("jme.matrix.reports bad size"));
@@ -12604,6 +12629,8 @@ jme.variables = /** @lends Numbas.jme.variables */ {
             case 'javascript':
                 fn.evaluate = jme.variables.makeJavascriptFunction(fn,withEnv);
                 break;
+            default:
+                throw(new Numbas.Error('jme.variables.invalid function language',{language: fn.language}));
             }
         } catch(e) {
             throw(new Numbas.Error('jme.variables.error making function',{name:fn.name,message:e.message}));

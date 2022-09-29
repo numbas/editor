@@ -71,7 +71,7 @@
                 <div class="panel-group functions" role="tablist">
                     <div class="container-fluid">
                         <div class="row">
-                            <div class="col-sm-12 col-md-3 col-lg-2" data-bind="visible: parts().length>0">
+                            <div class="col-sm-12 col-md-3 col-lg-2" data-bind="visible: functions().length>0">
                                 <div class="panel panel-info functions">
                                     <div class="panel-heading">
                                         <h3 class="panel-title">Functions</h3>
@@ -117,88 +117,88 @@
                                     <!-- /ko -->
                                 <!-- /ko -->
                                 <!-- ko with: currentFunction -->
-                                <div class="row">
-                                    <div class="form-group col-sm-9">
-                                        <label>
-                                            Name {% helplink 'question/reference.html#term-Name' %}
-                                            <input {% if not editable %}disabled{% endif %} class="form-control" placeholder="Name" type="text" data-bind="textInput: name">
+                                <form data-bind="submit: Editor.noop">
+                                    <div class="form-group">
+                                        <label class="label-block">
+                                            <span class="label-text">Name</span>
+                                            <input {% if not editable %}disabled{% endif %} type="text" placeholder="Name" class="form-control name monospace" data-bind="textInput: name"/>
+                                        </label>
+                                        <span class="name-error text-danger" data-bind="html: nameError, visible: nameError" aria-live="polite"></span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="label-block">
+                                            <span class="label-text">Language</span>
+                                            <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: language.options, value: language, optionsText: 'niceName'"></select>
                                         </label>
                                     </div>
-                                    <div class="form-group col-sm-3">
-                                        <label>
-                                            Language {% helplink 'question/reference.html#term-Language' subject='languages' %}
-                                            <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: languages, value: language"></select>
+                                    <div class="form-group">
+                                        <label class="label-block">
+                                            <span class="label-text">Parameters</span>
+                                        </label>
+                                        <table class="parameters table">
+                                            <thead>
+                                                <tr>
+                                                    <th id="function-parameters-label-name">Name</th>
+                                                    <th id="function-parameters-label-type">Type</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody data-bind="foreach: parameters">
+                                                <tr class="parameter">
+                                                    <td class="name">
+                                                        <input {% if not editable %}disabled{% endif %} placeholder="Name" type="text" class="form-control monospace" aria-labelledby="function-parameters-label-name" data-bind="textInput: name, autosize: name">
+                                                    </td>
+                                                    <td class="type">
+                                                        <select {% if not editable %}disabled{% endif %} class="form-control" aria-labelledby="function-parameters-label-type" data-bind="options: $parent.parameterTypes, value: type" title="Type of this parameter"></select>
+                                                        <!-- ko if: show_of -->
+                                                        <span id="function-parameter-of">of</span>
+                                                        <select {% if not editable %}disabled{% endif %} class="form-control" aria-labelledby="function-parameter-of" data-bind="options: $parent.parameterTypes, value: of_type" title="Type of the contents"></select>
+                                                        <!-- /ko -->
+                                                        <!-- ko if: show_custom_type -->
+                                                        <input {% if not editable %}disabled{% endif %} class="form-control monospace" placeholder="Name" type="text" aria-labelledby="function-parameters-label-type" class="form-control monospace" data-bind="textInput: custom_type, autosize: custom_type">
+                                                        <!-- /ko -->
+                                                    </td>
+                                                    <td>
+                                                        {% if editable %}<button type="button" class="btn btn-danger btn-xs" title="Remove this parameter" data-bind="click: remove"><span class="glyphicon glyphicon-remove"></span></button>{% endif %}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                            <tfoot>
+                                                {% if editable %}
+                                                <tr>
+                                                    <td colspan="3">
+                                                        <button type="button" class="btn btn-sm btn-info" title="Add a parameter" data-bind="click: addParameter"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></span></button>
+                                                    </td>
+                                                </tr>
+                                                {% endif %}
+
+                                                <tr>
+                                                    <th>Output type</th>
+                                                    <td class="type">
+                                                        <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: outputTypes, value: type" title="Output type"></select>
+                                                    </td>
+                                                    <td></td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                        
+                                    <div clas="form-group">
+                                        <label class="label-block">
+                                            <span class="label-text">Definition</span>
+                                            <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: definition, codemirrorMode: language"></textarea>
+                                            <div class="alert alert-danger" data-bind="visible: error().length>0" aria-live="polite">
+                                                <span class="glyphicon glyphicon-alert"></span> <span class="errortext" data-bind="html: error"></span>
+                                            </div>
                                         </label>
                                     </div>
-                                </div>
-                                <div class="form-group form-inline">
-                                    <table class="parameters table">
-                                        <caption>Parameters</caption>
-                                        <thead>
-                                            <tr>
-                                                <th id="function-parameters-label-name">Name</th>
-                                                <th id="function-parameters-label-type">Type</th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody data-bind="foreach: parameters">
-                                            <tr class="parameter">
-                                                <td>
-                                                    <input {% if not editable %}disabled{% endif %} placeholder="Name" type="text" class="form-control monospace" aria-labelledby="function-parameters-label-name" data-bind="textInput: name, autosize: name">
-                                                </td>
-                                                <td>
-                                                    <select {% if not editable %}disabled{% endif %} class="form-control" aria-labelledby="function-parameters-label-type" data-bind="options: $parent.parameterTypes, value: type" title"Type of this parameter"></select>
-                                                    <!-- ko if: show_of -->
-                                                    <span id="function-parameter-of">of</span>
-                                                    <select {% if not editable %}disabled{% endif %} class="form-control" aria-labelledby="function-parameter-of" data-bind="options: $parent.parameterTypes, value: of_type" title"Type of the contents"></select>
-                                                    <!-- /ko -->
-                                                    <!-- ko if: show_custom_type -->
-                                                    <input {% if not editable %}disabled{% endif %} class="form-control monospace" placeholder="Name" type="text" aria-labelledby="function-parameters-label-type" class="form-control monospace" data-bind="textInput: custom_type, autosize: custom_type">
-                                                    <!-- /ko -->
-                                                </td>
-                                                <td>
-                                                    {% if editable %}<button type="button" class="btn btn-danger btn-xs" title="Remove this parameter" data-bind="click: remove"><span class="glyphicon glyphicon-remove"></span></button>{% endif %}
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                        {% if editable %}
-                                        <tfoot>
-                                            <tr>
-                                                <td colspan="3">
-                                                    <button type="button" class="btn btn-sm btn-info" title="Add a parameter" data-bind="click: addParameter"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></span></button>
-                                                </td>
-                                            </tr>
-                                        </tfoot>
-                                        {% endif %}
-                                    </table>
-                                </div>
-
-                                <div class="form-group form-inline output">
-                                    <label class="label-block">
-                                        <span class="label-text">Output type</span>
-                                        <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: outputTypes, value: type" title="Output type"></select>
-                                    </label>
-                                </div>
-
-                                <div clas="form-group">
-                                    <label>
-                                        Definition:
-                                    </label>
-                                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: definition, codemirrorMode: language"></textarea>
-                                    <div class="alert alert-danger" data-bind="visible: error().length>0" aria-live="polite">
-                                        <span class="glyphicon glyphicon-alert"></span> <span class="errortext" data-bind="html: error"></span>
-                                    </div>
-                                </div>
+                                </form>
                                 <!-- /ko -->
                             </div>
                         </div>
                     </div>
                 </div>
-                <ul class="list-group">
-                    <!-- ko foreach: {data: functions, afterAdd: Editor.afterAdd} -->
-                    <li class="function list-group-item">
-                    <!-- /ko -->
-                </ul>
             </section>
             <section class="tab-pane" data-bind="activeIf: ko.unwrap(extensionTabs.currentTab().id)=='constants'">
                 <h2>Built-in constants</h2>

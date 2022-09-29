@@ -422,6 +422,7 @@ $(document).ready(function() {
                 return _obs(v);
             }
         })
+        obs.options = options;
         return obs;
     }
 

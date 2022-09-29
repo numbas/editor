@@ -333,6 +333,114 @@ $(document).ready(function() {
                 }
             }
 
+            this.functions().map(function(f) {
+                try {
+                    var fn = {
+                        name: f.name().toLowerCase(),
+                        definition: f.definition(),
+                        language: f.language().name,
+                        outtype: f.type(),
+                        parameters: f.parameters().map(function(p) {
+                            if(!p.name()) {
+                                throw(new Error('A parameter is unnamed.'));
+                            }
+                            return {
+                                name: p.name(),
+                                type: p.signature(),
+                            }
+                        })
+                    };
+
+                    var cfn = jme.variables.makeFunction(fn,scope);
+                    var oevaluate = cfn.evaluate;
+                    cfn.evaluate = function(args,scope) {
+                        function warning(message) {
+                            var wscope = scope;
+                            while(wscope.editor_evaluation_warnings === undefined) {
+                                wscope = wscope.parent;
+                                if(!wscope) {
+                                    return;
+                                }
+                            }
+
+                            var suggestions = [];
+                            function parameter_signature_suggestion(tok) {
+                                if(jme.isType(tok,'number')) {
+                                    return 'number';
+                                }
+                                if(tok.type=='list') {
+                                    if(tok.value.length>0) {
+                                        var item_sigs = tok.value.map(parameter_signature_suggestion);
+                                        if(item_sigs.every(function(s) { return s==item_sigs[0]; })) {
+                                            return 'list of '+item_sigs[0];
+                                        }
+                                    }
+                                    return 'list';
+                                }
+                                if(tok.type=='dict') {
+                                    var item_sigs = [];
+                                    for(var name in tok.value) {
+                                        var sig = parameter_signature_suggestion(tok.value[name]);
+                                    }
+                                    if(item_sigs.length>0 && item_sigs.every(function(s) { return s==item_sigs[0]; })) {
+                                        return 'dict of '+item_sigs[0];
+                                    }
+                                }
+                                return tok.type;
+                            }
+                            var parameter_signature_suggestions = args.map(parameter_signature_suggestion);
+                            f.parameters().forEach(function(p,i) {
+                                var current_sig = p.signature().replace('?','anything');
+                                var suggested_sig = parameter_signature_suggestions[i];
+                                if(current_sig != suggested_sig) {
+                                    suggestions.push({
+                                        kind:'change signature', 
+                                        parameter: p, 
+                                        from:current_sig, 
+                                        to: suggested_sig, 
+                                        apply: function() {
+                                            p.set_signature(suggested_sig);
+                                        }
+                                    });
+                                }
+                            });
+
+                            wscope.editor_evaluation_warnings.push({fn: f, message: message, suggestions: suggestions, args: args.slice()});
+                        }
+                        function check_value(tok) {
+                            switch(tok.type) {
+                                case 'number':
+                                    if(!(Numbas.util.isNumber(tok.value) || tok.value.complex)) {
+                                        warning("a value of <code>NaN</code> was returned.",['explicit number parameters']);
+                                    }
+                                    break;
+                                case 'list':
+                                    tok.value.forEach(check_value);
+                                    break;
+                                case 'dict':
+                                    for(var name in tok.value) {
+                                        check_value(tok.value[name]);
+                                    }
+                                    break;
+                            }
+                        }
+                        var result = oevaluate.apply(this,arguments);
+                        if(cfn.outtype!='?' && !jme.isType(result,cfn.outtype)) {
+                            warning("this function is supposed to return a <code>"+cfn.outtype+"</code> but instead returned a <code>"+result.type+"</code>.",['explicit number parameters']);
+                        }
+                        check_value(result);
+                        return result;
+                    }
+                    scope.addFunction(cfn);
+                }
+                catch(e) {
+                    f.error(e.message);
+                }
+
+            });
+
+
+
             return scope;
         },this);
         
@@ -1044,113 +1152,6 @@ $(document).ready(function() {
             var jme = Numbas.jme;
 
             var scope = this.baseScope();
-
-            //create functions
-            this.functions().map(function(f) {
-                try {
-                    var fn = {
-                        name: f.name().toLowerCase(),
-                        definition: f.definition(),
-                        language: f.language(),
-                        outtype: f.type(),
-                        parameters: f.parameters().map(function(p) {
-                            if(!p.name()) {
-                                throw(new Error('A parameter is unnamed.'));
-                            }
-                            return {
-                                name: p.name(),
-                                type: p.signature(),
-                            }
-                        })
-                    };
-
-                    var cfn = jme.variables.makeFunction(fn,scope);
-                    var oevaluate = cfn.evaluate;
-                    cfn.evaluate = function(args,scope) {
-                        function warning(message) {
-                            var wscope = scope;
-                            while(wscope.editor_evaluation_warnings === undefined) {
-                                wscope = wscope.parent;
-                                if(!wscope) {
-                                    return;
-                                }
-                            }
-
-                            var suggestions = [];
-                            function parameter_signature_suggestion(tok) {
-                                if(jme.isType(tok,'number')) {
-                                    return 'number';
-                                }
-                                if(tok.type=='list') {
-                                    if(tok.value.length>0) {
-                                        var item_sigs = tok.value.map(parameter_signature_suggestion);
-                                        if(item_sigs.every(function(s) { return s==item_sigs[0]; })) {
-                                            return 'list of '+item_sigs[0];
-                                        }
-                                    }
-                                    return 'list';
-                                }
-                                if(tok.type=='dict') {
-                                    var item_sigs = [];
-                                    for(var name in tok.value) {
-                                        var sig = parameter_signature_suggestion(tok.value[name]);
-                                    }
-                                    if(item_sigs.length>0 && item_sigs.every(function(s) { return s==item_sigs[0]; })) {
-                                        return 'dict of '+item_sigs[0];
-                                    }
-                                }
-                                return tok.type;
-                            }
-                            var parameter_signature_suggestions = args.map(parameter_signature_suggestion);
-                            f.parameters().forEach(function(p,i) {
-                                var current_sig = p.signature().replace('?','anything');
-                                var suggested_sig = parameter_signature_suggestions[i];
-                                if(current_sig != suggested_sig) {
-                                    suggestions.push({
-                                        kind:'change signature', 
-                                        parameter: p, 
-                                        from:current_sig, 
-                                        to: suggested_sig, 
-                                        apply: function() {
-                                            p.set_signature(suggested_sig);
-                                        }
-                                    });
-                                }
-                            });
-
-                            wscope.editor_evaluation_warnings.push({fn: f, message: message, suggestions: suggestions, args: args.slice()});
-                        }
-                        function check_value(tok) {
-                            switch(tok.type) {
-                                case 'number':
-                                    if(!(Numbas.util.isNumber(tok.value) || tok.value.complex)) {
-                                        warning("a value of <code>NaN</code> was returned.",['explicit number parameters']);
-                                    }
-                                    break;
-                                case 'list':
-                                    tok.value.forEach(check_value);
-                                    break;
-                                case 'dict':
-                                    for(var name in tok.value) {
-                                        check_value(tok.value[name]);
-                                    }
-                                    break;
-                            }
-                        }
-                        var result = oevaluate.apply(this,arguments);
-                        if(cfn.outtype!='?' && !jme.isType(result,cfn.outtype)) {
-                            warning("this function is supposed to return a <code>"+cfn.outtype+"</code> but instead returned a <code>"+result.type+"</code>.",['explicit number parameters']);
-                        }
-                        check_value(result);
-                        return result;
-                    }
-                    scope.addFunction(cfn);
-                }
-                catch(e) {
-                    f.error(e.message);
-                }
-
-            });
 
             //make structure of variables to evaluate
             var todo = {}
@@ -2506,13 +2507,17 @@ $(document).ready(function() {
 
     function CustomFunction(q,data) {
         this.name = ko.observable('');
+        this.nameError = ko.computed(function() {
+        }, this);
         this.outputTypes = jmeTypes;
         this.parameterTypes = jmeParameterTypes;
         this.parameters = ko.observableArray([])
         this.type = ko.observable('anything');
         this.definition = ko.observable('');
-        this.languages = ['jme','javascript'];
-        this.language = ko.observable('jme');
+        this.language = Editor.optionObservable([
+            {name: 'jme', niceName: 'JME'},
+            {name: 'javascript', niceName: 'JavaScript'}
+        ]);
         this.error = ko.observable('');
         this.displayName = ko.pureComputed(function() {
             return this.name().trim() || 'Unnamed function';
@@ -2543,7 +2548,7 @@ $(document).ready(function() {
             return {
                 parameters: parameters,
                 type: this.type(),
-                language: this.language(),
+                language: this.language().name,
                 definition: this.definition()
             };
         },

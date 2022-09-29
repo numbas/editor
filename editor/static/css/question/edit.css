@@ -155,13 +155,9 @@ table.variable-list .value-cell .value {
     margin-bottom: 0.5em;
 }
 
-.function .parameter .btn.btn-info, .function .parameter input.form-control {
-    padding-top: 0;
-    background: none;
-    color: inherit;
-    padding-bottom: 0;
-    line-height: 1em;
-    height: auto;
+.function .parameters .type .form-control {
+    display: inline-block;
+    width: auto;
 }
 
 .resource img.thumbnail {

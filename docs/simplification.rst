@@ -140,6 +140,11 @@ The following display options are available:
 
         **Example:** ``\simplify[timesDot]{ 2*3 }`` produces :math:`2 \cdot 3`.
 
+    timesSpace
+        Instead of drawing a cross between terms being multiplied, just leave a small space.
+
+        **Example:** ``\simplify[timesSpace]{ x*(x+1) }`` produces :math:`x \; (x + 1)`.
+
     bareMatrices
         Matrices are rendered without parentheses.
 

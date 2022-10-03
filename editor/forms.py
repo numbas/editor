@@ -630,6 +630,8 @@ def validate_custom_part_type_json_file(f):
 class UploadCustomPartTypeForm(forms.ModelForm):
     file = forms.FileField(required=True, validators=[validate_custom_part_type_json_file])
 
+    kwarg_keys = ['name', 'short_name', 'description', 'input_widget', 'input_options', 'can_be_gap', 'can_be_step', 'marking_script', 'marking_notes', 'settings', 'help_url', 'ready_to_use']
+
     class Meta:
         model = CustomPartType
         fields = ['author']
@@ -644,12 +646,12 @@ class UploadCustomPartTypeForm(forms.ModelForm):
         self.cleaned_data['json'] = data
         return content
 
-    def save(self, commit=True):
+    def get_kwargs(self):
         data = self.cleaned_data.get('json')
         extensions = data.get('extensions',[])
         del data['extensions']
         kwargs = {}
-        for key in ['name','short_name','description','input_widget','input_options','can_be_gap','can_be_step','marking_script','marking_notes','settings','help_url','ready_to_use']:
+        for key in self.kwarg_keys:
             if key in data:
                 kwargs[key] = data[key]
         n = 0
@@ -657,9 +659,28 @@ class UploadCustomPartTypeForm(forms.ModelForm):
         while CustomPartType.objects.filter(short_name=kwargs['short_name']).exists():
             n += 1
             kwargs['short_name'] = o_short_name+'-'+str(n)
+
+        return (kwargs, extensions)
+
+    def save(self, commit=True):
+        kwargs, extensions = self.get_kwargs()
         cpt = CustomPartType(author=self.cleaned_data.get('author'), **kwargs)
         if(commit):
             cpt.save()
+            cpt.extensions.set(Extension.objects.filter(location__in=extensions))
+        return cpt
+
+class ReuploadCustomPartTypeForm(UploadCustomPartTypeForm):
+    class Meta:
+        model = CustomPartType
+        fields = []
+        widgets = {}
+
+    def save(self, commit=True):
+        kwargs, extensions = self.get_kwargs()
+        cpt = super(UploadCustomPartTypeForm, self).save(commit=commit)
+        if(commit):
+            CustomPartType.objects.filter(pk=cpt.pk).update(**kwargs)
             cpt.extensions.set(Extension.objects.filter(location__in=extensions))
         return cpt
 

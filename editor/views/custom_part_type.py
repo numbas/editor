@@ -9,7 +9,7 @@ from django.shortcuts import redirect
 
 from accounts.util import user_json
 from editor.models import CustomPartType, CUSTOM_PART_TYPE_PUBLIC_CHOICES, CUSTOM_PART_TYPE_INPUT_WIDGETS, Extension, IndividualAccess
-from editor.forms import NewCustomPartTypeForm, UpdateCustomPartTypeForm, CopyCustomPartTypeForm, UploadCustomPartTypeForm, IndividualAccessFormset
+from editor.forms import NewCustomPartTypeForm, UpdateCustomPartTypeForm, CopyCustomPartTypeForm, UploadCustomPartTypeForm, IndividualAccessFormset, ReuploadCustomPartTypeForm
 from editor.views.generic import AuthorRequiredMixin, CanViewMixin
 
 import json
@@ -37,6 +37,18 @@ class UploadView(generic.CreateView):
     def get_initial(self):
         initial = super().get_initial()
         initial['author'] = self.request.user
+        return initial
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
+class ReuploadView(generic.UpdateView):
+    model = CustomPartType
+    form_class = ReuploadCustomPartTypeForm
+    template_name = 'custom_part_type/reupload.html'
+
+    def get_initial(self):
+        initial = super().get_initial()
         return initial
 
     def get_success_url(self):

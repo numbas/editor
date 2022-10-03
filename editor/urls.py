@@ -240,6 +240,7 @@ urlpatterns = [
     path('part_type/<int:pk>/publish', login_required(custom_part_type.PublishView.as_view()), name='custom_part_type_publish'),
     path('part_type/<int:pk>/unpublish', login_required(custom_part_type.UnPublishView.as_view()), name='custom_part_type_unpublish'),
     path('part_type/<int:pk>/source', custom_part_type.SourceView.as_view(), name='custom_part_type_source'),
+    path('part_type/<int:pk>/reupload', login_required(custom_part_type.ReuploadView.as_view()), name='custom_part_type_reupload'),
     path('part_type/<int:pk>/set-access',
         custom_part_type.SetAccessView.as_view(), name='custom_part_type_set_access'),
 

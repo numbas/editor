@@ -42,6 +42,8 @@ class DeleteTimelineItemView(generic.DeleteView):
 
 class HideTimelineItemView(generic.UpdateView):
     model = TimelineItem
+    fields = []
+    http_method_names = ['post', 'head', 'options', 'trace']
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()

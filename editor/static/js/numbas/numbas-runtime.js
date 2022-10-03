@@ -6299,8 +6299,8 @@ newBuiltin('scientificnumberlatex', [TNum], TString, null, {
         if(n.complex) {
             n = n.re;
         }
-        var bits = math.parseScientific(math.niceRealNumber(n,{style:'scientific'}));
-        var s = new TString(math.niceRealNumber(bits.significand)+' \\times 10^{'+bits.exponent+'}');
+        var bits = math.parseScientific(math.niceRealNumber(n,{style:'scientific', scientificStyle: 'plain'}));
+        var s = new TString(math.niceRealNumber(bits.significand,{syntax:'latex'})+' \\times 10^{'+bits.exponent+'}');
         s.latex = true;
         s.safe = true;
         s.display_latex = true;
@@ -6324,11 +6324,11 @@ newBuiltin('scientificnumberhtml', [TDecimal], THTML, function(n) {
     s.innerHTML = math.niceRealNumber(bits.significand)+' × 10<sup>'+bits.exponent+'</sup>';
     return s;
 });
-newBuiltin('scientificnumberhtml', [TDecimal], THTML, function(n) {
+newBuiltin('scientificnumberhtml', [TNum], THTML, function(n) {
     if(n.complex) {
         n = n.re;
     }
-    var bits = math.parseScientific(math.niceRealNumber(n,{style:'scientific'}));
+    var bits = math.parseScientific(math.niceRealNumber(n,{style:'scientific', scientificStyle:'plain'}));
     var s = document.createElement('span');
     s.innerHTML = math.niceRealNumber(bits.significand)+' × 10<sup>'+bits.exponent+'</sup>';
     return s;
@@ -8417,7 +8417,7 @@ function nullaryTex(code)
 function funcTex(code)
 {
     var f = function(tree,texArgs){
-        return code+' \\left ( '+texArgs.join(', ')+' \\right )';
+        return code+' \\left ( '+texArgs.join(Numbas.locale.default_list_separator+' ')+' \\right )';
     }
     f.code = code;
     return f;
@@ -8738,7 +8738,7 @@ var texOps = jme.display.texOps = {
         if(tree.args.length==1 && tree.args[0].tok.type=='list') {
             return '\\left\\{ '+this.render({tok: tree.args[0]})+' \\right\\}';
         } else {
-            return '\\left\\{ '+texArgs.join(', ')+' \\right\\}';
+            return '\\left\\{ '+texArgs.join(Numbas.locale.default_list_separator+' ')+' \\right\\}';
         }
     },
     '`+-': infixTex(patternName('\\pm')),
@@ -8926,7 +8926,7 @@ var typeToTeX = jme.display.typeToTeX = {
                 texArgs[i] = this.render({tok:tok.value[i]});
             }
         }
-        return '\\left[ '+texArgs.join(', ')+' \\right]';
+        return '\\left[ '+texArgs.join(Numbas.locale.default_list_separator+' ')+' \\right]';
     },
     keypair: function(tree,tok,texArgs) {
         var key = '\\textrm{'+tok.key+'}';
@@ -8942,7 +8942,7 @@ var typeToTeX = jme.display.typeToTeX = {
                 }
             }
         }
-        return '\\left[ '+texArgs.join(', ')+' \\right]';
+        return '\\left[ '+texArgs.join(Numbas.locale.default_list_separator+' ')+' \\right]';
     },
     vector: function(tree,tok,texArgs) {
         return ('\\left ( '
@@ -8974,7 +8974,7 @@ var typeToTeX = jme.display.typeToTeX = {
         for(var i=0;i<tok.value.length;i++) {
             texArgs.push(this.render({tok: tok.value[i]}));
         }
-        return '\\left\\{ '+texArgs.join(', ')+' \\right\\}';
+        return '\\left\\{ '+texArgs.join(Numbas.locale.default_list_separator+' ')+' \\right\\}';
     },
     expression: function(tree,tok,texArgs) {
         return this.render(tok.tree);
@@ -9012,6 +9012,7 @@ function flatten(tree,op) {
  * @property {boolean} noscientificnumbers - If true, don't write numbers in scientific notation.
  * @property {number} accuracy - Accuracy to use when finding rational approximations to numbers. See {@link Numbas.math.rationalApproximation}.
  * @property {boolean} timesdot - Use a dot for the multiplication symbol instead of a cross?
+ * @property {boolean} timesspace - Use a space for the multiplication symbol instead of a cross?
  */
 
 /** An object which can convert a JME tree into some display format.
@@ -9224,7 +9225,7 @@ Texifier.prototype = {
         var piD;
         if(this.common_constants.pi && (piD = math.piDegree(n)) > 0)
             n /= Math.pow(Math.PI*this.common_constants.pi.scale, piD);
-        var out = math.niceNumber(n,options);
+        var out = math.niceNumber(n, Object.assign({}, options, {syntax:'latex'}));
         if(out.length>20) {
             var bits = math.parseScientific(n.toExponential());
             return bits.significand+' '+this.texTimesSymbol()+' 10^{'+bits.exponent+'}';
@@ -9283,7 +9284,7 @@ Texifier.prototype = {
         var piD;
         if(this.common_constants.pi && (piD = math.piDegree(n)) > 0)
             n /= Math.pow(Math.PI*this.common_constants.pi.scale, piD);
-        var out = math.niceNumber(n,options);
+        var out = math.niceNumber(n, Object.assign({}, options, {syntax:'latex'}));
         if(out.length>20) {
             var bits = math.parseScientific(n.toExponential());
             return bits.significand+' '+this.texTimesSymbol()+' 10^{'+bits.exponent+'}';
@@ -9328,7 +9329,7 @@ Texifier.prototype = {
             elements = v.map(function(x){return texifier.number(x,options)});
         }
         if(this.settings.rowvector) {
-            out = elements.join(this.settings.matrixcommas===false ? ' \\quad ' : ' , ');
+            out = elements.join(this.settings.matrixcommas===false ? ' \\quad ' : ' '+Numbas.locale.default_list_separator+' ');
         } else {
             out = '\\begin{matrix} '+elements.join(' \\\\ ')+' \\end{matrix}';
         }
@@ -9357,7 +9358,7 @@ Texifier.prototype = {
                 }
             })
             if(!all_lists) {
-                return '\\operatorname{matrix}(' + m.args.map(function(x){return texifier.render(x);}).join(',') +')';
+                return '\\operatorname{matrix}(' + m.args.map(function(x){return texifier.render(x);}).join(Numbas.locale.default_list_separator) +')';
             }
         } else {
             var rows = m.map(function(x) {
@@ -9366,7 +9367,7 @@ Texifier.prototype = {
         }
         var commas = (rows.length==1 && this.settings.matrixcommas!==false) || this.settings.matrixcommas;
         rows = rows.map(function(x) {
-            return x.join((commas ? ',' : '')+' & ');
+            return x.join((commas ? Numbas.locale.default_list_separator : '')+' & ');
         });
         out = rows.join(' \\\\ ');
         var macro = parens ? 'pmatrix' : 'matrix';
@@ -9380,6 +9381,8 @@ Texifier.prototype = {
     texTimesSymbol: function() {
         if(this.settings.timesdot) {
             return '\\cdot';
+        } else if(this.settings.timesspace) {
+            return '\\,';
         } else {
             return '\\times';
         }
@@ -9483,7 +9486,7 @@ Texifier.prototype = {
             function texOperatorName(name) {
                 return '\\operatorname{'+name.replace(/_/g,'\\_')+'}';
             }
-            return this.texName(tok,texOperatorName)+' \\left ( '+texArgs.join(', ')+' \\right )';
+            return this.texName(tok,texOperatorName)+' \\left ( '+texArgs.join(Numbas.locale.default_list_separator+' ')+' \\right )';
         }
     },
 
@@ -12142,7 +12145,8 @@ var displayFlags = jme.rules.displayFlags = {
     mixedfractions: undefined,
     flatfractions: undefined,
     barematrices: undefined,
-    timesdot: undefined
+    timesdot: undefined,
+    timesspace: undefined
 };
 /** Flags used in JME simplification rulesets
  *
@@ -12155,6 +12159,7 @@ var displayFlags = jme.rules.displayFlags = {
  * @property {boolean} flatfractions - Display fractions horizontally?
  * @property {boolean} barematrices - Render matrices without wrapping them in parentheses.
  * @property {boolean} timesdot - Use a dot for the multiplication symbol instead of a cross?
+ * @property {boolean} timesspace - Use a space for the multiplication symbol instead of a cross?
  * @see Numbas.jme.rules.Ruleset
  */
 /** Set of simplification rules.
@@ -13700,8 +13705,35 @@ Numbas.queueScript('localisation',['i18next','localisation-resources'],function(
         'zh-CN': plain_en
     }
 
-    Numbas.locale.default_number_notation = Numbas.locale.default_number_notations[Numbas.locale.preferred_locale] || plain_en;
+    Numbas.locale.default_list_separators = {
+        'ar-SA': ',',
+        'en-GB': ',',
+        'de-DE': ';',
+        'es-ES': ';',
+        'fr-FR': ';',
+        'he-IL': ',',
+        'in-ID': ';',
+        'it-IT': ';',
+        'ja-JP': ',',
+        'ko-KR': ',',
+        'nb-NO': ';',
+        'nl-NL': ';',
+        'pl-PL': ';',
+        'pt-BR': ';',
+        'sq-AL': ';',
+        'sv-SR': ';',
+        'tr-TR': ';',
+        'vi-VN': ';',
+        'zh-CN': ','
+    };
 
+    Numbas.locale.set_preferred_locale = function(locale) {
+        Numbas.locale.preferred_locale = locale;
+        Numbas.locale.default_number_notation = Numbas.locale.default_number_notations[Numbas.locale.preferred_locale] || plain_en;
+        Numbas.locale.default_list_separator = Numbas.locale.default_list_separators[Numbas.locale.preferred_locale] || ',';
+    }
+
+    Numbas.locale.set_preferred_locale(Numbas.locale.preferred_locale);
 });
 
 /*
@@ -19201,6 +19233,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      * @property {string} precisionType - Either `"dp"` or `"sigfig"`.
      * @property {number} precision - Number of decimal places or significant figures to show.
      * @property {string} style - Name of a notational style to use. See {@link Numbas.util.numberNotationStyles}.
+     * @property {string} scientificStyle - Name of a notational style to use for the significand in scientific notation. See {@link Numbas.util.numberNotationStyles}.
+     * @property {string} syntax - The syntax to use for the rendered string. Either `"plain"` or `"latex"`.
      * @property {string} [infinity="infinity"] - The string to represent infinity. 
      * @property {string} [imaginary_unit="i"] - The symbol to represent the imaginary unit.
      * @property {object} circle_constant - An object with attributes `scale` and `symbol` for the circle constant. `scale` is the ratio of the circle constant to pi, and `symbol` is the string to use to represent it.
@@ -19223,7 +19257,12 @@ var math = Numbas.math = /** @lends Numbas.math */ {
         if(options.style=='scientific') {
             var s = n.toExponential();
             var bits = math.parseScientific(s);
-            var noptions = {precisionType: options.precisionType, precision: options.precision, style: Numbas.locale.default_number_notation[0]}
+            var noptions = {
+                precisionType: options.precisionType,
+                precision: options.precision,
+                syntax: options.syntax,
+                style: options.scientificStyle || Numbas.locale.default_number_notation[0]
+            };
             var significand = math.niceNumber(bits.significand,noptions);
             var exponent = bits.exponent;
             if(exponent>=0) {
@@ -19260,7 +19299,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
             }
             out = math.unscientific(out);
             if(style && Numbas.util.numberNotationStyles[style]) {
-                out = Numbas.util.formatNumberNotation(out,style);
+                out = Numbas.util.formatNumberNotation(out, style, options.syntax);
             }
         }
         return out;
@@ -22451,16 +22490,23 @@ var util = Numbas.util = /** @lends Numbas.util */ {
      *
      * @param {string} s - The string representing a number.
      * @param {string} style - The style of notation to use.
+     * @param {string} syntax="plain" - The syntax to use, either "plain" for plain text, or "latex", for LaTeX.
      *
      * @returns {string}
      */
-    formatNumberNotation: function(s,style) {
+    formatNumberNotation: function(s, style, syntax) {
         var match_neg = /^(-)?(.*)/.exec(s);
         var minus = match_neg[1] || '';
         var bits = match_neg[2].split('.');
         var integer = bits[0];
         var decimal = bits[1];
-        return minus+util.numberNotationStyles[style].format(integer,decimal);
+        var style = util.numberNotationStyles[style];
+        syntax = syntax || 'plain';
+        if(!style.format[syntax]) {
+            throw(new Error(`${syntax}`));
+        }
+        var formatted = style.format[syntax](integer,decimal);
+        return minus + formatted;
     },
 
     /** Parse a number - either as a `Decimal`, or parse a fraction.
@@ -23161,69 +23207,122 @@ var numberNotationStyles = util.numberNotationStyles = {
     // Plain English style - no thousands separator, dot for decimal point
     'plain': {
         re: /^([0-9]+)(\x2E[0-9]+)?/,
-        format: function(integer,decimal) {
-            if(decimal) {
-                return integer+'.'+decimal;
-            } else {
-                return integer;
+        format: {
+            plain: function(integer,decimal) {
+                if(decimal) {
+                    return integer+'.'+decimal;
+                } else {
+                    return integer;
+                }
+            },
+            latex: function(integer,decimal) {
+                if(decimal) {
+                    return integer+'.'+decimal;
+                } else {
+                    return integer;
+                }
             }
         }
     },
     // English style - commas separate thousands, dot for decimal point
     'en': {
         re: /^(\d{1,3}(?:,\d{3})*)(\x2E\d+)?/,
-        format: util.standardNumberFormatter(',','.')
+        format: {
+            plain: util.standardNumberFormatter(',','.'),
+            latex: util.standardNumberFormatter('{,}','.')
+        }
     },
     // English SI style - spaces separate thousands, dot for decimal point
     'si-en': {
         re: /^(\d{1,3}(?: +\d{3})*)(\x2E(?:\d{3} )*\d{1,3})?/,
-        format: util.standardNumberFormatter(' ','.',true)
+        format: {
+            plain: util.standardNumberFormatter(' ','.',true),
+            latex: util.standardNumberFormatter('\\,','.',true)
+        }
     },
     // French SI style - spaces separate thousands, comma for decimal point
     'si-fr': {
         re: /^(\d{1,3}(?: +\d{3})*)(,(?:\d{3} )*\d{1,3})?/,
-        format: util.standardNumberFormatter(' ',',',true)
+        format: {
+            plain: util.standardNumberFormatter(' ',',',true),
+            latex: util.standardNumberFormatter('\\,','{,}',true)
+        }
     },
     // Continental European style - dots separate thousands, comma for decimal point
     'eu': {
         re: /^(\d{1,3}(?:\x2E\d{3})*)(,\d+)?/,
-        format: util.standardNumberFormatter('.',',')
+        format: {
+            plain: util.standardNumberFormatter('.',','),
+            latex: util.standardNumberFormatter('.\\,','{,}')
+        }
     },
     // Plain French style - no thousands separator, comma for decimal point
     'plain-eu': {
         re: /^([0-9]+)(,[0-9]+)?/,
-        format: function(integer,decimal) {
-            if(decimal) {
-                return integer+','+decimal;
-            } else {
-                return integer;
+        format: {
+            plain: function(integer,decimal) {
+                if(decimal) {
+                    return integer+','+decimal;
+                } else {
+                    return integer;
+                }
+            },
+            latex: function(integer,decimal) {
+                if(decimal) {
+                    return integer+'{,}'+decimal;
+                } else {
+                    return integer;
+                }
             }
         }
     },
     // Swiss style - apostrophes separate thousands, dot for decimal point
     'ch': {
         re: /^(\d{1,3}(?:'\d{3})*)(\x2E\d+)?/,
-        format: util.standardNumberFormatter('\'','.')
+        format: {
+            plain: util.standardNumberFormatter('\'','.'),
+            latex: util.standardNumberFormatter('\'','.')
+        }
     },
     // Indian style - commas separate groups, dot for decimal point. The rightmost group is three digits, other groups are two digits.
     'in': {
         re: /^((?:\d{1,2}(?:,\d{2})*,\d{3})|\d{1,3})(\x2E\d+)?/,
-        format: function(integer,decimal) {
-            integer = integer+'';
-            if(integer.length>3) {
-                var over = (integer.length-3)%2
-                var out = integer.slice(0,over);
-                var i = over;
-                while(i<integer.length-3) {
-                    out += (out ? ',' : '')+integer.slice(i,i+2);
-                    i += 2;
+        format: {
+            plain: function(integer,decimal) {
+                integer = integer+'';
+                if(integer.length>3) {
+                    var over = (integer.length-3)%2
+                    var out = integer.slice(0,over);
+                    var i = over;
+                    while(i<integer.length-3) {
+                        out += (out ? ',' : '')+integer.slice(i,i+2);
+                        i += 2;
+                    }
+                    integer = out+','+integer.slice(i);
                 }
-                integer = out+','+integer.slice(i);
-            }
-            if(decimal) {
-                return integer+'.'+decimal;
-            } else {
-                return integer;
+                if(decimal) {
+                    return integer+'.'+decimal;
+                } else {
+                    return integer;
+                }
+            },
+            latex: function(integer,decimal) {
+                integer = integer+'';
+                if(integer.length>3) {
+                    var over = (integer.length-3)%2
+                    var out = integer.slice(0,over);
+                    var i = over;
+                    while(i<integer.length-3) {
+                        out += (out ? '{,}' : '')+integer.slice(i,i+2);
+                        i += 2;
+                    }
+                    integer = out+'{,}'+integer.slice(i);
+                }
+                if(decimal) {
+                    return integer+'.'+decimal;
+                } else {
+                    return integer;
+                }
             }
         }
     },
@@ -23233,8 +23332,13 @@ var numberNotationStyles = util.numberNotationStyles = {
         clean: function(m) {
             return Numbas.math.unscientific(m[0]);
         },
-        format: function(integer, decimal) {
-            return Numbas.math.niceRealNumber(parseFloat(integer+'.'+decimal),{style:'scientific'});
+        format: {
+            plain: function(integer, decimal) {
+                return Numbas.math.niceRealNumber(parseFloat(integer+'.'+decimal),{style:'scientific'});
+            },
+            latex: function(integer, decimal) {
+                return Numbas.math.niceRealNumber(parseFloat(integer+'.'+decimal),{style:'scientific', syntax: 'latex'});
+            }
         }
     }
 }

@@ -18,7 +18,7 @@
         <tr class="part-type">
             <td>
                 <button class="btn btn-block btn-default use" title="Use this part type" data-bind="click: $root.addPart, css: { 'btn-default': $data.is_custom_part_type, 'btn-primary': !$data.is_custom_part_type }">
-                    <span class="name" data-bind="html: niceName"></span>
+                    <span class="glyphicon glyphicon-plus"></span> <span class="name" data-bind="html: niceName"></span>
                 </button>
                 <!-- ko if: source.author -->
                 <small>by <span class="author" data-bind="text: source.author.name"></span></small>

@@ -309,23 +309,10 @@ table.variable-list .value-cell .value {
     width: 4em;
 }
 
-.part-type-modal .part-types {
-    max-height: 66vh;
-    overflow-y: auto;
-}
-.part-type-modal .part-types > .part-type {
-    display: flex;
-    align-items: baseline;
-}
-.part-type-modal .part-types > .part-type > button.use {
-    margin-right: 0.5em;
-}
-.part-type-modal .part-types > .part-type ~ .part-type {
-    margin-top: 1em;
-}
-
-.add-part {
-    line-height: 3em;
+.part-types .part-type button.use {
+  text-align: start;
+  width: 15em;
+  white-space: normal;
 }
 
 #previewModal .modal-content {

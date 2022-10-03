@@ -2502,6 +2502,7 @@ $(document).ready(function() {
             }
         },this);
         this.vars = ko.pureComputed(function() {
+            var scope = def.scope();
             var v = raw_vars();
             if(!v) {
                 return [];
@@ -2510,6 +2511,9 @@ $(document).ready(function() {
                 var ignore = ko.unwrap(this.def.ignore);
                 v = v.filter(function(n) { return ignore.indexOf(n)==-1 });
             }
+            v = v.filter(function(name) {
+                return !(scope.getVariable(name) || scope.getConstant(name));
+            });
             return v;
         },this);
     }

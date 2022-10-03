@@ -759,12 +759,21 @@ class CompareView(generic.TemplateView):
 
     template_name = "editoritem/compare.html"
 
+    def get(self, request, *args, **kwargs):
+        pk1 = int(kwargs['pk1'])
+        pk2 = int(kwargs['pk2'])
+        try:
+            self.ei1 = EditorItem.objects.get(pk=pk1)
+            self.ei2 = EditorItem.objects.get(pk=pk2)
+        except EditorItem.DoesNotExist:
+            raise http.Http404("The item does not exist.")
+
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, *args, **kwargs):
         context = super(CompareView, self).get_context_data(**kwargs)
-        pk1 = int(self.kwargs['pk1'])
-        pk2 = int(self.kwargs['pk2'])
-        ei1 = context['ei1'] = EditorItem.objects.get(pk=pk1)
-        ei2 = context['ei2'] = EditorItem.objects.get(pk=pk2)
+        ei1 = context['ei1'] = self.ei1
+        ei2 = context['ei2'] = self.ei2
         context['pr1_exists'] = PullRequest.objects.open().filter(source=ei1, destination=ei2).exists()
         context['pr2_exists'] = PullRequest.objects.open().filter(source=ei2, destination=ei1).exists()
         context['pr1_auto'] = ei2.can_be_edited_by(self.request.user)

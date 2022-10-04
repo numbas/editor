@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <script src="/static/script.js" defer></script>
+{% endblock head %}
+
+{% block main %}
+    <section id="intro">
+        <p>Numbas editor configured!</p>
+    </section>
+    
+    <section>
+        {% for item in command.response %}
+        <p> {{item}}</p>
+        {% endfor %}
+    </section>
+    
+{% endblock main %}

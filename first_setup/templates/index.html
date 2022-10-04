@@ -1,8 +1,18 @@
 {% extends "base.html" %}
 
+{% block head %}
+    <script src="/static/script.js" defer></script>
+{% endblock head %}
+
 {% block main %}
     <section id="intro">
         <p>This script will configure the Numbas editor up to a point where you can open it in a web browser, based on your answers to the following questions.</p>
+        {% if not command.valid_input %} 
+            <p>Error:
+                {% for item in command.response %}
+                 {{item}}
+                {% endfor %}
+            </p> {% endif %}
     </section>
 
     <form method="POST">
@@ -11,19 +21,19 @@
                 <h2>{{header}}</h2>
                 <ul class="questions">
                     {% for q in questions %}
-                    <label for="question-{{q.key}}">
+                    <label {% if q.hide.dev_overridden %} class="dev" {% endif %} {% if q.hide.superuser_question %} class="superuser" {% endif %} for="question-{{q.key}}">
                         {{q.question}}
                     </label>
                     {% if q.kind == 'dropdown' %}
-                    <select id="question-{{q.key}}" name="{{q.key}}">
+                    <select {% if q.hide.dev_overridden %} class="dev" {% endif %} {% if q.hide.superuser_question %} class="superuser" {% endif %} id="question-{{q.key}}" name="{{q.key}}">
                         {% for value, text in q.options %}
                         <option value="{{value}}" {% if value == q.default %}selected{% endif %}>{{text}}</option>
                         {% endfor %}
                     </select>
                     {% elif q.kind == 'str' %}
-                    <input id="question-{{q.key}}" type="text" name="{{q.key}}" value="{{q.default}}">
+                    <input {% if q.hide.dev_overridden %} class="dev" {% endif %} {% if q.hide.superuser_question %} class="superuser" {% endif %} id="question-{{q.key}}" type="text" name="{{q.key}}" value="{{q.default}}">
                     {% elif q.kind == 'bool' %}
-                    <input id="question-{{q.key}}" type="checkbox" name="{{q.key}}" {% if q.default %}checked{% endif %}>
+                    <input {% if q.hide.dev_overridden %} class="dev" {% endif %} {% if q.hide.superuser_question %} class="superuser" {% endif %} id="question-{{q.key}}" type="checkbox" name="{{q.key}}" {% if q.default %}checked{% endif %} value=True>
                     {% endif %}
                     {% endfor %}
                 </ul>

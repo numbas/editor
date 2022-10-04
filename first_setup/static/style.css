@@ -10,6 +10,14 @@ body {
     font-family: sans-serif;
 }
 
+body.is-dev .dev {
+  display: none;
+} 
+
+body.is-superuser .superuser {
+  display: none;
+} 
+
 .questions {
     list-style: none;
     padding: 0;

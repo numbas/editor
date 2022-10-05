@@ -6,13 +6,38 @@
 
 {% block main %}
     <section id="intro">
-        <p>Numbas editor configured!</p>
+        <p>The Numbas editor is now set up!</p>
+    </section>
+
+    <section id="written-files">
+        <p>The following files have been written. You might like to edit these further yourself before continuing.</p>
+        <ul>
+            {% for file in command.written_files %}
+            <li><code>{{file}}</code></li>
+            {% endfor %}
+        </ul>
     </section>
     
     <section>
-        {% for item in command.response %}
-        <p> {{item}}</p>
-        {% endfor %}
+        {% if command.dev %}
+            <p>In the terminal, close this process and then run the development server with</p>
+            <pre class="shell">python manage.py runserver</pre>
+        {% else %}
+            <p>Once you've configured your web server proxy, it'll be ready to use.</p>
+        {% endif %}
+    </section>
+
+    <section>
+        {% if command.run_result.superusers|length == 1 %}
+            <p>The username of the superuser account is <code>{{command.run_result.superusers.0}}</code>.</p>
+        {% else %}
+            <p>The following superuser accounts exist:</p>
+            <ul>
+                {% for username in command.run_result.superusers %}
+                <li><code>{{username}}</code></li>
+                {% endfor %}
+            </ul>
+        {% endif %}
     </section>
     
 {% endblock main %}

@@ -1,3 +1,8 @@
+:root {
+    --error-bg: hsl(0,70%,90%);
+    --error-outline: hsl(0,70%,50%);
+}
+
 * {
     box-sizing: border-box;
 }
@@ -10,29 +15,45 @@ body {
     font-family: sans-serif;
 }
 
-body.is-dev .dev {
+body.is-dev .dev,
+body:not(.create-superuser) .superuser,
+body:not(.uses-db-server) .db-server
+{
   display: none;
 } 
 
-body.is-superuser .superuser {
-  display: none;
-} 
+form {
+    margin: 0 auto;
+    max-width: 60em;
+}
 
 .questions {
     list-style: none;
     padding: 0;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: [label-start] minmax(5em, 20em) [label-end input-start] minmax(5em, 30em) [input-end];
     grid-gap: 1em;
     align-items: center;
+    justify-content: center;
 }
 
 form label {
     text-align: right;
+    grid-column: label;
 }
 
 form section ~ section {
     margin-top: 3em;
+}
+
+
+form .validation-error {
+    grid-column: input;
+    margin-bottom: 1em;
+    font-style: italic;
+    font-weight: bold;
+    background: var(--error-bg);
+    padding: 0.5em 1em;
 }
 
 input[type="text"] {
@@ -50,19 +71,38 @@ input[type="text"], select {
     border: 1px solid black;
 }
 
-.questions input {
+form input, form select {
     justify-self: start;
+    grid-column: input;
+}
+
+form input.has-error, form select.has-error {
+    border-width: 2px;
+    border-color: var(--error-outline);
 }
 
 button[type="submit"] {
-    grid-column: span 2;
-    justify-self: center;
     padding: 0.5em 2em;
     font-size: 1.1em;
+    margin: 2em auto;
+    display: block;
 }
 
-/*
-label[for*="question-DB_"]:not([for="question-DB_ENGINE"]), *[id*="question-DB_"]:not([id="question-DB_ENGINE"]) {
-    display:none;
+
+.shell {
+  background: #eee;
+  padding: 1em;
 }
-*/
+
+code {
+  background: #eee;
+  padding: 0.5em;
+  display: inline-block;
+  margin: 0.2em;
+}
+
+
+#form-error {
+  background: var(--error-bg);
+  padding: 1em;
+}

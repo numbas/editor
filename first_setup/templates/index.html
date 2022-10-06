@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <script src="/static/script.js" defer></script>
+{% endblock head %}
+
+{% block main %}
+    <section id="intro">
+        <p>This script will configure the Numbas editor up to a point where you can open it in a web browser, based on your answers to the following questions.</p>
+    </section>
+
+    {% if form_error %}
+    <section id="form-error">
+        <p>{{form_error.html}}</p>
+    </section>
+    {% endif %}
+
+    <form method="POST">
+        {% for header, questions in command.questions %}
+            <section>
+                <h2>{{header}}</h2>
+                <div class="questions">
+                    {% for q in questions %}
+                        <label class="{{q.css_classes}}" for="question-{{q.key}}">
+                            {{q.question}}
+                        </label>
+                        {% if q.kind == 'dropdown' %}
+                            <select class="{{q.css_classes}}" id="question-{{q.key}}" name="{{q.key}}">
+                                {% for value, text in q.options %}
+                                <option value="{{value}}" {% if value == q.value %}selected{% endif %}>{{text}}</option>
+                                {% endfor %}
+                            </select>
+                        {% elif q.kind == 'str' %}
+                            <input class="{{q.css_classes}}" id="question-{{q.key}}" type="text" name="{{q.key}}" value="{{q.value}}">
+                        {% elif q.kind == 'bool' %}
+                            <input class="{{q.css_classes}}" id="question-{{q.key}}" type="checkbox" name="{{q.key}}" {% if q.value %}checked{% endif %}>
+                        {% endif %}
+
+                        {% if q.validation_error %}
+                        <div class="validation-error {{q.css_classes}}">
+                                {{q.validation_error.html}}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+        {% endfor %}
+
+        <button type="submit">Save</button>
+    </form>
+{% endblock main %}

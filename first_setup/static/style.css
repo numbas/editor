@@ -1,0 +1,108 @@
+:root {
+    --error-bg: hsl(0,70%,90%);
+    --error-outline: hsl(0,70%,50%);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+}
+
+body {
+    font-family: sans-serif;
+}
+
+body.is-dev .dev,
+body:not(.create-superuser) .superuser,
+body:not(.uses-db-server) .db-server
+{
+  display: none;
+} 
+
+form {
+    margin: 0 auto;
+    max-width: 60em;
+}
+
+.questions {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: [label-start] minmax(5em, 20em) [label-end input-start] minmax(5em, 30em) [input-end];
+    grid-gap: 1em;
+    align-items: center;
+    justify-content: center;
+}
+
+form label {
+    text-align: right;
+    grid-column: label;
+}
+
+form section ~ section {
+    margin-top: 3em;
+}
+
+
+form .validation-error {
+    grid-column: input;
+    margin-bottom: 1em;
+    font-style: italic;
+    font-weight: bold;
+    background: var(--error-bg);
+    padding: 0.5em 1em;
+}
+
+input[type="text"] {
+    font-family: monospace;
+    width: 100%;
+}
+
+select {
+    background: white;
+}
+
+input[type="text"], select {
+    height: 2em;
+    padding: 0 0.5em;
+    border: 1px solid black;
+}
+
+form input, form select {
+    justify-self: start;
+    grid-column: input;
+}
+
+form input.has-error, form select.has-error {
+    border-width: 2px;
+    border-color: var(--error-outline);
+}
+
+button[type="submit"] {
+    padding: 0.5em 2em;
+    font-size: 1.1em;
+    margin: 2em auto;
+    display: block;
+}
+
+
+.shell {
+  background: #eee;
+  padding: 1em;
+}
+
+code {
+  background: #eee;
+  padding: 0.5em;
+  display: inline-block;
+  margin: 0.2em;
+}
+
+
+#form-error {
+  background: var(--error-bg);
+  padding: 1em;
+}

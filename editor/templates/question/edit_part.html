@@ -340,22 +340,22 @@
 
         <hr>
         <h4>Unit tests</h4>
-        <div class="nothing-here" data-bind="fadeVisible: unit_tests().length==0">
+        <div class="nothing-here" data-bind="fadeVisible: all_unit_tests().length==0">
             <p>No unit tests have been defined. Enter an answer above, select one or more notes, and click the "Create a unit test" button.</p>
         </div>
-        <div data-bind="fadeVisible: unit_tests().length>0">
+        <div data-bind="fadeVisible: all_unit_tests().length>0">
             <div class="help-block">
                 <p>The following tests check that the question is behaving as desired.</p>
             </div>
             <button class="btn btn-default" data-bind="click: run_all_tests"><span class="glyphicon glyphicon-play"></span> Run all unit tests</button>
         </div>
         <div class="panel-group unit-tests">
-            <!-- ko foreach: unit_tests -->
+            <!-- ko foreach: all_unit_tests -->
             <div class="panel unit-test" data-bind="css: {open: open(), 'panel-success': last_run() && passes(), 'panel-danger': last_run() && !passes(), 'panel-default': !last_run()}">
                 <div class="panel-heading" data-bind="restrictedClick: open.toggle" clickable>
                     {% if editable %}
                     <div class="pull-right">
-                        <button type="button" class="btn btn-link" title="Remove this unit test" data-bind="click: remove"><span class="glyphicon glyphicon-trash text-danger"></span></button>
+                        <button type="button" class="btn btn-link" title="Remove this unit test" data-bind="visible: editable, click: remove"><span class="glyphicon glyphicon-trash text-danger"></span></button>
                     </div>
                     {% endif %}
 
@@ -367,8 +367,8 @@
                         </span>
                         <span clickable role="button" class="glyphicon" data-bind="css: {'glyphicon-triangle-right': !open(), 'glyphicon-triangle-bottom': open}"></span>
                         <strong data-bind="text: header" clickable></strong>
-                        <span data-bind="visible: !item_json.editable || !open(), text: displayName" clickable></span>
-                        <input type="text" class="form-control" data-bind="visible: item_json.editable && open(), textInput: name" placeholder="Describe this test">
+                        <span data-bind="visible: !item_json.editable || !editable || !open(), text: displayName" clickable></span>
+                        <input type="text" class="form-control" data-bind="visible: item_json.editable && editable && open(), textInput: name" placeholder="Describe this test">
                     </h3>
                 </div>
 
@@ -456,9 +456,30 @@
                                                             <span class="value jme-value" data-bind="jmevalue: value, error: error"></span>
                                                         </td>
                                                         <td>
-                                                            <ul class="list-unstyled" data-bind="foreach: message_displays">
-                                                                <li class="feedbackMessage" data-bind="attr: {'data-credit-change': credit_change}"><span data-bind="css: 'feedback-icon glyphicon '+icon" aria-hidden="true"></span> <!-- ko if: format=='html' --><span data-bind="dom: message"></span><!-- /ko --><!-- ko if: format=='string' --><span data-bind="html: message"></span><!-- /ko --></li>
-                                                            </ul>
+                                                            <dl>
+                                                                <dt>Messages</dt>
+                                                                <dd>
+                                                                    <!-- ko if: message_displays().length -->
+                                                                    <ul class="list-unstyled" data-bind="foreach: message_displays">
+                                                                        <li class="feedbackMessage" data-bind="attr: {'data-credit-change': credit_change}"><span data-bind="css: 'feedback-icon glyphicon '+icon" aria-hidden="true"></span> <!-- ko if: format=='html' --><span data-bind="dom: message"></span><!-- /ko --><!-- ko if: format=='string' --><span data-bind="html: message"></span><!-- /ko --></li>
+                                                                    </ul>
+                                                                    <!-- /ko -->
+                                                                    <!-- ko if: !message_displays().length -->
+                                                                    <p class="nothing-here">No feedback messages.</p>
+                                                                    <!-- /ko -->
+                                                                </dd>
+                                                                <dt>Warnings</dt>
+                                                                <dd>
+                                                                    <!-- ko if: warnings().length -->
+                                                                    <ul data-bind="foreach: warnings">
+                                                                        <li class="warning" data-bind="html: $data"></li>
+                                                                    </ul>
+                                                                    <!-- /ko -->
+                                                                    <!-- ko if: !warnings().length -->
+                                                                    <p class="nothing-here">No warnings.</p>
+                                                                    <!-- /ko -->
+                                                                </dd>
+                                                            </dl>
                                                         </td>
                                                     </tr>
                                                     <tr class="note" data-bind="css: {danger: missing() || !valid()}">
@@ -467,9 +488,36 @@
                                                             <span class="value jme-value" data-bind="jmevalue: expected.computedValue"></span>
                                                         </td>
                                                         <td>
-                                                            <ul class="list-unstyled" data-bind="foreach: expected.message_displays">
-                                                                <li class="feedbackMessage" data-bind="attr: {'data-credit-change': credit_change}"><span data-bind="css: 'feedback-icon glyphicon '+icon" aria-hidden="true"></span> <!-- ko if: format=='html' --><span data-bind="dom: message"></span><!-- /ko --><!-- ko if: format=='string' --><span data-bind="html: message"></span><!-- /ko --></li>
-                                                            </ul>
+                                                            <dl>
+                                                                <dt>Messages</dt>
+                                                                <!-- ko if: !compare.messages -->
+                                                                <p class="help-block">A difference in feedback messages does not cause this test to fail.</p>
+                                                                <!-- /ko -->
+                                                                <dd>
+                                                                    <!-- ko if: expected.message_displays().length -->
+                                                                    <ul class="list-unstyled" data-bind="foreach: expected.message_displays">
+                                                                        <li class="feedbackMessage" data-bind="attr: {'data-credit-change': credit_change}"><span data-bind="css: 'feedback-icon glyphicon '+icon" aria-hidden="true"></span> <!-- ko if: format=='html' --><span data-bind="dom: message"></span><!-- /ko --><!-- ko if: format=='string' --><span data-bind="html: message"></span><!-- /ko --></li>
+                                                                    </ul>
+                                                                    <!-- /ko -->
+                                                                    <!-- ko if: !expected.message_displays().length -->
+                                                                    <p class="nothing-here">No feedback messages.</p>
+                                                                    <!-- /ko -->
+                                                                </dd>
+                                                                <dt>Warnings</dt>
+                                                                <!-- ko if: !compare.warnings -->
+                                                                <p class="help-block">A difference in warnings does not cause this test to fail.</p>
+                                                                <!-- /ko -->
+                                                                <dd>
+                                                                    <!-- ko if: expected.warnings().length -->
+                                                                    <ul data-bind="foreach: expected.warnings">
+                                                                        <li class="warning" data-bind="html: $data"></li>
+                                                                    </ul>
+                                                                    <!-- /ko -->
+                                                                    <!-- ko if: !expected.warnings().length -->
+                                                                    <p class="nothing-here">No warnings.</p>
+                                                                    <!-- /ko -->
+                                                                </dd>
+                                                            </dl>
                                                         </td>
                                                     </tr>
                                                 </tbody>

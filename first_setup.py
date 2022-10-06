@@ -232,7 +232,7 @@ class Command:
                     ],
                     dev_value = 'sqlite3'
                 ),
-                make_question('DB_NAME', 'Name of the database:', 'numbas_editor', dev_value = 'db.dqlite3'),
+                make_question('DB_NAME', 'Name of the database:', 'numbas_editor', dev_value = 'db.sqlite3'),
                 make_question('DB_USER', 'Database user:', 'numbas_editor', dev_value = '', classes = ['db-server']),
                 make_question('DB_PASSWORD', 'Database password:', '', dev_value = '', classes = ['db-server']),
                 make_question('DB_HOST', 'Database host:', 'localhost', dev_value = '', classes = ['db-server']),

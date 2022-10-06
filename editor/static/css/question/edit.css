@@ -373,3 +373,16 @@ table.variable-list .value-cell .value {
     width: 100%;
     overflow-x: auto;
 }
+
+.all-part-unit-tests {
+    width: initial;
+}
+.all-part-unit-tests .btn-link {
+    padding: 0;
+    color: inherit;
+    vertical-align: baseline;
+}
+.all-part-unit-tests .btn-link .indent {
+    display: inline-block;
+    width: 3em;
+}

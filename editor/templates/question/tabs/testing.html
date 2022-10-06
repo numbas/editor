@@ -1,0 +1,49 @@
+{% load can_edit %}
+{% load helplink %}
+{% load editor_controls %}
+
+<section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='testing'}">
+    <div class="help-block">
+        <p>Use this tab to check that this question works as expected.</p>
+    </div>
+
+    <button data-bind="click: run_all_unit_tests" class="btn btn-primary"><span class="glyphicon glyphicon-play"></span> Run all unit tests</button>
+
+    <table class="table all-part-unit-tests">
+        <thead>
+            <tr>
+                <th>Part</th>
+                <th>Test</th>
+                <th>Passed?</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- ko foreach: allParts -->
+                <tr>
+                    <td data-bind="attr: {rowspan: all_unit_tests().length+1}">
+                        <span data-bind="visible: parent" class="indent"></span>
+                        <button type="button" class="btn btn-link" data-bind="click: goTo, text: name"></button>
+                        <small class="text-muted" data-bind="text: type().niceName"></small>
+                    </td>
+                </tr>
+                <!-- ko foreach: all_unit_tests -->
+                <tr>
+                    <td><button type="button" class="btn btn-link" data-bind="text: displayName, click: goTo"></button></td>
+                    <td>
+                        <span class="text-muted" data-bind="if: state() == 'not run'">Hasn't run yet</span>
+                        <span class="text-info" data-bind="if: state() == 'running'">Running</span>
+                        <span class="text-success" data-bind="if: state() == 'passed'"><span class="glyphicon glyphicon-ok"></span> Passed</span>
+                        <span class="text-danger" data-bind="if: state() == 'failed'">
+                            <span class="glyphicon glyphicon-remove"></span> 
+                            Failed
+                            <ul class="list-unstyled" data-bind="foreach: failingNotes">
+                                <li><code data-bind="text: name"></code>: <span data-bind="text: noMatchDescription"></span></li>
+                            </ul>
+                        </span>
+                    </td>
+                </tr>
+                <!-- /ko -->
+            <!-- /ko -->
+        </tbody>
+    </table>
+</section>

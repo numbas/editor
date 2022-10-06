@@ -218,6 +218,19 @@ $(document).ready(function() {
             })
         }, this);
 
+        this.run_all_unit_tests = async function() {
+            for(let p of q.allParts()) {
+                for(let mt of p.all_unit_tests()) {
+                    mt.running(true);
+                }
+            }
+            setTimeout(async () => {
+                for(let p of q.allParts()) {
+                    await p.run_all_tests(true);
+                }
+            },100);
+        }
+
         this.maxMarks = ko.observable(0);
         this.penalties = ko.observableArray([]);
         this.objectives = ko.observableArray([]);
@@ -304,6 +317,10 @@ $(document).ready(function() {
             return this.extensionTabs.tabs.some(function(tab) { return tab.in_use(); });
         },this);
 
+        var testing_tab_in_use = ko.pureComputed(function() {
+            return this.allParts().some(function(p) { return p.unit_tests().length>0; });
+        },this);
+
         this.mainTabber.tabs([
             new Editor.Tab('statement','Statement','blackboard',{in_use: ko.pureComputed(function(){ return this.statement()!=''; },this)}),
             new Editor.Tab('parts','Parts','check',{in_use: ko.pureComputed(function() { return this.parts().length>0; },this)}),
@@ -313,6 +330,7 @@ $(document).ready(function() {
             new Editor.Tab('resources','Resources','picture',{in_use: ko.pureComputed(function() { return this.resources().length>0; },this)}),
             new Editor.Tab('settings','Settings','cog'),
             new Editor.Tab('exams','Exams using this question','book',{in_use:item_json.used_in_exams}),
+            new Editor.Tab('testing','Testing','check',{in_use: testing_tab_in_use}),
             new Editor.Tab('network','Other versions','link',{in_use:item_json.other_versions_exist}),
             new Editor.Tab('history','Editing history','time',{in_use:item_json.editing_history_used})
         ]);
@@ -401,15 +419,6 @@ $(document).ready(function() {
                 this.startAddingPart();
             }
         },this);
-
-        this.goToPart = function(path) {
-            var p = q.getPart(path);
-            if(!p) {
-                return;
-            }
-            q.currentPart(p);
-            q.mainTabber.setTab('parts')();
-        }
 
         this.baseVariableGroup = new VariableGroup(this,{name:'Ungrouped variables'});
         this.baseVariableGroup.fixed = true;
@@ -1741,7 +1750,6 @@ $(document).ready(function() {
                 document.head.appendChild(script);
             });
             Promise.all(script_promises).then(function() {
-                console.log('activate',ext.name);
                 Numbas.activateExtension(ext.location);
                 ext.loaded(true);
                 viewModel.regenerateVariables();
@@ -2689,6 +2697,11 @@ $(document).ready(function() {
             return this.customName().trim()!='';
         },this);
 
+        this.goTo = function() {
+            q.currentPart(p);
+            q.mainTabber.setTab('parts')();
+        }
+
         this.scope = ko.pureComputed(function() {
             return this.q.baseScope();
         },this);
@@ -3012,6 +3025,25 @@ $(document).ready(function() {
 
         this.unit_tests = ko.observableArray([]);
 
+        var correct_answer_test = this.correct_answer_test = new MarkingTest(this,this.q.questionScope(), false);
+        var correct_mark_note = correct_answer_test.getNote('mark');
+        correct_mark_note.show(true);
+        correct_mark_note.expected.credit(1);
+        correct_mark_note.compare.messages = false;
+        correct_answer_test.answer = correct_answer_test.correctAnswer;
+        correct_answer_test.name('Expected answer is marked correct');
+
+        this.builtin_unit_tests = ko.pureComputed(function() {
+            if(!this.type().has_marks) {
+                return [];
+            }
+            return [this.correct_answer_test];
+        },this);
+
+        this.all_unit_tests = ko.pureComputed(function() {
+            return this.builtin_unit_tests().concat(this.unit_tests());
+        },this);
+
         this.marking_test = ko.observable(new MarkingTest(this,this.q.questionScope()));
         ko.computed(function() {
             var mt = this.marking_test();
@@ -3021,10 +3053,10 @@ $(document).ready(function() {
             p.marking_test().run();
         }
 
-        this.run_all_tests = function() {
-            p.unit_tests().forEach(function(mt) {
-                mt.run();
-            });
+        this.run_all_tests = async function(force) {
+            for(let mt of p.all_unit_tests()) {
+                await mt.run(force);
+            }
         }
 
         this.addUnitTest = function(test) {
@@ -3609,15 +3641,24 @@ $(document).ready(function() {
 
     Numbas.marking.ignore_note_errors = true;
 
-    function MarkingTest(part,scope) {
+    function MarkingTest(part, scope, editable) {
         var mt = this;
         this.part = part;
+        this.editable = editable === undefined || editable;
         this.editing = ko.observable(true);
         this.open = ko.observable(true).toggleable();
         this.name = ko.observable();
         this.displayName = ko.pureComputed(function() {
             return this.name() || 'Unnamed test';
         }, this);
+
+        this.goTo = function() {
+            part.goTo();
+            part.tabber.setTab('testing')();
+        }
+
+        // JME scope in which this test is evaluated
+        this.scope = ko.observable(scope);
 
         // Values of variables used in this test
         this.variables = ko.observableArray([]);
@@ -3679,13 +3720,14 @@ $(document).ready(function() {
         // Marking notes generated by this test
         this.notes = ko.observableArray([]);
 
+        for(let note of ['mark', 'interpreted_answer']) {
+            this.notes.push(new MarkingNote(note));
+        }
+
         // Get the marking note with the given name
         this.getNote = function(name) {
             return this.notes().filter(function(n){return n.name==name})[0];
         }
-
-        // JME scope in which this test is evaluated
-        this.scope = ko.observable(scope);
 
         // The result of running the marking script
         this.last_run = ko.observable(null);
@@ -3697,8 +3739,8 @@ $(document).ready(function() {
         this.last_question_json = null;
         this.last_variables = null;
         this.question_error = ko.observable(null);
-        this.make_question = function() {
-            if(mt.part.q.currentPart()!=mt.part) {
+        this.make_question = function(force) {
+            if(!force && mt.part.q.currentPart()!=mt.part) {
                 return;
             }
             if(!mt.variablesReady()) {
@@ -3729,8 +3771,8 @@ $(document).ready(function() {
                     q.scope.setVariable(v.name, v.value);
                 });
                 q.signals.trigger('variablesSet');
-                var promise = q.signals.on('ready').then(function() {
-                    if(q!=mt.current_question_instance) {
+                q.signals.on('ready').then(function() {
+                    if(q != mt.current_question_instance) {
                         return;
                     }
                     mt.question_error(null);
@@ -3762,7 +3804,7 @@ $(document).ready(function() {
         this.waiting_for_pre_submit = ko.observable(false);
         
         // When something changes, run the marking script and store the result in `this.result`
-        this.mark = function() {
+        this.mark = async function() {
             var answer = mt.answer();
             mt.answerDirty(false);
             var q = mt.question();
@@ -3815,40 +3857,44 @@ $(document).ready(function() {
                 } else {
                     promise = Promise.resolve(true);
                 }
-                promise.then(function() {
-                    mt.waiting_for_pre_submit(false);
-                    try {
-                        var alternatives_result = part.markAlternatives(part.getScope(), undefined, '');
-                        var res = alternatives_result.result.script_result;
-                        if(!res) {
-                            var out = {script: part.markingScript, error: 'The marking algorithm did not return a result.'};
-                        } else {
-                            var alternative_used = alternatives_result.best_alternative ? alternatives_result.best_alternative.path : null;
-                            var out = {script: part.markingScript, result: res, marking_result: part.marking_result, message_displays: make_message_displays(part.markingFeedback.slice()), marks: part.marks, alternative_used: alternative_used};
-                            if(res.state_errors.mark) {
-                                out.error = 'Error when computing the <code>mark</code> note: '+res.state_errors.mark.message;
-                            } else if(!res.state_valid.mark) {
-                                out.error = 'This answer is not valid.';
-                                out.warnings = part.warnings;
-                            }
+                await promise;
+                mt.waiting_for_pre_submit(false);
+                try {
+                    var alternatives_result = part.markAlternatives(part.getScope(), undefined, '');
+                    var res = alternatives_result.result.script_result;
+                    if(!res) {
+                        var out = {script: part.markingScript, error: 'The marking algorithm did not return a result.'};
+                    } else {
+                        var alternative_used = alternatives_result.best_alternative ? alternatives_result.best_alternative.path : null;
+                        var out = {script: part.markingScript, result: res, marking_result: part.marking_result, message_displays: make_message_displays(part.markingFeedback.slice()), marks: part.marks, alternative_used: alternative_used};
+                        if(res.state_errors.mark) {
+                            out.error = 'Error when computing the <code>mark</code> note: '+res.state_errors.mark.message;
+                        } else if(!res.state_valid.mark) {
+                            out.error = 'This answer is not valid.';
+                            out.warnings = part.warnings;
                         }
-                        mt.last_run(out);
-                    } catch(e) {
-                        console.error(e);
-                        mt.last_run({error: 'Error marking: '+e.message});
                     }
-                });
+                    mt.last_run(out);
+                } catch(e) {
+                    console.error(e);
+                    mt.last_run({error: 'Error marking: '+e.message});
+                }
             } catch(e) {
                 console.error(e);
                 mt.last_run({error: 'Error marking: '+e.message});
-            };
+            } finally {
+                mt.running(false);
+                mt.finish_run();
+            }
         }
-        this.run = function() {
-            var q = mt.make_question();
+
+        this.running = ko.observable(false);
+        this.run = async function(force) {
+            mt.running(true);
+            var q = mt.make_question(force);
             if(q) {
-                q.signals.on('ready').then(function() {
-                    mt.mark();
-                });
+                await q.signals.on('ready');
+                await mt.mark();
             }
         }
 
@@ -3874,7 +3920,7 @@ $(document).ready(function() {
         }, this);
 
         // When the script is evaluated, add new notes to the list and update existing ones
-        ko.computed(function() {
+        this.finish_run = function() {
             var last_run = this.last_run();
             var editing = this.editing();
 
@@ -3904,7 +3950,7 @@ $(document).ready(function() {
             // Look at notes we already know about, and if they're present in this result
             var notes = this.notes().slice();
             notes.forEach(function(note) {
-                var missing = !(result && (note.name in result.states));
+                var missing = !(result && result.states && (note.name in result.states));
                 if(missing) {
                     if(mt.editing()) {
                         mt.notes.remove(note);
@@ -3964,11 +4010,11 @@ $(document).ready(function() {
                     mark_note.warnings([]);
                 }
             }
-        },this);
+        };
 
         // If this test is being edited, keep the "expected" values up to date
         ko.computed(function() {
-            if(this.editing()) {
+            if(this.editing() && this.editable) {
                 this.setExpected();
             }
         },this).extend({throttle:100});
@@ -4009,6 +4055,19 @@ $(document).ready(function() {
         // Is this test passing? No if any notes are failing.
         this.passes = ko.pureComputed(function() {
             return this.failingNotes().length==0;
+        },this);
+
+        this.state = ko.pureComputed(function() {
+            if(this.running()) {
+                return 'running';
+            }
+            if(!this.last_run()) {
+                return 'not run';
+            }
+            if(this.passes()) {
+                return 'passed';
+            }
+            return 'failed';
         },this);
 
 
@@ -4090,6 +4149,15 @@ $(document).ready(function() {
         var mn = this;
         this.name = name;
 
+        this.compare = {
+            value: true,
+            messages: true,
+            warnings: true,
+            error: true,
+            validity: true,
+            credit: true
+        }
+
         var default_show_names = ['mark','interpreted_answer'];
         this.show = ko.observable(in_unit_test && default_show_names.contains(this.name)).toggleable();
 
@@ -4169,24 +4237,24 @@ $(document).ready(function() {
             var expected_messages = this.expected.messages();
             var differentMessages = this.messages().find(function(action,i) { 
                 var expected_action = expected_messages[i];
-                return expected_action.credit_change != action.credit_change || expected_action.message != action.message;
+                return !expected_action || expected_action.credit_change != action.credit_change || expected_action.message != action.message;
             });
             var differentWarnings = this.warnings().join('\n') != this.expected.warnings().join('\n');
             var differentError = this.error() != this.expected.error();
             var differentValidity = this.valid() != this.expected.valid();
             var differentCredit = this.credit() != this.expected.credit();
 
-            if(differentValue) {
+            if(this.compare.value && differentValue) {
                 return 'value';
-            } else if(differentMessages) {
+            } else if(this.compare.messages && differentMessages) {
                 return 'messages';
-            } else if(differentWarnings) {
+            } else if(this.compare.warnings && differentWarnings) {
                 return 'warnings';
-            } else if(differentError) {
+            } else if(this.compare.error && differentError) {
                 return this.error() ? this.expected.error() ? 'different-error' : 'unexpected-error' : 'missing-error';
-            } else if(differentValidity) {
+            } else if(this.compare.validity && differentValidity) {
                 return this.expected.valid() ? 'unexpected-invalid' : 'unexpected-invalid';
-            } else if(differentCredit) {
+            } else if(this.compare.credit && differentCredit) {
                 return 'credit';
             } else {
                 return null;

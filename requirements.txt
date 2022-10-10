@@ -3,15 +3,15 @@ Pillow==9.0.1
 Unidecode==1.0.23
 bleach==3.3.0
 django-analytical==2.6.0
-git+https://github.com/shtalinberg/django-el-pagination.git@9f9c6963efb101cb0d4b5406a2ab0be51cfa586c # 2022-08-23: waiting for a tagged release for django 4.0 compatibility
-git+https://github.com/christianp/django-html_sanitizer.git@django4compat # 2022-08-23: fork with django 4.0 compatibility; the project seems unmaintained
+git+https://github.com/shtalinberg/django-el-pagination.git@9f9c6963efb101cb0d4b5406a2ab0be51cfa586c#egg=django-el-pagination # 2022-08-23: waiting for a tagged release for django 4.0 compatibility
+git+https://github.com/christianp/django-html_sanitizer.git@django4compat#egg=django-html_sanitizer # 2022-08-23: fork with django 4.0 compatibility; the project seems unmaintained
 django-notifications-hq==1.7.0
 django-registration-redux==2.11
 django-reversion==5.0.2
 django-tables2==2.3.1
 django-taggit==1.3.0
 django-uuslug==1.2.0
-git+https://github.com/numbas/django-thumbs
+git+https://github.com/numbas/django-thumbs@5e9dc77852e53fc831275a91e42b2997cec394ed#egg=django-thumbs
 python-slugify==4.0.1
 six==1.15.0
 mistune==2.0.3

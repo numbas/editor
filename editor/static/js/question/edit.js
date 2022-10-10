@@ -1160,7 +1160,7 @@ $(document).ready(function() {
         prepareVariables: function() {
             var jme = Numbas.jme;
 
-            var scope = this.baseScope();
+            var scope = new jme.Scope([this.baseScope()]);
 
             //make structure of variables to evaluate
             var todo = {}

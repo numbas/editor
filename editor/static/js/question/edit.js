@@ -1098,7 +1098,7 @@ $(document).ready(function() {
         prepareVariables: function() {
             var jme = Numbas.jme;
 
-            var scope = this.baseScope();
+            var scope = new jme.Scope([this.baseScope()]);
 
             //create functions
             this.functions().map(function(f) {

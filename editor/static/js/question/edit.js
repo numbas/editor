@@ -3526,11 +3526,11 @@ $(document).ready(function() {
             }
             var o = [];
             if(this.availabilityCondition().id=='expression') {
-                o.push(new VariableReference({kind:'part',part:this.part,tab:'nextparts',value:this.availabilityExpression,type:'jme',description:'next part availability condition', defined_names: note_names.concat(['credit','answered', 'used_alternative']), scope:this.part.scope}));
+                o.push(new VariableReference({kind:'part',part: part,tab:'nextparts',value:this.availabilityExpression,type:'jme',description:'next part availability condition', defined_names: note_names.concat(['credit','answered', 'used_alternative']), scope: part.scope}));
             }
             this.variableReplacements().forEach(function(vr) {
-                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.definition,type:'jme',description:'variable replacement', defined_names: note_names.concat(['credit', 'used_alternative']), scope:this.part.scope}));
-                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.variable,type:'jme',description:'variable replacement', defined_names: note_names.concat(['credit', 'used_alternative']), scope:this.part.scope}));
+                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.definition,type:'jme',description:'variable replacement', defined_names: note_names.concat(['credit', 'used_alternative']), scope: part.scope}));
+                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.variable,type:'jme',description:'variable replacement', defined_names: note_names.concat(['credit', 'used_alternative']), scope: part.scope}));
             });
             return o;
         },this);

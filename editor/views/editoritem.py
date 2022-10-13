@@ -133,7 +133,7 @@ class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMix
         if obj2.editoritem.project == obj.editoritem.project:
             obj2.editoritem.folder = obj.editoritem.folder
         obj2.editoritem.save()
-        obj2.editoritem.tags.set(*obj.editoritem.tags.all())
+        obj2.editoritem.tags.set(obj.editoritem.tags.all())
         obj2.editoritem.ability_levels.set(obj.editoritem.ability_levels.all())
         obj2.editoritem.taxonomy_nodes.set(obj.editoritem.taxonomy_nodes.all())
         for c in obj.editoritem.contributors.all():
@@ -203,7 +203,7 @@ class BaseUpdateView(generic.UpdateView):
             self.object.editoritem.taxonomy_nodes.add(*form.cleaned_data['taxonomy_nodes'])
             self.object.editoritem.ability_levels.clear()
             self.object.editoritem.ability_levels.add(*form.cleaned_data['ability_levels'])
-            self.object.editoritem.tags.set(*[t.strip() for t in self.data.get('tags', [])])
+            self.object.editoritem.tags.set([t.strip() for t in self.data.get('tags', [])])
             Contributor.objects.get_or_create(item=self.object.editoritem,user=self.user)
 
             self.object.save()

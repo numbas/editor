@@ -1361,7 +1361,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
         self.content = other.content
         self.metadata = other.metadata
 
-        self.tags.set(*other.tags.all())
+        self.tags.set(other.tags.all())
 
         self.ability_levels.clear()
         self.ability_levels.add(*other.ability_levels.all())

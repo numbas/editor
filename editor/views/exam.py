@@ -132,7 +132,7 @@ class UploadView(editor.views.editoritem.CreateView):
                 qei.project = ei.project
                 qei.save()
 
-                qei.tags.set(*[t.strip() for t in q.get('tags',[])])
+                qei.tags.set([t.strip() for t in q.get('tags',[])])
 
                 qo = NewQuestion()
                 qo.editoritem = qei

@@ -47,6 +47,10 @@ Adding more questions to your exam
 ##################################
 
 On the editing page for your exam, under :guilabel:`Questions` select :guilabel:`Add another question to this group'.
+
+.. image:: screenshots/exam_edit_enter_add_questions_area.png
+    :alt: A  large button below the questions containing Add another question to this group.
+
 The :guilabel:`Recent questions` tab shows questions you have recently edited.
 The :guilabel:`Basket` tab shows questions you've added to your basket: you can browse the question editor to find questions, add them to your basket, and then go back to the exam editing page and add them in.
 

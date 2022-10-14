@@ -8,13 +8,12 @@ Let's create an exam using questions already in the database.
 Creating an exam using existing questions
 #########################################
 
-On your home page, click on the :guilabel:`Questions` link under :guilabel:`Browse the public database`. 
-You can use the options on the left to filter the results, or use the search box at the top of the page to search for content that you are interested in. 
+On your home page, use the search box at the top of the page to search for content you are interested in. You can leave the search box blank to get all available questions. You can use the options on the left to filter the results. 
 
 .. image:: screenshots/question_search.png
     :alt: The search box is highlighted at the top of the page.
 
-Once you have found a question that you are interested in, click on the :guilabel:`Preview` icon to try it out. 
+Once you have found a question that you are interested in, click on the :guilabel:`Test run` icon to try it out. 
 If you are happy with the question, click on the :guilabel:`basket` icon to add it to your *question basket*. 
 
 .. image:: screenshots/question_search_basket.png
@@ -47,19 +46,18 @@ The description should be short -- one or two lines -- and will appear underneat
 Adding more questions to your exam
 ##################################
 
-On the editing page for your exam, click the :guilabel:`Questions` link in the sidebar to go to the question selection area. 
-On the left is space for your selected questions, and on the right are tabs offering different ways of finding questions to add.
+On the editing page for your exam, under :guilabel:`Questions` select :guilabel:`Add another question to this group'.
 The :guilabel:`Recent questions` tab shows questions you have recently edited.
 The :guilabel:`Basket` tab shows questions you've added to your basket: you can browse the question editor to find questions, add them to your basket, and then go back to the exam editing page and add them in.
 
 You can click on any question's name to open it in a new window. This is useful to verify that the question contains content that you find relevant before including it in your exam.
 
-Click the plus icon on one of the question results to add it to your exam. 
+Click the plus icon on one of the question results to add it to your exam - this returns you to the main :guilabel:`Questions` page where you can rearrange your questions. 
 
 .. image:: screenshots/exam_edit_add_question.png
     :alt: A question is about to be added to the exam by clicking on the plus icon.
 
-You can drag and drop questions in the list on the left to reorder them.
+You can drag and drop questions in the list to reorder them.
 
 .. image:: screenshots/exam_edit_drag.png
     :alt: Reordering a question by dragging it down the list.

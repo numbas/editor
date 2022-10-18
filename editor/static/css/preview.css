@@ -8,7 +8,7 @@ body {
 }
 header {
     padding: 0 1em;
-    background: hsl(0, 70%, 30%);
+    background: hsl(0, 0%, 30%);
     /*! border-bottom: 0.2rem solid hsl(0, 70%, 10%); */
     display: grid;
     color: white;

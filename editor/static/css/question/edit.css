@@ -356,6 +356,10 @@ table.variable-list .value-cell .value {
     width: 100%;
     overflow-x: auto;
 }
+.marking-matrix > table {
+    width: auto;
+}
+    
 
 .all-part-unit-tests {
     width: initial;

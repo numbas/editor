@@ -132,19 +132,19 @@
             <thead>
                 <tr>
                     <td></td>
-                    <th data-bind="attr: {colspan: answers().length}" class="answers">Answers</th>
+                    <!-- ko foreach: answers -->
+                    <th data-bind="latex: content"></th>
+                    <!-- /ko -->
                 </tr>
             </thead>
             <tbody>
                 <!-- ko foreach: matrix -->
                 <tr>
-                    <!-- ko if: $index()==0 -->
-                    <th data-bind="attr: {rowspan: $parent.choices().length}" class="choices">Choices</th>
-                    <!-- /ko -->
+                    <th data-bind="latex: $parent.choices()[$index()].content"></th>
 
                     <!-- ko foreach: $data -->
                     <td>
-                        <input {% if not editable %}disabled{% endif %} class="form-control" type="text" class="marks monospace" data-bind="textInput: marks, autosize: marks"/>
+                        <input {% if not editable %}disabled{% endif %} class="form-control marks monospace" type="text" data-bind="textInput: marks, autosize: marks"/>
                     </td>
                     <!-- /ko -->
                 </tr>

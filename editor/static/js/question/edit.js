@@ -3714,7 +3714,7 @@ $(document).ready(function() {
 
         // set answer for gapfill parts
         ko.computed(function() {
-            if(this.editing()) {
+            if(this.editing() && this.editable) {
                 if(this.part.type().name=='gapfill') {
                     this.answer({
                         valid: this.part.gaps().some(function(g){return g.marking_test().answer().valid}), 

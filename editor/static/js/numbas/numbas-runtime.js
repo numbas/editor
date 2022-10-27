@@ -12877,7 +12877,7 @@ jme.variables.note_script_constructor = function(construct_scope, process_result
             var nscope = construct_scope(scope);
             var result = jme.variables.remakeVariables(this.notes,changed_variables,nscope,compute_note,[note]);
             for(var name in result.variables) {
-                scope.setVariable(name,result.variables[name]);
+                nscope.setVariable(name,result.variables[name]);
             }
             return {value: result.variables[note], scope: nscope};
         }
@@ -14192,8 +14192,11 @@ if(res) { \
                         return function() {
                             var original_result = originalScript.apply(part,arguments);
                             var after_result = script.apply(part,arguments);
-                            if(!after_result || (after_result.added_because_missing && after_result.states && after_result.states.mark && after_result.states.mark.length==0)) {
+                            if(!after_result) {
                                 return original_result;
+                            }
+                            if(after_result.added_because_missing && after_result.states && after_result.states.mark) {
+                                after_result.states.mark = original_result.states.mark.concat(after_result.states.mark);
                             }
                             return after_result;
                         }
@@ -15189,9 +15192,15 @@ if(res) { \
             if(pre_submit_result.waiting) {
                 return {waiting_for_pre_submit: pre_submit_result.waiting};
             }
+            var marking_parameters = this.marking_parameters(studentAnswer, pre_submit_result.parameters, exec_path);
+            Object.keys(marking_parameters).forEach(function(name) {
+                if(scope.getVariable(name) !== undefined){
+                    throw(new Numbas.Error("part.marking.parameter already in scope",{name: name}));
+                }
+            });
             var result = this.markingScript.evaluate(
                 scope,
-                this.marking_parameters(studentAnswer, pre_submit_result.parameters, exec_path)
+                marking_parameters
             );
         } catch(e) {
             throw(new Numbas.Error("part.marking.error in marking script",{message:e.message},e));
@@ -16401,9 +16410,6 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         // check the suspend data was for this question - if the test is updated and the question set changes, this won't be the case!
         q.signals.on('variablesTodoMade', function() {
             var qobj = q.store.loadQuestion(q);
-            if(qobj.name && qobj.name!=q.name) {
-                throw(new Numbas.Error('question.loaded name mismatch'));
-            }
             for(var x in qobj.variables) {
                 q.scope.setVariable(x,qobj.variables[x]);
             }
@@ -18311,7 +18317,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      */
     root: function(a,b)
     {
-        if(!a.complex && a<0) {
+        if(!a.complex && a<0 && b%2==1) {
             return -math.root(-a,b);
         }
         return math.pow(a,div(1,b));

@@ -31409,7 +31409,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         if(this.type!='1_n_2') {
             tryLoad(data, ['maxMarks'], this, ['marks']);
         }
-        tryLoad(data, ['minMarks'], settings, ['minimumMarks']);
+        tryLoad(data, ['minMarks', 'markingMethod'], settings, ['minimumMarks', 'markingMethod']);
         tryLoad(data, ['minAnswers', 'maxAnswers', 'shuffleChoices', 'shuffleAnswers', 'displayType','displayColumns'], settings, ['minAnswersString', 'maxAnswersString', 'shuffleChoices', 'shuffleAnswers', 'displayType','displayColumns']);
         tryLoad(data, ['warningType'], settings);
         tryLoad(data.layout, ['type', 'expression'], settings, ['layoutType', 'layoutExpression']);
@@ -31491,6 +31491,9 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
     finaliseLoad: function() {
         var settings = this.settings;
         var scope = this.getScope();
+        if(this.type == 'm_n_2') {
+            settings.displayType = 'checkbox';
+        }
         if(settings.displayType=='radiogroup') {
             settings.markingMethod = 'sum ticked cells';
         }

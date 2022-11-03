@@ -333,3 +333,39 @@ static-dynamic-setting .static-switch {
     position: initial;
     margin-left: 0;
 }
+
+body.fill-viewport {
+    display: grid;
+    grid-template:
+        "nav" auto
+        "main" 1fr
+        "footer" auto
+        /
+        1fr
+    ;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+body.fill-viewport > nav {
+    grid-area: nav;
+}
+body.fill-viewport > main {
+    grid-area: main;
+    overflow: auto;
+    width: 100%;
+}
+body.fill-viewport > footer {
+    grid-area: footer;
+    margin-top: 0;
+}
+
+body.fill-viewport .page-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1em
+}
+body.fill-viewport .page-header h1 {
+    margin: 0;
+}

@@ -10,3 +10,87 @@
 .list-group-item.dir::after {
     content: '/';
 }
+
+#toolbar {
+  display: grid;
+  grid-auto-flow: column;
+  grid-gap: 0.5em 1em;
+  grid-auto-columns: max-content;
+  width: 100%;
+  grid-template:
+    "save replace download info delete" / auto auto auto 1fr auto;
+  margin-bottom: 0.5em;
+  align-items: end;
+  overflow-x: auto;
+}
+#toolbar #save { grid-area: save; }
+#toolbar #replace { grid-area: replace; }
+#toolbar #delete { grid-area: delete; }
+#toolbar #file-info { grid-area: info; }
+#toolbar #download { grid-area: download; }
+
+@media screen and (max-width: 80em) {
+  #toolbar {
+    grid-template:
+      "info info info info info"
+      "save replace download . delete"
+      / auto auto 1fr auto
+      ;
+  }
+}
+
+
+#replace-file input[type="file"] {
+  display:inline-block;
+}
+#file-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  /*! align-content: baseline; */
+  /*! align-items: baseline; */
+  /*! align-self: end; */
+  margin: 0;
+}
+.image-file {
+  max-height: 50vh;
+}
+
+#file-info .help-block {
+  margin: 0;
+}
+
+#content {
+  display: grid;
+  grid-template:
+    "page-header page-header" auto "sidebar editor" 1fr / 18em 1fr;
+  grid-gap: 0 1em;
+  height: 100%;
+  overflow-y: hidden;
+}
+.page-header {
+  grid-area: page-header;
+}
+.sidebar {
+  grid-area: sidebar;
+  overflow-y: auto;
+}
+
+.edit-content {
+  grid-area: editor;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  height: 100%;
+  overflow-y: hidden;
+}
+
+
+#save-file {
+  overflow: auto;
+  height: 100%;
+}
+
+#content .CodeMirror {
+  height: auto;
+}

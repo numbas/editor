@@ -39,7 +39,7 @@
         <li data-bind="css: {active: ko.unwrap($parent.tabber.currentTab().id) == $data.id, 'more-important': $data.more_important, 'in-use': $data.in_use}">
             <a href="#" data-bind="click: $parent.tabber.currentTab">
                 <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span>
-                <span class="hidden-sm hidden-xs" data-bind="text: title"></span>
+                <span class="tab-label hidden-sm hidden-xs" data-bind="text: title"></span>
             </a>
         </li>
         <!-- /ko -->

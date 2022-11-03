@@ -92,57 +92,50 @@
         </h1>
         {% endblock page_header %}
     </div>
-    <div class="row">
-        <div class="col-sm-1 col-md-2 tabs">
-            <div class="navbar navbar-blank">
-                <ul class="nav nav-pills nav-stacked">
-                    {% with can_copy=object|can_be_copied_by:request.user %}
-                    <li class="{% if not can_copy %}disabled{% endif %}">
-                        <a class="text-warning" href="{% if can_copy %}{% url 'custom_part_type_copy' object.pk %}{% endif %}" target="_blank" title="{% if can_copy %}Create your own copy of this part type{% else %}This item's licence doesn't allow you to modify it.{% endif %}">
+    <div class="navbar navbar-blank">
+        <ul class="nav navbar-nav nav-tabs">
+            <li>
+                <div class="navbar-form navbar-left">
+                    <div class="btn-group">
+                        {% with can_copy=object|can_be_copied_by:request.user %}
+                        <a class="btn btn-warning {% if not can_copy %}disabled{% endif %}" href="{% if can_copy %}{% url 'custom_part_type_copy' object.pk %}{% endif %}" target="_blank" title="{% if can_copy %}Create your own copy of this part type{% else %}This item's licence doesn't allow you to modify it.{% endif %}">
                             <span class="glyphicon glyphicon-duplicate"></span>
-                            <span class="hidden-sm">Make a copy</span>
+                            Make a copy
                         </a>
-                    </li>
-                    {% endwith %}
+                        {% endwith %}
 
-                    {% if editable %}
-                    <li class="">
-                        <a href="{% url 'custom_part_type_delete' object.pk %}" class="text-danger" title="Delete this part type permanently">
+                        {% if editable %}
+                        <a href="{% url 'custom_part_type_delete' object.pk %}" class="btn btn-danger" title="Delete this part type permanently">
                             <span class="glyphicon glyphicon-remove"></span> 
-                            <span class="hidden-sm">Delete</span>
+                            Delete
                         </a>
-                    </li>
-                    {% endif %}
+                        {% endif %}
 
-                    <li>
-                        <a href="{% url 'custom_part_type_source' object.pk %}">
+                        <a href="{% url 'custom_part_type_source' object.pk %}" class="btn btn-default">
                             <span class="glyphicon glyphicon-cloud-download"></span>
                             Download
                         </a>
-                    </li>
 
-                    <li>
-                        <a href="{% url 'custom_part_type_reupload' object.pk %}">
+                        <a href="{% url 'custom_part_type_reupload' object.pk %}" class="btn btn-default">
                             <span class="glyphicon glyphicon-cloud-upload"></span>
                             Re-upload
                         </a>
-                    </li>
-                </ul>
+                    </div>
+                </div>
+            </li>
+            <!-- ko foreach: mainTabber.tabs -->
+            <li data-bind="visible: visible, css: {active: $root.mainTabber.currentTab() == $data}">
+                <a href="#" data-bind="click: $root.mainTabber.currentTab">
+                    <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> 
+                    <span class="tab-label hidden-sm" data-bind="text: title"></span>
+                </a>
+            </li>
+            <!-- /ko -->
+        </ul>
+    </div>
 
-                <hr>
-
-                <ul class="nav nav-pills nav-stacked" data-bind="foreach: mainTabber.tabs">
-                    <li data-bind="visible: visible, css: {active: $root.mainTabber.currentTab() == $data}">
-                        <a href="#" data-bind="click: $root.mainTabber.currentTab">
-                            <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> 
-                            <span class="hidden-sm" data-bind="text: title"></span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="col-sm-11 col-md-10 editing">
+    <div class="row">
+        <div class="col-sm-12 editing">
             <div class="tab-content">
             {% block main_tab_content %}
                 <!-- Description -->

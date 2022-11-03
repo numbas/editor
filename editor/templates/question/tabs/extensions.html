@@ -7,7 +7,7 @@
         <nav class="navbar navbar-blank">
             <ul class="nav nav-tabs extension-tabs" data-bind="foreach: extensionTabs.tabs">
                 <li data-bind="css: {active: ko.unwrap($parent.extensionTabs.currentTab().id) == $data.id, 'more-important': $data.more_important, 'in-use': $data.in_use}">
-                    <a href="#" data-bind="click: $parent.extensionTabs.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> <span class="hidden-sm" data-bind="text: title"></span></a>
+                    <a href="#" data-bind="click: $parent.extensionTabs.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> <span class="tab-label hidden-sm" data-bind="text: title"></span></a>
                 </li>
             </ul>
         </nav>

@@ -93,76 +93,80 @@
     </div>
     <nav class="navbar navbar-blank">
         <ul class="nav navbar-nav nav-tabs">
-            <li>
-            <div class="navbar-form navbar-left">
-            <div class="btn-group">
-                <a class="btn btn-success" data-bind="attr: {href: item_json.previewURL+'?refresh', target: item_json.previewWindow}" title="Run this {{item_type}} in a new window (Ctrl+B)">
-                    <span class="glyphicon glyphicon-play"></span>
-                    &nbsp;
-                    Run
-                </a>
-                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <span class="caret"></span>
-                    <span class="sr-only">Toggle Dropdown</span>
-                </button>
-                <ul class="dropdown-menu">
-                {% block admin_controls %}
-                {% with can_copy=object.editoritem|can_be_copied_by:request.user %}
-                <li class="{% if not can_copy %}disabled{% endif %}">
-                <a class="text-warning" {% if can_copy %}href="{% editoritem_url 'copy' object %}" target="_blank"{% endif %} title="{% if can_copy %}Create your own copy of this {{item_type}}{% else %}This item's licence doesn't allow you to modify it.{% endif %}">
-                    <span class="glyphicon glyphicon-duplicate"></span>
-                    &nbsp;
-                    Make a copy
-                </a>
-                </li>
-                {% endwith %}
-
-                {% if editable %}
-                <li class="">
-                    <a href="{% editoritem_url 'delete' object %}" class="text-danger" title="Delete this {{item_type}} permanently">
-                        <span class="glyphicon glyphicon-remove"></span> 
+            <li class="dropdown">
+                <div class="btn-group">
+                    <a class="btn btn-success" data-bind="attr: {href: item_json.previewURL+'?refresh', target: item_json.previewWindow}" title="Run this {{item_type}} in a new window (Ctrl+B)">
+                        <span class="glyphicon glyphicon-play"></span>
                         &nbsp;
-                        Delete
+                        Run
                     </a>
-                </li>
-                {% endif %}
-
-                <li role="separator" class="divider"></li>
-                <li class="dropdown-header">
-                    <span class="glyphicon glyphicon-cloud-download"></span>
-                    &nbsp;
-                    Download
-                </li>
-
-                <li class="disabled">
-                    <a data-bind="visible: ready_to_download"><span class="text-success"><span class="glyphicon glyphicon-ok"></span> This {{item_type}} is ready to download.</span></a>
-                    <a data-bind="visible: !ready_to_download()"><span class="text-danger"><span class="glyphicon glyphicon-exclamation-sign"></span> This {{item_type}} might need some attention: <span data-bind="text: ready_to_download_reason"></span></span></a>
-                </li>
-                <li class="indent"><a href="{% editoritem_url 'download' object %}?scorm">SCORM package</a></li>
-                <li class="indent"><a href="{% editoritem_url 'download' object %}">standalone .zip (no SCORM)</a></li>
-                <li class="indent"><a href="{% editoritem_url 'source' object %}">source</a></li>
-                <li role="separator" class="divider"></li>
-
-                <li class="dropdown-header">
-                    Organisation
-                </li>
-                <li>
-                    <a href="#" class="add-to-queue" title="Add this to a queue" data-item-id="{{object.editoritem.pk}}">
-                        <span class="glyphicon glyphicon-list" aria-hidden="true"></span> 
-                        Add to a queue
+                </div>
+            </li>
+            <li class="dropdown">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="organisation-dropdown-button">
+                        Organisation
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledBy="organisation-dropdown-button">
+                    {% block admin_controls %}
+                    {% with can_copy=object.editoritem|can_be_copied_by:request.user %}
+                    <li class="{% if not can_copy %}disabled{% endif %}">
+                    <a class="text-warning" {% if can_copy %}href="{% editoritem_url 'copy' object %}" target="_blank"{% endif %} title="{% if can_copy %}Create your own copy of this {{item_type}}{% else %}This item's licence doesn't allow you to modify it.{% endif %}">
+                        <span class="glyphicon glyphicon-duplicate"></span>
+                        &nbsp;
+                        Make a copy
                     </a>
-                </li>
+                    </li>
+                    {% endwith %}
 
-                {% endblock admin_controls %}
-                </ul>
-            </div>
-            </div>
+                    {% if editable %}
+                    <li class="">
+                        <a href="{% editoritem_url 'delete' object %}" class="text-danger" title="Delete this {{item_type}} permanently">
+                            <span class="glyphicon glyphicon-remove"></span> 
+                            &nbsp;
+                            Delete
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <li role="separator" class="divider"></li>
+
+                    <li>
+                        <a href="#" class="add-to-queue" title="Add this to a queue" data-item-id="{{object.editoritem.pk}}">
+                            <span class="glyphicon glyphicon-list" aria-hidden="true"></span> 
+                            Add to a queue
+                        </a>
+                    </li>
+
+                    {% endblock admin_controls %}
+                    </ul>
+                </div>
+            </li>
+            <li class="dropdown">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="download-dropdown-button">
+                        <span class="glyphicon glyphicon-cloud-download"></span>
+                        &nbsp;
+                        Download
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledBy="download-dropdown-button">
+                        <li class="disabled">
+                            <a data-bind="visible: ready_to_download"><span class="text-success"><span class="glyphicon glyphicon-ok"></span> This {{item_type}} is ready to download.</span></a>
+                            <a data-bind="visible: !ready_to_download()"><span class="text-danger"><span class="glyphicon glyphicon-exclamation-sign"></span> This {{item_type}} might need some attention: <span data-bind="text: ready_to_download_reason"></span></span></a>
+                        </li>
+                        <li class="indent"><a href="{% editoritem_url 'download' object %}?scorm">SCORM package</a></li>
+                        <li class="indent"><a href="{% editoritem_url 'download' object %}">standalone .zip (no SCORM)</a></li>
+                        <li class="indent"><a href="{% editoritem_url 'source' object %}">source</a></li>
+                    </ul>
+                </div>
             </li>
             <!-- ko foreach: mainTabber.tabs -->
             <li data-bind="visible: visible, css: {active: $root.mainTabber.currentTab() == $data, 'in-use': $data.in_use, 'warning': $data.warning}">
                 <a href="#" data-bind="click: $root.mainTabber.currentTab">
                     <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> 
-                    <span class="hidden-xs hidden-sm" data-bind="text: title"></span>
+                    <span class="tab-label hidden-xs hidden-sm" data-bind="text: title"></span>
                     <span class="sr-only" data-bind="visible: in_use">(in use)</span>
                     <!-- ko if: warning -->
                     <span class="sr-only">has errors</span>

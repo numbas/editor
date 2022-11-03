@@ -781,18 +781,22 @@ $(document).ready(function() {
             this.baseScope();
             this.should_remake_instance = true;
         },this);
+        this.instance_error = ko.observable(null);
         this.instance = function() {
             if(this.should_remake_instance) {
-                var q = Numbas.createQuestionFromJSON(this.toJSON(),1,null,null,this.baseScope());
+                this.instance_error(null);
+                var qq = Numbas.createQuestionFromJSON(this.toJSON(),1,null,null,this.baseScope());
                 var vm = this;
-                q.signals.on('ready',function() {
-                    if(q.partsMode=='explore') {
+                qq.signals.on('ready',function() {
+                    if(qq.partsMode=='explore') {
                         vm.parts().slice(1).forEach(function(p,i) {
-                            var p = q.addExtraPart(i+1);
+                            var p = qq.addExtraPart(i+1);
                         });
                     }
+                }).catch(function(e) {
+                    q.instance_error(e);
                 });
-                this._instance = q;
+                this._instance = qq;
                 this.should_remake_instance = false;
             }
             return this._instance;
@@ -3902,7 +3906,13 @@ $(document).ready(function() {
             mt.running(true);
             var q = mt.make_question(force);
             if(q) {
-                await q.signals.on('ready');
+                try {
+                    await q.signals.on('ready');
+                } catch(e) {
+                    mt.running(false);
+                    mt.last_run({error: 'Error initialising the question: '+e.message});
+                    return;
+                }
                 await mt.mark();
             }
         }

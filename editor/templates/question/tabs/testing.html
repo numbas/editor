@@ -9,6 +9,11 @@
 
     <button data-bind="click: run_all_unit_tests" class="btn btn-primary"><span class="glyphicon glyphicon-play"></span> Run all unit tests</button>
 
+    <div class="alert alert-warning" data-bind="visible: instance_error">
+        <p>There was an error which means the tests can't run:</p>
+        <pre data-bind="text: instance_error"></pre>
+    </div>
+
     <table class="table all-part-unit-tests">
         <thead>
             <tr>
@@ -36,9 +41,11 @@
                         <span class="text-danger" data-bind="if: state() == 'failed'">
                             <span class="glyphicon glyphicon-remove"></span> 
                             Failed
+                            <!-- ko if: !question_error -->
                             <ul class="list-unstyled" data-bind="foreach: failingNotes">
                                 <li><code data-bind="text: name"></code>: <span data-bind="text: noMatchDescription"></span></li>
                             </ul>
+                            <!-- /ko -->
                         </span>
                     </td>
                 </tr>

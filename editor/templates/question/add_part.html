@@ -9,9 +9,14 @@
     <span data-bind="if: $data.parent">to <span data-bind="text: $data.parent.levelName()+' '+$data.parent.indexLabel()"></span>
 </h3>
 
+<p class="help-block">Choose a type for this new <span data-bind="text: kind"></span>.</p>
+
 <!-- /ko -->
 
-<input type="text" class="form-control" data-bind="textInput: part_search" placeholder="Enter keywords to search for">
+<div class="form-group part-type-search">
+    <label for="part-type-search">Enter keywords to search for</label>
+    <input id="part-type-search" type="text" class="form-control" data-bind="textInput: part_search">
+</div>
 
 <table class="table table-condensed part-types">
     <tbody data-bind="foreach: filtered_part_types">

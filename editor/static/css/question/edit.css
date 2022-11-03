@@ -373,3 +373,19 @@ table.variable-list .value-cell .value {
     display: inline-block;
     width: 3em;
 }
+
+.part-type-search {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    grid-gap: 1em;
+}
+
+.part-type-search label {
+    margin: 0;
+}
+
+.part > h3 {
+    margin-top: 0;
+}

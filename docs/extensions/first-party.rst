@@ -57,7 +57,7 @@ There are `a few questions demonstrating how to use the JSXGraph extension <http
 .. _eukleides-extension:
 
 Eukleides
---------
+---------
 
 The Eukleides extension provides functions to embed diagrams created using the Eukleides language.
 

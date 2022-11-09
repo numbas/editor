@@ -46,7 +46,7 @@ The description should be short -- one or two lines -- and will appear underneat
 Adding more questions to your exam
 ##################################
 
-On the editing page for your exam, under :guilabel:`Questions` select :guilabel:`Add another question to this group'.
+On the editing page for your exam, under :guilabel:`Questions` select :guilabel:`Add another question to this group`.
 
 .. image:: screenshots/exam_edit_enter_add_questions_area.png
     :alt: A  large button below the questions containing Add another question to this group.

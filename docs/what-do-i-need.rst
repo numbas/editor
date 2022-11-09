@@ -22,16 +22,17 @@ Numbas is compatible with all major browsers and devices.
 For standalone tests, you just need to upload your exam to the web and give your students a link to it.
 See :ref:`recording scores <recording-scores>` for information on integrating Numbas with a virtual learning environment.
 
+We aim for Numbas to be compatible with all popular browsers.
+
 We have tested Numbas on the following browsers.
 Any more recent versions should be assumed to work.
 
-* **Chrome** version 10.
-* **Firefox** version 7.
-* **Internet Explorer** 9.
-* **Edge** any version.
-* **Safari** 5.0 on desktop.
-* **iOS (iPhone/iPad)** 8.0 with Safari.
-* **Android** 5.0 (Lollipop) with Chrome.
+* **Chrome** version 73 (released 2019-03-12).
+* **Firefox** version 81 (released 2020-09-22).
+* **Edge** version 79 (released 2020-01-15).
+* **macOS Safari** version 13 (released 2019-09-19).
+* **iOS Safari (iPhone/iPad)** version 13 (released 2019-09-19).
+* **Android WebView** version 73 (released 2019-03-12).
 
 .. _recording-scores:
 

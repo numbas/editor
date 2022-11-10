@@ -3,217 +3,212 @@
 {% load editor_controls %}
 
 <section class="tab-pane diagnostic-tab" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='diagnostic'}">
-    <div class="row">
-        <div class="col-sm-1 col-md-2 tabs" data-bind="with: diagnostic.tabber">
-            <div class="navbar navbar-blank">
-                <ul class="nav nav-pills nav-stacked" data-bind="foreach: tabs">
-                    <li data-bind="css: {active: $parent.currentTab() == $data}">
-                        <a href="#" data-bind="click: $parent.currentTab">
-                            <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> 
-                            <span class="hidden-sm" data-bind="text: title"></span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
+    <div class="container-fluid">
+        <nav class="navbar navbar-blank" data-bind="with: diagnostic.tabber">
+            <ul class="nav nav-tabs" data-bind="foreach: tabs">
+                <li data-bind="css: {active: $parent.currentTab() == $data}">
+                    <a href="#" data-bind="click: $parent.currentTab">
+                        <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> 
+                        <span class="hidden-sm" data-bind="text: title"></span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
 
-        <div class="col-sm-11 col-md-10 editing">
-            <div class="tab-content">
-                <section data-bind="visible: diagnostic.tabber.currentTab().id=='topics', with: diagnostic.knowledge_graph">
-                    <div class="row">
-                        <div class="col-sm-12 col-md-6 col-lg-7" data-bind="visible: topics().length==0">
-                            <p class="nothing-here">No topics have been defined.</p>
-                        </div>
-                        <div class="col-sm-12 col-md-6 col-lg-7 topic" data-bind="with: current_topic">
-                            <form class="form-horizontal" data-bind="submit: Editor.noop">
-                                {% if editable %}<button type="button" type="button" class="delete btn btn-sm btn-danger" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this topic</button>{% endif %}
-                                <div class="form-group">
-                                    <label for="topic-name" class="control-label">Name</label>
-                                    <input id="topic-name" type="text" class="form-control" data-bind="textInput: name">
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="topic-description" class="control-label">Description</label>
-                                    <div id="topic-description" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="topic-depends-on" class="control-label">← Depends on</label>
-                                    <input id="topic-depends-on" type="text" class="form-control" placeholder="Search for a topic" data-bind="autocomplete: dependency_autocomplete, autocompleteSelect: add_dependency, delay: 0">
-                                </div>
-
-                                <ul class="list-inline" data-bind="foreach: depends_on">
-                                    <li class="topic-link">
-                                        <div class="btn-group" role="group">
-                                            <button class="btn btn-info" type="button" data-bind="text: label, click: $parents[2].diagnostic.show_topic"></button> 
-                                            <button type="button" class="btn btn-danger" data-bind="click: $parent.remove_dependency"><span class="glyphicon glyphicon-remove"></span></button>
-                                        </div>
-                                    </li>
-                                </ul>
-
-                                <div class="form-group">
-                                    <label for="topic-leads-to" class="control-label">→ Leads to</label>
-                                    <input id="topic-leads-to" type="text" class="form-control" placeholder="Search for a topic" data-bind="autocomplete: leads_to_autocomplete, autocompleteSelect: add_leads_to, delay: 0">
-                                </div>
-
-                                <ul class="list-inline" data-bind="foreach: leads_to">
-                                    <li class="topic-link">
-                                        <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-info" data-bind="text: label, click: $parents[2].diagnostic.show_topic"></button>
-                                            <button type="button" class="btn btn-danger" data-bind="click: $parent.remove_leads_to"><span class="glyphicon glyphicon-remove"></span></button>
-                                        </div>
-                                    </li>
-                                </ul>
-
-                                <div class="form-group">
-                                    <label for="topic-learning-objective" class="control-label">Learning objectives</label>
-                                    <input id="topic-learning-objective" type="text" class="form-control" placeholder="Search for a learning objective" data-bind="autocomplete: learning_objective_autocomplete, autocompleteSelect: add_learning_objective, delay: 0"></label>
-                                </div>
-
-                                <ul class="list-inline" data-bind="foreach: learning_objectives">
-                                    <li>
-                                        <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-info" data-bind="text: name, click: $parents[2].diagnostic.show_learning_objective"></button>
-                                            <button type="button" class="btn btn-danger" data-bind="click: $parent.remove_learning_objective"><span class="glyphicon glyphicon-remove"></span></button>
-                                        </div>
-                                    </li>
-                                </ul>
-
-                                <button type="button" class="btn btn-primary">Questions in this topic</button>
-                            </form>
-                        </div>
-                        
-                        <div class="col-sm-12 col-md-6 col-lg-5">
-                            <div class="panel panel-info">
-                                <div class="panel-heading">
-                                    <h3 class="panel-title">Topics</h3>
-                                </div>
-                                <div class="list-group">
-                                    <div data-bind="sortable: {
-                                        foreach: topics,
-                                        options: {
-                                            group: 'topics',
-                                            handle: '.root'
-                                        }
-                                    }">
-                                        <div class="topic">
-                                            <a tabindex="0" href="#" role="button" class="list-group-item root" data-bind="
-                                                click: $parent.current_topic,
-                                                css: {
-                                                    active: $data==$parent.current_topic()
-                                                }
-                                                ">
-                                                <span data-bind="text: label">
-                                            </a>
-                                        </div>
+        <div class="tab-content">
+            <section data-bind="visible: diagnostic.tabber.currentTab().id=='topics', with: diagnostic.knowledge_graph">
+                <div class="row">
+                    <div class="col-sm-12 col-md-4 col-lg-3">
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Topics</h3>
+                            </div>
+                            <div class="list-group">
+                                <div data-bind="sortable: {
+                                    foreach: topics,
+                                    options: {
+                                        group: 'topics',
+                                        handle: '.root'
+                                    }
+                                }">
+                                    <div class="topic">
+                                        <a tabindex="0" href="#" role="button" class="list-group-item root" data-bind="
+                                            click: $parent.current_topic,
+                                            css: {
+                                                active: $data==$parent.current_topic()
+                                            }
+                                            ">
+                                            <span data-bind="text: label">
+                                        </a>
                                     </div>
                                 </div>
-                                <div class="panel-footer">
-                                    {% if editable %}
-                                    <button id="add-topic-button" type="button" class="btn btn-default add-topic" data-bind="click: add_topic, attr: {title: topics().length ? 'Add another topic' : 'Add a topic'}">
-                                        <span class="glyphicon glyphicon-plus"></span>
-                                        Add a topic
-                                    </button>
-                                    {% endif %}
-                                </div>
+                            </div>
+                            <div class="panel-footer">
+                                {% if editable %}
+                                <button id="add-topic-button" type="button" class="btn btn-default add-topic" data-bind="click: add_topic, attr: {title: topics().length ? 'Add another topic' : 'Add a topic'}">
+                                    <span class="glyphicon glyphicon-plus"></span>
+                                    Add a topic
+                                </button>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
+                    <div class="col-sm-12 col-md-8 col-lg-9" data-bind="visible: topics().length==0">
+                        <p class="nothing-here">No topics have been defined.</p>
+                    </div>
+                    <div class="col-sm-12 col-md-8 col-lg-9 topic" data-bind="with: current_topic">
+                        <form class="form-horizontal" data-bind="submit: Editor.noop">
+                            {% if editable %}<button type="button" type="button" class="delete btn btn-sm btn-danger" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this topic</button>{% endif %}
+                            <div class="form-group">
+                                <label for="topic-name" class="control-label">Name</label>
+                                <input id="topic-name" type="text" class="form-control" data-bind="textInput: name">
+                            </div>
 
-                </section>
+                            <div class="form-group">
+                                <label for="topic-description" class="control-label">Description</label>
+                                <div id="topic-description" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
+                            </div>
 
-                <section data-bind="visible: diagnostic.tabber.currentTab().id=='learning-objectives', with: diagnostic.knowledge_graph">
-                    <div class="row">
-                        <div class="col-sm-12 col-md-6 col-lg-7" data-bind="visible: learning_objectives().length==0">
-                            <p class="nothing-here">No learning objectives have been defined.</p>
-                        </div>
-                        <div class="col-sm-12 col-md-6 col-lg-7 learning-objective" data-bind="with: current_learning_objective">
-                            <form class="form-horizontal" data-bind="submit: Editor.noop">
-                                {% if editable %}<button type="button" type="button" class="delete btn btn-sm btn-danger" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this learning objective</button>{% endif %}
-                                <div class="form-group">
-                                    <label for="learning-objective-name" class="control-label">Name</label>
-                                    <input id="learning-objective-name" type="text" class="form-control" data-bind="textInput: name">
-                                </div>
+                            <div class="form-group">
+                                <label for="topic-depends-on" class="control-label">← Depends on</label>
+                                <input id="topic-depends-on" type="text" class="form-control" placeholder="Search for a topic" data-bind="autocomplete: dependency_autocomplete, autocompleteSelect: add_dependency, delay: 0">
+                            </div>
 
-                                <div class="form-group">
-                                    <label for="topic-description" class="control-label">Description</label>
-                                    <div id="topic-description" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
-                                </div>
+                            <ul class="list-inline" data-bind="foreach: depends_on">
+                                <li class="topic-link">
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-info" type="button" data-bind="text: label, click: $parents[2].diagnostic.show_topic"></button> 
+                                        <button type="button" class="btn btn-danger" data-bind="click: $parent.remove_dependency"><span class="glyphicon glyphicon-remove"></span></button>
+                                    </div>
+                                </li>
+                            </ul>
 
-                                <div class="form-group">
-                                    <label for="learning-objective-topics" class="control-label">Topics</label>
-                                    <input id="learning-objective-topics" type="text" class="form-control" placeholder="Search for a topic" data-bind="autocomplete: topic_autocomplete, autocompleteSelect: add_topic, delay: 0">
-                                </div>
+                            <div class="form-group">
+                                <label for="topic-leads-to" class="control-label">→ Leads to</label>
+                                <input id="topic-leads-to" type="text" class="form-control" placeholder="Search for a topic" data-bind="autocomplete: leads_to_autocomplete, autocompleteSelect: add_leads_to, delay: 0">
+                            </div>
 
-                                <ul class="list-inline" data-bind="foreach: topics">
-                                    <li class="topic-link">
-                                        <div class="btn-group" role="group">
-                                            <button class="btn btn-info" type="button" data-bind="text: label, click: $parents[2].diagnostic.show_topic"></button> 
-                                            <button type="button" class="btn btn-danger" data-bind="click: $parent.remove_topic"><span class="glyphicon glyphicon-remove"></span></button>
-                                        </div>
-                                    </li>
-                                </ul>
+                            <ul class="list-inline" data-bind="foreach: leads_to">
+                                <li class="topic-link">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-info" data-bind="text: label, click: $parents[2].diagnostic.show_topic"></button>
+                                        <button type="button" class="btn btn-danger" data-bind="click: $parent.remove_leads_to"><span class="glyphicon glyphicon-remove"></span></button>
+                                    </div>
+                                </li>
+                            </ul>
 
-                            </form>
-                        </div>
-                        
-                        <div class="col-sm-12 col-md-6 col-lg-5">
-                            <div class="panel panel-info">
-                                <div class="panel-heading">
-                                    <h3 class="panel-title">Learning objectives</h3>
-                                </div>
-                                <div class="list-group">
-                                    <div data-bind="sortable: {
-                                        foreach: learning_objectives,
-                                        options: {
-                                            group: 'learning-objectives',
-                                            handle: '.root'
-                                        }
-                                    }">
-                                        <div class="learning-objective">
-                                            <a tabindex="0" href="#" role="button" class="list-group-item root" data-bind="
-                                                click: $parent.current_learning_objective,
-                                                css: {
-                                                    active: $data==$parent.current_learning_objective()
-                                                }
-                                                ">
-                                                <span data-bind="text: label">
-                                            </a>
-                                        </div>
+                            <div class="form-group">
+                                <label for="topic-learning-objective" class="control-label">Learning objectives</label>
+                                <input id="topic-learning-objective" type="text" class="form-control" placeholder="Search for a learning objective" data-bind="autocomplete: learning_objective_autocomplete, autocompleteSelect: add_learning_objective, delay: 0"></label>
+                            </div>
+
+                            <ul class="list-inline" data-bind="foreach: learning_objectives">
+                                <li>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-info" data-bind="text: name, click: $parents[2].diagnostic.show_learning_objective"></button>
+                                        <button type="button" class="btn btn-danger" data-bind="click: $parent.remove_learning_objective"><span class="glyphicon glyphicon-remove"></span></button>
+                                    </div>
+                                </li>
+                            </ul>
+
+                            <button type="button" class="btn btn-primary">Questions in this topic</button>
+                        </form>
+                    </div>
+                    
+                </div>
+
+            </section>
+
+            <section data-bind="visible: diagnostic.tabber.currentTab().id=='learning-objectives', with: diagnostic.knowledge_graph">
+                <div class="row">
+                    <div class="col-sm-12 col-md-4 col-lg-3">
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Learning objectives</h3>
+                            </div>
+                            <div class="list-group">
+                                <div data-bind="sortable: {
+                                    foreach: learning_objectives,
+                                    options: {
+                                        group: 'learning-objectives',
+                                        handle: '.root'
+                                    }
+                                }">
+                                    <div class="learning-objective">
+                                        <a tabindex="0" href="#" role="button" class="list-group-item root" data-bind="
+                                            click: $parent.current_learning_objective,
+                                            css: {
+                                                active: $data==$parent.current_learning_objective()
+                                            }
+                                            ">
+                                            <span data-bind="text: label">
+                                        </a>
                                     </div>
                                 </div>
-                                <div class="panel-footer">
-                                    {% if editable %}
-                                    <button id="add-learning-objective-button" type="button" class="btn btn-default add-learning-objective" data-bind="click: add_learning_objective, attr: {title: learning_objectives().length ? 'Add another learning objective' : 'Add a learning objective'}">
-                                        <span class="glyphicon glyphicon-plus"></span>
-                                        Add a learning objective
-                                    </button>
-                                    {% endif %}
-                                </div>
+                            </div>
+                            <div class="panel-footer">
+                                {% if editable %}
+                                <button id="add-learning-objective-button" type="button" class="btn btn-default add-learning-objective" data-bind="click: add_learning_objective, attr: {title: learning_objectives().length ? 'Add another learning objective' : 'Add a learning objective'}">
+                                    <span class="glyphicon glyphicon-plus"></span>
+                                    Add a learning objective
+                                </button>
+                                {% endif %}
                             </div>
                         </div>
-                </section>
-
-                <section data-bind="visible: diagnostic.tabber.currentTab().id=='algorithm'">
-                    <form class="form-horizontal" data-bind="submit: Editor.noop">
-                        {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
-                        {% selectproperty 'diagnostic.script' 'Diagnostic algorithm' options_text='niceName' options='diagnostic.scriptOptions' help_url='exam/diagnostic.html#diagnostic-algorithms' %}
-                        {% booleanproperty 'diagnostic.extendScript' 'Extend built-in algorithm?' help_url='exam/diagnostic.html#diagnostic-algorithms' %}
-                        <div data-bind="fadeVisible: diagnostic.extendScript()">
-                            <div class="base-diagnostic-algorithm" data-bind="fadeVisible: diagnostic.extendScript() && diagnostic.baseScript()">
-                                <h5>Base diagnostic algorithm</h5>
-                                <pre data-bind="text: diagnostic.baseScript"></pre>
+                    </div>
+                    <div class="col-sm-12 col-md-8 col-lg-9" data-bind="visible: learning_objectives().length==0">
+                        <p class="nothing-here">No learning objectives have been defined.</p>
+                    </div>
+                    <div class="col-sm-12 col-md-8 col-lg-9 learning-objective" data-bind="with: current_learning_objective">
+                        <form class="form-horizontal" data-bind="submit: Editor.noop">
+                            {% if editable %}<button type="button" type="button" class="delete btn btn-sm btn-danger" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this learning objective</button>{% endif %}
+                            <div class="form-group">
+                                <label for="learning-objective-name" class="control-label">Name</label>
+                                <input id="learning-objective-name" type="text" class="form-control" data-bind="textInput: name">
                             </div>
 
-                            <h5>Custom diagnostic algorithm</h5>
-                            <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: diagnostic.customScript, codemirrorMode: 'jme'"></textarea>
-                            <p class="alert alert-danger" data-bind="html: diagnostic.scriptError, visible: diagnostic.scriptError" aria-live="polite"></p>
+                            <div class="form-group">
+                                <label for="topic-description" class="control-label">Description</label>
+                                <div id="topic-description" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="learning-objective-topics" class="control-label">Topics</label>
+                                <input id="learning-objective-topics" type="text" class="form-control" placeholder="Search for a topic" data-bind="autocomplete: topic_autocomplete, autocompleteSelect: add_topic, delay: 0">
+                            </div>
+
+                            <ul class="list-inline" data-bind="foreach: topics">
+                                <li class="topic-link">
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-info" type="button" data-bind="text: label, click: $parents[2].diagnostic.show_topic"></button> 
+                                        <button type="button" class="btn btn-danger" data-bind="click: $parent.remove_topic"><span class="glyphicon glyphicon-remove"></span></button>
+                                    </div>
+                                </li>
+                            </ul>
+
+                        </form>
+                    </div>
+                    
+            </section>
+
+            <section data-bind="visible: diagnostic.tabber.currentTab().id=='algorithm'">
+                <form class="form-horizontal" data-bind="submit: Editor.noop">
+                    {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
+                    {% selectproperty 'diagnostic.script' 'Diagnostic algorithm' options_text='niceName' options='diagnostic.scriptOptions' help_url='exam/diagnostic.html#diagnostic-algorithms' %}
+                    {% booleanproperty 'diagnostic.extendScript' 'Extend built-in algorithm?' help_url='exam/diagnostic.html#diagnostic-algorithms' %}
+                    <div data-bind="fadeVisible: diagnostic.extendScript()">
+                        <div class="base-diagnostic-algorithm" data-bind="fadeVisible: diagnostic.extendScript() && diagnostic.baseScript()">
+                            <h5>Base diagnostic algorithm</h5>
+                            <pre data-bind="text: diagnostic.baseScript"></pre>
                         </div>
-                        {% endwith %}
-                    </form>
-                </section>
-            </div>
+
+                        <h5>Custom diagnostic algorithm</h5>
+                        <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: diagnostic.customScript, codemirrorMode: 'jme'"></textarea>
+                        <p class="alert alert-danger" data-bind="html: diagnostic.scriptError, visible: diagnostic.scriptError" aria-live="polite"></p>
+                    </div>
+                    {% endwith %}
+                </form>
+            </section>
         </div>
     </div>
-
 </section>

@@ -4,10 +4,51 @@
 
 <section class="tab-pane questions-tab" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='questions'}">
     <div class="questions row">
-        <div class="col-sm-12 col-md-8 col-lg-8" data-bind="visible: question_groups().length==0">
+        <div class="col-sm-12 col-md-4 col-lg-3 question-groups">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h4 class="panel-title">Question groups</h4>
+                </div>
+                <div class="panel-body">
+                    <form class="form-horizontal" data-bind="submit: Editor.noop">
+                        {% with form_label_class='col-sm-8' form_control_class='col-sm-4' %}
+                            {% booleanproperty 'showQuestionGroupNames' 'Show group names to student?' help_url='exam/reference.html#term-Show-group-names-to-student' %}
+                            <div data-bind="visible: question_groups().length>1">
+                                {% booleanproperty 'shuffleQuestionGroups' 'Shuffle question groups?' help_url='exam/reference.html#term-Shuffle-question-groups' %}
+                            </div>
+                        {% endwith %}
+                    </form>
+                </div>
+                
+                <div class="list-group" data-bind="
+                    visible: question_groups().length,
+                    sortable: {
+                        foreach: question_groups,
+                        options: {handle: '.handle-grp', group: 'question_groups'}
+                    }
+                ">
+                    <a href="#" role="button" tabindex="0" class="list-group-item handle-grp question-group" data-bind="click: $parent.current_question_group, css: {active: $data==$parent.current_question_group()}">
+                        <strong data-bind="text: name"></strong>
+                        <span class="num-questions" data-bind="text: num_questions_text"></span>
+                        {% if editable %}
+                        <button class="pull-right delete btn btn-link btn-lg" title="Remove this group of questions" data-bind="visible: $parent.question_groups().length>0, click: remove"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                        {% endif %}
+                    </a>
+                </div>
+
+                {% if editable %}
+                <div class="panel-footer" data-bind="fadeVisible: navigatemode().name!='diagnostic'">
+                    <button class="btn btn-primary btn-block" data-bind="click: addQuestionGroup"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: question_groups().length==0 ? 'Add a question group' : 'Add another question group'"></span></button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-sm-12 col-md-8 col-lg-9" data-bind="visible: question_groups().length==0">
             <p class="nothing-here">No question groups have been defined.</p>
         </div>
-        <div class="col-sm-12 col-md-8 col-lg-8 question-group">
+
+        <div class="col-sm-12 col-md-8 col-lg-9 question-group">
             <!-- ko if: question_view()=='add_question' -->
             <div class="add-questions">
                 <h3>
@@ -156,47 +197,6 @@
             <!-- /ko -->
         </div>
 
-        <div class="col-sm-12 col-md-4 col-lg-4 question-groups">
-            <div class="panel panel-primary">
-                <div class="panel-heading">
-                    <h4 class="panel-title">Question groups</h4>
-                </div>
-                <div class="panel-body">
-                    <form class="form-horizontal" data-bind="submit: Editor.noop">
-                        {% with form_label_class='col-sm-8' form_control_class='col-sm-4' %}
-                            {% booleanproperty 'showQuestionGroupNames' 'Show group names to student?' help_url='exam/reference.html#term-Show-group-names-to-student' %}
-                            <div data-bind="visible: question_groups().length>1">
-                                {% booleanproperty 'shuffleQuestionGroups' 'Shuffle question groups?' help_url='exam/reference.html#term-Shuffle-question-groups' %}
-                            </div>
-                        {% endwith %}
-                    </form>
-                </div>
-                
-                <div class="list-group" data-bind="
-                    visible: question_groups().length,
-                    sortable: {
-                        foreach: question_groups,
-                        options: {handle: '.handle-grp', group: 'question_groups'}
-                    }
-                ">
-                    <a href="#" role="button" tabindex="0" class="list-group-item handle-grp question-group" data-bind="click: $parent.current_question_group, css: {active: $data==$parent.current_question_group()}">
-                        <strong data-bind="text: name"></strong>
-                        <span class="num-questions" data-bind="visible: questions().length>0, text: num_questions_text"></span>
-                        <ul class="questions" data-bind="sortable: {
-                            foreach: questions,
-                            options: {group: 'questions'}
-                        }">
-                        </ul>
-                    </a>
-                </div>
-
-                {% if editable %}
-                <div class="panel-footer" data-bind="fadeVisible: navigatemode().name!='diagnostic'">
-                    <button class="btn btn-primary btn-block" data-bind="click: addQuestionGroup"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: question_groups().length==0 ? 'Add a question group' : 'Add another question group'"></span></button>
-                </div>
-                {% endif %}
-            </div>
-        </div>
     </div>
 
     {% if editable %}

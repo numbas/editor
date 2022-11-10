@@ -24,6 +24,15 @@
   display: none;
 }
 
+.question-groups .question-group {
+  display: grid;
+  grid-template: 
+    "name delete" "num-questions delete" / auto max-content;
+}
+.question-groups .question-group .delete {
+    grid-area: delete;
+}
+
 .questions-tab .question {
   display: grid;
   grid-gap: 0.5em;

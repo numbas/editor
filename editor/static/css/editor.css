@@ -257,6 +257,7 @@ editor-pager nav {
 .project-header .list-inline {
     display: flex;
     align-items: first baseline;
+    margin: 0;
 }
 
 .project-header li ~ li::before {
@@ -272,6 +273,7 @@ editor-pager nav {
 }
 
 .name-header {
+    margin-top: 0;
     display: grid;
     grid-template: "icon name edit-name . status" auto / auto auto auto 1fr auto;
     grid-gap: 0.2em;
@@ -332,6 +334,29 @@ static-dynamic-setting .static-switch {
 .label-block .checkbox input[type="checkbox"] {
     position: initial;
     margin-left: 0;
+}
+
+.page-header {
+    display: grid;
+    grid-gap: 1em;
+    grid-template: "project save-status" "name stamp" / 1fr 12em;
+    align-items: baseline;
+}
+.page-header .save-status {
+    padding: 0.2em 1em;
+    margin: 0;
+}
+.page-header .stamp-header, .save-status {
+    justify-self: end;
+}
+.page-header > .project-header { grid-area: project; }
+.page-header > .name-header { grid-area: name; }
+.page-header > .stamp-header { grid-area: stamp; }
+.page-header > .save-status { grid-area: save-status; }
+
+.page-header .name {
+    word-break: break-word;
+    hyphens: auto;
 }
 
 body.fill-viewport {

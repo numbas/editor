@@ -105,12 +105,17 @@
         <div class="panel-body">
             <label>Give access to</label>
             <input class="form-control" id="search_author" type="text" placeholder="Full name or username" size="30" data-bind="
-                value: userAccessSearch,
+                textInput: userAccessSearch,
                 autocomplete: '{% url 'user_search' %}', 
                 autocompleteCallback: function(user) { return {label: user.name, value: user.name} },
                 autocompleteSelect: addUserAccess
                 "
             />
+            <!-- ko if: add_user_access_error -->
+            <div class="alert alert-warning" data-bind="fadeVisible: add_user_access_error">
+                <p><strong data-bind="text: add_user_access_error().name"></strong> is already in the access list.</p>
+            </div>
+            <!-- /ko -->
         </div>
     </div>
 

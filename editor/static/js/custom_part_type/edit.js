@@ -447,9 +447,7 @@ $(document).ready(function() {
             return this.extensions().filter(function(e){return e.used()});
         },this);
 
-        this.edit_name = function() {
-            pt.setTab('description')();
-        }
+        this.edit_name = pt.mainTabber.setTab('description');
         
         this.input_widgets = ko.observableArray(Editor.custom_part_type.input_widgets.map(function(data) {
             return new InputWidget(pt,data);
@@ -576,7 +574,7 @@ $(document).ready(function() {
                     }
                 });
                 this.saveAccess = new Editor.Saver(this.access_data,function(data) {
-                    return $.post(pt.set_access_url,data);
+                    return Editor.post_json(pt.set_access_url, data);
                 });
                 this.userAccessSearch = ko.observable('');
 

@@ -88,8 +88,16 @@
     <div class="page-header">
         {% block page_header %}
         <h1 class="name-header">
-            <span class="glyphicon glyphicon-ok"></span> <span data-bind="text: name, click: edit_name">{{part_type.name}}</span>
+            <span class="glyphicon glyphicon-ok"></span> 
+            <span class="name" data-bind="mathjaxHTML: name"></span>
+            {% if editable %}
+            <button type="button" class="btn btn-link" title="Change this part type's name" data-bind="click: edit_name"><span class="glyphicon glyphicon-pencil"></span></button>
+            {% endif %}
         </h1>
+        <div class="save-status alert" data-bind="class: autoSave.status_info().class">
+            <span class="glyphicon" data-bind="class: autoSave.status_info().icon"></span>
+            <span data-bind="text: autoSave.status_info().message">Saved</span>
+        </div>
         {% endblock page_header %}
     </div>
     <div class="navbar navbar-blank">

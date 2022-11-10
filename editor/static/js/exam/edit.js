@@ -349,7 +349,9 @@ $(document).ready(function() {
             },this);
 
             this.init_save(function(save_request) {
-                save_request.success(function(data) {
+                save_request.then(async function(request) {
+                    const response = await request;
+                    const data = await response.json();
                     e.remove_deleted_questions(data.deleted_questions);
                 });
             });

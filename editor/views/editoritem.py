@@ -189,7 +189,7 @@ class BaseUpdateView(generic.UpdateView):
         if not self.object.editoritem.can_be_edited_by(self.user):
             return http.HttpResponseForbidden()
 
-        self.data = json.loads(request.POST['json'])
+        self.data = json.loads(request.body.decode('utf-8'))
 
     def pre_save(self, form):
         """ Do anything that needs to be done before saving the object, after creating self.object from the form """
@@ -725,13 +725,13 @@ class SetAccessView(generic.UpdateView):
 
         existing_accesses = item.access.all()
 
-        user_ids = [int(x) for x in self.request.POST.getlist('user_ids[]')]
-        access_levels = self.request.POST.getlist('access_levels[]')
+        data = json.loads(request.body.decode('utf-8'))
 
-        access_dict = {u:a for u,a in zip(user_ids, access_levels)}
+        access_dict = data.get('access_rights',{});
 
+        # Delete removed accesses, and change existing accesses
         for a in existing_accesses:
-            if a.user.pk not in user_ids:
+            if a.user.pk not in access_dict:
                 a.delete()
             new_access = access_dict[a.user.pk]
             if a.access != new_access:
@@ -740,6 +740,7 @@ class SetAccessView(generic.UpdateView):
 
             del access_dict[a.user.pk]
 
+        # Create records for new accesses
         for user_id, access in access_dict.items():
             IndividualAccess.objects.create(user=User.objects.get(pk=user_id), access=access, object=item)
 

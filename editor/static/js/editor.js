@@ -141,6 +141,22 @@ $(document).ready(function() {
         })
     });
 
+    var post_json = Editor.post_json = function(url, data, extra_options) {
+        const options = {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFtoken()
+            },
+            body: JSON.stringify(data)
+        };
+        if(extra_options) {
+            Object.assign(options, extra_options);
+        }
+        return fetch(url, options);
+    }
+
     $.noty.defaultOptions.theme = 'noty_theme_twitter';
 
     slugify = function(s) {
@@ -365,8 +381,7 @@ $(document).ready(function() {
                         search.results.page(parseInt(response.page) || 1);
                 })
                 .error(function() {
-                    if('console' in window)
-                        console.log(arguments);
+                    console.log(arguments);
                     search.results.raw([]);
                     search.results.error('Error fetching results: '+arguments[2]);
                 })
@@ -447,19 +462,6 @@ $(document).ready(function() {
         Editor.savers += 1;
 
         if(Editor.savers==1) {
-            if(!Editor.save_noty)
-            {
-                Editor.save_noty = noty({
-                    text: 'Saving...', 
-                    layout: 'topCenter', 
-                    type: 'information',
-                    timeout: 0, 
-                    speed: 150,
-                    closeOnSelfClick: false, 
-                    closeButton: false
-                });
-            }
-                
             window.onbeforeunload = function() {
                 return 'There are still unsaved changes.';
             }
@@ -469,32 +471,41 @@ $(document).ready(function() {
         Editor.savers = Math.max(Editor.savers-1,0);
         if(Editor.savers==0) {
             window.onbeforeunload = null;
-            $.noty.close(Editor.save_noty);
-            Editor.save_noty = null;
         }
     }
     Editor.abortSave = function(reason) {
         Editor.savers = Math.max(Editor.savers-1,0);
-        $.noty.close(Editor.save_noty);
-        Editor.save_noty = null;
         window.onbeforeunload = function() {
             return reason;
         }
     }
 
     //obs is an observable on the data to be saved
-    //savefn is a function which does the save, and returns a deferred object which resolves when the save is done
+    //savefn is a function which does the save, and returns a Promise which resolves when the save is done, or rejects when the save fails.
     Editor.Saver = function(obs,savefn) {
         var saver = this;
         this.firstSave = true;
         this.firstData = null;
         this.obs = obs;
         this.savefn = savefn;
+        this.status = ko.observable('saved');
+        this.error_message = ko.observable('');
+        this.status_info = ko.pureComputed(function() {
+            return {
+                'saved': {message: 'Saved', class: 'alert-success', icon: 'glyphicon-ok'},
+                'unsaved': {message: 'Unsaved changes', class: 'alert-info', icon: 'glyphicon-pencil'},
+                'saving': {message: 'Saving…', class: 'alert-info', icon: 'glyphicon-upload'},
+                'error': {message: 'Error saving: '+this.error_message(), class: 'alert-warning', icon: 'glyphicon-exclamation-sign'}
+            }[this.status()];
+        },this);
 
-        ko.computed(function() {
+        this.changed_data = ko.computed(function() {
             var data = saver.obs();
             if(data===undefined) {
                 return;
+            }
+            if(!saver.firstSave) {
+                saver.status('unsaved');
             }
             if(saver.firstSave) {
                 var json = JSON.stringify(data);
@@ -505,21 +516,33 @@ $(document).ready(function() {
                     saver.firstSave = false;
                 }
             }
+            return data;
+        },this).extend({throttle: 100});
+
+        ko.computed(function() {
+            var data = saver.changed_data();
             saver.save();
         }).extend({throttle:1000, deferred: true});
     }
     Editor.Saver.prototype = {
         save: function() {
+            var saver = this;
             var data = this.obs();
             Editor.startSave();
             data.csrfmiddlewaretoken = getCSRFtoken();
             try {
+                saver.status('saving');
                 var def = this.savefn(data);
+                window.def = def;
                 def
-                    .always(Editor.endSave)
-                    .done(function() {
-                        noty({text:'Saved.',type:'success',timeout: 1000, layout: 'topCenter'})
+                    .then(function() {
+                        saver.status('saved');
                     })
+                    .catch(function(e) {
+                        saver.error_message(e.message);
+                        saver.status('error');
+                    })
+                    .finally(Editor.endSave)
                 ;
             } catch(e) {
                 Editor.abortSave(e.message);
@@ -761,32 +784,31 @@ $(document).ready(function() {
 
             this.access_data = ko.pureComputed(function() {
                 return {
-                    user_ids: ei.access_rights().map(function(u){return u.id}),
-                    access_levels: ei.access_rights().map(function(u){return u.access_level()})
+                    access_rights: Object.fromEntries(ei.access_rights().map(u => { 
+                        return [u.id, u.access_level()];
+                    }))
                 }
             });
-            this.saveAccess = new Editor.Saver(this.access_data,function(data) {
-                return $.post(Editor.url_prefix+'item/'+ei.editoritem_id+'/set-access',data);
+            this.saveAccess = new Editor.Saver(this.access_data, function(data) {
+                if(ei.editoritem_id === undefined) {
+                    return;
+                }
+                return post_json(Editor.url_prefix+'item/'+ei.editoritem_id+'/set-access',data);
             });
-            this.userAccessSearch=ko.observable('');
+
+            this.userAccessSearch = ko.observable('');
+
+            this.add_user_access_error = ko.observable(null);
+            this.userAccessSearch.subscribe(function() {
+                ei.add_user_access_error(null);
+            });
 
             this.addUserAccess = function(data) {
+                ei.add_user_access_error(null);
                 var access_rights = ei.access_rights();
-                for(var i=0;i<access_rights.length;i++) {
-                    if(access_rights[i].id==data.id) {
-                        noty({
-                            text: "That user is already in the access list.",
-                            layout: "center",
-                            speed: 100,
-                            type: 'error',
-                            timeout: 2000,
-                            closable: true,
-                            animateOpen: {"height":"toggle"},
-                            animateClose: {"height":"toggle"},
-                            closeOnSelfClick: true
-                        });
-                        return;
-                    }
+                if(ei.access_rights().some(a => a.id == data.id)) {
+                    ei.add_user_access_error(data);
+                    return;
                 }
                 var access = new UserAccess(ei,data);
                 ei.access_rights.push(access);
@@ -847,37 +869,28 @@ $(document).ready(function() {
                     if(!ei.name()) {
                         throw(new Error("We can't save changes while the name field is empty."));
                     }
-                    var promise = $.post(
-                        Editor.url_prefix+ei.item_type+'/'+ei.id+'/'+slugify(ei.realName())+'/',
-                        {json: JSON.stringify(data), csrfmiddlewaretoken: getCSRFtoken()}
-                    )
-                        .success(function(data){
-                            var address = location.protocol+'//'+location.host+data.url;
-                            if(history.replaceState)
-                                history.replaceState(history.state,ei.realName(),address);
-                        })
-                        .error(function(response,type,message) {
-                            if(message=='')
-                                message = 'Server did not respond.';
 
-                            noty({
-                                text: 'Error saving item:\n\n'+message,
-                                layout: "topLeft",
-                                type: "error",
-                                textAlign: "center",
-                                animateOpen: {"height":"toggle"},
-                                animateClose: {"height":"toggle"},
-                                speed: 200,
-                                timeout: 5000,
-                                closable:true,
-                                closeOnSelfClick: true
-                            });
-                        })
-                    ;
+                    var request = post_json(
+                        Editor.url_prefix+ei.item_type+'/'+ei.id+'/'+slugify(ei.realName())+'/',
+                        data
+                    );
+
+                    request.then(function(data) {
+                        var address = location.protocol+'//'+location.host+data.url;
+                        if(history.replaceState) {
+                            history.replaceState(history.state,ei.realName(),address);
+                        }
+                    }).catch(function() {});
+
                     if(callback) {
-                        callback(promise);
+                        try {
+                            callback(request);
+                        } catch(e) {
+                            return Promise.reject(e);
+                        }
                     }
-                    return promise;
+
+                    return request;
                 }
             );
             if(item_json.is_new) {

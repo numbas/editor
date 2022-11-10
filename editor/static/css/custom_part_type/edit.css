@@ -1,3 +1,8 @@
+.page-header {
+    display: grid;
+    grid-template: "name save-status" / 1fr 12em;
+    align-items: baseline;
+}
 .name-header .glyphicon {
     margin-right: 0.2em;
 }

@@ -102,33 +102,51 @@
     </div>
     <div class="navbar navbar-blank">
         <ul class="nav navbar-nav nav-tabs">
-            <li>
-                <div class="navbar-form navbar-left">
-                    <div class="btn-group">
+            <li class="dropdown">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="organisation-dropdown-button">
+                        Organisation
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledBy="organisation-dropdown-button">
                         {% with can_copy=object|can_be_copied_by:request.user %}
-                        <a class="btn btn-warning {% if not can_copy %}disabled{% endif %}" href="{% if can_copy %}{% url 'custom_part_type_copy' object.pk %}{% endif %}" target="_blank" title="{% if can_copy %}Create your own copy of this part type{% else %}This item's licence doesn't allow you to modify it.{% endif %}">
-                            <span class="glyphicon glyphicon-duplicate"></span>
-                            Make a copy
-                        </a>
+                        <li class="{% if not can_copy %}disabled{% endif %}">
+                            <a href="{% if can_copy %}{% url 'custom_part_type_copy' object.pk %}{% endif %}" target="_blank" title="{% if can_copy %}Create your own copy of this part type{% else %}This item's licence doesn't allow you to modify it.{% endif %}">
+                                <span class="text-warning">
+                                    <span class="glyphicon glyphicon-duplicate"></span>
+                                    Make a copy
+                                </span>
+                            </a>
+                        </li>
                         {% endwith %}
 
                         {% if editable %}
-                        <a href="{% url 'custom_part_type_delete' object.pk %}" class="btn btn-danger" title="Delete this part type permanently">
-                            <span class="glyphicon glyphicon-remove"></span> 
-                            Delete
-                        </a>
+                        <li class="{% if not editable %}disabled{% endif %}">
+                            <a href="{% url 'custom_part_type_delete' object.pk %}" title="Delete this part type permanently">
+                                <span class="text-danger">
+                                    <span class="glyphicon glyphicon-remove"></span> 
+                                    Delete
+                                </span>
+                            </a>
+                        </li>
                         {% endif %}
 
-                        <a href="{% url 'custom_part_type_source' object.pk %}" class="btn btn-default">
+                        <li role="separator" class="divider"></li>
+
+                        <li>
+                        <a href="{% url 'custom_part_type_source' object.pk %}">
                             <span class="glyphicon glyphicon-cloud-download"></span>
                             Download
                         </a>
+                        </li>
 
-                        <a href="{% url 'custom_part_type_reupload' object.pk %}" class="btn btn-default">
+                        <li>
+                        <a href="{% url 'custom_part_type_reupload' object.pk %}">
                             <span class="glyphicon glyphicon-cloud-upload"></span>
                             Re-upload
                         </a>
-                    </div>
+                        </li>
+                    </ul>
                 </div>
             </li>
             <!-- ko foreach: mainTabber.tabs -->

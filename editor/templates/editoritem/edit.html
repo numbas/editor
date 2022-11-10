@@ -118,20 +118,24 @@
                     {% block admin_controls %}
                     {% with can_copy=object.editoritem|can_be_copied_by:request.user %}
                     <li class="{% if not can_copy %}disabled{% endif %}">
-                    <a class="text-warning" {% if can_copy %}href="{% editoritem_url 'copy' object %}" target="_blank"{% endif %} title="{% if can_copy %}Create your own copy of this {{item_type}}{% else %}This item's licence doesn't allow you to modify it.{% endif %}">
-                        <span class="glyphicon glyphicon-duplicate"></span>
-                        &nbsp;
-                        Make a copy
+                    <a {% if can_copy %}href="{% editoritem_url 'copy' object %}" target="_blank"{% endif %} title="{% if can_copy %}Create your own copy of this {{item_type}}{% else %}This item's licence doesn't allow you to modify it.{% endif %}">
+                        <span class="text-warning">
+                            <span class="glyphicon glyphicon-duplicate"></span>
+                            &nbsp;
+                            Make a copy
+                        </span>
                     </a>
                     </li>
                     {% endwith %}
 
                     {% if editable %}
                     <li class="">
-                        <a href="{% editoritem_url 'delete' object %}" class="text-danger" title="Delete this {{item_type}} permanently">
-                            <span class="glyphicon glyphicon-remove"></span> 
-                            &nbsp;
-                            Delete
+                        <a href="{% editoritem_url 'delete' object %}" title="Delete this {{item_type}} permanently">
+                            <span class="text-danger">
+                                <span class="glyphicon glyphicon-remove"></span> 
+                                &nbsp;
+                                Delete
+                            </span>
                         </a>
                     </li>
                     {% endif %}

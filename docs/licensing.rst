@@ -15,10 +15,7 @@ Numbas runtime
 Third-party material used:
 
 * `pipwerks SCORM wrapper for JavaScript <https://github.com/pipwerks/scorm-api-wrapper>`_, MIT license.
-* `es5-shim <https://github.com/es-shims/es5-shim>`_, MIT license.
-* `es6-shim <https://github.com/es-shims/es6-shim>`_, MIT license.
 * `Decimal.js <https://github.com/MikeMcl/decimal.js/>`_, MIT license.
-* `es6-promise <https://github.com/stefanpenner/es6-promise>`_, MIT license.
 * `i18next <https://www.i18next.com/>`_, MIT license.
 * `jQuery <https://jquery.com/>`_, MIT license.
 * `Knockout <https://knockoutjs.com/>`_, MIT license.
@@ -39,8 +36,6 @@ Third-party material included in the source repository:
 * `Source Sans Pro <https://github.com/adobe-fonts/source-sans>`_, SIL OFL 1.1 license.
 * `Summernote <https://summernote.org/>`_, MIT license.
 * `TinyMCE <https://www.tiny.cloud/>`_, LGPL license.
-* `es5-shim <https://github.com/es-shims/es5-shim>`_, MIT license.
-* `es6-shim <https://github.com/es-shims/es6-shim>`_, MIT license.
 * `jQuery <https://jquery.com/>`_, MIT license.
 * `jQuery UI <https://jqueryui.com/>`_, MIT license.
 * `SortableJS <https://github.com/SortableJS/Sortable>`_, MIT license.

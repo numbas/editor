@@ -398,7 +398,7 @@ body.fill-viewport .page-header h1 {
 .nav-tabs > li.active .tab-label {
     display: initial !important;
 }
-.nav-tabs > li.dropdown > .btn-group {
+.nav-tabs > li.single-button > .btn-group {
     padding-top: 7.5px;
     padding-bottom: 7.5px;
     margin-right: 0.5em;

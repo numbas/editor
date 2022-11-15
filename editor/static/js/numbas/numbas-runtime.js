@@ -6313,7 +6313,7 @@ newBuiltin('<', [TDecimal,TDecimal], TBool, function(a,b){ return a.lessThan(b);
 newBuiltin('<=', [TDecimal,TDecimal], TBool, function(a,b){ return a.lessThanOrEqualTo(b); });
 newBuiltin('<=', [TDecimal,TNum], TBool, function(a,b){ return math.leq(a.re.toNumber(),b); });
 newBuiltin('log',[TDecimal], TDecimal, function(a) {return a.re.log(); })
-newBuiltin('log',[TDecimal,TDecimal], TDecimal, function(a,b) {return a.re.log()/b.re.log(); })
+newBuiltin('log',[TDecimal,TDecimal], TDecimal, function(a,b) {return a.re.log().div(b.re.log()); })
 newBuiltin('mod', [TDecimal,TDecimal], TDecimal, function(a,b) {
     var m = a.re.mod(b.re);
     if(m.isNegative()) {
@@ -31477,7 +31477,11 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
             return;
         }
         var pobj = this.store.loadPart(this);
-        this.shuffleChoices = pobj.shuffleChoices;
+        if(this.type == 'm_n_x') {
+            this.shuffleChoices = pobj.shuffleChoices;
+        } else {
+            this.shuffleChoices = [0];
+        }
         this.shuffleAnswers = pobj.shuffleAnswers;
         this.ticks = pobj.studentAnswer;
         this.stagedAnswer = [];

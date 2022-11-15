@@ -39,6 +39,8 @@ Marking
 Marking settings
 ################
 
+The ``studentAnswer`` parameter is a :data:`string` value, containing the string that the student typed in the answer box.
+
 This part type provides the following properties to the :data:`settings` object:
 
 .. data:: correctAnswer

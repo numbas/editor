@@ -219,6 +219,8 @@ See `this example question <https://numbas.mathcentre.ac.uk/question/88275/answe
 Marking settings
 ################
 
+The ``studentAnswer`` parameter is a :data:`string` value, containing the string the student typed in the answer box.
+
 This part type provides the following properties to the :data:`settings` object:
 
 .. data:: correctAnswer

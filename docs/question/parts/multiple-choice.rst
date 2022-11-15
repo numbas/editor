@@ -169,6 +169,12 @@ Assign marks to each pair of choice and answer using the input boxes.
 Marking settings
 ################
 
+The ``studentAnswer`` parameter is a :data:`list` value, comprising a list of lists of :data:`boolean` values.
+
+For :term:`Choose one from a list` and :term:`Choose several from a list` parts, ``studentAnswer`` has as many entries as there are choices, each comprising a list with one entry, representing whether the student chose that choice.
+
+For :term:`Match choices with answers` parts, ``studentAnswer[i][j]`` is ``true`` if the student selected the option matching the ``i``-th answer with the ``j``-th choice.
+
 This part type provides the following properties to the :data:`settings` object:
 
 .. data:: maxMarksEnabled

@@ -22,6 +22,8 @@ Marking
         The lowest answer will be submitted against the first gap, and so on.
         Because the order of marking might not correspond with the order in which the gaps are shown to the student, no feedback icon is shown next to the gap input boxes, only in the feedback summary for the whole part.
 
+The ``studentAnswer`` marking parameter is a :data:`list` value, containing the string the student's answers to each of the gaps.
+
 This part type provides one property to the :data:`settings` object:
 
 .. data:: sortAnswers

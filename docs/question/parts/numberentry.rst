@@ -104,6 +104,8 @@ Marking
 Marking settings
 ################
 
+The ``studentAnswer`` marking parameter is a :data:`string` value, containing the string the student typed in the answer box.
+
 This part type provides the following properties to the :data:`settings` object:
 
 .. data:: minvalue

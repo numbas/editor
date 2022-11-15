@@ -84,6 +84,9 @@ Marking
 Marking settings
 ################
 
+The ``studentAnswer`` parameter is a :data:`list` value, comprising a list of lists of strings.
+``studentAnswer[i][j]`` is the string that the student typed in the ``j``-th column of the ``i``-th row.
+
 This part type provides the following properties to the :data:`settings` object:
 
 .. data:: correctAnswer

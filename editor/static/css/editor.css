@@ -342,6 +342,9 @@ static-dynamic-setting .static-switch {
     grid-template: "project save-status" "name stamp" / 1fr 12em;
     align-items: baseline;
 }
+body.project .page-header {
+    grid-template: "name settings" / 1fr auto;
+}
 .page-header .save-status {
     padding: 0.2em 1em;
     margin: 0;

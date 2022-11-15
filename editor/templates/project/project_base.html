@@ -4,14 +4,16 @@
 
 {% block search_url %}{% url 'project_search' project.pk %}{% endblock search_url %}
 
+{% block body_classes %}project{% endblock %}
+
 {% block content %}
 <div class="page-header">
     {% if project_editable %}
-    <span class="pull-right">
+    <span class="settings">
         <a href="{% url 'project_settings_options' project.pk %}" title="Project settings" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-cog"></span></a>
     </span>
     {% endif %}
-    <h1><span class="glyphicon glyphicon-briefcase"></span> <a href="{% url 'project_index' project.pk %}">{{project.name}}</a></h1>
+    <h1 class="name-header"><span class="glyphicon glyphicon-briefcase"></span> <a href="{% url 'project_index' project.pk %}">{{project.name}}</a></h1>
 </div>
 <div class="{% block project_container %}container{% endblock project_container %}">
     {% block project_content %}{% endblock project_content %}

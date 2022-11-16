@@ -43,7 +43,7 @@ function move_to(target_pk,selection) {
         row.classList.add('moving');
     })
     $.post({
-        url: '/folder/move',
+        url: Editor.url_prefix + 'folder/move',
         data: data,
         traditional: true
     })

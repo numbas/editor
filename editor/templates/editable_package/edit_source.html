@@ -1,7 +1,7 @@
 {% extends "editable_package/edit_base.html" %}
 {% load helplink %}
 {% load editable_package %}
-{% load static %}
+{% load sstatic %}
 
 {% block body_classes %}fill-viewport{% endblock %}
 
@@ -81,40 +81,10 @@
 
     {% if not path.is_dir %}
     <script>
-
-    var filename = "{{filename}}";
-    var editable = {% if editable %}true{% else %}false{% endif %};
-
-    window.addEventListener('DOMContentLoaded',function() {
-        var source_element = document.getElementById('id_source');
-        var extension = filename.match(/\.(.*)$/);
-        extension = extension ? extension[1] : 'js';
-        var modes = {
-            'js': 'javascript',
-            'jme': 'jme',
-            'cpt': 'jme',
-            'md': 'markdown',
-            'html': 'htmlmixed',
-            'css': 'css'
-        }
-        var mc = CodeMirror.fromTextArea(source_element,{
-            lineNumbers: true,
-            styleActiveLine: true,
-            matchBrackets: true,
-            mode: modes[extension] || 'javascript',
-            indentWithTabs: false,
-            indentUnit: 2,
-            lineWrapping: Editor.wrapLines,
-            readOnly: !editable
-        });
-
-        mc.on('change',function() {
-            var save_button = document.getElementById('save');
-            save_button.classList.remove('btn-default');
-            save_button.classList.add('btn-primary');
-        });
-    });
+        var filename = "{{filename}}";
+        var editable = {% if editable %}true{% else %}false{% endif %};
     </script>
+    <script src="{% sstatic 'js/editable_package/edit_source.js' %}"></script>
     {% endif %}
 {% endblock %}
 

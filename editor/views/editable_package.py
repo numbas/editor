@@ -160,7 +160,7 @@ class ReplaceFileView(CanEditMixin, generic.UpdateView):
         return reverse(self.success_view, args=(self.get_object().pk,))+'?filename='+self.filename
 
     def form_valid(self,form):
-        self.filename = form.cleaned_data.get('filename')
+        self.filename = form.cleaned_data.get('content').name
         return super().form_valid(form)
 
 class DeleteFileView(CanEditMixin, generic.UpdateView):

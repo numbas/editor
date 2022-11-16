@@ -345,6 +345,9 @@ static-dynamic-setting .static-switch {
 body.project .page-header {
     grid-template: "name settings" / 1fr auto;
 }
+body.editable-package .page-header {
+    grid-template: "back" "name";
+}
 .page-header .save-status {
     padding: 0.2em 1em;
     margin: 0;
@@ -405,4 +408,11 @@ body.fill-viewport .page-header h1 {
     padding-top: 7.5px;
     padding-bottom: 7.5px;
     margin-right: 0.5em;
+}
+
+.btn.dragging {
+    border-style: dashed;
+    border-color: black;
+    background-color: #e6e6e6;
+    color: black;
 }

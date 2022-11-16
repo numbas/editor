@@ -2724,4 +2724,21 @@ $(document).ready(function() {
             description:'A significand followed by the letter \'e\' and an integer exponent.'
         }
     ];
+
+    Editor.receive_file_drops = function(element, drop_handler) {
+        element.addEventListener('dragover', e => {
+            e.preventDefault();
+            element.classList.add('dragging');
+        });
+        element.addEventListener('dragleave', e => {
+            element.classList.remove('dragging');
+        });
+        element.addEventListener('drop', e => {
+            console.log("HEY");
+            e.stopPropagation();
+            e.preventDefault();
+
+            drop_handler(e);
+        });
+    }
 });

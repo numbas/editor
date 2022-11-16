@@ -6,6 +6,8 @@
 
 {% block content_container %}container-fluid{% endblock %}
 
+{% block body_classes %}{{block.super}} editable-package{% endblock %}
+
 {% block stylesheets %}
     {{ block.super }}
     <link rel="stylesheet" type="text/css" href="{% sstatic 'css/editable_package.css' %}"/>
@@ -13,8 +15,8 @@
 
 {% block content %}
 <div class="page-header">
-    <a href="{% package_url 'list_profile' request.user.pk %}">Back to {{object.package_noun}}s</a>
-    <h1>
+    <a class="back" href="{% package_url 'list_profile' request.user.pk %}">Back to {{object.package_noun}}s</a>
+    <h1 class="name-header">
         Edit {{object.package_noun}} <em>"{{form.instance.name}}"</em>
     </h1>
 </div>
@@ -87,7 +89,7 @@
             </li>
             {% endif %}
             <li class="list-group-item">
-                <button class="btn btn-primary btn-block" type="submit" data-toggle="modal" data-target="#upload-file-modal">
+                <button id="upload" class="btn btn-primary btn-block" type="submit" data-toggle="modal" data-target="#upload-file-modal">
                     <span class="glyphicon glyphicon-upload"></span>
                     Upload a new file
                 </button>
@@ -135,3 +137,9 @@
         </div>
     </div>
 {% endblock modals %}
+
+{% block javascripts %}
+    {{block.super}}
+
+    <script src="{% sstatic 'js/editable_package/edit_base.js' %}"></script>
+{% endblock %}

@@ -277,6 +277,7 @@ editor-pager nav {
     display: grid;
     grid-template: "icon name edit-name . status" auto / auto auto auto 1fr auto;
     grid-gap: 0.2em;
+    align-items: baseline;
 }
 .name-header > .status {
     grid-area: status;
@@ -342,6 +343,9 @@ static-dynamic-setting .static-switch {
     grid-template: "project save-status" "name stamp" / 1fr 12em;
     align-items: baseline;
 }
+.page-header.static {
+    grid-template: "name settings";
+}
 body.project .page-header {
     grid-template: "name settings" / 1fr auto;
 }
@@ -359,6 +363,7 @@ body.editable-package .page-header {
 .page-header > .name-header { grid-area: name; }
 .page-header > .stamp-header { grid-area: stamp; }
 .page-header > .save-status { grid-area: save-status; }
+.page-header > .settings { grid-area: settings; }
 
 .page-header .name {
     word-break: break-word;

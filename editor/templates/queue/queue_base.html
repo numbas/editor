@@ -4,13 +4,11 @@
 {% block title %}{{queue.name}} - {{block.super}}{% endblock title %}
 
 {% block content %}
-<div class="page-header">
+<div class="page-header static">
     {% if queue|can_be_edited_by:user %}
-    <span class="pull-right">
-        <a href="{% url 'queue_settings_options' queue.pk %}" title="Queue settings" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-cog"></span></a>
-    </span>
+    <a href="{% url 'queue_settings_options' queue.pk %}" title="Queue settings" class="settings btn btn-lg btn-link"><span class="glyphicon glyphicon-cog"></span></a>
     {% endif %}
-    <h1>
+    <h1 class="name-header">
         <span class="glyphicon glyphicon-list"></span> <a href="{% url 'queue_view' queue.pk %}">{{queue.name}}</a>
         <small>in <span class="glyphicon glyphicon-briefcase"></span> <a href="{{queue.project.get_absolute_url}}">{{queue.project.name}}</a></small>
     </h1>

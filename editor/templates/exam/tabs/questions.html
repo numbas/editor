@@ -71,6 +71,7 @@
                     </div>
                     <div class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentQuestionTab().id)=='basket'}">
                         <ul class="results tab-pane" data-bind="
+                            visible: basketQuestions().length > 0,
                             template: {
                                 name: 'questionResult',
                                 foreach: basketQuestions,

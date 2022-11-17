@@ -78,6 +78,12 @@
   margin-bottom: 1em;
 }
 
+.question-result ~ .question-result {
+    margin-top: 1em;
+    padding-top: 1em;
+    border-top: 2px dashed var(--brand-color);
+}
+
 
 @media screen and (max-width: 1490px) {
     .questions-tab .question {

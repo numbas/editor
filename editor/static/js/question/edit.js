@@ -2540,8 +2540,10 @@ $(document).ready(function() {
         },this);
 
         this.remove = function() {
-            if(confirm("Remove this function?"))
+            if(confirm("Remove this function?")) {
                 q.functions.remove(this);
+                q.currentFunction(null);
+            }
         };
         if(data)
             this.load(data);

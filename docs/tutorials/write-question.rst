@@ -34,15 +34,14 @@ You are taken to the *editing page* for your new question.
 It is worth spending a few moments finding your way around this page.
 
 At the top of the page are the question's name and, above that, a link to the project which it belongs to.
-Below are buttons to run and download the question.
-Below this there are options to navigate through the various steps involved in editing a question.
+Below are buttons to run and download the question, along with options to navigate through the various steps involved in editing a question.
 
 .. figure:: screenshots/write-question/blank-question.png
     :alt: Screenshot of the question editor.
 
     The question editor.
 
-In the centre is the main editing interface.
+Beneath these is the main editing interface.
 
 Every Numbas question consists of three sections: :ref:`Statement <statement>`, :ref:`Parts <parts>`, and :ref:`Advice <advice>`.
 In the Statement, the context for the question is given to the student.
@@ -50,7 +49,7 @@ Parts are where the student enters their answers: the student is shown some prom
 A question can have one or more parts, each of which is one of several types, depending on what kind of input you want from the student.
 Finally, the optional Advice section can be used to give a full solution to the question, which the student can request to see if they're stuck. 
 
-Each of these sections of the editor can be accessed from the links in the sidebar, or you can use the buttons at the bottom of each section to guide you through in a logical order.
+Each of these sections of the editor can be accessed from the links in the navigation bar, or you can use the buttons at the bottom of each section to guide you through in a logical order.
 
 Planning
 --------
@@ -106,7 +105,7 @@ If you run the question now, you'll see there is a statement, but no prompt to d
 
 Let's ask the student to work out how many apples Chris eats in a week.
 
-Go back to the editing window and click on :guilabel:`Parts` in the sidebar, or follow the navigation buttons at the bottom of the page.
+Go back to the editing window and click on :guilabel:`Parts` in the navigation bar, or follow the navigation buttons at the bottom of the page.
 
 You're shown a list of part types.
 We want the student to give a number, so select :ref:`Number entry <number-entry>`.
@@ -185,17 +184,17 @@ of the values that you can expect to be generated.
 Now it’s time to replace the number 7 in the question with the new variable.
 Variables can be substituted in using curly braces: ``{}``.
 
-Click on :guilabel:`Statement` in the sidebar, then change the statement to use the new variable:
+Click on :guilabel:`Statement` in the navigation bar, then change the statement to use the new variable:
 
     Chris eats {num_apples} apples per day.
 
-.. figure:: screenshots/write-question/part-prompt-randomised.png
-   :alt: Screenshot of the "Prompt" tab. The prompt field reads "Chris eats {num_apples} apples per day."
+.. figure:: screenshots/write-question/statement-randomised.png
+   :alt: Screenshot of the "Statement" tab. The statement field reads "Chris eats {num_apples} apples per day."
 
-   Using the variable in the part's prompt.
+   Using the variable in the question's statement.
 
 We also need to change the expected answer, which is currently hard-coded to 49.
-Click on :guilabel:`Parts` in the sidebar, then go back to the :guilabel:`Marking settings` tab and change both minimum and maximum accepted value to ``7 * num_apples``.
+Click on :guilabel:`Parts` in the navigation bar, then go back to the :guilabel:`Marking settings` tab and change both minimum and maximum accepted value to ``7 * num_apples``.
 
 .. figure:: screenshots/write-question/part-answer-randomised.png
    :alt: Screenshot of the "marking settings" tab. The minimum and maximum accepted value fields both contain "7 * num_apples".

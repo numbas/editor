@@ -52,10 +52,7 @@
 
     <script type="text/html" id="questionResult">
         <li class="question question-result">
-            <span class="handle btn btn-link" data-bind="click: add, visible: item_json.editable"><span class="glyphicon glyphicon-plus"></span></span>
-            <div class="controls">
-                <a class="preview btn btn-link" data-bind="attr: {href: previewURL}" target="_blank" title="Preview this question"><span class="glyphicon glyphicon-play text-success"></span></a>
-            </div>
+            <button type="button" tabindex="0" class="handle btn btn-link" data-bind="click: add, visible: item_json.editable"><span class="glyphicon glyphicon-plus"></span></button>
             <div class="details">
                 <div class="title">
                     <a data-bind="attr:{href: url}, latex: name" target="_blank"></a>
@@ -64,6 +61,9 @@
                 <div class="author">
                     (<span data-bind="text: author"></span>)
                 </div>
+            </div>
+            <div class="controls">
+                <a class="preview btn btn-link" data-bind="attr: {href: previewURL}" target="_blank"><span class="text-success"><span class="glyphicon glyphicon-play"></span> Preview this question</span></a>
             </div>
             <div class="description" data-bind="visible: description.length>0, latex: description"></div>
         </li>

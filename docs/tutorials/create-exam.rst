@@ -54,7 +54,8 @@ On the editing page for your exam, under :guilabel:`Questions` select :guilabel:
 The :guilabel:`Recent questions` tab shows questions you have recently edited.
 The :guilabel:`Basket` tab shows questions you've added to your basket: you can browse the question editor to find questions, add them to your basket, and then go back to the exam editing page and add them in.
 
-You can click on any question's name to open it in a new window. This is useful to verify that the question contains content that you find relevant before including it in your exam.
+You can click on any question's name to open it in a new window. 
+This is useful to verify that the question contains content that you find relevant before including it in your exam.
 
 Click the plus icon on one of the question results to add it to your exam - this returns you to the main :guilabel:`Questions` page where you can rearrange your questions. 
 
@@ -63,10 +64,8 @@ Click the plus icon on one of the question results to add it to your exam - this
 
 You can drag and drop questions in the list to reorder them.
 
-.. image:: screenshots/exam_edit_drag.png
-    :alt: Reordering a question by dragging it down the list.
-
-The changes that you make to the exam content are active immediately. You can see how your exam looks by clicking on :guilabel:`Run` again.
+The changes that you make to the exam content are active immediately.
+You can see how your exam looks by clicking on :guilabel:`Run` again.
 
 Publish your exam
 #################

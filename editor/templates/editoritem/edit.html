@@ -91,10 +91,12 @@
                 <span class="label label-default stamp" data-bind="text: current_stamp().status_display, attr: {'data-stamp':current_stamp().status}"></span>
             {% endif %}
         </div>
+        <!-- ko if: $root.autoSave -->
         <div class="save-status alert" data-bind="class: autoSave.status_info().class">
             <span class="glyphicon" data-bind="class: autoSave.status_info().icon"></span>
             <span data-bind="text: autoSave.status_info().message">Saved</span>
         </div>
+        <!-- /ko -->
         {% endblock page_header %}
     </div>
     <nav class="navbar navbar-blank">

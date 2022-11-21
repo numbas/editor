@@ -373,7 +373,7 @@ $(document).ready(function() {
                         } catch(e) {
                             console.error(e);
                             setTimeout(function() {
-                                this.error(true);
+                                ext.error(true);
                             },1);
                         }
                     }
@@ -386,6 +386,7 @@ $(document).ready(function() {
     }
     Extension.prototype = {
         load: function() {
+            this.error(false);
             this.loading(true);
             var ext = this;
             if(this.loaded()) {
@@ -411,6 +412,7 @@ $(document).ready(function() {
                 ext.loaded(true);
             }).catch(function(err) {
                 console.error(err);
+                ext.error(true);
             }).finally(function() {
                 ext.loading(false);
             });

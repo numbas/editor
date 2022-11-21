@@ -237,7 +237,7 @@
                         <tbody data-bind="foreach: marking_parameters">
                             <tr class="variable">
                                 <td class="name monospace" data-bind="text: name ? name : 'Unnamed'"></td>
-                                <td class="value jme-value" data-bind="jmevalue: value"></td>
+                                <td class="value jme-value" data-bind="jmevalue: value, abbreviate: false"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -254,7 +254,7 @@
                         <tbody data-bind="foreach: part_settings">
                             <tr class="variable">
                                 <td class="name monospace" data-bind="text: name ? name : 'Unnamed'"></td>
-                                <td class="value jme-value" data-bind="jmevalue: value"></td>
+                                <td class="value jme-value" data-bind="jmevalue: value, abbreviate: false"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -314,7 +314,7 @@
                                         <span class="name monospace" data-bind="text: name, attr: {title: description}"></span> 
                                     </td>
                                     <td class="only-when-shown">
-                                        <div class="value jme-value" data-bind="jmevalue: value, error: error"></div>
+                                        <div class="value jme-value" data-bind="jmevalue: value, error: error, abbreviate: false"></div>
                                     </td>
                                     <td class="only-when-shown">
                                         <ul class="list-unstyled" data-bind="foreach: message_displays">

@@ -1,4 +1,4 @@
-﻿.parts > .part + .part.root {
+.parts > .part + .part.root {
     margin-top: 1em;
 }
 
@@ -125,9 +125,10 @@ table.variable-list > tbody > tr > td {
 table.variable-list .value-cell {
     width: 100%;
 }
-table.variable-list .value-cell .value {
+table.variable-list .value-cell .value-wrapper {
   max-width: 100%;
   height: 1.5em;
+  position: relative;
 }
 
 .lock-cell button.lock.locked {
@@ -196,12 +197,16 @@ table.variable-list .value-cell .value {
 .variable-selector .value {
     text-align: left;
     display: inline-block;
-    max-height: 5em;
+    max-height: 1.5em;
     overflow-y: hidden;
     overflow-x: hidden;
     word-break: break-word;
+    text-overflow: ellipsis;
+    position: absolute;
+    background: inherit;
+    white-space: nowrap;
+    width: 100%;
 }
-
 .variable-selector.error .value {
     color: red;
     font-weight: bold;
@@ -219,6 +224,19 @@ table.variable-list .value-cell .value {
 .variable-reference {
     margin: 0.2em;
 }
+.value-preview > .value {
+    overflow: auto;
+    max-height: 50vh;
+    white-space: pre-wrap;
+}
+.value-preview > h3 {
+    margin: 0 0 0.5em 0;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+.value-preview > h3 .type {
+    font-weight: normal;
+}
 
 .empty-receiver * {
     opacity: 0;
@@ -231,12 +249,7 @@ table.variable-list .value-cell .value {
 .jme-value {
     font-family: monospace;
 }
-.jme-value[data-jme-value-type="error"],
-.jme-value[data-jme-value-type="string"],
-.jme-value[data-jme-value-type="nothing"],
-.jme-value[data-jme-value-type="list"],
-.jme-value[data-jme-value-type="dict"],
-.jme-value[data-jme-value-type="html"] {
+.jme-value[data-jme-value-display="description"] {
     font-family: inherit;
 }
 

@@ -55,9 +55,11 @@
                                     <span title="This variable is a source of randomisation"  data-bind="visible: $parent.random(), click: $parent.makeCurrentVariable" class="glyphicon glyphicon-random is-random text-muted"></span>
                                 </td>
                                 <td class="name monospace" data-bind="click: $parent.makeCurrentVariable, text: name || 'Unnamed', css: {'name-error': $parent.nameError()!='','text-danger': $parent.nameError()!=''}"></td>
-                                <td class="type" data-bind="text: type"></td>
+                                <td class="type" data-bind="click: $parent.makeCurrentVariable, text: type"></td>
                                 <td class="value-cell" data-bind="click: $parent.makeCurrentVariable">
-                                    <div class="value jme-value" data-bind="jmevalue: value, error: $parent.anyError"></div>
+                                    <div class="value-wrapper">
+                                        <div class="value jme-value" data-bind="jmevalue: value, error: $parent.anyError"></div>
+                                    </div>
                                 </td>
                                 <td>
                                     {% if editable %}
@@ -268,6 +270,10 @@
                         </div>
                     </div>
                 </form>
+                <div class="value-preview well well-sm" data-bind="visible: !anyError()">
+                    <h3>Generated value: <code class="monospace type" data-bind="text: type"></code></h3>
+                    <div class="value jme-value" data-bind="jmevalue: value, error: anyError, abbreviate: false"></div>
+                </div>
                 <div data-bind="visible: dependencies().length>0" class="inline-names">
                     <strong>← Depends on:</strong>
                     <ul class="list-inline" data-bind="foreach: dependenciesObjects">

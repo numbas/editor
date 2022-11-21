@@ -1835,12 +1835,12 @@ $(document).ready(function() {
         }
     }
 
-    var displayJMEValue = Editor.displayJMEValue = function(v) {
+    var displayJMEValue = Editor.displayJMEValue = function(v, abbreviate) {
         var code = Numbas.jme.display.treeToJME({tok:v});
         var description;
         switch(v.type) {
             case 'nothing':
-                return 'Nothing';
+                return {description: 'Nothing'};
             case 'string':
                 code = Numbas.util.escapeHTML(v.value);
                 description = Numbas.util.escapeHTML(v.value.slice(0,30));
@@ -1857,18 +1857,25 @@ $(document).ready(function() {
             case 'html':
                 if(v.value.length==1 && v.value[0].tagName=='IMG') {
                     var src = v.value[0].getAttribute('src');
-                    return '<img src="'+src+'" title="'+src+'">';
+                    return {value: '<img src="'+src+'" title="'+src+'">'};
                 }
-                code = v.value;
                 description = 'HTML node';
+                if(!abbreviate) {
+                    code = v.value
+                }
                 break;
             default:
+                var preferred_types = ['html', 'dict', 'list'];
+                for(let type of preferred_types) {
+                    if(Numbas.jme.isType(v, type)) {
+                        return displayJMEValue(Numbas.jme.castToType(v,type), abbreviate);
+                    }
+                }
         }
-        if(code.length<30) {
-            return code;
-        } else {
-            return description || code.slice(0,27)+'…';
+        if(abbreviate && code.length > 30 && description) {
+            return {description: description};
         }
+        return {value: code};
     }
 
     ko.bindingHandlers.jmevalue = {
@@ -1876,24 +1883,31 @@ $(document).ready(function() {
             var value = ko.unwrap(valueAccessor());
             var allBindings = allBindingsAccessor();
             var error = ko.unwrap(allBindings.error);
+            var abbreviate = ko.unwrap(allBindings.abbreviate) !== false;
             var display = '';
             var type = '';
             if(error) {
-                display = error;
+                display = {description: error};
                 type = 'error';
             } else if(value) {
                 try {
-                    display = displayJMEValue(value);
+                    display = displayJMEValue(value, abbreviate);
                     type = value.type;
                 } catch(e) {
-                    display = e.message;
+                    display = {description: e.message};
                     type = 'error';
                 }
             } else {
                 display = '';
             }
             element.setAttribute('data-jme-value-type',type);
-            $(element).html(display);
+            if(display.value !== undefined) {
+                $(element).html(display.value);
+                element.setAttribute('data-jme-value-display','value');
+            } else if(display.description !== undefined) {
+                $(element).html(display.description);
+                element.setAttribute('data-jme-value-display','description');
+            }
         }
     }
 

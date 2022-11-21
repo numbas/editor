@@ -325,7 +325,7 @@ $(document).ready(function() {
             new Editor.Tab('statement','Statement','blackboard',{in_use: ko.pureComputed(function(){ return this.statement()!=''; },this)}),
             new Editor.Tab('parts','Parts','check',{in_use: ko.pureComputed(function() { return this.parts().length>0; },this)}),
             new Editor.Tab('variables','Variables','list',{in_use: ko.pureComputed(function() { return this.variables().length>0; },this), warning: ko.pureComputed(function() { return this.variableErrors(); },this)}),
-            new Editor.Tab('advice','Advice','blackboard',{in_use: ko.pureComputed(function() { return this.advice()!=''; },this)}),
+            new Editor.Tab('advice','Advice','education',{in_use: ko.pureComputed(function() { return this.advice()!=''; },this)}),
             new Editor.Tab('extensions','Extensions & scripts','wrench',{in_use: extensions_tab_in_use}),
             new Editor.Tab('resources','Resources','picture',{in_use: ko.pureComputed(function() { return this.resources().length>0; },this)}),
             new Editor.Tab('settings','Settings','cog'),

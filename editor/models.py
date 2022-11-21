@@ -222,7 +222,7 @@ class Project(models.Model, ControlledObject):
     custom_part_types = models.ManyToManyField('CustomPartType', related_name='projects')
 
     class Meta:
-        ordering = ['name']
+        ordering = (Lower('name'),)
 
     def is_published(self):
         return self.public_view
@@ -404,7 +404,7 @@ class EditorTag(taggit.models.TagBase):
 
     class Meta:
         verbose_name = 'tag'
-        ordering = ['name']
+        ordering = (Lower('name'),)
 
     def used_count(self):
         return self.tagged_items.count()
@@ -501,7 +501,8 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
 
 
     class Meta:
-        ordering = ['name']
+        ordering = (Lower('name'),)
+
     def __str__(self):
         return self.name
 
@@ -763,6 +764,9 @@ class CustomPartType(models.Model, ControlledObject):
     timeline_noun = 'part type'
     icon = 'ok'
 
+    class Meta:
+        ordering = (Lower('name'),)
+
     def copy(self, author, name):
         new_type = CustomPartType.objects.get(pk=self.pk)
         new_type.pk = None
@@ -946,7 +950,7 @@ class AbilityFramework(models.Model):
     description = models.TextField(blank=False)
 
     class Meta:
-        ordering = ('name',)
+        ordering = (Lower('name'),)
 
     def __str__(self):
         return self.name
@@ -1099,7 +1103,7 @@ class Folder(models.Model):
 
     class Meta:
         unique_together = (('name', 'project', 'parent'),)
-        ordering = ('name',)
+        ordering = (Lower('name'),)
 
     def clean(self):
         if self.parent==self:
@@ -1196,7 +1200,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
     unwatching_users = models.ManyToManyField(User, related_name='unwatched_items')
 
     class Meta:
-        ordering = ('name',)
+        ordering = (Lower('name'),)
 
     def __str__(self):
         return self.name
@@ -1704,7 +1708,7 @@ class NewQuestion(models.Model):
 
     class Meta:
         verbose_name = 'question'
-        ordering = ['editoritem__name']
+        ordering = (Lower('editoritem__name'),)
         permissions = (
               ('highlight', 'Can pick questions to feature on the front page.'),
         )
@@ -1941,7 +1945,7 @@ class NewExamQuestion(models.Model):
     """
     
     class Meta:
-        ordering = ['qn_order']
+        ordering = ('qn_order',)
         
     exam = models.ForeignKey(NewExam, on_delete=models.CASCADE)
     question = models.ForeignKey(NewQuestion, on_delete=models.CASCADE)

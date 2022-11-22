@@ -10,7 +10,7 @@
 <div class="page-header">
     {% if project_editable %}
     <span class="settings">
-        <a href="{% url 'project_settings_options' project.pk %}" title="Project settings" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-cog"></span></a>
+        <a href="{% url 'project_settings_options' project.pk %}" title="Project settings" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-cog"></span> Project settings</a>
     </span>
     {% endif %}
     <h1 class="name-header"><span class="glyphicon glyphicon-briefcase"></span> <a href="{% url 'project_index' project.pk %}">{{project.name}}</a></h1>

@@ -1,6 +1,6 @@
 {% extends "project/settings_base.html" %}
 
-{% block title %}Project options - {{block.super}}{% endblock title %}
+{% block title %}Project settings - {{block.super}}{% endblock title %}
 
 {% block javascripts %}
 {{block.super}}
@@ -15,7 +15,7 @@
 
 <div class="panel panel-default">
     <div class="panel-heading">
-        <h3 class="panel-title">Options</h3>
+        <h3 class="panel-title">Settings</h3>
     </div>
     <div class="panel-body">
         <form method="post">
@@ -73,19 +73,17 @@
         </form>
     </div>
 </div>
-{% if request.user == project.owner %}
+{% if request.user == project.owner and project != project.owner.userprofile.personal_project %}
 <div class="panel panel-danger">
     <div class="panel-heading">
         <h3 class="panel-title">Admin actions</h3>
     </div>
     <ul class="list-group">
-        {% if project != project.owner.userprofile.personal_project %}
         <li class="list-group-item">
             <a class="btn btn-danger pull-right" href="{% url 'project_delete' project.pk %}">Delete this project</a>
             <p>Deleting this project will reassign each of its questions and exams to its author's personal workspace.</p>
             <p><strong>This can not be undone.</strong></p>
         </li>
-        {% endif %}
     </ul>
 </div>
 {% endif %}

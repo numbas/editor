@@ -174,7 +174,7 @@ We have introduced some randomisation but we're still only asking about one entr
 Choose the function to integrate from a list
 ============================================
 
-Let's make the question randomly choose one of :math:`e^{kx}`, :math:`x^k`, :math:`\cos(kx)` or :math:`sin(kx)` as the function to integrate.
+Let's make the question randomly choose one of :math:`e^{kx}`, :math:`x^k`, :math:`\cos(kx)` or :math:`\sin(kx)` as the function to integrate.
 
 There are two ways of doing this, each with their own benefits and drawbacks.
 

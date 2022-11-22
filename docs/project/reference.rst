@@ -41,7 +41,7 @@ A project's home page shows a *timeline* of activity on the project, the list of
 The timeline shows all activity on exams or questions belonging to the question, as well as comments attached to the project itself.
 Timeline items belonging to each project you're a member of will also be shown in your personal timeline on the editor homepage.
 
-The cog icon at the top of the page takes you to the project's options page. 
+The :guilabel:`Project settings` link at the top of the page takes you to the project's settings page. 
 On this page you can change any of the project's settings or, if you're the project's owner and it isn't your personal workspace, delete it.
 
 
@@ -71,6 +71,8 @@ Click on the cog icon at the top-right of the page to change a project's setting
 .. _public-project:
 
 If :guilabel:`Visible to non-members?` is ticked, the project and all of its **published** content will be visible to the general public.
+
+The :guilabel:`Default language` and :guilabel:`Default licence` determine the settings used for new questions and exams created within this project.
 
 Adding someone to a project
 ===========================
@@ -116,7 +118,7 @@ You can't delete your personal workspace.
     Only delete a project if you're absolutely sure you don't need it any more.
     Deleting a project is an irreversible action that will result in the loss of data belonging to the project. 
 
-To delete a project, go to the project's :guilabel:`Options` page and click on the :guilabel:`Delete this project` button.
+To delete a project, go to the project's :guilabel:`Settings` page and click on the :guilabel:`Delete this project` button.
 
 Questions and exams belonging to the project will be reassigned to their authors' personal workspaces, but any comments on the project's activity timeline will be deleted.
 
@@ -124,12 +126,6 @@ Questions and exams belonging to the project will be reassigned to their authors
 
 Queues
 ======
-
-.. admonition:: Warning
-
-   Queues are an experimental feature.
-
-   The functionality and interface may change significantly in the next few months.
 
 Queues offer a means of organising the editing process for content in a project.
 

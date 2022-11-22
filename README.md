@@ -1,20 +1,20 @@
 **Numbas** is an open-source system for creating SCORM-compliant exams which
 run entirely in the browser, developed by [Newcastle University's School of
-Mathematics, Statistics and Physics](http://www.ncl.ac.uk/maths/).
+Mathematics, Statistics and Physics](https://www.ncl.ac.uk/maths-physics/).
 
-This is the Numbas editor. The Numbas runtime can be found at http://github.com/numbas/Numbas.
+This is the Numbas editor. The Numbas runtime can be found at https://github.com/numbas/Numbas.
 
-For more information, see [the Numbas website](http://www.numbas.org.uk).
+For more information, see [the Numbas website](https://www.numbas.org.uk).
 
 ### Installation
 
 Instructions for installation can be found at http://numbas.github.io/editor/.
 
-You probably don't need to set up your own editor installation: there's [a free public editor at **math**centre](http://numbas.mathcentre.ac.uk), which is supported by Newcastle University.
+You probably don't need to set up your own editor installation: there's [a free public editor at **math**centre](https://numbas.mathcentre.ac.uk), which is supported by Newcastle University.
 
 ### Copyright
 
-> Copyright 2011-19 Newcastle University
+> Copyright 2011-22 Newcastle University
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

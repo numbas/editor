@@ -51,15 +51,21 @@ Admin controls
         .. warning:: 
             Do **NOT** use this link to deliver the exam to students. 
             This link is not permanent and could stop working at any time.
-            Instead, download the exam and put it either on your own webspace or in a VLE.
+            Instead, either download the exam and put it on your own webspace or in a VLE, or use the :guilabel:`Share` button on the preview to obtina a permanent link.
 
-    Make a copy
-        Create a copy of the exam. 
-        Use this to make changes to an exam which does not belong to you.
+    Organisation
+        Actions to organise this exam in the editor database.
 
-    Delete
-        Delete the exam permanently from the database. 
-        The associated questions are not deleted - you must delete them individually, if you want them to be deleted too.
+        Make a copy
+            Create a copy of the exam. 
+            Use this to make changes to an exam which does not belong to you.
+
+        Delete
+            Delete the exam permanently from the database. 
+            The associated questions are not deleted - you must delete them individually, if you want them to be deleted too.
+
+        Add to a queue
+            Add this exam to a :ref:`queue <item_queues>`.
 
     Download
         Links to download standalone packages of the exam. 
@@ -108,7 +114,7 @@ Click the plus icon on one of the question results to add it to your exam.
 .. image:: images/add_question.png
     :alt: The "Add questions to this exam" section, listing questions in the basket and recently edited questions in a separate tab.
 
-You can drag and drop questions in the list on the left to reorder them, or move them between groups.
+Once you've added some questions to your exam, you can drag and drop questions in the list to reorder them.
 
 The :guilabel:`Replace this question with a copy` lets you quickly swap in a duplicate of a question you've included in your exam. 
 If you're using a question created by someone else, this is a convenient way of getting a version of the question you can make changes to.

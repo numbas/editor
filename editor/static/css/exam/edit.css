@@ -84,6 +84,41 @@
     border-top: 2px dashed var(--brand-color);
 }
 
+body:not(.dragging-question) .group-drop-question {
+    display: none;
+}
+
+.group-drop-question {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: black;
+    opacity: 0.01;
+    margin: 0;
+    padding: 0;
+}
+.question-group.dropping {
+    background: #449d44;
+    color: white;
+}
+.group-drop-question > li {
+    display: none;
+}
+.group-drop-question > .sortable-ghost {
+    opacity: 0;
+}
+.group-drop-question > .sortable-ghost::before {
+    width: 100%;
+    height: 2em;
+    background: black;
+    color: black;
+    content: '.';
+}
+.group-drop-question > .sortable-ghost > * {
+    display: none;
+}
+
 
 @media screen and (max-width: 1490px) {
     .questions-tab .question {

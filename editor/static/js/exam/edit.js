@@ -758,6 +758,17 @@ $(document).ready(function() {
         }
     }
 
+    Editor.highlight_question_dropper = function(e) {
+        Array.from(document.querySelectorAll('.group-drop-question')).forEach(g => g.parentElement.classList.remove('dropping'));
+        e.to.parentElement.classList.add('dropping');
+    }
+    Editor.start_question_sorting = function(e) {
+        document.body.classList.add('dragging-question');
+    }
+    Editor.stop_question_sorting = function(e) {
+        document.body.classList.remove('dragging-question');
+    }
+
     function Question(data,exam) {
         var q = this;
         this.exam = exam;

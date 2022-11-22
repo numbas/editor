@@ -94,16 +94,31 @@ $(document).ready(function() {
             this.Push(mml);
         }
         function JMEsimplifysub(name) {
-            var rules = this.GetBrackets(name);
-            if(rules===undefined) {
-                rules = 'all';
+            var ruleset = this.GetBrackets(name);
+            if(ruleset === undefined) {
+                ruleset = 'all';
             }
             var expr = this.GetArgument(name);
 
             var scope = currentScope;
-            expr = Numbas.jme.subvars(expr,scope,false);
 
-            var tex = Numbas.jme.display.exprToLaTeX(expr,rules,scope);
+            var tree = Numbas.jme.compile(wrap_subvar(expr));
+
+            function subvars(tree) {
+                if(tree.tok.type=='function' && tree.tok.name == 'subvar'){ 
+                    return {tok: scope.evaluate(tree.args[0])};
+                }
+                if(tree.args) {
+                    var args = tree.args.map(subvars);
+                    return {tok: tree.tok, args: args};
+                }
+                return tree;
+            }
+
+            var subbed_tree = subvars(tree);
+
+            var tex = Numbas.jme.display.treeToLaTeX(subbed_tree, ruleset, scope);
+
             var mml = TEX.Parse(tex,this.stack.env).mml();
 
             this.Push(mml);

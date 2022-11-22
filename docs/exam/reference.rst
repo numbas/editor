@@ -114,7 +114,12 @@ Click the plus icon on one of the question results to add it to your exam.
 .. image:: images/add_question.png
     :alt: The "Add questions to this exam" section, listing questions in the basket and recently edited questions in a separate tab.
 
-Once you've added some questions to your exam, you can drag and drop questions in the list to reorder them.
+Once you've added some questions to your exam, you can drag and drop questions in the list to reorder them, or move a question to another group by dropping it on the list on the left-hand side.
+
+.. video:: ../_static/exam-questions.mp4
+    :loop:
+
+    Adding questions to an exam and rearranging them.
 
 The :guilabel:`Replace this question with a copy` lets you quickly swap in a duplicate of a question you've included in your exam. 
 If you're using a question created by someone else, this is a convenient way of getting a version of the question you can make changes to.

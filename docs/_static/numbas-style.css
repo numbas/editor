@@ -101,7 +101,6 @@ h1,h2,h3 {
 #main-content div.figure {
     padding: 1em 1em 0.5em 1em;
     border: 0.4em solid var(--numbas-color);
-    margin-left: 2em;
     background: hsl(0, 0%, 93%);
     text-align: center;
 }
@@ -109,4 +108,8 @@ h1,h2,h3 {
 .toctree-wrapper > .caption {
     font-weight: bold;
     font-size: 1.5rem;
+}
+
+video {
+    max-width: 100%;
 }

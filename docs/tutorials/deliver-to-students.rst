@@ -70,6 +70,8 @@ Uploading to Blackboard
     We don't recommend using Blackboard's SCORM player for high-stakes assessments.
     Instead, if you can, use the :ref:`Numbas LTI provider <upload-to-lti-provider>` with Blackboard.
 
+.. todo:: Redo this screencast
+
 .. raw:: html
 
     <iframe src="https://player.vimeo.com/video/167121013" width="640" height="360" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>

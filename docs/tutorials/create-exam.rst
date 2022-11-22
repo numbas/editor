@@ -8,12 +8,14 @@ Let's create an exam using questions already in the database.
 Creating an exam using existing questions
 #########################################
 
-On your home page, use the search box at the top of the page to search for content you are interested in. You can leave the search box blank to get all available questions. You can use the options on the left to filter the results. 
+On your home page, use the search box at the top of the page to search for content you are interested in.
+You can leave the search box blank to get all available questions.
+You can use the options on the left to filter the results. 
 
 .. image:: screenshots/question_search.png
     :alt: The search box is highlighted at the top of the page.
 
-Once you have found a question that you are interested in, click on the :guilabel:`Test run` icon to try it out. 
+Once you have found a question that you are interested in, click on the :guilabel:`Run` button to try it out. 
 If you are happy with the question, click on the :guilabel:`basket` icon to add it to your *question basket*. 
 
 .. image:: screenshots/question_search_basket.png
@@ -33,7 +35,7 @@ By default it will be added to your personal project.
     :alt: The "create a new exam" form.
 
 Once created, you can  try out your exam straight away.
-Click the :guilabel:`Run` link in the sidebar on the left. 
+Click the :guilabel:`Run` button on the left of the navigation bar.
 The compiled exam will open in a new window and you can have a go at answering the questions.
 
 .. image:: screenshots/exam_edit_testrun.png

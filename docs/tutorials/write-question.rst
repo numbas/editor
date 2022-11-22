@@ -73,6 +73,7 @@ It’s a rich text editor, so in addition to text you can add video, images, any
 
 The statement is optional, and ours is going to be very short, but let’s
 go for it anyway.
+
 Type:
 
     Chris eats 7 apples per day.
@@ -96,7 +97,7 @@ Switch back to the editor tab when you're ready to make more changes.
 .. note::
 
     There's no 'Save' button: the editor saves your changes automatically.
-    You'll see a little box saying *Saved* at the top of the screen each time your changes are saved.
+    At the top-right of the screen is a little box describing the status of your changes, either "Saved", "Unsaved changes", or "Saving".
 
 Parts
 -----
@@ -116,6 +117,7 @@ We want the student to give a number, so select :ref:`Number entry <number-entry
    Selecting a part type.
 
 Every part has a :term:`Prompt` which you can use to tell the student how to answer the part.
+
 Type:
 
     How many apples does Chris eat per week?
@@ -138,7 +140,7 @@ For this question the answer is exactly :math:`49`, so put that in both fields.
 
 Now press :guilabel:`Run` again to try out the question.
 
-If you put ``49`` in the entry box and press :guilabel:`Submit part`, the answer is marked correct; any other number is marked incorrect.
+If you put ``49`` in the entry box and press :guilabel:`Submit answer`, the answer is marked correct; any other number is marked incorrect.
 
 .. figure:: screenshots/write-question/test-run.png
    :alt: A preview of the question. The answer '49' has been entered and the message "Your answer is correct" is underneath.
@@ -166,9 +168,11 @@ Choose numbers between 2 and 9 with step size 1.
 .. note::
 
     Why not include 1 in this range? Because then we'd have to think about whether to write 'apple' or 'apples' in the prompt.
+    That's a problem to solve later!
 
 The :guilabel:`description` field gives you more space to describe what the variable represents.
 This will be useful when you come back to the question.
+
 Write:
 
     The number of apples eaten per day.
@@ -178,7 +182,7 @@ Write:
 
    Defining the variable ``num_apples``.
 
-The :guilabel:`Regenerate variables` button on the right will give you a preview
+The :guilabel:`Regenerate variables` button on the left will give you a preview
 of the values that you can expect to be generated.
 
 Now it’s time to replace the number 7 in the question with the new variable.

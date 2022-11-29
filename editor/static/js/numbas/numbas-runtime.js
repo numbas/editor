@@ -8982,7 +8982,7 @@ JMEDisplayer.prototype = {
     /** Display a complex decimal.
      *
      * @abstract
-     * @param {decimal} n
+     * @param {Numbas.math.ComplexDecimal} n
      * @param {Numbas.math.niceNumber_settings} options
      * @returns {*}
      * @see Numbas.jme.display.JMEDisplayer#decimal
@@ -8993,7 +8993,7 @@ JMEDisplayer.prototype = {
     /** Display a decimal as a fraction.
      *
      * @abstract
-     * @param {decimal} n
+     * @param {Decimal} n
      * @param {Numbas.math.niceNumber_settings} options
      * @returns {*}
      * @see Numbas.jme.display.JMEDisplayer#decimal
@@ -9004,7 +9004,7 @@ JMEDisplayer.prototype = {
     /** Display a decimal as a decimal.
      *
      * @abstract
-     * @param {decimal} n
+     * @param {Decimal} n
      * @param {Numbas.math.niceNumber_settings} options
      * @returns {*}
      * @see Numbas.jme.display.JMEDisplayer#decimal
@@ -19813,7 +19813,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
     /** Get the significand and exponent of a number written in exponential form.
      *
      * @param {string} str
-     * @returns {object} `{significand: number, exponent: number}`
+     * @param {boolean} [parse=true] - Parse the significand and exponent values to numbers, or leave them as strings?
+     * @returns {object} `{significand: number, exponent: number}` if `parse` is true, or `{significand: string, exponent: string}`
      */
     parseScientific: function(str, parse) {
         var m = /(-?\d[ \d]*(?:\.\d[ \d]*)?)e([\-+]?\d[ \d]*)/i.exec(str);

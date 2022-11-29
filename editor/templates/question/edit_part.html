@@ -160,7 +160,7 @@
                             <ul class="list-unstyled" data-bind="foreach: last_run().message_displays">
                                 <li class="feedbackMessage" data-bind="attr: {'data-credit-change': credit_change}"><span data-bind="css: 'feedback-icon glyphicon '+icon" aria-hidden="true"></span> <!-- ko if: format=='html' --><span data-bind="dom: message"></span><!-- /ko --><!-- ko if: format=='string' --><span data-bind="html: message"></span><!-- /ko --></li>
                             </ul>
-                            <p><strong>Score:</strong> <span data-bind="text: last_run().marks"></span></p>
+                            <p><strong>Score:</strong> <span data-bind="text: last_run().score"></span></p>
                         </section>
                     </form>
                 <!-- /ko -->

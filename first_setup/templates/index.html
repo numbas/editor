@@ -30,6 +30,8 @@
                                 <option value="{{value}}" {% if value == q.value %}selected{% endif %}>{{text}}</option>
                                 {% endfor %}
                             </select>
+                        {% elif q.kind == 'password' %}
+                            <input class="{{q.css_classes}}" id="question-{{q.key}}" type="password" name="{{q.key}}" value="{{q.value}}">
                         {% elif q.kind == 'str' %}
                             <input class="{{q.css_classes}}" id="question-{{q.key}}" type="text" name="{{q.key}}" value="{{q.value}}">
                         {% elif q.kind == 'bool' %}

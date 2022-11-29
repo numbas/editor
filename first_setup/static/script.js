@@ -7,6 +7,9 @@ const toggles = [
 toggles.forEach(({key, className, fn}) => {
     fn = fn || ((e) => e.checked);
     const q = document.getElementById(`question-${key}`);
+    if(!q) {
+        return;
+    }
     function toggle() {
         document.body.classList.toggle(className,fn(q));
     }

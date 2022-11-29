@@ -56,7 +56,7 @@ form .validation-error {
     padding: 0.5em 1em;
 }
 
-input[type="text"] {
+input[type="text"], input[type="password"] {
     font-family: monospace;
     width: 100%;
 }
@@ -65,7 +65,7 @@ select {
     background: white;
 }
 
-input[type="text"], select {
+input[type="text"], input[type="password"], select {
     height: 2em;
     padding: 0 0.5em;
     border: 1px solid black;
@@ -105,4 +105,11 @@ code {
 #form-error {
   background: var(--error-bg);
   padding: 1em;
+}
+
+body.setup-waiting main:not(.running) #running,
+body.setup-waiting main:not(.finished) #finished,
+body.setup-waiting main:not(.not-running) #not-running,
+body.setup-waiting main:not(.error) #error {
+    display: none;
 }

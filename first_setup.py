@@ -69,9 +69,12 @@ class NeedNewerPythonError(ValidationError):
 class CantConnectToDatabase(ValidationError):
     pass
 
-def path_exists(path):
+def path_exists(path, is_dev=False):
     if not Path(path).exists():
-        raise PathDoesNotExist(path)
+        if is_dev:
+            Path(path).mkdir(parents=True, exist_ok=True)
+        else:
+            raise PathDoesNotExist(path)
 
 class Question:
     def __init__(self, key, question, default, value = None, options = None, kind = None, validation = None, dev_value = None, classes = None):
@@ -125,22 +128,22 @@ class Question:
 
         return default
 
-    def validate(self, value):
+    def validate(self, value, is_dev=False):
         if self.validation is None:
             return
 
         try:
-            self.validation(value)
+            self.validation(value, is_dev)
         except ValidationError as error:
             self.validation_error = error
             raise error
 
-def validate_numbas_path(path):
+def validate_numbas_path(path, *args):
     path_exists(path)
     if not Path(path, 'bin', 'numbas.py').exists():
         raise ValidationError("The path you gave for the Numbas compiler doesn't seem to be correct. It exists, but doesn't contain the Numbas compiler scripts.")
 
-def validate_python_exec(python_cmd):
+def validate_python_exec(python_cmd, *args):
     try:
         res = subprocess.run(python_cmd.split(' ')+['--version'], check=True, capture_output = True)
         stdout = res.stdout.decode('utf-8')
@@ -154,8 +157,6 @@ def validate_python_exec(python_cmd):
         raise NotPythonError() from e
 
 class Command:
-
-    run_result = None
 
     sqlite_template = """DATABASES = {{
     'default': {{
@@ -174,11 +175,11 @@ class Command:
     }}
 }}"""
 
-    def __init__(self, values = None, dev = False):
-        self.written_files = []
+    def __init__(self, values = None, dev = False, server = None):
         self.response = []
         self.rvalues = {}
         self.dev = dev
+        self.server = server
 
         self.make_questions(values)
 
@@ -234,13 +235,13 @@ class Command:
                 ),
                 make_question('DB_NAME', 'Name of the database:', 'numbas_editor', dev_value = 'db.sqlite3'),
                 make_question('DB_USER', 'Database user:', 'numbas_editor', dev_value = '', classes = ['db-server']),
-                make_question('DB_PASSWORD', 'Database password:', '', dev_value = '', classes = ['db-server']),
+                make_question('DB_PASSWORD', 'Database password:', '', dev_value = '', classes = ['db-server'], kind='password'),
                 make_question('DB_HOST', 'Database host:', 'localhost', dev_value = '', classes = ['db-server']),
             ]),
             ("Superuser details", [
                 make_question('SU_CREATE', 'Create a new superuser?', True),
                 make_question('SU_NAME', 'Username:', 'superuser', classes = ['superuser']),
-                make_question('SU_PASS', 'Password:', '', classes = ['superuser']),
+                make_question('SU_PASS', 'Password:', '', classes = ['superuser'], kind='password'),
                 make_question('SU_EMAIL', 'Email:', '', classes = ['superuser']),
                 make_question('SU_FIRST_NAME', 'First name:', '', classes = ['superuser']),
                 make_question('SU_LAST_NAME', 'Last name:', '', classes = ['superuser']),
@@ -279,34 +280,24 @@ class Command:
                 raise PackageMissingError('mysqlclient') from e
 
     def run_setup(self):
-        try:
-            cmd = [sys.executable, 'manage.py', 'first_setup_db', json.dumps(self.values)]
-            if self.dev:
-                cmd.append('--dev')
-            setup_process = subprocess.run(cmd, capture_output = True, check = True)
-            stdout = setup_process.stdout.decode('utf-8')
-            try:
-                self.run_result = json.loads(stdout)
-            except json.decoder.JSONDecodeError as e:
-                raise SetupError(e) from e
-            self.written_files.append(Path('numbas', 'settings.py'))
-        except subprocess.CalledProcessError as e:
-            stdout = e.stdout.decode('utf-8')
-            stderr = e.stderr.decode('utf-8')
-            try:
-                result = json.loads(stdout)
-                error = result.get('error','')
-                raise SetupError(error) from e
-            except json.decoder.JSONDecodeError as e2:
-                raise SetupError(stderr) from e2
+        if self.server.setup_process is not None:
+            raise SetupError('The final setup task is already running.')
+
+        cmd = [sys.executable, 'manage.py', 'first_setup_db', json.dumps(self.values)]
+        if self.dev:
+            cmd.append('--dev')
+        self.server.setup_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def handle(self):
         self.get_values()
 
+        print("Checking database")
         self.check_database()
 
+        print("Writing files")
         self.write_files()
 
+        print("Run setup")
         self.run_setup()
 
     def get_value(self, key):
@@ -340,8 +331,9 @@ class Command:
                 if question.key in self.values:
                     question.response = self.values[question.key]
                     try:
-                        question.validate(question.response)
+                        question.validate(question.response, self.dev)
                     except ValidationError as e:
+                        print(e)
                         validation_errors.append(e)
 
         if validation_errors:
@@ -386,7 +378,7 @@ class Command:
         self.sub_file(Path('numbas', 'settings.py'), settings_subs)
 
     def sub_file(self, fname, subs):
-        self.written_files.append(fname)
+        self.server.written_files.append(fname)
 
         with open(str(fname)+'.dist', encoding='utf-8') as f:
             text = f.read()
@@ -447,13 +439,45 @@ class RequestHandler(BaseHTTPRequestHandler):
         if self.path == '/':
             return self.get_index()
 
+        if self.path == '/setup-status':
+            return self.get_setup_status()
+
+        if self.path == '/finished':
+            return self.get_finished_response()
+
         return self.get_not_found()
 
     def get_index(self):
         message = render_to_string(
             'index.html',
             {
-                'command': Command(),
+                'command': Command(server=self.server),
+            }
+        )
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(message.encode('utf-8'))
+
+    def get_setup_status(self):
+        if self.server.run_result is not None:
+            status = 'finished'
+        elif self.server.setup_process is not None:
+            status = 'running'
+        else:
+            status = 'not-running'
+
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(status.encode('utf-8'))
+
+    def get_finished_response(self):
+        if self.server.run_result is None:
+            return self.get_not_found()
+
+        message = render_to_string(
+            'response.html',
+            {
+                'command': Command(server=self.server, dev=self.server.run_result['dev']),
             }
         )
         self.send_response(200)
@@ -484,7 +508,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.post_index()
 
     def post_index(self):
-        command = Command(self.params)
+        command = Command(self.params, server=self.server)
 
         try:
             command.handle()
@@ -492,7 +516,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.end_headers()
             message = render_to_string(
-                'response.html',
+                'setup_waiting.html',
                 {
                     'command': command,
                 }
@@ -513,10 +537,51 @@ class RequestHandler(BaseHTTPRequestHandler):
     def log_request(self, code = '-', size = '-'):
         pass
 
+class SetupHTTPServer(HTTPServer):
+
+    timeout = 1
+
+    setup_process = None
+    run_result = None
+    written_files = []
+
+    def poll_setup(self):
+        if self.setup_process is None:
+            return
+
+        returncode = self.setup_process.poll()
+        if returncode is None:
+            return
+
+        print("Setup is finished")
+
+        stdout_data, stderr_data = self.setup_process.communicate()
+        stdout = stdout_data.decode('utf-8')
+        stderr = stderr_data.decode('utf-8')
+
+        if returncode != 0:
+            try:
+                result = json.loads(stdout)
+                error = result.get('error','')
+                raise SetupError(error) from e
+            except json.decoder.JSONDecodeError as e2:
+                raise SetupError(stderr) from e2
+
+        try:
+            self.run_result = json.loads(stdout)
+        except json.decoder.JSONDecodeError as e:
+            raise SetupError(e) from e
+        self.written_files.append(Path('numbas', 'settings.py'))
+
+        self.setup_process = None
+
 def serve_web(port):
-    with HTTPServer(("", port), RequestHandler) as httpd:
+    with SetupHTTPServer(("", port), RequestHandler) as httpd:
         print(f"Please open http://localhost:{port} to set up this Numbas editor.")
-        httpd.serve_forever()
+        while True:
+            httpd.handle_request()
+            httpd.poll_setup()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

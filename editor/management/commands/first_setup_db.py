@@ -43,6 +43,7 @@ class Command(BaseCommand):
             'superusers': [u.username for u in superusers],
             'domain': self.domain,
             'stdout': stdout,
+            'dev': self.dev,
         }
 
         print(json.dumps(result))

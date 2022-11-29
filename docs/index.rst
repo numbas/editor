@@ -7,7 +7,7 @@
 Numbas is an open-source e-assessment system aimed at mathematics and other numerate disciplines. 
 It generates SCORM 2004-compliant, self-contained assessment packages.
 
-Find out more about Numbas, including case studies and the latest blog posts, at `numbas.org.uk <http://www.numbas.org.uk>`_.
+Find out more about Numbas, including case studies and the latest blog posts, at `numbas.org.uk <https://www.numbas.org.uk>`_.
 
 A free to use Numbas editor is open to the public at `numbas.mathcentre.ac.uk <https://numbas.mathcentre.ac.uk>`_.
 

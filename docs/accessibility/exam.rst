@@ -142,7 +142,7 @@ Navigating with a keyboard
 
 In most browsers, pressing the Tab key will move focus between interactive elements in the display.
 
-Numbas uses the `MathJax accessibility extensions <http://docs.mathjax.org/en/latest/basic/a11y-extensions.html#interactive-exploration>`__ to provide interactive exploration of mathematical notation.
+Numbas uses the `MathJax accessibility extensions <https://docs.mathjax.org/en/v2.7-latest/misc/accessibility-features.html>`__ to provide interactive exploration of mathematical notation.
 
 Printing a Numbas exam
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -158,7 +158,7 @@ We’ve tested Numbas with NVDA and Orca.
 
 When you submit an answer, the score and any feedback messages will be read out.
 
-Mathematical notation is made accessible to a screenreader by the `MathJax accessibility extensions <http://docs.mathjax.org/en/latest/basic/a11y-extensions.html#speech-braille-support>`__.
+Mathematical notation is made accessible to a screenreader by the `MathJax accessibility extensions <https://docs.mathjax.org/en/v2.7-latest/misc/accessibility-features.html>`__.
 
 Who to contact if you have problems or want to give feedback
 ------------------------------------------------------------

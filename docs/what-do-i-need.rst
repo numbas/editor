@@ -10,7 +10,7 @@ The Numbas editor is used to write questions and collect them into exams.
 The editor at `numbas.mathcentre.ac.uk <https://numbas.mathcentre.ac.uk>`_ is free to use, and hosted by Newcastle University.
 
 If you want to set up your own instance of the editor, you can: it's open source. 
-See the `editor installation instructions <http://numbas.github.io/editor/>`_.
+See the :ref:`editor installation instructions <server-installation>`.
 
 What students need
 ------------------

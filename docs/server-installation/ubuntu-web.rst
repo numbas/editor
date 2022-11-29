@@ -33,7 +33,7 @@ Virtualenv
 ----------
 
 Rather than rely on the system-wide Python executable and libraries, a more flexible
-approach is to use `virtualenv <http://www.virtualenv.org/>`_, which is a tool to create an isolated Python environment.
+approach is to use `virtualenv <https://virtualenv.pypa.io>`_, which is a tool to create an isolated Python environment.
 
 #.  Create a user group which will have access to the virtualenv, and
     add yourself to it::

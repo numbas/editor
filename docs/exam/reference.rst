@@ -121,7 +121,12 @@ Once you've added some questions to your exam, you can drag and drop questions i
 
     Adding questions to an exam and rearranging them.
 
-The :guilabel:`Replace this question with a copy` lets you quickly swap in a duplicate of a question you've included in your exam. 
+You can give a question a custom name, which will be shown to the student.
+In the "Sequential" :ref:`question navigation mode`, questions with custom names are not numbered and do not affect the numbering of other questions in the exam.
+
+Click the pencil icon labelled :guilabel:`Edit this question` to edit an individual question.
+
+The :guilabel:`Replace this question with a copy` button lets you quickly swap in a duplicate of a question you've included in your exam. 
 If you're using a question created by someone else, this is a convenient way of getting a version of the question you can make changes to.
 
 If the question has any :term:`variables whose values can be overridden <Can an exam override the value of this variable?>`, then you can give values for those variables here.
@@ -288,7 +293,7 @@ Events
 ======
 
 Some of the properties described above are marked as *events*. 
-These all have the same structure: an :guilabel:`action` setting which determines how to react to the event, and a :guilabel:`message` to display to the student when appropriate.
+These all have the same structure: an :guilabel:`Action` setting which determines how to react to the event, and a :guilabel:`Message` to display to the student when appropriate.
 
 Settings
 ========
@@ -354,8 +359,7 @@ You can control who is allowed to see, and to edit, your exams.
 When you create a new exam, access is limited to you and any other members of the project the exam belongs to.
 You can grant extra access to indvidual users or *publish* your exam to the public database, where it can be viewed by any other user.
 
-.. topic:: Give access to a user
-
+Give access to a user
     Type a name into the search box to find a user. 
     Click on a user's name in the results list to add them to the access list. 
 
@@ -369,8 +373,7 @@ You can grant extra access to indvidual users or *publish* your exam to the publ
         Can edit this
             The named user can see this exam and make changes to it.
 
-.. topic:: Access Links
-    
+Access Links
     The URLs in this section automatically grant access to whoever follows them. 
     You could use these links to share a question with someone who hasn't yet created an account on the editor (they'll be prompted to create an account when they click on the link), or to share a question with a group of people without inviting each person individually.
 

@@ -9,8 +9,8 @@ Question parts
 Each question has one or more parts.
 The student is given a separate score for each part of the question, and their total score is the sum of their scores for each part.
 
-In the editor, parts are displayed in a list; you can click on the title bar of a part to hide it, making room for the others.
-Use the :guilabel:`Expand every part` and :guilabel:`Collapse every part` buttons to show or hide every part at once.
+In the editor, parts are displayed in a list.
+Click on a part's name to edit it.
 
 The **type** of a part defines how it appears to the student, and how it is marked.
 Different part types offer different settings fields to configure the display and marking of the part.
@@ -189,7 +189,7 @@ Scripts
 =======
 
 The script fields allow you to override the built-in algorithms used by Numbas. 
-They take JavaScript code; `the Numbas JavaScript API documentation for parts <http://numbas.github.io/Numbas/Numbas.parts.Part.html>`_ is a useful reference.
+They take JavaScript code; `the Numbas JavaScript API documentation for parts <https://docs.numbas.org.uk/runtime_api/en/latest/Numbas.parts.Part.html>`_ is a useful reference.
 
 .. note::
     

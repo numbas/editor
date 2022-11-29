@@ -20,7 +20,7 @@ The GeoGebra extension provides functions to embed GeoGebra worksheets in a ques
 
 You can:
 
-* Create a GeoGebra worksheet from scratch, or load one from `geogebra.org <http://www.geogebra.org>`_ or a ``.ggb`` file.
+* Create a GeoGebra worksheet from scratch, or load one from `geogebra.org <https://www.geogebra.org>`_ or a ``.ggb`` file.
 * Replace values in the GeoGebra worksheet with values derived from question variables.
 * Link the positions of GeoGebra objects to :ref:`number-entry` part inputs.
 * Examine the state of the worksheet during a part's marking algorithm.
@@ -44,7 +44,7 @@ You can:
 
 For more information on how to use the extension, see `its documentation <https://github.com/numbas/numbas-extension-jsxgraph>`__.
 
-For help on using JSXGraph, see `the official documentation <http://jsxgraph.uni-bayreuth.de/wp/docs/index.html>`_.
+For help on using JSXGraph, see `the official documentation <https://jsxgraph.org/wp/docs/index.html>`_.
 
 The screencast below shows how to use JSXGraph in a Numbas question:
 
@@ -100,7 +100,7 @@ Statistical functions
 
 The statistical functions extension provides many new functions for generating samples from random distributions, and calculating statistics.
 
-It is built on the `jStat <http://github.com/jstat/jstat/>`_ library and follows its API quite closely. 
+It is built on the `jStat <https://jstat.github.io/>`_ library and follows its API quite closely. 
 
 For more information on how to use the extension, see `its documentation <https://github.com/numbas/numbas-extension-stats>`__.
 

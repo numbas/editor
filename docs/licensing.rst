@@ -3,7 +3,7 @@
 Licensing
 ---------
 
-The Numbas runtime and editor software are both © 2011-2021 Newcastle University, released under the terms of the `Apache License, Version 2.0 <http://www.apache.org/licenses/LICENSE-2.0>`_.
+The Numbas runtime and editor software are both © 2011-2021 Newcastle University, released under the terms of the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_.
 
 You can see a plain-English explanation of the license and what it allows at `tl;drLegal <https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)>`_.
 

@@ -33,20 +33,22 @@ The question editor
 
 At the top of the question editor is the question's name, as well as a stamp showing the status of the question.
 
-.. todo::
-   Move stamps to a generic page about organisation
-
 .. _question-stamps:
 
 Click on the status stamp to give feedback about the quality of an question, after test running it. 
 The options are listed in descending order of "suitability for use":
 
-* :guilabel:`Ready to use` - this question is of sufficient quality to give to students.
-* :guilabel:`Should not be used` - this question works, but you deprecate its use - for example, if it's not intended for use by students, or there's a better version elsewhere.
-* :guilabel:`Has some problems` - this question works, but has some problems which mean it's not ready for use by students - for example, the question is incomplete, or changes need to be made to the text. 
-  Further work is needed before this question can be given to students.
-* :guilabel:`Doesn't work` - this question doesn't even run!
-* :guilabel:`Needs to be tested` - this question looks alright to me, but it should be checked thoroughly before being used.
+Ready to use
+    This question is of sufficient quality to give to students.
+Should not be used
+    This question works, but you deprecate its use - for example, if it's not intended for use by students, or there's a better version elsewhere.
+Has some problems
+    This question works, but has some problems which mean it's not ready for use by students - for example, the question is incomplete, or changes need to be made to the text. 
+    Further work is needed before this question can be given to students.
+Doesn't work
+    This question doesn't even run!
+Needs to be tested
+    This question looks alright to me, but it should be checked thoroughly before being used.
 
 On the left of the screen are :ref:`question-admin-controls` and labels for each of the editing tabs.
 
@@ -64,12 +66,10 @@ Admin controls
         Opens a preview of the question in a new window. 
         A specially simplified theme will be used, different from the one used for exams.
 
-        You can also use the keyboard shortcut :kbd:`Ctrl+B` to open a preview.
-
         .. warning:: 
             Do **NOT** use this link to deliver the question to students. 
             This link is not permanent and could stop working at any time.
-            Instead, download the question and put it either on your own webspace or in a VLE.
+            Instead, either download the exam and put it on your own webspace or in a VLE, or use the :guilabel:`Share` button on the preview to obtina a permanent link.
 
     Make a copy
         Create a copy of the question. 
@@ -99,6 +99,8 @@ A content area can include text, images, or more dynamic content such as videos 
 
 By default, text is edited using the rich text editor. 
 Click on the :guilabel:`Source code` button to edit the raw HTML code for the content area.
+
+Click on the :guilabel:`Preview` button to see how the content will look with question variables substituted in.
 
 .. figure:: images/content_area_editor.png
     :align: center
@@ -130,7 +132,7 @@ Here's a quick summary of the different methods of substituting variables into q
 | no surrounding operators  |                          |                                              |
 +---------------------------+--------------------------+----------------------------------------------+
 | Several numbers into a    | :math:`a`, :math:`b` and | :ref:`\\simplify <simplification-rules>`,    |
-| LaTeX expression          | :math:`c` into           | e.g. ``\simplify{ {a}x^2 + {b}x + {c} }``    |
+| LaTeX expression          | :math:`c` into           | e.g. ``$\simplify{ {a}x^2 + {b}x + {c} }$``  |
 |                           | :math:`ax^2+bx+c`        |                                              |
 +---------------------------+--------------------------+----------------------------------------------+
 
@@ -172,14 +174,14 @@ Parts
 Each question has one or more *parts*.
 
 In the editor, parts are displayed in a list on the right of a page; you can click on a part in the list to start editing it.
-You can drag up or down a part to change its position in the question.
+You can drag a part up or down to change its position in the question.
 
 .. image:: images/add-a-part.png
     :alt: The "add a part" section. There is a button for each part type, followed by the "more parts" button.
 
 To add a new part to your question, click the :guilabel:`Add a part` button at the bottom of the list, then click on one of the part types shown.
-Click on the :guilabel:`more part types` button to browse the list of custom part types available to you.
 You can filter the list by typing keywords in the search box at the top.
+Built-in part types are shown first, followed by any :ref:`custom part types <custom-part-types>` you have access to.
 
 See :ref:`parts` for more on part settings.
 
@@ -189,6 +191,9 @@ Part display mode
 -----------------
 
 There are two modes that dictate how question parts are presented to students.
+
+You choose the part display mode when you create a question.
+It isn't possible to change the part display mode of an existing question.
 
 .. glossary::
 
@@ -267,7 +272,7 @@ Definition
         Specify what type of data the variable should hold. 
         The :guilabel:`JME code` option allows you to define the variable using :doc:`/jme-reference` syntax, while the other options provide simplified forms.
 
-        The :guilabel:`JSON data` option allows you to enter raw `JSON <http://json.org/>`_ data, which is parsed into JME data.
+        The :guilabel:`JSON data` option allows you to enter raw `JSON <https://www.json.org/>`_ data, which is parsed into JME data.
 
         The :guilabel:`Short text string` and :guilabel:`Long text string` options have a checkbox labelled :guilabel:`Is this a template?`. 
         If ticked, the string will be marked as :jme:func:`safe <safe>`, and variable values will not be substituted into it.
@@ -287,6 +292,13 @@ Definition
 
     Can an exam override the value of this variable?
         If this is ticked, then when an exam uses this question the author can override the value of this variable with their own choice.
+
+    Generated value
+        This box shows a representative value of this variable.
+        This is the same value as shown in the :guilabel:`Variables` list.
+        Click :guilabel:`Regenerate variables` to generate another value.
+
+        When you run the question or include it in an exam, a fresh value is generated for each attempt at the question.
 
     Depends on
         A list of all variables used in this variable's definition. 
@@ -320,7 +332,7 @@ You can unlock a variable by clicking on the padlock icon again.
 .. _variable-testing:
 
 Variable testing
-================
+----------------
 
 .. admonition:: Motivation
 
@@ -435,6 +447,19 @@ Any constant equal to :math:`k\pi` or :math:`\frac{1}{k}\pi`, where :math:`k \in
 The imaginary unit, :math:`\sqrt{-1}`, is used when rendering complex numbers.
 
 The base of the natural logarithm, :math:`e = 2.71828 \ldots`, is used when rendering exponentials.
+
+.. _rulesets:
+
+Rulesets
+--------
+
+.. admonition:: Motivation
+
+   If you find yourself using the same set of rules repeatedly in ``\simplify`` commands, define a new ruleset with a shorter name to save yourself some typing.
+
+A "ruleset" defines a list of named :doc:`simplification rules </simplification>` used to manipulate mathematical expressions.
+
+.. _question-functions:
 
 Functions
 ---------
@@ -570,9 +595,8 @@ Functions defined in Javasript don't need the ``function(parameters) { ... }`` e
     Values inside lists also need to be converted; if you have nested data structures such as two-dimensional lists, you will need to use a :ref:`custom signature expression <jme-function-signature-expressions>`.
 
 Numbas provides a large library of functions which you can use. 
-These are accessed from the objects ``Numbas.math`` and ``Numbas.util``. 
-The best way to see what's available is to look at `the Numbas code documentation <http://numbas.github.io/Numbas>`_. 
-`jQuery <http://jquery.com>`_ is also available. 
+These are accessed from the global object ``Numbas``. 
+The best way to see what's available is to look at `the Numbas code documentation <https://docs.numbas.org.uk/runtime_api>`_. 
 
 While the JME system has its own type system for variables, separate from JavaScript's, function parameters are unwrapped to native JavaScript values on evaluation so you normally don't need to worry about it.
 
@@ -587,21 +611,25 @@ While the JME system has its own type system for variables, separate from JavaSc
 
     This function takes a list of strings and returns an HTML bullet list::
         
-        var ol = $('<ol>');  // create list element
+        var ol = document.createElement('ol');  // create an unordered list element
 
         for(var i=0; i<things.length; i++) {
-            ol.append($('<li>').html(things[i]));	//append list item to list
+            var li = document.createElement('li');
+            li.textContent = things[i];
+            ol.appendChild(li);
         }
           
-        return ol;	//return list
+        return ol;	//return the list
 
     This function creates an HTML5 ``canvas`` element and draws a rectangle with the given dimensions, along with labels::
 
         var c = document.createElement('canvas');
-        $(c).attr('width',w+40).attr('height',h+40);
+        c.setAttribute('width', w+40);
+        c.setAttribute('height', h+40);
+
         var context = c.getContext('2d');
 
-        //fill in rectangle with a light shade
+        //fill in a rectangle with a light shade
         context.fillStyle = '#eee';
         context.fillRect(5,5,w,h);
 
@@ -628,27 +656,6 @@ While the JME system has its own type system for variables, separate from JavaSc
 
     You can see this function in use at https://numbas.mathcentre.ac.uk/question/759/use-canvas-to-draw-a-rectangle/.
 
-    This function formats a number with commas to separate every third digit, i.e. :math:`1,\!000,\!000` instead of :math:`1000000`::
-
-        var parts=n.toString().split(".");
-        if(parts[1] && parts[1].length<2) {
-          parts[1]+='0';
-        }
-        return parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",") + (parts[1] ? "." + parts[1] : "");
-
-    You can see this function in use at https://numbas.mathcentre.ac.uk/question/396/numerical-reasoning-average-salary/.
-
-.. _rulesets:
-
-Rulesets
---------
-
-.. admonition:: Motivation
-
-   If you find yourself using the same set of rules repeatedly in ``\simplify`` commands, define a new ruleset with a shorter name to save yourself some typing.
-
-A "ruleset" defines a list of named :doc:`simplification rules </simplification>` used to manipulate mathematical expressions.
-
 .. _preamble:
 
 Preamble
@@ -664,16 +671,16 @@ Preamble
    The CSS preamble allows you to style certain portions of your question, without relying on a custom exam :ref:`theme <themes>`.
 
 The code written in the :guilabel:`JavaScript` preamble is executed when the question is generated, just before the question's variables are calculated. 
-The JavaScript preamble can access the question's properties through the `question` variable. 
+The JavaScript preamble can access the question's properties through the ``question`` variable. 
 You can see an example of the JavaScript preamble in use at https://numbas.mathcentre.ac.uk/question/2705/jsxgraph-test-preamble-version/.
 
-You can see what functions are available in JavaScript at `the Numbas code documentation <http://numbas.github.io/Numbas>`_.
+You can see what functions are available in JavaScript at `the Numbas code documentation <https://docs.numbas.org.uk/runtime_api>`_.
 
 If you want to do something with the display of the question on the page, you have to wait until its HTML has been generated, using the ``HTMLAttached`` signal. 
 Here's an example which hides an element in the statement with a given id::
     
     question.signals.on('HTMLAttached',function() {
-        $(question.display.html).find('.statement #secret').hide();
+        question.display.html.querySelector('.statement #secret').style.visibility = 'hidden'; 
     });
 
 The preamble also runs before the question's variables are generated; if you'd like to do something that uses the question's variables, you can either wait for ``HTMLAttached``, or use ``variablesGenerated`` if you need to do something before the HTML is generated.
@@ -729,6 +736,28 @@ Settings
     Taxonomy
         The mathcentre taxonomy provides a framework for specifying the topics that a question relates to.
         Select all topics relevant to the question; the taxonomy is hierarchical, so more specific subtopics appear once you've selected a broader topic.
+        
+
+.. _question-testing:
+
+Testing
+=======
+
+.. figure:: images/question-testing-failed.png
+    :align: center
+
+    The Testing tab, with one failed test.
+
+
+The :guilabel:`Testing` tab shows the :ref:`unit tests <unit-tests>` associated with each part of the question.
+
+You can run all the tests at once by clicking the :guilabel:`Run all unit tests` button.
+
+If there are any errors which mean the tests can't be run, they are shown at the top of the list of tests.
+
+Each test's status is shown in the rightmost column.
+
+You can click on a test's name to go to its definition in the part editor.
 
 .. access:
 
@@ -743,28 +772,30 @@ You can control who is allowed to see, and to edit, your questions.
 When you create a new question, access is limited to you and any other members of the project the question belongs to.
 You can grant extra access to indvidual users or *publish* your question to the public database, where it can be viewed by any other user.
 
-.. topic:: Give access to a user
+Give access to a user
+---------------------
 
-    Type a name into the search box to find a user. 
-    Click on a user's name in the results list to add them to the access list. 
+Type a name into the search box to find a user. 
+Click on a user's name in the results list to add them to the access list. 
 
-    Named users can have the following rights:
+Named users can have the following rights:
 
-    .. glossary::
+.. glossary::
 
-        Can view this
-            The named user can see, but not edit, this question.
+    Can view this
+        The named user can see, but not edit, this question.
 
-        Can edit this
-            The named user can see this question and make changes to it.
+    Can edit this
+        The named user can see this question and make changes to it.
 
-.. topic:: Access Links
-    
-    The URLs in this section automatically grant access to whoever follows them. 
-    You could use these links to share a question with someone who hasn't yet created an account on the editor, or to share a question with a group of people without inviting each person individually.
+Access Links
+------------
 
-    .. warning::
-        These URLs grant access to whoever clicks on them, so be careful about how they're shared.
+The URLs in this section automatically grant access to whoever follows them. 
+You could use these links to share a question with someone who hasn't yet created an account on the editor, or to share a question with a group of people without inviting each person individually.
+
+.. warning::
+    These URLs grant access to whoever clicks on them, so be careful about how they're shared.
 
 Exams using this question
 =========================

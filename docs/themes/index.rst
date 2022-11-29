@@ -69,7 +69,7 @@ A theme is a folder containing the following three things:
 * A folder called ``files`` containing static files to be included in the compiled exam. 
   For a theme which does not extend another, this contains at the minimum a JavaScript file ``files/scripts/display.js``.
 * A folder called ``templates`` containing, at the least, two files, called ``templates/index.html`` and ``templates/question.xslt``.
-  These files are `jinja2 <http://jinja.pocoo.org/>`_ templates which will produce the HTML for the exam and the XSLT stylesheet for questions, respectively.
+  These files are `jinja2 <https://jinja.palletsprojects.com/en/2.11.x/>`_ templates which will produce the HTML for the exam and the XSLT stylesheet for questions, respectively.
 
 .. note:: 
 
@@ -86,7 +86,7 @@ These are the only files you need to load from your theme's ``index.html`` - all
 HTML and XSLT templates
 -----------------------
 
-The files ``index.html`` and ``question.xslt`` are produced using `jinja2 <http://jinja.pocoo.org/>`_.
+The files ``index.html`` and ``question.xslt`` are produced using `jinja2 <https://jinja.palletsprojects.com/en/2.11.x/>`_.
 The main reason for this is to allow authors to override sections of the layout, while inheriting the rest from the base theme.
 
 While jinja2 is a very powerful templating language, it's used in the default theme solely as a way of including sub-templates with the ``{% include "filename.html" %}`` tag.

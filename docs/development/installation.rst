@@ -3,6 +3,8 @@ Setting up a development environment
 
 These instructions will describe how to set up a development environment for the Numbas runtime and editor.
 
+The editor is a `Django <https://www.djangoproject.com/>`__ app.
+
 .. todo::
 
     Include a screencast of me going through these steps?
@@ -17,7 +19,7 @@ You'll need Python 3.8 or later and the version control tool *git*.
 Windows
 *******
 
-#.  Install Python 3 from `python.org/download <http://python.org/download/>`_.
+#.  Install Python 3 from `python.org/download <https://python.org/download/>`_.
 
 #.  Install `Git for Windows <https://git-scm.com/downloads>`_.
 
@@ -113,16 +115,22 @@ Run the "first setup" script:
     $ cd editor
     $ python first_setup.py
 
-This will configure the editor based on your answers to a few questions, and write the file ``numbas/settings.py``.
+This starts a web-based setup interface where you can configure the editor's settings.
 
-Answer ``Y`` to the first question, "Is this installation for development?", and then enter details for your admin account.
+Open http://localhost:8000 in your browser.
+
+.. image:: images/web-setup.png
+   :alt: The web-based setup interface.
+
+Tick :guilabel:`Is this installation for development?`, fill in the :guilabel:`Path of the Numbas compiler` field and the superuser details.
+Then click :guilabel:`Save`.
+
+Once the setup jobs have finished, go back to the terminal and end the setup script (normally :kbd:`Ctrl-C` does it)).
 
 If you make any mistakes, you can run the script again, or edit ``numbas/settings.py`` directly.
 
 Run the editor server
 ---------------------
-
-The editor is a `Django <https://www.djangoproject.com/>`__ app.
 
 There is a script called ``manage.py`` which provides a variety of tools, including a development server.
 

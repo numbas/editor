@@ -28,7 +28,7 @@ Topics covered include:
 
     <iframe src="https://player.vimeo.com/video/438881068?portrait=0" width="640" height="360" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
 
-There is `a transcript of this recording <http://www.numbas.org.uk/talks/numbas-training-2020-07-15/>`__.
+There is `a transcript of this recording <https://www.numbas.org.uk/talks/numbas-training-2020-07-15/>`__.
 
 .. _training-recording-advanced-2020-07-22:
 
@@ -50,4 +50,4 @@ Topics covered include:
 
     <iframe src="https://player.vimeo.com/video/442721457?portrait=0" width="640" height="360" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
 
-There is `a transcript of this recording <http://www.numbas.org.uk/talks/numbas-advanced-training-2020-07-22>`__.
+There is `a transcript of this recording <https://www.numbas.org.uk/talks/numbas-advanced-training-2020-07-22>`__.

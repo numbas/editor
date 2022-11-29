@@ -27,10 +27,10 @@ produces
 
         x = \frac{ -b \pm \sqrt{ b^2-4ac } }{ 2a }
     
-If you've never used LaTeX before, a couple of good places to start are the `LaTeX maths Wikibook <http://en.wikibooks.org/wiki/LaTeX/Mathematics>`_ and the `Art of Problem Solving LaTeX Guide <http://www.artofproblemsolving.com/Wiki/index.php/LaTeX:Commands>`_. 
+If you've never used LaTeX before, a couple of good places to start are the `LaTeX maths Wikibook <https://en.wikibooks.org/wiki/LaTeX/Mathematics>`_ and the `Art of Problem Solving LaTeX Guide <https://artofproblemsolving.com/wiki/index.php/LaTeX:Commands>`_. 
 Bear in mind that LaTeX is only used for maths-mode, so the text-mode LaTeX commands don't apply.
 
-To find the command for a symbol you want to use, draw it in `Detexify <http://detexify.kirelabs.org/classify.html>`_ and it will show you the commands for the most similar-looking symbols.
+To find the command for a symbol you want to use, draw it in `Detexify <https://detexify.kirelabs.org/classify.html>`_ and it will show you the commands for the most similar-looking symbols.
 
 MathJax
 -------

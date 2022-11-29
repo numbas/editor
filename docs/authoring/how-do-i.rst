@@ -83,9 +83,10 @@ Include an interactive diagram
 
     There are a few ways of including an interactive diagram in a Numbas question. 
 
-    `JSXGraph <http://jsxgraph.uni-bayreuth.de/>`__ is a JavaScript library for creating interactive diagramss. There is :ref:`an extension <jsxgraph-extension>` which allows you to create JSXGraph diagrams using JME or JavaScript code.
+    `JSXGraph <https://jsxgraph.org>`__ is a JavaScript library for creating interactive diagrams.
+    There is :ref:`an extension <jsxgraph-extension>` which allows you to create JSXGraph diagrams using JME or JavaScript code.
 
-    `GeoGebra <http://www.geogebra.org>`__ applets are much easier to create and use, but are loaded from `geogebra.org <http://www.geogebra.org>`__ so the student must have internet access in order to use any questions containing GeoGebra applets.
+    `GeoGebra <https://www.geogebra.org>`__ applets are much easier to create and use, but are loaded from `geogebra.org <https://www.geogebra.org>`__ so the student must have internet access in order to use any questions containing GeoGebra applets.
     For more information, see the page on the :ref:`GeoGebra extension <geogebra-extension>`.
 
     `Eukleides <https://numbas.github.io/numbas-extension-eukleides/docs/>`__ is a Numbas extension designed to easily produce accessible, dynamic diagrams.
@@ -427,7 +428,7 @@ See `this example question <https://numbas.mathcentre.ac.uk/question/26868/use-a
 Load JSON data
 --------------
 
-`JSON <http://www.json.org/>`__ is a commonly-used format to store data in a way that is easy for both people and computers to read. 
+`JSON <https://www.json.org/>`__ is a commonly-used format to store data in a way that is easy for both people and computers to read. 
 
 The following questions show how to use large JSON data sets in Numbas questions:
 

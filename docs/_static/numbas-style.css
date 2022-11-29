@@ -50,6 +50,10 @@
 
 }
 
+#main-content a.reference {
+    text-decoration: underline;
+}
+
 .toc-h2 {
  font-size: 1rem;
 }
@@ -66,6 +70,7 @@
 
 #main-content img {
 	border: 1px solid #999;
+    margin: 1em 0;
 }
 
 iframe {

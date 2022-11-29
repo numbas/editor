@@ -1,7 +1,9 @@
+.. _server-installation:
+
 Installing an editor server
 ===========================
 
-If you just want to create your own Numbas content, `the editor hosted by mathcentre <http://numbas.mathcentre.ac.uk>`_ is free to use and doesn't need any setup.
+If you just want to create your own Numbas content, `the editor hosted by mathcentre <https://numbas.mathcentre.ac.uk>`_ is free to use and doesn't need any setup.
 
 These instructions are only needed if you want to set up your own private editing server.
 

@@ -6,9 +6,9 @@ Writing an extension
 Creating a new extension
 ------------------------
 
-To begin writing an extension, click on the :guilabel:`Profile` link, then :guilabel:`Extensions`.
+To begin writing an extension from scratch, click on the :guilabel:`Profile` link, then :guilabel:`Extensions`.
 
-Click the :guilabel:`Create a new extension button`.
+Click the :guilabel:`Create a new extension` button.
 On the following page, enter a name for your extension and click :guilabel:`Submit`.
 Note that the extension's name must be unique among all extensions in the database, so you might need to change your chosen name if someone else has already used it.
 
@@ -21,7 +21,7 @@ The :guilabel:`Upload an extension` link takes you to a form where you can uploa
 
 Either upload a single JavaScript file, or a .zip file containing all of the extension's files.
 
-After uploading your extension, you will be returned to the list of your extensions.
+After uploading your extension, you will be presented with the editor for the extension's main script file.
 
 .. glossary::
     Name:
@@ -59,13 +59,15 @@ You can give other users the ability to *view* your extension, which will allow 
 Contents of an extension
 ------------------------
 
+.. highlight:: javascript
+
 The minimum an extension must contain is a file named ``<extension-name>.js``, containing the following::
 
     Numbas.addExtension('<extension-name>',['base'],function(extension) {
 
     });
 
-(See the API documentation for `Numbas.addExtension <http://numbas.github.io/Numbas/Numbas.html#addExtension>`_ for details on how this function works)
+(See the API documentation for `Numbas.addExtension <https://docs.numbas.org.uk/runtime_api/en/latest/Numbas.html#.addExtension>`_ for details on how this function works)
 
 This function call tells Numbas that the extension has loaded.
 Because Numbas can't guarantee the order script files will be loaded in, code which uses the `Numbas` object must be placed inside the callback function given to ``Numbas.addExtension``.
@@ -79,7 +81,7 @@ Extensions created through the editor automatically have a ``README.md`` file, w
 Adding JME functions
 --------------------
 
-An extension can add JME functions (or rulesets, or anything else that goes in a `Scope <http://numbas.github.io/Numbas/Numbas.jme.Scope.html>`_ object by manipulating the ``extension.scope`` object.
+An extension can add JME functions (or rulesets, or anything else that goes in a `Scope <https://docs.numbas.org.uk/runtime_api/en/latest/Numbas.jme.Scope.html>`_ object by manipulating the ``extension.scope`` object.
 Here's an example which adds a single JME function::
 
     Numbas.addExtension('difference',['jme'],function(extension) {

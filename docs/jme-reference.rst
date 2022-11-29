@@ -2553,7 +2553,7 @@ Logic
     Vectors, matrices, and lists are considered equal only if every pair of corresponding elements in ``a`` and ``b`` is "close enough".
 
     ``checkingFunction`` is the name of a checking function to use.
-    These are documented in `the Numbas runtime documentation <http://numbas.github.io/Numbas/Numbas.jme.html#.checkingFunctions>`_.
+    These are documented in `the Numbas runtime documentation <https://docs.numbas.org.uk/runtime_api/en/latest/Numbas.jme.html#.checkingFunctions>`_.
 
     **Definitions**:
         * anything, anything, :data:`string`, :data:`number` → :data:`boolean`
@@ -3599,7 +3599,7 @@ HTML
 JSON
 ----
 
-`JSON <http://www.json.org/>`_ is a lightweight data-interchange format.
+`JSON <https://www.json.org/>`_ is a lightweight data-interchange format.
 Many public data sets come in JSON format; it's a good way of encoding data in a way that is easy for both humans and computers to read and write.
 
 For an example of how you can use JSON data in a Numbas question, see the exam `Working with JSON data <https://numbas.mathcentre.ac.uk/exam/4684/working-with-json-data/>`_.

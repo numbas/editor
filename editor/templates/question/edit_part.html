@@ -327,11 +327,12 @@
 
                         <div class="help-block">
                             <p>
-                                Click on a note's name to show or hide it. Only shown notes will be included when you create a unit test. 
+                                Click on a note's name to show or hide it.{% if editable %} Only shown notes will be included when you create a unit test.{% endif %}
                             </p>
                         </div>
-
+                        {% if editable %}
                         <button class="btn btn-primary" type="button" data-bind="click: $parent.addUnitTest, disable: !canCreateUnitTest()">Create a unit test</button>
+                        {% endif %}
                     </div>
                     <!-- /ko -->
                 </section>

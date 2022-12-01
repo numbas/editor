@@ -2119,7 +2119,7 @@ $(document).ready(function() {
         },
         template: '\
             <ul class="list-inline" data-bind="foreach: items">\
-                <button type="button" class="btn btn-default btn-sm" data-bind="click: $parent.edit_item, text: $data"></button>\
+                <button type="button" class="btn btn-default btn-sm" data-bind="click: $parent.edit_item, text: $data, attr: {disabled: $parent.disabled}"></button>\
             </ul>\
             <input type="text" class="form-control" data-bind="visible: !disabled, textInput: value, event: {blur: blur, keydown: keydown}">\
         '

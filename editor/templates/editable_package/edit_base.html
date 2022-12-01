@@ -52,6 +52,8 @@
             {% for fname, is_dir in filenames %}
             <a class="list-group-item monospace{% if fname == filename %} active{% endif %}{% if is_dir %} dir{% endif %}" href="{% package_url 'edit_source' object.pk %}?filename={{fname}}">{{fname.name}}</a>
             {% endfor %}
+
+            {% if editable %}
             <li class="list-group-item">
                 <form method="GET" action="{% package_url 'edit_source' object.pk %}" class="form-inline">
                     <label>
@@ -94,6 +96,7 @@
                     Upload a new file
                 </button>
             </li>
+            {% endif %}
         </ul>
         {% else %}
         <div class="panel-body">

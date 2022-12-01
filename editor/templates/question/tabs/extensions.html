@@ -208,7 +208,7 @@
                 <ul data-bind="foreach: builtin_constants">
                     <li>
                         <label>
-                            <input type="checkbox" data-bind="checked: enabled">
+                            <input type="checkbox" data-bind="checked: enabled" {% if not editable %}disabled{% endif %}>
                             <code data-bind="text: name"></code> - <span class="help-text" data-bind="latex: description"></span>
                         </label>
                     </li>
@@ -240,12 +240,16 @@
                                 <span class="jme-preview" data-bind="inline_latex: tex"></span>
                             </td>
                             <td>
+                                {% if editable %}
                                 <button type="button" class="btn btn-sm btn-danger" data-bind="click: remove"><span class="glyphicon glyphicon-remove"></span> Delete this constant</button>
+                                {% endif %}
                             </td>
                         </tr>
                     </tbody>
                 </table>
+                {% if editable %}
                 <button type="button" class="btn btn-primary" data-bind="click: addConstant"><span class="glyphicon glyphicon-plus"></span><span data-bind="text: constants().length ? 'Add another constant' : 'Add a constant' "></span></button>
+                {% endif %}
             </section>
             <section class="tab-pane" data-bind="activeIf: ko.unwrap(extensionTabs.currentTab().id)=='preamble'">
                 <p class="help-block">

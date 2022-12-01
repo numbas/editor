@@ -80,7 +80,7 @@
   grid-area: editor;
   overflow: hidden;
   display: grid;
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto 1fr;
   height: 100%;
   overflow-y: hidden;
 }
@@ -93,4 +93,8 @@
 
 #content .CodeMirror {
   height: auto;
+}
+
+#content .CodeMirror-scroll {
+    max-height: none;
 }

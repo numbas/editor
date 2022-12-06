@@ -81,6 +81,10 @@ Marking
         This option only applies when a precision restriction is selected. 
         If the student does not give all of the cells in their answer to the required precision, they are given this feedback message.
  
+    Pre-filled cells
+        A 2D array of either :data:`string` or :data:`number` values, giving values to fill the cells of the matrix with.
+        An empty string ``""`` denotes a blank cell that the student can write an answer in; any other value is filled in and the student may not change it.
+
 Marking settings
 ################
 

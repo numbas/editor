@@ -8138,6 +8138,53 @@ jme.display = /** @lends Numbas.jme.display */ {
      */
     simplifyTree: function(exprTree,ruleset,scope,allowUnbound) {
         return ruleset.simplify(exprTree,scope);
+    },
+
+
+    /** Substitute values into a JME string, and return an expression tree.
+     *
+     * @param {JME} expr
+     * @param {Numbas.jme.Scope} scope
+     * @returns {Numbsa.jme.tree}
+     */
+    subvars: function(expr, scope) {
+        var sbits = Numbas.util.splitbrackets(expr,'{','}');
+        var wrapped_expr = '';
+        var subs = [];
+        for(var j = 0; j < sbits.length; j += 1) {
+            if(j % 2 == 0) {
+                wrapped_expr += sbits[j];
+            } else {
+                var v = scope.evaluate(sbits[j]);
+                if(Numbas.jme.display.treeToJME({tok:v},{},scope)=='') {
+                    continue;
+                }
+                subs.push(v);
+                wrapped_expr += ' texify_simplify_subvar('+(subs.length-1)+')';
+            }
+        }
+
+        var tree = Numbas.jme.compile(wrapped_expr);
+
+        /** Replace instances of `texify_simplify_subvar(x)` anywhere in the tree with the result of evaluating `x`.
+         *
+         * @param {Numbas.jme.tree} tree
+         * @returns {Numbas.jme.tree}{
+         */
+        function replace_subvars(tree) {
+            if(tree.tok.type=='function' && tree.tok.name == 'texify_simplify_subvar'){ 
+                return {tok: subs[tree.args[0].tok.value]};
+            }
+            if(tree.args) {
+                var args = tree.args.map(replace_subvars);
+                return {tok: tree.tok, args: args};
+            }
+            return tree;
+        }
+
+        var subbed_tree = replace_subvars(tree);
+
+        return subbed_tree;
     }
 };
 
@@ -12634,6 +12681,10 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         var math = Numbas.math;
         var util = Numbas.util;
         withEnv = withEnv || {};
+        var env_args = Object.entries(withEnv).map(([name,v]) => {
+            paramNames.push(name);
+            return v;
+        });
         try {
             var jfn = new Function(paramNames,fn.definition);
         } catch(e) {
@@ -12648,6 +12699,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
             }
             args = args.map(function(a){return jme.unwrapValue(a)});
             args.push(scope);
+            args = args.concat(env_args);
             try {
                 var val = jfn.apply(this,args);
                 if(val===undefined) {

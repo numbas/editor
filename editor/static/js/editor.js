@@ -102,20 +102,7 @@ $(document).ready(function() {
 
             var scope = currentScope;
 
-            var tree = Numbas.jme.compile(wrap_subvar(expr));
-
-            function subvars(tree) {
-                if(tree.tok.type=='function' && tree.tok.name == 'subvar'){ 
-                    return {tok: scope.evaluate(tree.args[0])};
-                }
-                if(tree.args) {
-                    var args = tree.args.map(subvars);
-                    return {tok: tree.tok, args: args};
-                }
-                return tree;
-            }
-
-            var subbed_tree = subvars(tree);
+            var subbed_tree = Numbas.jme.display.subvars(expr, scope);
 
             var tex = Numbas.jme.display.treeToLaTeX(subbed_tree, ruleset, scope);
 

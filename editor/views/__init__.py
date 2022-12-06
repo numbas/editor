@@ -14,6 +14,9 @@ import json
 from random import shuffle, randint
 import re
 
+def request_is_ajax(request):
+    return request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
 class HomeView(TemplateView):
     template_name = 'index.html'
 
@@ -113,7 +116,7 @@ class ExploreView(TemplateView):
 
 class TopSearchView(ListView):
     def render_to_response(self, context, **response_kwargs):
-        if self.request.accepts('application/json'):
+        if request_is_ajax(self.request):
             return HttpResponse(json.dumps(context['object_list']),
                                 content_type='application/json',
                                 **response_kwargs)

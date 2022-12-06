@@ -9,6 +9,7 @@ from django.template.loader import render_to_string
 import editor.forms
 from editor.models import Folder, Project
 import editor.views
+from editor.views import request_is_ajax
 import editor.views.generic
 from editor.views.generic import ProjectQuerysetMixin
 
@@ -32,7 +33,7 @@ class MoveFolderView(MustBeEditorMixin, generic.FormView):
         return Project.objects.get(pk=project_pk)
 
     def form_invalid(self,form):
-        if self.request.accepts('application/json'):
+        if request_is_ajax(self.request):
             return http.JsonResponse(form.errors, status=400)
 
     def form_valid(self, form):
@@ -49,7 +50,7 @@ class MoveFolderView(MustBeEditorMixin, generic.FormView):
             folder_name = project.name
             folder_url = reverse('project_browse',args=(project.pk,''))
 
-        if self.request.accepts('application/json'):
+        if request_is_ajax(self.request):
             num_moved = len(folders) + len(items)
             message = render_to_string('folder/moved_message.html',{
                 'folder_name': folder_name, 

@@ -42,6 +42,7 @@ from editor.tables import EditorItemTable, RecentlyPublishedTable
 from editor.models import EditorItem, Project, IndividualAccess, Licence, PullRequest, Taxonomy, Contributor, Folder
 import editor.models
 import editor.views.generic
+from editor.views import request_is_ajax
 from editor.views.generic import ProjectQuerysetMixin
 from editor.views.errors import forbidden
 from editor.views.user import find_users
@@ -142,14 +143,14 @@ class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMix
             except IntegrityError:
                 continue
 
-        if self.request.accepts('application/json'):
+        if request_is_ajax(self.request):
             return http.HttpResponse(json.dumps(obj2.summary()), content_type='application/json')
         else:
             return redirect(obj2.get_absolute_url())
 
     def form_invalid(self, form):
         response = super(CopyView, self).form_invalid(form)
-        if self.request.accepts('application/json'):
+        if request_is_ajax(self.request):
             return http.JsonResponse(form.errors, status=400)
         else:
             return response

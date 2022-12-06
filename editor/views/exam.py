@@ -20,6 +20,7 @@ from editor.forms import ExamForm, NewExamForm, UploadExamForm
 from editor.models import NewExam, NewQuestion, EditorItem
 import editor.models
 from editor.models import Theme, Extension, Contributor
+from editor.views import request_is_ajax
 import editor.views.editoritem
 import editor.views.generic
 from editor.views.errors import forbidden
@@ -342,7 +343,7 @@ class SetRestorePointView(editor.views.generic.SetRestorePointView):
     model = NewExam
 
 def question_lists(request, pk):
-    if not request.accepts('application/json'):
+    if not request_is_ajax(request):
         raise Http404
 
     exam = NewExam.objects.get(pk=pk)

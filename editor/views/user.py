@@ -5,6 +5,7 @@ from django.http import Http404, HttpResponse
 from django.urls import reverse
 
 from accounts.util import find_users
+from editor.views import request_is_ajax
 
 class UserSearchView(ListView):
     
@@ -13,7 +14,7 @@ class UserSearchView(ListView):
     model = User
     
     def render_to_response(self, context, **response_kwargs):
-        if self.request.accepts('application/json'):
+        if request_is_ajax(self.request):
             return HttpResponse(json.dumps(context['object_list']),
                                 content_type='application/json',
                                 **response_kwargs)

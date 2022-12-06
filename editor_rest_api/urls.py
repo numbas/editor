@@ -1,4 +1,4 @@
-from django.conf.urls import url,include
+from django.urls import path,include
 
 from rest_framework import routers
 from . import viewsets
@@ -12,6 +12,6 @@ router.register(r'resources',viewsets.ResourceViewSet)
 router.register(r'available-exams', viewsets.AvailableExamsViewSet,basename='available-exams')
 
 urls = [
-    url(r'^', include(router.urls)),
-    url(r'^handshake$',viewsets.handshake),
+    path(r'', include(router.urls)),
+    path(r'handshake',viewsets.handshake),
 ]

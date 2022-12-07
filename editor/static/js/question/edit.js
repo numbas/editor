@@ -2240,6 +2240,14 @@ $(document).ready(function() {
             return val.type;
         },this);
 
+        this.isHTML = ko.pureComputed(function() {
+            var val = this.value();
+            if(!val || this.error()) {
+                return false;
+            }
+            return Numbas.jme.isType(val,'html');
+        },this);
+
         this.thisLocked = ko.observable(false);
         var lockedSeen = {};
         var lockedDepth = 0;

@@ -85,7 +85,7 @@ class ControlledObject(object):
         if getattr(settings, 'EVERYTHING_VISIBLE', False):
             return True
         
-        return (self.superuser_sees_everything and user.is_superuser) or (self.owner == user) or self.is_published() or (self.has_access(user, ('view', 'edit')))
+        return (self.superuser_sees_everything and user.is_superuser) or user.has_perm('editor.view_everything') or (self.owner == user) or self.is_published() or (self.has_access(user, ('view', 'edit')))
 
     def can_be_edited_by(self, user):
         return (user.is_superuser) or (self.owner == user) or self.has_access(user, ('edit',))
@@ -1201,6 +1201,10 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
 
     class Meta:
         ordering = (Lower('name'),)
+
+        permissions = [
+            ("view_everything", "Can view everything"),
+        ]
 
     def __str__(self):
         return self.name

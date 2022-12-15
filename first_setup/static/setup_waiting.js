@@ -27,7 +27,7 @@ function factorise(n) {
 
 function show_time_taken(dt) {
     dt = Math.floor(dt/1000);
-    if(dt>1000) {
+    if(dt<2 || dt>1000) {
         return dt+'';
     }
 

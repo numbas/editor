@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block head %}
+<script src="/static/setup_waiting.js"></script>
+{% endblock head %}
+
+{% block main %}
+    <section id="intro">
+        <p>The last few setup jobs are running.</p>
+    </section>
+
+    <section id="progress">
+        <p>The setup jobs have taken <strong id="time-taken">0</strong> seconds.</p>
+    </section>
+
+{% endblock main %}

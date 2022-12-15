@@ -16184,7 +16184,7 @@ Copyright 2011-14 Newcastle University
    limitations under the License.
 */
 /** @file The {@link Numbas.Question} object */
-Numbas.queueScript('standard_parts',['parts/jme','parts/patternmatch','parts/numberentry','parts/matrixentry','parts/multipleresponse','parts/gapfill','parts/information','parts/extension'],function() {});
+Numbas.queueScript('standard_parts',['parts/jme','parts/patternmatch','parts/numberentry','parts/matrixentry','parts/multipleresponse','parts/gapfill','parts/information','parts/extension','parts/custom_part_type'],function() {});
 Numbas.queueScript('question',['base','schedule','jme','jme-variables','util','part','standard_parts'],function() {
 var util = Numbas.util;
 var jme = Numbas.jme;
@@ -16958,7 +16958,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                     }
                     seen_names[n] = true;
                 });
-                var definition = def.definition.trim();
+                var definition = def.definition.toString().trim();
                 if(name=='') {
                     if(definition=='') {
                         return;
@@ -26688,7 +26688,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         }
         if('answers' in data) {
             if(typeof(data.answers)=='string') {
-                answers = jme.evaluate(data.answers, scope);
+                var answers = jme.evaluate(data.answers, scope);
                 if(!answers || !jme.isType(answers,'list')) {
                     this.error('part.mcq.options def not a list',{properties: 'answer'});
                 }

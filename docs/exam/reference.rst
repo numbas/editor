@@ -257,6 +257,10 @@ Feedback
         This text is shown to the student on the front page, before the exam starts. 
         You could use it to outline the rules of the exam, or just summarise the subjects covered.
 
+    End message
+        This text is shown to the student on the results page, after the exam has finished.
+        You could use it to tell the student what to do next, if there are offline components to the assessment.
+
     Feedback messages
         You can write a list of messages, paired with threshold percentages, to show to the student at the end of the exam.
         The student's score is calculated as a percentage, rounded to the nearest 1%, and compared with the thresholds for each message.

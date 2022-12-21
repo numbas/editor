@@ -2060,6 +2060,45 @@ Vector and matrix arithmetic
     **Example**:
         * ``combine_diagonally(id(3), matrix([3,4],[5,6]))`` → ``matrix([1,0,0,0,0],[0,1,0,0,0],[0,0,1,0,0],[0,0,0,3,4],[0,0,0,5,6])``
 
+.. jme:function:: lu_decomposition(m)
+    :keywords: matrices, matrix, decomposition, decompose, upper, lower, triangular
+
+    Perform LU-decomposition: decompose the given matrix into a lower-triangular matrix :math:`L` and an upper-triangular matrix :math:`U`, such that :math:`m = LU`.
+
+    The matrix must be square.
+
+    Returns a list ``[L, U]``.
+
+    **Definitions**:
+        * :data:`matrix` → :data:`list`
+
+    **Example**:
+        * ``lu_decomposition(matrix([1,2,3],[4,5,6],[7,8,10]))`` → ``[ matrix([1,0,0],[4,-3,0],[7,-6,1]), matrix([1,2,3],[0,1,2],[0,0,1]) ]``
+
+.. jme:function:: gauss_jordan_elimination(m)
+    :keywords: matrices, matrix, gaussian, gauss, jordan, elimination, row, reduction, reduced, echelon, form
+
+    Perform Gaussian elimination: given a :math:`m \times n` matrix, where :math:`n \geq m`, reduce the rows so that the leading coefficient in each row is :math:`1`, and every column containing a leading coefficient has zeros in every other row.
+
+    **Definitions**:
+        * :data:`matrix` → :data:`matrix`
+
+    **Example**:
+        * ``gauss_jordan_elimination(matrix([1,2,3,5],[5,6,9,11],[6,9,12,15]))`` → ``matrix([1,0,0,-2],[0,1,0,-1],[0,0,1,3])``
+
+.. jme:function:: inverse(m)
+    :keywords: invert, matrix, matrices
+
+    Find the inverse of the given square matrix.
+
+    If the matrix is not invertible, an error will be thrown.
+
+    **Definitions**:
+        * :data:`matrix` → :data:`matrix`
+
+    **Example**:
+        * ``inverse(matrix([1,2,3],[5,6,9],[4,8,14]))`` → ``matrix([-1.5,0.5,0],[4.25,-0.25,-0.75],[-2,0,0.5])``
+
 .. _jme-fns-strings:
 
 Strings

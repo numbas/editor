@@ -1460,6 +1460,57 @@ var jme_function_hints =
         "doc": "jme-reference"
     },
     {
+        "name": "lu_decomposition",
+        "description": "Perform LU-decomposition: decompose the given matrix into a lower-triangular matrix $L$ and an upper-triangular matrix $U$, such that $m = LU$.",
+        "keywords": [
+            "matrices",
+            "matrix",
+            "decomposition",
+            "decompose",
+            "upper",
+            "lower",
+            "triangular"
+        ],
+        "calling_patterns": [
+            "lu_decomposition(m)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "gauss_jordan_elimination",
+        "description": "Perform Gaussian elimination: given a $m \\times n$ matrix, where $n \\geq m$, reduce the rows so that the leading coefficient in each row is $1$, and every column containing a leading coefficient has zeros in every other row.",
+        "keywords": [
+            "matrices",
+            "matrix",
+            "gaussian",
+            "gauss",
+            "jordan",
+            "elimination",
+            "row",
+            "reduction",
+            "reduced",
+            "echelon",
+            "form"
+        ],
+        "calling_patterns": [
+            "gauss_jordan_elimination(m)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "inverse",
+        "description": "Find the inverse of the given square matrix.",
+        "keywords": [
+            "invert",
+            "matrix",
+            "matrices"
+        ],
+        "calling_patterns": [
+            "inverse(m)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
         "name": "listval",
         "description": "Get the Nth character of the string <code>x</code>.\nIndices start at 0.",
         "keywords": [

@@ -132,7 +132,7 @@ class DeleteFolderView(MustBeEditorMixin, generic.DeleteView):
             item.folder = self.object.parent
             item.save()
 
-        return super().delete(request,*args,**kwargs)
+        return super().delete(self.request)
 
     def get_success_url(self):
         if self.object.parent:

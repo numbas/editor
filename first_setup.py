@@ -218,7 +218,7 @@ class Command:
                 make_question('STATIC_ROOT', 'Where are static files stored?', '/srv/numbas/static/', validation = path_exists, dev_value = 'editor/static'),
                 make_question('MEDIA_ROOT', 'Where are uploaded files stored?', '/srv/numbas/media/', validation = path_exists, dev_value = 'media'),
                 make_question('PREVIEW_PATH', 'Where are preview exams stored?', '/srv/numbas/previews/', dev_value = 'editor/static/previews'),
-                make_question('PREVIEW_URL', 'Base URL of previews:', '/numbas-previews/', dev_value = '/static/previews'),
+                make_question('PREVIEW_URL', 'Base URL of previews:', '/numbas-previews/', dev_value = '/static/previews/'),
                 make_question('PYTHON_EXEC', 'Python command:', 'python3', validation = validate_python_exec, dev_value = 'python3'),
             ]),
             ("Database connection", [

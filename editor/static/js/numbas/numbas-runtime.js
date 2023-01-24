@@ -2281,7 +2281,7 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
         data = {
             name: name,
             value: data.value,
-            tex: data.tex
+            tex: data.tex || name
         };
         name = jme.normaliseName(name, this);
         this.constants[name] = data;
@@ -6358,6 +6358,7 @@ newBuiltin('min', [sig.listof(sig.type('decimal'))], TDecimal, function(l) { ret
 newBuiltin('dpformat',[TDecimal,TNum], TString, function(a,dp) {return a.toFixed(dp); });
 newBuiltin('tonearest',[TDecimal,TDecimal], TDecimal, function(a,x) {return a.toNearest(x.re); });
 newBuiltin('^',[TDecimal,TDecimal], TDecimal, function(a,b) {return a.pow(b); });
+newBuiltin('^', [TInt,TDecimal], TDecimal, function(a,b) { return (new math.ComplexDecimal(math.numberToDecimal(a))).pow(b); });
 newBuiltin('sigformat',[TDecimal,TNum], TString, function(a,sf) {return a.toPrecision(sf); });
 function_with_precision_info('siground', function(a,dp) {return a.toSignificantDigits(dp); }, TDecimal, 'sigfig');
 newBuiltin('formatnumber', [TDecimal,TString], TString, function(n,style) {return math.niceComplexDecimal(n,{style:style});});
@@ -8176,6 +8177,9 @@ jme.display = /** @lends Numbas.jme.display */ {
         }
 
         var tree = Numbas.jme.compile(wrapped_expr);
+        if(!tree) {
+            return tree;
+        }
 
         /** Replace instances of `texify_simplify_subvar(x)` anywhere in the tree with the result of evaluating `x`.
          *
@@ -13474,7 +13478,7 @@ DOMcontentsubber.prototype = {
         for(var i=0;i<element.attributes.length;i++) {
             var m;
             var attr = element.attributes[i];
-            if(m = attr.name.match(/^eval-(.*)/)) {
+            if((m = attr.name.match(/^eval-(.*)/) || (m = attr.name.match(/^(alt)/)))) {
                 var name = m[1];
                 var value = jme.subvars(attr.value,scope,true);
                 new_attrs[name] = value;
@@ -14240,6 +14244,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
     /** Perform any tidying up or processing that needs to happen once the part's definition has been loaded.
      */
     finaliseLoad: function() {
+        this.marks = this.marks || 0;
         this.applyScripts();
         if(this.customConstructor) {
             try {
@@ -21322,7 +21327,7 @@ ComplexDecimal.prototype = {
         if(this.isReal() && b.isReal()) {
             return new ComplexDecimal(this.re.pow(b.re),this.im);
         } else {
-            var ss = this.re.times(this.re).plus(b.im.times(b.im));
+            var ss = this.re.times(this.re).plus(this.im.times(this.im));
             var arg1 = Decimal.atan2(this.im,this.re);
             var mag = ss.pow(b.re.dividedBy(2)).times(Decimal.exp(b.im.times(arg1).negated()));
             var arg = b.re.times(arg1).plus(b.im.times(Decimal.ln(ss)).dividedBy(2));
@@ -25175,7 +25180,9 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
              */
             function answer_changed(value) {
                 if(lastValue.value != value.value) {
-                    answerJSON(value);
+                    if(!ko.unwrap(disable)) {
+                        answerJSON(value);
+                    }
                     lastValue = value;
                 }
             }
@@ -26152,6 +26159,9 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         var settings = this.settings;
         var answerSimplification = Numbas.jme.collectRuleset(settings.answerSimplificationString,scope.allRulesets());
         var tree = jme.display.subvars(settings.correctAnswerString, scope);
+        if(!tree && this.marks>0) {
+            this.error('part.jme.answer missing');
+        }
         var expr = jme.display.treeToJME(tree,{plaindecimal: true},scope);
         settings.correctVariables = jme.findvars(jme.compile(expr),[],scope);
         settings.correctAnswer = jme.display.simplifyExpression(
@@ -26160,9 +26170,6 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
             scope
         );
         settings.mustMatchPattern = jme.subvars(settings.mustMatchPatternString || '', scope);
-        if(settings.correctAnswer == '' && this.marks>0) {
-            this.error('part.jme.answer missing');
-        }
         this.markingScope = new jme.Scope(this.getScope());
         this.markingScope.variables = {};
         return settings.correctAnswer;

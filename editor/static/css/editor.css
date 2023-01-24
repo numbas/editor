@@ -421,3 +421,7 @@ body.fill-viewport .page-header h1 {
     background-color: #e6e6e6;
     color: black;
 }
+
+.label-block > .label-text ~ * {
+    font-weight: normal;
+}

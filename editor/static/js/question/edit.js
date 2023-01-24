@@ -1929,6 +1929,39 @@ $(document).ready(function() {
         return {names: names, nameError: nameError};
     }
 
+    class BlopWidget extends HTMLElement {
+        get observedAttributes() { return ['value']; }
+
+        constructor() {
+            super();
+            this.attachShadow({mode:'open'});
+            const input = document.createElement('input');
+            input.setAttribute('type','file');
+            input.addEventListener('drop', async e => {
+                e.stopPropagation();
+
+                console.log(e.dataTransfer.items);
+
+                const file = [...e.dataTransfer.items].filter(item => item.kind == 'file')[0];
+
+                if(!file) {
+                    return;
+                }
+
+                const data = await file.getAsFile().arrayBuffer();
+                const wb = XLSX.read(data, {sheetStubs: true});
+
+                this.dispatchEvent(new CustomEvent('change', {detail: {value: wb}}));
+            });
+            this.shadowRoot.appendChild(input);
+        }
+
+        attributeChangedCallback(name, oldValue, newValue) {
+            console.log(name, newValue);
+        }
+    }
+    window.customElements.define('variable-template-blop', BlopWidget);
+
     function Variable(q,data) {
         var v = this;
         this.question = q;
@@ -1962,7 +1995,307 @@ $(document).ready(function() {
         },this);
 
         this.description = ko.observable('');
-        this.templateType = ko.observable(this.templateTypes[0]);
+
+        var treeToJME = Numbas.jme.display.treeToJME;
+        var wrapValue = Numbas.jme.wrapValue;
+        this.builtin_templateTypes = [
+            {
+                id:  'anything',
+                name: 'JME code',
+                value: {
+                    definition: ko.observable('')
+                },
+                load_definition(definition) {
+                    this.value.definition(definition);
+                },
+                jme_definition() {
+                    var tokens = Numbas.jme.tokenise(this.value.definition());
+                    if(tokens.length > 2) {
+                        if(Numbas.jme.isName(tokens[0],v.name()) && Numbas.jme.isOp(tokens[1],'=')) {
+                            throw("You don't need to include <code>"+v.name()+" =</code> at the start of your definition.");
+                        }
+                    }
+                    return this.value.definition()+'';
+                }
+            },
+
+            {
+                id: 'number', 
+                name: 'Number',
+                value: {
+                    value: ko.observable(0)
+                },
+                load_definition(definition) {
+                    this.value.value(Numbas.jme.evaluate(definition,Numbas.jme.builtinScope).value);
+                },
+                jme_definition() {
+                    var n = parseFloat(this.value.value());
+                    if(isNaN(n)) {
+                        throw("Value is not a number");
+                    }
+                    return treeToJME({tok: wrapValue(parseFloat(this.value.value()))});
+                }
+            },
+            {
+                id: 'range',
+                name: 'Range of numbers',
+                value: {
+                    min: ko.observable(0),
+                    max: ko.observable(1),
+                    step: ko.observable(1)
+                },
+                load_definition(definition) {
+                    var tree = Numbas.jme.compile(definition);
+                    var rule = new Numbas.jme.display.Rule('?;a..?;b#?;c',[]);
+                    var m = rule.match(tree,Numbas.jme.builtinScope);
+                    this.value.min(Numbas.jme.evaluate(m.a,Numbas.jme.builtinScope).value);
+                    this.value.max(Numbas.jme.evaluate(m.b,Numbas.jme.builtinScope).value);
+                    this.value.step(Numbas.jme.evaluate(m.c,Numbas.jme.builtinScope).value);
+                },
+                jme_definition() {
+                    var min = parseFloat(this.value.min());
+                    var max = parseFloat(this.value.max());
+                    var step = parseFloat(this.value.step());
+                    if(isNaN(min)) {
+                        throw('Minimum value is not a number');
+                    } else if(isNaN(max)) {
+                        throw('Maximum value is not a number');
+                    } else if(isNaN(step)) {
+                        throw("Step value is not a number");
+                    }
+
+                    var tree = Numbas.jme.compile('a..b#c');
+                    tree.args[0].args[0] = {tok: wrapValue(parseFloat(this.value.min()))};
+                    tree.args[0].args[1] = {tok: wrapValue(parseFloat(this.value.max()))};
+                    tree.args[1] = {tok: wrapValue(parseFloat(this.value.step()))};
+                    return treeToJME(tree);
+                }
+            },
+            {
+                id: 'randrange',
+                name: 'Random number from a range',
+                value: {
+                    min: ko.observable(0),
+                    max: ko.observable(1),
+                    step: ko.observable(1)
+                },
+                load_definition(definition) {
+                    var tree = Numbas.jme.compile(definition);
+                    var rule = new Numbas.jme.display.Rule('random(?;a..?;b#?;c)',[]);
+                    var m = rule.match(tree,Numbas.jme.builtinScope);
+                    this.value.min(Numbas.jme.evaluate(m.a,Numbas.jme.builtinScope).value);
+                    this.value.max(Numbas.jme.evaluate(m.b,Numbas.jme.builtinScope).value);
+                    this.value.step(Numbas.jme.evaluate(m.c,Numbas.jme.builtinScope).value);
+                },
+                jme_definition() {
+                    var min = parseFloat(this.value.min());
+                    var max = parseFloat(this.value.max());
+                    var step = parseFloat(this.value.step());
+                    if(isNaN(min)) {
+                        throw('Minimum value is not a number');
+                    } else if(isNaN(max)) {
+                        throw('Maximum value is not a number');
+                    } else if(isNaN(step)) {
+                        throw("Step value is not a number");
+                    }
+
+                    var tree = Numbas.jme.compile('random(a..b#c)');
+                    tree.args[0].args[0].args[0] = {tok: wrapValue(parseFloat(this.value.min()))};
+                    tree.args[0].args[0].args[1] = {tok: wrapValue(parseFloat(this.value.max()))};
+                    tree.args[0].args[1] = {tok: wrapValue(parseFloat(this.value.step()))};
+                    return treeToJME(tree);
+                }
+            },
+            {
+                id: 'string', 
+                name: 'Short text string',
+                value: {
+                    value: ko.observable(''),
+                    isTemplate: ko.observable(false)
+                },
+                load_definition(definition) {
+                    var tree = Numbas.jme.compile(definition);
+                    while(Numbas.jme.isFunction(tree.tok,'safe')) {
+                        this.value.isTemplate(true);
+                        tree = tree.args[0];
+                    }
+                    this.value.value(tree.tok.value);
+                },
+                jme_definition() {
+                    var tok = wrapValue(this.value.value());
+                    tok.safe = this.value.isTemplate();
+                    var s = treeToJME({tok: tok});
+                    return s;
+                }
+            },
+            {
+                id: 'long plain string', 
+                name: 'Long plain text string',
+                value: {
+                    value: ko.observable(''),
+                    isTemplate: ko.observable(true)
+                },
+                load_definition(definition) {
+                    var tree = Numbas.jme.compile(definition);
+                    while(Numbas.jme.isFunction(tree.tok,'safe')) {
+                        this.value.isTemplate(true);
+                        tree = tree.args[0];
+                    }
+                    this.value.value(tree.tok.value);
+                },
+                jme_definition() {
+                    var tok = wrapValue(this.value.value());
+                    tok.safe = this.value.isTemplate();
+                    var s = treeToJME({tok: tok});
+                    return s;
+                }
+            },
+            {
+                id: 'long string', 
+                name: 'Formatted text',
+                value: {
+                    value: ko.observable(''),
+                    isTemplate: ko.observable(false)
+                },
+                load_definition(definition) {
+                    var tree = Numbas.jme.compile(definition);
+                    while(Numbas.jme.isFunction(tree.tok,'safe')) {
+                        this.value.isTemplate(true);
+                        tree = tree.args[0];
+                    }
+                    this.value.value(tree.tok.value);
+                },
+                jme_definition() {
+                    var tok = wrapValue(this.value.value());
+                    tok.safe = this.value.isTemplate();
+                    var s = treeToJME({tok: tok});
+                    return s;
+                }
+            },
+            {
+                id: 'mathematical expression',
+                name: 'Abstract mathematical expression',
+                value: {
+                    value: ko.observable(''),
+                },
+                load_definition(definition) {
+                    var tree = Numbas.jme.compile(definition);
+                    tree = tree.args[0];
+                    while(Numbas.jme.isFunction(tree.tok,'safe')) {
+                        tree = tree.args[0];
+                    }
+                    this.value.value(tree.tok.value);
+                },
+                jme_definition() {
+                    var tok = wrapValue(this.value.value());
+                    var tree = Numbas.jme.compile('expression(x)');
+                    tree.args[0] = {tok: tok};
+                    return treeToJME(tree);
+                }
+            },
+            {
+                id: 'list of numbers', 
+                name: 'List of numbers',
+                value: (() => {
+                    const data = {
+                        values: InexhaustibleList(),
+                    }
+                    data.floatValues = ko.pureComputed(function() {
+                        return data.values().map(function(n){return parseFloat(n)});
+                    });
+                    return data;
+                })(),
+                load_definition(definition) {
+                    var tree = Numbas.jme.compile(definition);
+                    this.value.values(tree.args.map(function(t){return Numbas.jme.display.treeToJME(t);}));
+                },
+                jme_definition() {
+                    var values = this.value.values().filter(function(n){return n!=''});
+                    if(!values.every(function(n){return Numbas.util.isNumber(n,true)})) {
+                        throw("One of the values is not a number");
+                    }
+                    return treeToJME(Numbas.jme.compile('['+values.join(',')+']'));
+                }
+            },
+            {
+                id: 'list of strings', 
+                name: 'List of short text strings',
+                value: {
+                    values: InexhaustibleList()
+                },
+                load_definition(definition) {
+                    var tree = Numbas.jme.compile(definition);
+                    this.value.values(tree.args.map(function(t){
+                        while(Numbas.jme.isFunction(t.tok,'safe')) {
+                            t = t.args[0];
+                        }
+                        return t.tok.value;
+                    }));
+                },
+                jme_definition() {
+                    var strings = this.value.values().map(function(s){ 
+                        var tok = wrapValue(s);
+                        tok.safe = false;
+                        return tok;
+                    });
+                    return treeToJME({tok: new Numbas.jme.types.TList(strings)});
+                }
+            },
+            {
+                id: 'json', 
+                name: 'JSON data',
+                value: (() => {
+                    const data = {
+                        value: ko.observable(''),
+                    }
+                    data.prettyPrint = () => {
+                        var val = data.value();
+                        try {
+                            var data = JSON.parse(val);
+                            data.value(JSON.stringify(data,null,4));
+                        } catch(e) {
+                        }
+                    }
+                    return data;
+                })(),
+                load_definition(definition) {
+                    var tree = Numbas.jme.compile(definition);
+                    tree = tree.args[0];
+                    while(Numbas.jme.isFunction(tree.tok,'safe')) {
+                        tree = tree.args[0];
+                    }
+                    this.value.value(tree.tok.value);
+                },
+                jme_definition() {
+                    JSON.parse(this.value.value() || '');
+                    var json = treeToJME({tok: wrapValue(this.value.value())});
+                    return 'json_decode('+json+')';
+                }
+            }
+        ];
+
+        this.extra_template_types = ko.observableArray([
+            {
+                id: 'blop', 
+                name: 'Spreadsheet file',
+                value: ko.observable({}),
+                load_definition(definition) {
+                    var tree = Numbas.jme.compile(definition);
+                    tree = tree.args[0].args[0];
+                    var s = Numbas.jme.builtinScope.evaluate(tree);
+                    this.value(JSON.parse(s.value));
+                },
+                jme_definition() {
+                    const v = this.value();
+                    return 'spreadsheet_from_workbook(json_decode(safe("'+Numbas.jme.escape(JSON.stringify(v))+'")))'
+                },
+                widget: BlopWidget
+            }
+        ]);
+        this.templateTypes = ko.pureComputed(() => {
+            return this.builtin_templateTypes.concat(this.extra_template_types());
+        },this);
+        this.templateType = ko.observable(this.templateTypes()[0]);
 
         function InexhaustibleList() {
             var _arr = ko.observableArray([]);
@@ -2008,148 +2341,14 @@ $(document).ready(function() {
             return arr;
         }
 
-        this.templateTypeValues = {
-            'anything': {
-                definition: ko.observable('')
-            },
-            'number': {
-                value: ko.observable(0)
-            },
-            'range': {
-                min: ko.observable(0),
-                max: ko.observable(1),
-                step: ko.observable(1)
-            },
-            'randrange': {
-                min: ko.observable(0),
-                max: ko.observable(1),
-                step: ko.observable(1)
-            },
-            'string': {
-                value: ko.observable(''),
-                isTemplate: ko.observable(false)
-            },
-            'long plain string': {
-                value: ko.observable(''),
-                isTemplate: ko.observable(true)
-            },
-            'long string': {
-                value: ko.observable(''),
-                isTemplate: ko.observable(false)
-            },
-            'list of numbers': {
-                values: InexhaustibleList(),
-            },
-            'list of strings': {
-                values: InexhaustibleList()
-            },
-            'json': {
-                value: ko.observable(''),
-                prettyPrint: function() {
-                    var val = this.templateTypeValues.json.value();
-                    try {
-                        var data = JSON.parse(val);
-                        this.templateTypeValues.json.value(JSON.stringify(data,null,4));
-                    } catch(e) {
-                    }
-                }
-            },
-            'mathematical expression': {
-                value: ko.observable(''),
-            }
-        };
-        this.templateTypeValues['list of numbers'].floatValues = ko.pureComputed(function() {
-            return this.values().map(function(n){return parseFloat(n)});
-        },this.templateTypeValues['list of numbers']);
-        this.editDefinition = this.templateTypeValues['anything'].definition;
+
         this.definitionError = ko.observable(null);
         this.definition = ko.computed({
             read: function() {
                 this.definitionError(null);
-                var templateType = this.templateType().id;
-                var val = this.templateTypeValues[templateType];
-                var treeToJME = Numbas.jme.display.treeToJME;
-                var wrapValue = Numbas.jme.wrapValue;
+                var templateType = this.templateType();
                 try {
-                    switch(templateType) {
-                    case 'anything':
-                        var tokens = Numbas.jme.tokenise(val.definition());
-                        if(tokens.length > 2) {
-                            if(Numbas.jme.isName(tokens[0],this.name()) && Numbas.jme.isOp(tokens[1],'=')) {
-                                throw("You don't need to include <code>"+this.name()+" =</code> at the start of your definition.");
-                            }
-                        }
-                        return val.definition()+'';
-                    case 'number':
-                        var n = parseFloat(val.value());
-                        if(isNaN(n)) {
-                            throw("Value is not a number");
-                        }
-                        return treeToJME({tok: wrapValue(parseFloat(val.value()))});
-                    case 'range':
-                        var min = parseFloat(val.min());
-                        var max = parseFloat(val.max());
-                        var step = parseFloat(val.step());
-                        if(isNaN(min)) {
-                            throw('Minimum value is not a number');
-                        } else if(isNaN(max)) {
-                            throw('Maximum value is not a number');
-                        } else if(isNaN(step)) {
-                            throw("Step value is not a number");
-                        }
-
-                        var tree = Numbas.jme.compile('a..b#c');
-                        tree.args[0].args[0] = {tok: wrapValue(parseFloat(val.min()))};
-                        tree.args[0].args[1] = {tok: wrapValue(parseFloat(val.max()))};
-                        tree.args[1] = {tok: wrapValue(parseFloat(val.step()))};
-                        return treeToJME(tree);
-                    case 'randrange':
-                        var min = parseFloat(val.min());
-                        var max = parseFloat(val.max());
-                        var step = parseFloat(val.step());
-                        if(isNaN(min)) {
-                            throw('Minimum value is not a number');
-                        } else if(isNaN(max)) {
-                            throw('Maximum value is not a number');
-                        } else if(isNaN(step)) {
-                            throw("Step value is not a number");
-                        }
-
-                        var tree = Numbas.jme.compile('random(a..b#c)');
-                        tree.args[0].args[0].args[0] = {tok: wrapValue(parseFloat(val.min()))};
-                        tree.args[0].args[0].args[1] = {tok: wrapValue(parseFloat(val.max()))};
-                        tree.args[0].args[1] = {tok: wrapValue(parseFloat(val.step()))};
-                        return treeToJME(tree);
-                    case 'string':
-                    case 'long plain string':
-                    case 'long string':
-                        var tok = wrapValue(val.value());
-                        tok.safe = val.isTemplate();
-                        var s = treeToJME({tok: tok});
-                        return s;
-                    case 'list of numbers':
-                        var values = val.values().filter(function(n){return n!=''});
-                        if(!values.every(function(n){return Numbas.util.isNumber(n,true)})) {
-                            throw("One of the values is not a number");
-                        }
-                        return treeToJME(Numbas.jme.compile('['+values.join(',')+']'));
-                    case 'list of strings':
-                        var strings = val.values().map(function(s){ 
-                            var tok = wrapValue(s);
-                            tok.safe = false;
-                            return tok;
-                        });
-                        return treeToJME({tok: new Numbas.jme.types.TList(strings)});
-                    case 'json':
-                        JSON.parse(val.value() || '');
-                        var json = treeToJME({tok: wrapValue(val.value())});
-                        return 'json_decode('+json+')';
-                    case 'mathematical expression':
-                        var tok = wrapValue(val.value());
-                        var tree = Numbas.jme.compile('expression(x)');
-                        tree.args[0] = {tok: tok};
-                        return treeToJME(tree);
-                    }
+                    return templateType.jme_definition();
                 } catch(e) {
                     this.definitionError(e);
                     return '';
@@ -2305,26 +2504,15 @@ $(document).ready(function() {
             this.load(data);
     }
     Variable.prototype = {
-        templateTypes: [
-            {id: 'anything', name: 'JME code'},
-            {id: 'number', name: 'Number'},
-            {id: 'range', name: 'Range of numbers'},
-            {id: 'randrange', name: 'Random number from a range'},
-            {id: 'string', name: 'Short text string'},
-            {id: 'long plain string', name: 'Long plain text string'},
-            {id: 'long string', name: 'Formatted text'},
-            {id: 'mathematical expression', name: 'Abstract mathematical expression'},
-            {id: 'list of numbers', name: 'List of numbers'},
-            {id: 'list of strings', name: 'List of short text strings'},
-            {id: 'json', name: 'JSON data'}
-        ],
+
 
         load: function(data) {
             tryLoad(data,['name','description','can_override'],this);
             if('templateType' in data) {
-                for(var i=0;i<this.templateTypes.length;i++) {
-                    if(this.templateTypes[i].id==data.templateType) {
-                        this.templateType(this.templateTypes[i]);
+                var templateTypes = this.templateTypes();
+                for(var i=0;i<templateTypes.length;i++) {
+                    if(templateTypes[i].id==data.templateType) {
+                        this.templateType(templateTypes[i]);
                         break;
                     }
                 }
@@ -2347,69 +2535,12 @@ $(document).ready(function() {
             return obj;
         },
 
+        /** Parse a variable's JME definition to fill in the fields of the form for the selected variable type.
+         */
         definitionToTemplate: function(definition) {
-            var templateType = this.templateType().id;
-            var templateTypeValues = this.templateTypeValues[templateType];
-
+            var templateType = this.templateType();
             try {
-                var tree = Numbas.jme.compile(definition);
-                var scope = Numbas.jme.builtinScope;
-                switch(templateType) {
-                case 'anything':
-                    templateTypeValues.definition(definition);
-                    break;
-                case 'number':
-                    templateTypeValues.value(Numbas.jme.evaluate(definition,Numbas.jme.builtinScope).value);
-                    break;
-                case 'range':
-                    var rule = new Numbas.jme.display.Rule('?;a..?;b#?;c',[]);
-                    var m = rule.match(tree,scope);
-                    templateTypeValues.min(Numbas.jme.evaluate(m.a,Numbas.jme.builtinScope).value);
-                    templateTypeValues.max(Numbas.jme.evaluate(m.b,Numbas.jme.builtinScope).value);
-                    templateTypeValues.step(Numbas.jme.evaluate(m.c,Numbas.jme.builtinScope).value);
-                    break;
-                case 'randrange':
-                    var rule = new Numbas.jme.display.Rule('random(?;a..?;b#?;c)',[]);
-                    var m = rule.match(tree,scope);
-                    templateTypeValues.min(Numbas.jme.evaluate(m.a,Numbas.jme.builtinScope).value);
-                    templateTypeValues.max(Numbas.jme.evaluate(m.b,Numbas.jme.builtinScope).value);
-                    templateTypeValues.step(Numbas.jme.evaluate(m.c,Numbas.jme.builtinScope).value);
-                    break;
-                case 'string':
-                case 'long plain string':
-                case 'long string':
-                    while(Numbas.jme.isFunction(tree.tok,'safe')) {
-                        templateTypeValues.isTemplate(true);
-                        tree = tree.args[0];
-                    }
-                    templateTypeValues.value(tree.tok.value);
-                    break;
-                case 'list of numbers':
-                    templateTypeValues.values(tree.args.map(function(t){return Numbas.jme.display.treeToJME(t);}));
-                    break;
-                case 'list of strings':
-                    templateTypeValues.values(tree.args.map(function(t){
-                        while(Numbas.jme.isFunction(t.tok,'safe')) {
-                            t = t.args[0];
-                        }
-                        return t.tok.value;
-                    }));
-                    break;
-                case 'json':
-                    tree = tree.args[0];
-                    while(Numbas.jme.isFunction(tree.tok,'safe')) {
-                        tree = tree.args[0];
-                    }
-                    templateTypeValues.value(tree.tok.value);
-                    break;
-                case 'mathematical expression':
-                    tree = tree.args[0];
-                    while(Numbas.jme.isFunction(tree.tok,'safe')) {
-                        tree = tree.args[0];
-                    }
-                    templateTypeValues.value(tree.tok.value);
-                    break;
-                }
+                templateType.load_definition(definition);
             } catch(e) {
                 console.log(e);
             }
@@ -4353,6 +4484,18 @@ $(document).ready(function() {
         ;
     }
 
+    ko.bindingHandlers.variable_definition_template = {
+        init: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+            const value = ko.unwrap(valueAccessor());
+            console.log(value);
+            const widget = new value.widget();
+            widget.addEventListener('change', e => {
+                console.log(e.detail.value);
+                value.value(e.detail.value);
+            });
+            element.appendChild(widget);
+        }
+    };
 
     Numbas.queueScript('knockout',[], function() {});
 

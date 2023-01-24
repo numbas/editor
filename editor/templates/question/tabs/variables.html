@@ -154,69 +154,75 @@
                         </label>
                     </div>
                     <div class="form-group">
-                        <label class="label-block">
+                        <label class="label-block" data-bind="with: templateType">
                             <span class="label-text">Value</span>
-                            <div data-bind="visible: templateType().id=='anything'">
-                                <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: templateTypeValues.anything.definition, codemirrorMode: 'jme'"></textarea>
+                            <div data-bind="if: id=='anything'">
+                                <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: value.definition, codemirrorMode: 'jme'"></textarea>
                                 <p class="help-block text-right">
                                     <a class="helplink text-info" href="{{HELP_URL}}jme-reference.html" target="_blank">JME function reference <span class="glyphicon glyphicon-question-sign"></span></a>
                                 </p>
                             </div>
-                            <div data-bind="visible: templateType().id=='number'">
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.number.value, autosize: {max: 500, min: 30, padding: 30, value: templateTypeValues.number.value}"/> 
+                            <div data-bind="if: id=='number'">
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: value.value, autosize: {max: 500, min: 30, padding: 30, value: value.value}"/> 
                                 <p class="help-block">(a number)</p>
                             </div>
-                            <div data-bind="visible: templateType().id=='range'" class="form-inline">
+                            <div data-bind="if: id=='range'" class="form-inline">
                                 Numbers between 
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.range.min, autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.min}"/>
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: value.min, autosize: {max: 500, min: 30, padding: 10, value: value.min}"/>
                                 and
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.range.max, autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.max}"/>
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: value.max, autosize: {max: 500, min: 30, padding: 10, value: value.max}"/>
                                 (inclusive) with step size
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.range.step, autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.step}"/>
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: value.step, autosize: {max: 500, min: 30, padding: 10, value: value.step}"/>
                             </div>
-                            <div data-bind="visible: templateType().id=='randrange'" class="form-inline">
+                            <div data-bind="if: id=='randrange'" class="form-inline">
                                 A random number between 
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.randrange.min, autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.min}"/>
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: value.min, autosize: {max: 500, min: 30, padding: 10, value: value.min}"/>
                                 and
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.randrange.max, autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.max}"/>
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: value.max, autosize: {max: 500, min: 30, padding: 10, value: value.max}"/>
                                 (inclusive) with step size
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.randrange.step, autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.step}"/>
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: value.step, autosize: {max: 500, min: 30, padding: 10, value: value.step}"/>
                             </div>
-                            <div data-bind="visible: templateType().id=='string'">
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.string.value, autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.string.value}"/> 
+                            <div data-bind="if: id=='string'">
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: value.value, autosize: {max: 500, min: 30, padding: 10, value: value.value}"/> 
                                 <p class="help-block">(text string)</p>
-                                <p><label><input type="checkbox" data-bind="checked: templateTypeValues.string.isTemplate" {% if not editable %}disabled{% endif %}> Is this a template?</p>
+                                <p><label><input type="checkbox" data-bind="checked: value.isTemplate" {% if not editable %}disabled{% endif %}> Is this a template?</p>
                             </div>
-                            <div data-bind="visible: templateType().id=='long plain string'">
-                                <div {% if not editable %}disabled{% endif %} data-bind="codemirror: templateTypeValues['long plain string'].value"></div>
+                            <div data-bind="if: id=='long plain string'">
+                                <div {% if not editable %}disabled{% endif %} data-bind="codemirror: value.value"></div>
                             </div>
-                            <div data-bind="visible: templateType().id=='long string'">
-                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: templateTypeValues['long string'].value, preambleCSS: $root.preamble.css,"></div>
-                                <p><label><input type="checkbox" data-bind="checked: templateTypeValues['long string'].isTemplate" {% if not editable %}disabled{% endif %}> Is this a template?</p>
+                            <div data-bind="if: id=='long string'">
+                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: value.value, preambleCSS: $root.preamble.css,"></div>
+                                <p><label><input type="checkbox" data-bind="checked: value.isTemplate" {% if not editable %}disabled{% endif %}> Is this a template?</p>
                             </div>
-                            <div data-bind="visible: templateType().id=='list of numbers', with: templateTypeValues['list of numbers']">
-                                <ul class="list-unstyled" data-bind="foreach: values.edit">
+                            <div data-bind="if: id=='list of numbers'">
+                                <ul class="list-unstyled" data-bind="foreach: value.values.edit">
                                     <li data-bind="css: {'has-error': value() && !Numbas.util.isNumber(value(),true)}">
                                         <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: value, event: {blur: onBlur}, autosize: {max: 500, min: 30, padding: 10, value: value}"/>
                                     </li>
                                 </ul>
                                 <p class="help-block">(numbers)</p>
                             </div>
-                            <div data-bind="visible: templateType().id=='list of strings', with: templateTypeValues['list of strings']">
-                                <ul class="list-unstyled" data-bind="foreach: values.edit">
+                            <div data-bind="if: id=='list of strings'">
+                                <ul class="list-unstyled" data-bind="foreach: value.values.edit">
                                     <li>
                                         <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: value, event: {blur: onBlur}, autosize: {max: 500, min: 30, padding: 10, value: value}"/>
                                     </li>
                                 </ul>
                                 <p class="help-block">(text strings)</p>
                             </div>
-                            <div data-bind="visible: templateType().id=='json'">
-                                <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: templateTypeValues.json.value, codemirrorMode: 'json'"></textarea>
-                                <button type="button" class="btn btn-default" data-bind="click: templateTypeValues.json.prettyPrint"><span class="glyphicon glyphicon-object-align-left"></span> Clean up formatting</button>
+                            <div data-bind="if: id=='json'">
+                                <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: value.value, codemirrorMode: 'json'"></textarea>
+                                <button type="button" class="btn btn-default" data-bind="click: value.prettyPrint"><span class="glyphicon glyphicon-object-align-left"></span> Clean up formatting</button>
                             </div>
-                            <div data-bind="visible: templateType().id=='mathematical expression'">
-                                {% jme_input 'templateTypeValues[\'mathematical expression\'].value' %}
+                            <div data-bind="if: id=='mathematical expression'">
+                                {% jme_input 'value.value' %}
                             </div>
+                            <!-- ko foreach: $parent.extra_template_types -->
+                            <div data-bind="if: $parent.id==id">
+                                <p>It's that thing <span data-bind="text: name"></p>
+                                <div data-bind="variable_definition_template: $data"></div>
+                            </div>
+                            <!-- /ko -->
                         </label>
                     </div>
                     <div class="help-block">

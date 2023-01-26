@@ -1851,7 +1851,7 @@ $(document).ready(function() {
                 description = 'Set of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
                 break;
             case 'matrix':
-                description = 'Matrix of size '+v.value.length+'×'+v.value[0].length;
+                description = 'Matrix of size '+v.value.rows+'×'+v.value.columns;
                 break;
             case 'vector':
                 description = 'Vector with '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'component','components');

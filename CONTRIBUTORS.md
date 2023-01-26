@@ -16,5 +16,6 @@
 * [Darcy Coleman](https://github.com/docoleman)
 * [Nabeel Sait](https://github.com/NabeelSait)
 * [Maheshwaran Dhandapani](https://github.com/Maheshwaran17)
+* [Maanas Arora](https://github.com/MaanasArora)
 
 *Add your name here - [contribute to the Numbas project](http://www.numbas.org.uk/contributing-to-numbas/)!*

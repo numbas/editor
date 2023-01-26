@@ -1850,6 +1850,12 @@ $(document).ready(function() {
             case 'set':
                 description = 'Set of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
                 break;
+            case 'matrix':
+                description = 'Matrix of size '+v.value.length+'×'+v.value[0].length;
+                break;
+            case 'vector':
+                description = 'Vector with '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'component','components');
+                break;
             case 'list':
                 description = 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
                 break;

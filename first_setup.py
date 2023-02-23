@@ -10,6 +10,8 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path, PurePath
 from pkg_resources import packaging
 
+PYTHON_EXEC_PATH = sys.executable
+
 MIN_PYTHON_VERSION = packaging.version.parse("3.8")
 
 try:
@@ -219,7 +221,7 @@ class Command:
                 make_question('MEDIA_ROOT', 'Where are uploaded files stored?', '/srv/numbas/media/', validation = path_exists, dev_value = 'media'),
                 make_question('PREVIEW_PATH', 'Where are preview exams stored?', '/srv/numbas/previews/', dev_value = 'editor/static/previews'),
                 make_question('PREVIEW_URL', 'Base URL of previews:', '/numbas-previews/', dev_value = '/static/previews/'),
-                make_question('PYTHON_EXEC', 'Python command:', 'python3', validation = validate_python_exec, dev_value = 'python3'),
+                make_question('PYTHON_EXEC', 'Python command:', PYTHON_EXEC_PATH, validation = validate_python_exec, dev_value = PYTHON_EXEC_PATH),
             ]),
             ("Database connection", [
                 make_question(

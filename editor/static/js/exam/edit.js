@@ -135,6 +135,7 @@ $(document).ready(function() {
         this.allowsteps = ko.observable(true);
         this.preventleave = ko.observable(true);
         this.startpassword = ko.observable('');
+        this.needsStudentName = ko.observable(false);
 
         this.onleave = ko.observable(null);
 
@@ -443,7 +444,8 @@ $(document).ready(function() {
                     navigatemode: this.navigatemode().name,
                     onleave: this.onleave.toJSON(),
                     preventleave: this.preventleave(),
-                    startpassword: this.startpassword()
+                    startpassword: this.startpassword(),
+                    needsStudentName: this.needsStudentName()
                 },
                 timing: {
                     allowPause: this.allowPause(),
@@ -488,7 +490,7 @@ $(document).ready(function() {
             this.duration((content.duration||0)/60);
 
             if('navigation' in content) {
-                tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','preventleave','startpassword','allowsteps'],this);
+                tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','preventleave','startpassword','needsStudentName','allowsteps'],this);
                 var showresultspage = Editor.tryGetAttribute(content.navigation, 'showresultspage');
                 if(showresultspage) {
                     this.showresultspage(this.showResultsPageOptions.find(function(o){return o.name==showresultspage}));

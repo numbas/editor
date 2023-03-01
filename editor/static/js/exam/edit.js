@@ -136,6 +136,7 @@ $(document).ready(function() {
         this.preventleave = ko.observable(true);
         this.startpassword = ko.observable('');
         this.needsStudentName = ko.observable(false);
+        this.allowCsvDownload = ko.observable(false);
 
         this.onleave = ko.observable(null);
 
@@ -445,7 +446,8 @@ $(document).ready(function() {
                     onleave: this.onleave.toJSON(),
                     preventleave: this.preventleave(),
                     startpassword: this.startpassword(),
-                    needsStudentName: this.needsStudentName()
+                    needsStudentName: this.needsStudentName(),
+                    allowCsvDownload: this.allowCsvDownload()
                 },
                 timing: {
                     allowPause: this.allowPause(),
@@ -490,7 +492,7 @@ $(document).ready(function() {
             this.duration((content.duration||0)/60);
 
             if('navigation' in content) {
-                tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','preventleave','startpassword','needsStudentName','allowsteps'],this);
+                tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','preventleave','startpassword','needsStudentName','allowCsvDownload','allowsteps'],this);
                 var showresultspage = Editor.tryGetAttribute(content.navigation, 'showresultspage');
                 if(showresultspage) {
                     this.showresultspage(this.showResultsPageOptions.find(function(o){return o.name==showresultspage}));

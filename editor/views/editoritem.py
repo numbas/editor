@@ -728,7 +728,7 @@ class SetAccessView(generic.UpdateView):
 
         data = json.loads(request.body.decode('utf-8'))
 
-        access_dict = data.get('access_rights',{});
+        access_dict = {int(pk):v for pk, v in data.get('access_rights',{}).items()};
 
         # Delete removed accesses, and change existing accesses
         for a in existing_accesses:

@@ -344,6 +344,11 @@ table.variable-list .value-cell .value-wrapper {
     justify-content: flex-end;
 }
 
+.feedbackMessage > .message {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
 .feedbackMessage ~ .feedbackMessage {
     margin-top: 0.5em;
 }

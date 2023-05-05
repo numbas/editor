@@ -4,7 +4,7 @@ from django.views.generic import TemplateView
 
 from django.contrib.auth.decorators import login_required
 
-from accounts.views import ActivationView, RegistrationView, RegistrationCompleteView, UserUpdateView, ChangePasswordView, UserProfileView, AllExamsView, AllQuestionsView, UserSearchView
+from accounts.views import ActivationView, RegistrationView, RegistrationCompleteView, UserUpdateView, ChangePasswordView, UserProfileView, AllExamsView, AllQuestionsView, UserSearchView, WellKnownChangePasswordView
 import accounts.views
 
 from numbas import settings
@@ -83,3 +83,11 @@ if settings.CAN_CHANGE_PASSWORD:
         ]
 
 urlpatterns = [path('accounts/', include(urlpatterns))]
+
+if settings.CAN_CHANGE_PASSWORD:
+    urlpatterns += [
+        path('.well-known/change-password',
+            WellKnownChangePasswordView.as_view(),
+            name='well-known-change_password'
+        ),
+    ]

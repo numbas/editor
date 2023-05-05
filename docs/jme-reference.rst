@@ -952,6 +952,16 @@ Number operations
         * ``siground(matrix([[0.123,4.56],[54,98.765]]),2)`` → ``matrix([0.12,4.6],[54,99])``
         * ``siground(vector(10/3,20/3,1),2)`` → ``vector(3.3,6.7,1.0)``
 
+.. jme:function:: with_precision(n, precision, precisionType)
+    :keywords: precision
+    :noexamples:
+
+    Add or remove a :data:`number` value's precision information.
+    This function is used in the attempt suspend data process; it's unlikely you'd want to use it in another context.
+
+    **Definition**:
+        * ``with_precision(3.00, 2, "dp")``
+
 .. jme:function:: withintolerance(a,b,t)
     :keywords: close, near, tolerance
 

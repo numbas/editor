@@ -9,6 +9,7 @@ except ImportError:
 from django import apps
 from django.conf import settings
 from django.views.generic import UpdateView, DetailView, ListView, TemplateView
+from django.views.generic.base import RedirectView
 from django.contrib.auth.models import User
 from django.core import signing
 from django.shortcuts import redirect, render
@@ -103,6 +104,10 @@ class UserUpdateView(CurrentUserUpdateView):
     def get_success_url(self):
         user = self.get_object()
         return reverse('view_profile', args=(user.pk,))
+
+class WellKnownChangePasswordView(RedirectView):
+    permanent = True
+    pattern_name = 'change_password'
 
 class ChangePasswordView(CurrentUserUpdateView):
     template_name = 'registration/change_password.html'

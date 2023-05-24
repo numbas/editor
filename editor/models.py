@@ -549,11 +549,17 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
             d['hasScript'] = True
             d['scriptURL'] = path
             d['scripts'] = list(self.scripts())
+            d['stylesheets'] = list(self.stylesheets())
         return d
 
     def scripts(self):
         for f in Path(self.extracted_path).iterdir():
             if f.suffix == '.js':
+                yield f.name
+
+    def stylesheets(self):
+        for f in Path(self.extracted_path).iterdir():
+            if f.suffix == '.css':
                 yield f.name
 
     @property

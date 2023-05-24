@@ -1706,7 +1706,7 @@ $(document).ready(function() {
 
     function Extension(q,data) {
         var ext = this;
-        ["location","name","edit_url","hasScript","url","scriptURL","author","pk","script_url","scripts"].forEach(function(k) {
+        ["location","name","edit_url","hasScript","url","scriptURL","author","pk","script_url","scripts","stylesheets"].forEach(function(k) {
             ext[k] = data[k];
         });
         this.loadPromise = new Promise((resolve, reject) => {
@@ -1758,6 +1758,13 @@ $(document).ready(function() {
             this.loading(true);
 
             var script_promises = [];
+            this.stylesheets.forEach(function(name) {
+                var link = document.createElement('link');
+                link.setAttribute('href', ext.script_url + name);
+                link.setAttribute('rel','stylesheet');
+                document.head.appendChild(link);
+                console.log(name,link);
+            });
             this.scripts.forEach(function(name) {
                 var script = document.createElement('script');
                 script.setAttribute('src', ext.script_url+name);

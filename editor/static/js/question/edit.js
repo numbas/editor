@@ -49,8 +49,13 @@ $(document).ready(function() {
     },this);
 
 
-    var Question = Editor.question.Question = function(data)
-    {
+    var extra_template_types = Editor.extra_template_types = ko.observableArray([]);
+    Editor.register_variable_template_type = (def) => {
+        extra_template_types.push(def);
+    }
+
+
+    var Question = Editor.question.Question = function(data) {
         var q = this;
 
         Editor.EditorItem.apply(this);
@@ -640,6 +645,8 @@ $(document).ready(function() {
 
         if(data) {
             this.load(data);
+        } else {
+            this.loaded();
         }
 
         ko.computed(function() {
@@ -1074,8 +1081,7 @@ $(document).ready(function() {
         },
 
         generateVariablePreview: function() {
-            if(!Numbas.jme)
-            {
+            if(!Numbas.jme) {
                 var q = this;
                 Numbas.init = function() {
                     q.generateVariablePreview();
@@ -1463,16 +1469,20 @@ $(document).ready(function() {
 
         },
 
-        load: function(data) {
+        load: async function(data) {
             Editor.EditorItem.prototype.load.apply(this,[data]);
 
             var q = this;
 
             if('extensions' in data) {
-                this.extensions().map(function(e) {
-                    if(data.extensions.indexOf(e.location)>=0)
-                        e.used(true);
+                var used_extensions = this.extensions().filter(function(e) {
+                    return data.extensions.indexOf(e.location) >= 0;
                 });
+
+                await Promise.all(used_extensions.map(function(e) {
+                    e.used(true);
+                    return e.loadPromise;
+                }));
             }
 
             if('resources' in data) {
@@ -1532,24 +1542,19 @@ $(document).ready(function() {
                 tryLoad(contentData.variablesTest,['condition','maxRuns'],this.variablesTest);
             }
 
-            if('functions' in contentData)
-            {
-                for(var x in contentData.functions)
-                {
+            if('functions' in contentData) {
+                for(var x in contentData.functions) {
                     contentData.functions[x].name = x;
                     this.functions.push(new CustomFunction(this,contentData.functions[x]));
                 }
             }
 
-            if('preamble' in contentData)
-            {
+            if('preamble' in contentData) {
                 tryLoad(contentData.preamble,['css','js'],this.preamble);
             }
 
-            if('rulesets' in contentData)
-            {
-                for(var x in contentData.rulesets)
-                {
+            if('rulesets' in contentData) {
+                for(var x in contentData.rulesets) {
                     this.rulesets.push(new Ruleset(this,{name: x, sets:contentData.rulesets[x]}));
                 }
             }
@@ -1576,8 +1581,7 @@ $(document).ready(function() {
             Editor.tryLoadMatchingId(contentData, 'objectiveVisibility', 'id', this.objective_visibility_options, this);
             Editor.tryLoadMatchingId(contentData, 'penaltyVisibility', 'id', this.objective_visibility_options, this);
 
-            if('parts' in contentData)
-            {
+            if('parts' in contentData) {
                 contentData.parts.map(function(pd) {
                     this.loadPart(pd);
                 },this);
@@ -1613,6 +1617,15 @@ $(document).ready(function() {
                 this.tags([]);
             }
 
+            this.loaded();
+        },
+
+        loaded: function() {
+            this.set_tab_from_hash();
+            ko.options.deferUpdates = true;
+            ko.applyBindings(this);
+            $('.timeline').mathjax();
+            document.body.classList.add('loaded');
         },
 
         selectFirstVariable: function() {
@@ -1696,6 +1709,9 @@ $(document).ready(function() {
         ["location","name","edit_url","hasScript","url","scriptURL","author","pk","script_url","scripts"].forEach(function(k) {
             ext[k] = data[k];
         });
+        this.loadPromise = new Promise((resolve, reject) => {
+            ext.resolve_loadPromise = resolve;
+        });
         this.used = ko.observable(false);
         this.required = ko.pureComputed(function() {
             return q.usedPartTypes().some(function(p){ return p.required_extensions && p.required_extensions.indexOf(ext.location) != -1 });
@@ -1734,11 +1750,13 @@ $(document).ready(function() {
     }
     Extension.prototype = {
         load: function() {
-            this.loading(true);
             var ext = this;
-            if(this.loaded()) {
+            if(this.loaded() || this.loading()) {
                 return;
             }
+
+            this.loading(true);
+
             var script_promises = [];
             this.scripts.forEach(function(name) {
                 var script = document.createElement('script');
@@ -1757,6 +1775,7 @@ $(document).ready(function() {
             Promise.all(script_promises).then(function() {
                 Numbas.activateExtension(ext.location);
                 ext.loaded(true);
+                ext.resolve_loadPromise();
                 viewModel.regenerateVariables();
             }).catch(function(err) {
                 console.error(err);
@@ -1766,8 +1785,7 @@ $(document).ready(function() {
         }
     }
 
-    function Ruleset(exam,data)
-    {
+    function Ruleset(exam,data) {
         this.name = ko.observable('');
         this.sets = ko.observableArray([]);
         this.allsets = exam.allsets;
@@ -1928,39 +1946,6 @@ $(document).ready(function() {
 
         return {names: names, nameError: nameError};
     }
-
-    class BlopWidget extends HTMLElement {
-        get observedAttributes() { return ['value']; }
-
-        constructor() {
-            super();
-            this.attachShadow({mode:'open'});
-            const input = document.createElement('input');
-            input.setAttribute('type','file');
-            input.addEventListener('drop', async e => {
-                e.stopPropagation();
-
-                console.log(e.dataTransfer.items);
-
-                const file = [...e.dataTransfer.items].filter(item => item.kind == 'file')[0];
-
-                if(!file) {
-                    return;
-                }
-
-                const data = await file.getAsFile().arrayBuffer();
-                const wb = XLSX.read(data, {sheetStubs: true});
-
-                this.dispatchEvent(new CustomEvent('change', {detail: {value: wb}}));
-            });
-            this.shadowRoot.appendChild(input);
-        }
-
-        attributeChangedCallback(name, oldValue, newValue) {
-            console.log(name, newValue);
-        }
-    }
-    window.customElements.define('variable-template-blop', BlopWidget);
 
     function Variable(q,data) {
         var v = this;
@@ -2274,24 +2259,16 @@ $(document).ready(function() {
             }
         ];
 
-        this.extra_template_types = ko.observableArray([
-            {
-                id: 'blop', 
-                name: 'Spreadsheet file',
-                value: ko.observable({}),
-                load_definition(definition) {
-                    var tree = Numbas.jme.compile(definition);
-                    tree = tree.args[0].args[0];
-                    var s = Numbas.jme.builtinScope.evaluate(tree);
-                    this.value(JSON.parse(s.value));
-                },
-                jme_definition() {
-                    const v = this.value();
-                    return 'spreadsheet_from_workbook(json_decode(safe("'+Numbas.jme.escape(JSON.stringify(v))+'")))'
-                },
-                widget: BlopWidget
-            }
-        ]);
+        var _extra_template_types = [];
+        this.extra_template_types = ko.pureComputed(function() {
+            Editor.extra_template_types().map((fn,i) => {
+                if(i >= _extra_template_types.length) {
+                    _extra_template_types[i] = fn(ko.observable(null));
+                }
+            });
+            return _extra_template_types;
+        },this);
+
         this.templateTypes = ko.pureComputed(() => {
             return this.builtin_templateTypes.concat(this.extra_template_types());
         },this);
@@ -3364,8 +3341,7 @@ $(document).ready(function() {
 
         remove: function() {
             var p = this;
-            if(confirm("Remove "+this.name()+"?"))
-            {
+            if(confirm("Remove "+this.name()+"?")) {
                 this.parentList.remove(this);
                 if(this.q.currentPart()==this) {
                     this.q.currentPart(this.parent() || null);
@@ -3398,8 +3374,7 @@ $(document).ready(function() {
 
         setType: function(name) {
             name = name.toLowerCase();
-            for(var i=0;i<this.types.length;i++)
-            {
+            for(var i=0;i<this.types.length;i++) {
                 if(this.types[i].name == name) {
                     this.type(this.types[i]);
                     return;
@@ -4485,15 +4460,20 @@ $(document).ready(function() {
     }
 
     ko.bindingHandlers.variable_definition_template = {
-        init: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        init: function(element, valueAccessor) {
             const value = ko.unwrap(valueAccessor());
-            console.log(value);
             const widget = new value.widget();
             widget.addEventListener('change', e => {
-                console.log(e.detail.value);
                 value.value(e.detail.value);
             });
             element.appendChild(widget);
+        },
+
+        update: function(element, valueAccessor) {
+            const options = ko.unwrap(valueAccessor());
+            const value = ko.unwrap(options.value);
+            const widget = element.children[0];
+            widget.set_value(value);
         }
     };
 
@@ -4503,15 +4483,6 @@ $(document).ready(function() {
     Numbas.queueScript('start-editor',deps,function() {
         try {
             viewModel = new Question(item_json.itemJSON);
-            viewModel.set_tab_from_hash();
-            ko.options.deferUpdates = true;
-            ko.applyBindings(viewModel);
-            try {
-                document.body.classList.add('loaded');
-            } catch(e) {
-                document.body.className += ' loaded';
-            }
-            $('.timeline').mathjax();
         }
         catch(e) {
             loading_error(e.message);

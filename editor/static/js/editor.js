@@ -649,6 +649,7 @@ $(document).ready(function() {
     }
 
     if(window.Numbas) {
+        Numbas.editor = Editor;
         Numbas.getStandaloneFileURL = function(extension, path) {
             var e = (item_json.numbasExtensions || []).find(function(e) {
                 return e.location == extension;

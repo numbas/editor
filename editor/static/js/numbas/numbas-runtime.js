@@ -8751,7 +8751,15 @@ var texOps = jme.display.texOps = {
     'mod': (function(tree,texArgs) {return texArgs[0]+' \\pmod{'+texArgs[1]+'}';}),
     'perm': (function(tree,texArgs) { return '^{'+texArgs[0]+'}\\kern-2pt P_{'+texArgs[1]+'}';}),
     'comb': (function(tree,texArgs) { return '^{'+texArgs[0]+'}\\kern-1pt C_{'+texArgs[1]+'}';}),
-    'root': (function(tree,texArgs) { return '\\sqrt['+texArgs[1]+']{'+texArgs[0]+'}'; }),
+    'root': (function(tree,texArgs) { 
+        if(jme.isType(tree.args[1].tok, 'number')) {
+            var n = jme.castToType(tree.args[1].tok, 'number').value;
+            if(n == 2) {
+                return '\\sqrt{ '+texArgs[0]+' }';
+            }
+        }
+        return '\\sqrt['+texArgs[1]+']{ '+texArgs[0]+' }'; 
+    }),
     'if': (function(tree,texArgs)
             {
                 for(var i=0;i<3;i++)
@@ -21516,7 +21524,11 @@ ComplexDecimal.prototype = {
     pow: function(b) {
         b = ensure_decimal(b);
         if(this.isReal() && b.isReal()) {
-            return new ComplexDecimal(this.re.pow(b.re),this.im);
+            if(this.re.greaterThanOrEqualTo(0)) {
+                return new ComplexDecimal(this.re.pow(b.re),this.im);
+            } else {
+                return new ComplexDecimal(new Decimal(0), this.re.negated().pow(b.re));
+            }
         } else {
             var ss = this.re.times(this.re).plus(this.im.times(this.im));
             var arg1 = Decimal.atan2(this.im,this.re);
@@ -25843,7 +25855,14 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
             });
         }
     },
-    finaliseLoad: function() {},
+    finaliseLoad: function() {
+        if(this.settings.sortAnswers && this.gaps.length) {
+            var type = this.gaps[0].type;
+            if(this.gaps.some(function(g) { return g.type != type; })) {
+                this.settings.sortAnswers = false;
+            }
+        }
+    },
     initDisplay: function() {
         this.display = new Numbas.display.GapFillPartDisplay(this);
     },

@@ -1763,7 +1763,6 @@ $(document).ready(function() {
                 link.setAttribute('href', ext.script_url + name);
                 link.setAttribute('rel','stylesheet');
                 document.head.appendChild(link);
-                console.log(name,link);
             });
             this.scripts.forEach(function(name) {
                 var script = document.createElement('script');

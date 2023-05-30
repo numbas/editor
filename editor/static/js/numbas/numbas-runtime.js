@@ -5886,7 +5886,7 @@ newBuiltin('split',[TString,TString],TList, function(str,delimiter) {
     return str.split(delimiter).map(function(s){return new TString(s)});
 });
 newBuiltin('trim',[TString],TString, function(str) { return str.trim(); });
-newBuiltin('currency',[TNum,TString,TString],TString,util.currency);
+newBuiltin('currency',[TNum,TString,TString],TString,util.currency, {latex: true});
 newBuiltin('separateThousands',[TNum,TString],TString,util.separateThousands);
 newBuiltin('listval',[TString,TNum],TString,function(s,i) {return s[i]});
 newBuiltin('listval',[TString,TRange],TString,function(s,range) {return s.slice(range[0],range[1])});
@@ -9009,7 +9009,7 @@ var typeToTeX = jme.display.typeToTeX = {
             if(tok.safe) {
                 return tok.value;
             } else {
-                return tok.value.replace(/\\([\{\}])/g,'$1');
+                return tok.value.replace(/\\([\{\}])/g,'$1').replace(/\$/g,'\\$');
             }
         } else {
             return '\\textrm{'+tok.value+'}';
@@ -20992,7 +20992,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
     rangeSize: function(range) {
         var diff = range[1]-range[0];
         var num_steps = Math.floor(diff/range[2])+1;
-        num_steps += (range[0]+num_steps*range[2] == range[1] ? 1 : 0);
+        num_steps += (math.isclose(range[0]+num_steps*range[2], range[1]) ? 1 : 0);
         return num_steps;
     },
     /** Get a rational approximation to a real number by the continued fractions method.

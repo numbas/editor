@@ -598,7 +598,15 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
         _, extension = os.path.splitext(self.zipfile.name)
         if extension.lower() == '.zip':
             z = ZipFile(self.zipfile.file, 'r')
-            z.extractall(self.extracted_path)
+            infolist = z.infolist()
+            if len(infolist)>0:
+                firstfile = infolist[0].filename
+                if all(m.filename.startswith(firstfile) for m in infolist):
+                    for m in infolist[1:]:
+                        m.filename = m.filename[len(firstfile):]
+                        z.extract(m,path=self.extracted_path)
+                else: 
+                    z.extractall(self.extracted_path)
         elif extension.lower() == '.js':
             file = open(os.path.join(self.extracted_path, self.location+'.js'), 'wb')
             file.write(self.zipfile.file.read())

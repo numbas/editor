@@ -27,3 +27,14 @@ You may choose any number of authors from the users who are able to edit the ext
 Upload the extension package - this should at minimum contain a ``.js`` file matching the short name.
 
 Upon Saving the extension, it will become available for use within your editor.
+
+Downloading extensions from github
+----------------------------------
+
+The extension packages for first-party extensions can be obtained from the `Numbas page on github <https://github.com/numbas?q=numbas-extension>`__
+
+The package is obtained via downloading the zip of the github repository. 
+This can then be directly uploaded as above or within the editor - ensure that the short name matches the ``.js`` in the package folder.
+
+.. image:: images/extension-git.png
+   :alt: Downloading a zip of an extension from github via the drop-down beside 'Code' and clicking 'Download Zip'.

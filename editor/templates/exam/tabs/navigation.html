@@ -6,9 +6,9 @@
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
         {% property 'startpassword' 'Password to begin the exam' help_url='exam/reference.html#term-Password-to-begin-the-exam' %}
-        {% property 'csvEncryptionKey' 'Key for encrypting student download of data' help_url='exam/reference.html#term-Key-for-encrypting-student-download-of-data' %}
+        {% property 'downloadEncryptionKey' 'Key for encrypting student download of data' help_url='exam/reference.html#term-Key-for-encrypting-student-download-of-data' %}
         {% booleanproperty 'needsStudentName' 'Ask for student\'s name before beginning?' help_url='exam/reference.html#term-Ask-for-students-name-before-beginning' %}
-        {% booleanproperty 'allowCsvDownload' 'Allow the student to download a CSV of their results?' help_url='exam/reference.html#term-Allow-the-student-to-download-a-CSV-of-their-results' %}
+        {% booleanproperty 'allowAttemptDownload' 'Allow the student to download a CSV of their results?' help_url='exam/reference.html#term-Allow-the-student-to-download-a-CSV-of-their-results' %}
         {% booleanproperty 'allowregen' 'Allow user to regenerate questions?' help_url='exam/reference.html#term-Allow-user-to-regenerate-questions' %}
         {% selectproperty 'navigatemode' 'Question navigation mode' options='navigateModeOptions' options_text='niceName' help_url='exam/reference.html#term-Question-navigation-mode' %}
         <div data-bind="fadeVisible: navigatemode().name=='sequence'">

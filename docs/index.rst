@@ -78,6 +78,7 @@ If you have any questions, please `email us <mailto:numbas@ncl.ac.uk>`_ or join 
     :maxdepth: 2
 
     server-installation/index
+    admin/admin-interface
 
 .. toctree::
     :caption: Development

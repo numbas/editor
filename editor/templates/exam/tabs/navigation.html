@@ -24,9 +24,9 @@
         {% endwith %}
 
         <h4>Offline analysis</h4>
-        {% booleanproperty 'allowAttemptDownload' 'Allow the student to download their attempt data?' help_url='exam/reference.html#term-Allow-the-student-to-download-a-CSV-of-their-results' %}
+        {% booleanproperty 'allowAttemptDownload' 'Allow the student to download their attempt data?' help_url='exam/reference.html#term-Allow-the-student-to-download-their-attempt-data' %}
         <div data-bind="fadeVisible: allowAttemptDownload">
-            {% property 'downloadEncryptionKey' 'Key for encrypting student download of data' help_url='exam/reference.html#term-Key-for-encrypting-student-download-of-data' %}
+            {% property 'downloadEncryptionKey' 'Key for encrypting student data downloads' help_url='exam/reference.html#term-Key-for-encrypting-student-data-downloads' %}
         </div>
     </form>
 

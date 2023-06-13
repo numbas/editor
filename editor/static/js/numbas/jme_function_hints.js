@@ -2644,6 +2644,20 @@ var jme_function_hints =
         "doc": "jme-reference"
     },
     {
+        "name": "|>",
+        "description": "Inline substitution_reference start-string without end-string.",
+        "keywords": [
+            "pipe",
+            "compose",
+            "function",
+            "sequence"
+        ],
+        "calling_patterns": [
+            "|>"
+        ],
+        "doc": "jme-reference"
+    },
+    {
         "name": "sort",
         "description": "Sort list <code>x</code>.",
         "keywords": [

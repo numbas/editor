@@ -2019,10 +2019,12 @@ Vector and matrix arithmetic
     **Definitions**:
         * :data:`vector` → :data:`matrix` - returns a single-row matrix.
         * :data:`matrix` → :data:`matrix`
+        * :data:`list of list` → :data:`list of list`
 
     **Examples**:
         * ``transpose(matrix([1,2],[3,4]))`` → ``matrix([1,3],[2,4])``
         * ``transpose(vector(1,2,3))`` → ``matrix([1,2,3])``
+        * ``transpose([[1,2], [3,4]])`` → ``[[1,3], [2,4]]``
 
 .. jme:function:: sum_cells(m)
     :keywords: cells, add, total
@@ -2988,6 +2990,26 @@ Lists
         * ``let([a,b,c],[1,5,6],d,sqrt(b^2-4*a*c), [(-b+d)/2, (-b-d)/2])`` → ``[-2,-3]`` (when ``[a,b,c]`` = ``[1,5,6]``)
         * ``let(x,1, y,2, x+y)`` → ``3``
         * ``let(["x": 1, "y": 2], x+y)`` → ``3``
+
+.. jme:function:: |>
+    :keywords: pipe, compose, function, sequence
+
+    ``a |> f()`` is equivalent to ``f(a)``.
+
+    This operator can be chained: ``a |> f() |> g()`` is equivalent to ``g(f(a))``.
+
+    The "pipe" operator can be used to apply a sequence of transformations to a value.
+
+    The left-hand value ``a`` is inserted as the first argument of the right-hand function ``f``.
+
+    If ``f`` takes more than one argument, you must give the others on the right-hand side.
+
+    **Definitions**:
+        * anything, anything → anything
+
+    **Examples**:
+        * ``2 |> sqrt() |> siground(2)`` → ``1.4``
+        * ``["happy", "birthday"] |> join(" ") |> upper()`` → ``"HAPPY BIRTHDAY"``
 
 .. jme:function:: sort(x)
     :keywords: order, arrange

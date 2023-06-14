@@ -12,14 +12,20 @@ learning environment) so you can record scores.
 Run standalone on the web
 =========================
 
-Numbas exams can run entirely standalone: students access the test through a web browser, but data about their attempt is not saved.
-This is suitable when you want to provide material for students to practice on their own, and don't need to record scores.
+Numbas exams can run entirely standalone: students access the test through a web browser, but data about their attempt is not automatically saved. 
+You can allow students to download their data to send to you to process without a VLE. 
+This is also suitable when you want to provide material for students to practice on their own, and don't need to record scores.
+
+Direct link via the Numbas editor
+#################################
+
+When you :guilabel:`Run` the exam, the :guilabel:`Share` button at the top of the page allows you to share a link to the exam, either in browser or requiring the Numbas Lockdown app.
+You can share this URL with your students, or link to it from your course material.
+
+If you use the numbas lockdown app, student must have it installed in order to access the exam.
 
 Embed from the editor
 #####################
-
-When you :guilabel:`Run` the exam, click the :guilabel:`Share` button at the top of the page and copy the URL that appears.
-You can share this URL with your students, or link to it from your course material.
 
 If you use `OEmbed <https://oembed.com/>`_-compatible software such as WordPress, you can paste the URL of the exam into the editor and it'll be embedded automatically.
 
@@ -32,6 +38,30 @@ Extract the zip file on your computer, and then upload the resulting files to a 
 Most often you'll be able to do this through an FTP client - ask your server administrator.
 
 Once you've uploaded the exam files, you're done! The exam will be available at the address you uploaded it to.
+
+Obtaining student results without a VLE
+#######################################
+
+You can obtain students result data by enabling the ``Allow the student to download their attempt data?`` option in the :guilabel:`Navigation` tab. 
+Enter an encryption key for additional safety. You should choose something which is difficult to guess.
+
+Each student must, after ending their exam, download their data via the :guilabel:`Download your exam data` button and send this to you. 
+This will provide a ``.txt`` file with an encoding of their exam data (this contains a header with basic information, followed by the encoding of their data which looks like random characters).
+
+To view this exam data, access the ``analysis`` page associated with your exam. Here, you can directly upload the files provided. You can then view the data obtained via the :guilabel:`View results` button.
+
+There are different views for student data:
+
+Exam totals
+    Shows the students' total marks and their percentage total.
+
+Exam and question totals
+    Shows the students' scores for each question.
+
+All details
+    Shows the students' scores and answers for each question part.
+
+Each view can be downloaded as a ``.csv`` which can be opened in excel.
 
 Uploading an exam to a virtual learning environment
 ===================================================

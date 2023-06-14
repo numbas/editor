@@ -71,7 +71,7 @@ class UpdateView(CanViewMixin, generic.UpdateView):
         kwargs = super(UpdateView, self).get_form_kwargs()
         if self.request.method == 'POST':
             kwargs.update({
-                'data': json.loads(self.request.POST['json'])
+                'data': json.loads(self.request.body.decode('utf-8'))
             })
         return kwargs
 

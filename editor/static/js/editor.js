@@ -383,7 +383,6 @@ $(document).ready(function() {
                         search.results.page(parseInt(response.page) || 1);
                 })
                 .error(function() {
-                    console.log(arguments);
                     search.results.raw([]);
                     search.results.error('Error fetching results: '+arguments[2]);
                 })
@@ -2757,7 +2756,6 @@ $(document).ready(function() {
             element.classList.remove('dragging');
         });
         element.addEventListener('drop', e => {
-            console.log("HEY");
             e.stopPropagation();
             e.preventDefault();
 

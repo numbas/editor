@@ -706,10 +706,8 @@ $(document).ready(function() {
                     return pt.toJSON();
                 },
                 function(data) {
-                    var promise = $.post(pt.save_url, {json: JSON.stringify(data), csrfmiddlewaretoken: getCSRFtoken()})
-                        .success(function(data) {
-                        })
-                        .error(function(response,type,message) {
+                    var promise = Editor.post_json(pt.save_url, data)
+                        .catch(function(response,type,message) {
                             console.error('Error saving:',message);
                         })
                     ;

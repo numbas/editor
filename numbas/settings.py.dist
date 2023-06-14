@@ -214,3 +214,10 @@ URL_PREFIX = '/'
 CSS_VARIABLES = {
     'brand-color': '#acdeff',   # The colour of the top nav bar.
 }
+
+# Settings for the lockdown app
+LOCKDOWN_APP = {
+    # Salt for encrypted links to launch the lockdown app.
+    # This is built into the lockdown app, so shouldn't change unless you have your own version.
+    'salt': '45ab2cf2e139c01f8447d17dc653d585',
+}

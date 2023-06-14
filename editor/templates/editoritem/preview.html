@@ -45,11 +45,28 @@
             <button class="like-link action" id="share">Share</button>
 
             <span id="embed-url">
-                <code class="url text-muted" tabindex="0">{{SITE_ROOT}}{{embed_url}}</code>
-                <button id="link-label"><span class="" id="copy-text" aria-live="polite">
-                    <span class="not-copied">Copy this link</span>
-                    <span class="copied">Link copied!</span>
-                </button>
+                <fieldset>
+                    <legend>Link to this {{item.item_type}}</legend>
+                    <a id="embed-link" class="text-muted" href="{{SITE_ROOT}}{{embed_url}}"><code>{{SITE_ROOT}}{{embed_url}}</code></a>
+                    <button for="embed-link" class="copy-link" type="button">
+                        <span class="not-copied">Copy this link</span>
+                        <span class="copied">Link copied!</span>
+                    </button>
+                </fieldset>
+                <form id="make-lockdown-link-form" method="GET" action="{% url 'item_make_lockdown_link' item.pk %}">
+                    <fieldset>
+                        <legend>Make a link to launch in the Numbas lockdown app:</legend>
+                        <label for="lockdown-password">Password:</label>
+                        <input type="text" id="lockdown-password" name="password">
+                        <output for="lockdown-password">
+                            <a href="" id="lockdown-link">Launch in Numbas lockdown app</a>
+                            <button type="button" class="copy-link" for="lockdown-link">
+                                <span class="not-copied">Copy this link</span>
+                                <span class="copied">Link copied!</span>
+                            </button>
+                        </output>
+                    </fieldset>
+                </form>
             </span>
 
         </header>
@@ -61,7 +78,6 @@
         <script>
             var share_button = document.getElementById('share');
             var embed_display = document.getElementById('embed-url');
-            var copy_text = document.getElementById('copy-text');
 
             /* To toggle the embedded URL area */
             share_button.addEventListener('click',function() {
@@ -69,15 +85,18 @@
                 embed_display.focus();
             });
 
-            if(!(navigator.clipboard && navigator.clipboard.writeText)) {
-                copy_text.style['display'] = 'none';
-            } else {
-                copy_text.addEventListener('click',function() {
-                    var url = document.querySelector('#embed-url .url').textContent;
+            Array.from(document.querySelectorAll('button.copy-link')).forEach(copy_link_button => {
+                if(!(navigator.clipboard && navigator.clipboard.writeText)) {
+                    copy_link_button.style['display'] = 'none';
+                    return;
+                } 
+                copy_link_button.addEventListener('click',function() {
+                    const a = document.getElementById(copy_link_button.getAttribute('for'));
+                    const url = a.href;
                     navigator.clipboard.writeText(url);
-                    embed_display.classList.add('copied');
+                    copy_link_button.classList.add('copied');
                 });
-            }
+            });
 
             var get_numbas_interval = setInterval(function() {
                 var w = window.frames[0];
@@ -86,6 +105,22 @@
                     clearInterval(get_numbas_interval);
                 }
             },100);
+
+            const make_lockdown_link_form = document.getElementById('make-lockdown-link-form');
+            async function update_lockdown_link(e) {
+                e.preventDefault();
+                const password = make_lockdown_link_form.elements['password'].value;
+                const res = await fetch(make_lockdown_link_form.action+'?password='+password);
+                const data = await res.json();
+                console.log(data);
+                if(data.password != password) {
+                    return;
+                }
+                make_lockdown_link_form.classList.add('generated');
+                make_lockdown_link_form.querySelector('output[for="lockdown-password"] a').href = data.launch_url;
+            }
+            make_lockdown_link_form.querySelector('input').addEventListener('input', update_lockdown_link);
+            make_lockdown_link_form.addEventListener('submit', update_lockdown_link);
         </script>
     </body>
 </html>

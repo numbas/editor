@@ -940,11 +940,12 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
         }
     },
 
-    /** Unwrap TExpression tokens: if `tree.tok` is a TExpression token, just return its `tree` property.
-     *  Applies recursively.
+    /** 
+     * Unwrap TExpression tokens: if `tree.tok` is a TExpression token, just return its `tree` property.
+     * Applies recursively.
      *
-     *  @param {Numbas.jme.tree} tree
-     *  @returns {Numbas.jme.tree}
+     * @param {Numbas.jme.tree} tree
+     * @returns {Numbas.jme.tree}
      */
     unwrapSubexpression: function(tree) {
         if(tree.tok.type == 'expression') {
@@ -1512,7 +1513,7 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
      * 
      * @type {Array.<string>}
      */
-    ops: ['not','and','or','xor','implies','isa','except','in','divides','as','..','#','<=','>=','<>','&&','||','|','*','+','-','/','^','<','>','=','!','&'].concat(Object.keys(Numbas.unicode_mappings.symbols)),
+    ops: ['not','and','or','xor','implies','isa','except','in','divides','as','..','#','<=','>=','<>','&&','||','|','*','+','-','/','^','<','>','=','!','&', '|>'].concat(Object.keys(Numbas.unicode_mappings.symbols)),
 
     /** Superscript characters, and their normal-script replacements.
      * 
@@ -1676,11 +1677,12 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
         'BOLD': 'bf',
     },
 
-    /** Normalise a name token, returning a name string and a list of annotations.
-     *  Don't confuse this with {@link Numbas.jme.normaliseName}, which applies scope-dependent normalisation, e.g. case-insensitivity, after parsing.
+    /** 
+     * Normalise a name token, returning a name string and a list of annotations.
+     * Don't confuse this with {@link Numbas.jme.normaliseName}, which applies scope-dependent normalisation, e.g. case-insensitivity, after parsing.
      *
-     *  @param {string}
-     *  @returns {object}
+     * @param {string} name
+     * @returns {object}
      */
     normaliseName: function(name) {
         let annotations = [];
@@ -1732,7 +1734,7 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
 
     /** Normalise a string containing a single operator name or symbol.
      *
-     * @param {string} c
+     * @param {string} op
      * @returns {string}
      */
     normaliseOp: function(op) {
@@ -2200,6 +2202,15 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
             if(thing.tok.type=='op' && thing.tok.negated) {
                 thing.tok.negated = false;
                 thing = {tok:this.op('not',false,true), args: [thing]};
+            }
+            if(thing.tok.type == 'op' && thing.tok.name == '|>') {
+                if(thing.args[1].args === undefined) {
+                    throw(new Numbas.Error("jme.shunt.pipe right hand takes no arguments"));
+                }
+                thing = {
+                    tok: thing.args[1].tok,
+                    args: [thing.args[0]].concat(thing.args[1].args)
+                };
             }
             this.output.push(thing);
         }
@@ -3822,7 +3833,8 @@ var arity = jme.arity = {
     'fact': 1,
     '+u': 1,
     '-u': 1,
-    '/u': 1
+    '/u': 1,
+    'sqrt': 1
 }
 /** Some names represent different operations when used as prefix. This dictionary translates them.
  *
@@ -3835,7 +3847,8 @@ var prefixForm = jme.prefixForm = {
     '-': '-u',
     '/': '/u',
     '!': 'not',
-    'not': 'not'
+    'not': 'not',
+    'sqrt': 'sqrt'
 }
 /** Some names represent different operations when used as prefix. This dictionary translates them.
  *
@@ -3856,6 +3869,7 @@ var precedence = jme.precedence = {
     ';': 0,
     'fact': 1,
     'not': 1,
+    'sqrt': 1,
     '+u': 2.5,
     '-u': 2.5,
     '/u': 2.5,
@@ -3903,7 +3917,8 @@ var opSynonyms = jme.opSynonyms = {
     '≠': '<>',
     '≥': '>=',
     '≤': '<=',
-    'ˆ': '^'
+    'ˆ': '^',
+    'identical': '='
 }
 /** Synonyms of function names - keys in this dictionary are translated to their corresponding values.
  *
@@ -5636,6 +5651,18 @@ newBuiltin('numcolumns',[TMatrix], TNum, function(m){ return m.columns });
 newBuiltin('angle',[TVector,TVector],TNum,vectormath.angle);
 newBuiltin('transpose',[TVector],TMatrix, vectormath.transpose);
 newBuiltin('transpose',[TMatrix],TMatrix, matrixmath.transpose);
+newBuiltin('transpose', ['list of list'], TList, null, {
+    evaluate: function(args, scope) {
+        var lists = args[0].value;
+        var l = Math.min(...lists.map(l => l.value.length));
+        var o = [];
+        for(let i=0;i<l;i++) {
+            var r = [];
+            o.push(new TList(lists.map(l => l.value[i])));
+        }
+        return new TList(o);
+    }
+});
 newBuiltin('is_zero',[TVector],TBool, vectormath.is_zero);
 newBuiltin('id',[TNum],TMatrix, matrixmath.id);
 newBuiltin('sum_cells',[TMatrix],TNum,matrixmath.sum_cells);
@@ -8152,6 +8179,38 @@ newBuiltin('scope_case_sensitive', ['?',TBool], '?', null, {
 });
 jme.lazyOps.push('scope_case_sensitive');
 
+
+/** 
+ * Rewrite an application of the pipe operator `a |> b(...)` to `b(a, ...)`.
+ *
+ * Note that the `|>` operator won't normally appear in compiled expressions, because the tree is rewritten as part of the compilation process.
+ * This definition is added only so that manually-constructed expressions containing `|>` still work.
+ *
+ * @param {Array.<Numbas.jme.tree>} args
+ * @returns {Numbas.jme.tree}
+ */
+function pipe_rewrite(args) {
+    var bargs = args[1].args.slice();
+    bargs.splice(0,0,args[0]);
+    var tree = {
+        tok: args[1].tok,
+        args: bargs
+    };
+
+    return tree;
+}
+
+newBuiltin('|>', ['?','?'], '?', null, {
+    evaluate: function(args, scope) {
+        return scope.evaluate(pipe_rewrite(args));
+    }
+});
+jme.lazyOps.push('|>');
+jme.findvarsOps['|>'] = function(tree, boundvars, scope) {
+    tree = pipe_rewrite(tree.args);
+    return jme.findvars(tree, boundvars, scope);
+}
+
 newBuiltin('translate',[TString],TString,function(s) {
     return R(s);
 });
@@ -8301,7 +8360,7 @@ jme.display = /** @lends Numbas.jme.display */ {
      *
      * @param {JME} expr
      * @param {Numbas.jme.Scope} scope
-     * @returns {Numbsa.jme.tree}
+     * @returns {Numbas.jme.tree}
      */
     subvars: function(expr, scope) {
         var sbits = Numbas.util.splitbrackets(expr,'{','}');
@@ -8368,6 +8427,7 @@ var number_options = jme.display.number_options = function(tok) {
  */
 
 /** Get options for rendering a string token.
+ *
  * @param {Numbas.jme.token} tok
  * @returns {Numbas.jme.display.string_options}
  */
@@ -13250,8 +13310,8 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         definitions.forEach(function(def) {
             var names = def.name.split(/\s*,\s*/);
             var value = def.value;
-            if(typeof value == 'string') {
-                value = scope.evaluate(value);
+            if(typeof value != 'object') {
+                value = scope.evaluate(value+'');
             }
             names.forEach(function(name) {
                 defined_names.push(jme.normaliseName(name,scope));
@@ -20644,7 +20704,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      * When `p` is given, truncate to that many decimal places.
      *
      * @param {number} x
-     * @param {number} p=0
+     * @param {number} [p=0]
      * @returns {number}
      * @see Numbas.math.fract
      */
@@ -21524,18 +21584,17 @@ ComplexDecimal.prototype = {
     pow: function(b) {
         b = ensure_decimal(b);
         if(this.isReal() && b.isReal()) {
-            if(this.re.greaterThanOrEqualTo(0)) {
-                return new ComplexDecimal(this.re.pow(b.re),this.im);
-            } else {
+            if(this.re.greaterThanOrEqualTo(0) || b.re.isInt()) {
+                return new ComplexDecimal(this.re.pow(b.re),new Decimal(0));
+            } else if(b.re.times(2).isInt()) {
                 return new ComplexDecimal(new Decimal(0), this.re.negated().pow(b.re));
             }
-        } else {
-            var ss = this.re.times(this.re).plus(this.im.times(this.im));
-            var arg1 = Decimal.atan2(this.im,this.re);
-            var mag = ss.pow(b.re.dividedBy(2)).times(Decimal.exp(b.im.times(arg1).negated()));
-            var arg = b.re.times(arg1).plus(b.im.times(Decimal.ln(ss)).dividedBy(2));
-            return new ComplexDecimal(mag.times(arg.cos()), mag.times(arg.sin()));
         }
+        var ss = this.re.times(this.re).plus(this.im.times(this.im));
+        var arg1 = Decimal.atan2(this.im,this.re);
+        var mag = ss.pow(b.re.dividedBy(2)).times(Decimal.exp(b.im.times(arg1).negated()));
+        var arg = b.re.times(arg1).plus(b.im.times(Decimal.ln(ss)).dividedBy(2));
+        return new ComplexDecimal(mag.times(arg.cos()), mag.times(arg.sin()));
     },
 
     squareRoot: function() {
@@ -22497,10 +22556,9 @@ var util = Numbas.util = /** @lends Numbas.util */ {
      */
     extend: function(a,b,extendMethods)
     {
-        var c = function()
-        {
+        var c = function() {
             a.apply(this,arguments);
-            b.apply(this,arguments);
+            return b.apply(this,arguments);
         };
         var x;
         for(x in a.prototype)
@@ -22534,6 +22592,27 @@ var util = Numbas.util = /** @lends Numbas.util */ {
             for(var key in arguments[i]) {
                 if(arguments[i].hasOwnProperty(key) && arguments[i][key]!==undefined) {
                     destination[key] = arguments[i][key];
+                }
+            }
+        }
+        return destination;
+    },
+    /** Extend `destination` with all the properties from subsequent arguments, and recursively extend objects that both properties have under the same key.
+     *
+     * @param {object} destination
+     * @returns {object}
+     */
+    deep_extend_object: function(destination) {
+        for(var i=1; i<arguments.length; i++) {
+            const arg = arguments[i];
+            for(let key of Object.keys(arg)) {
+                if(arg[key] === undefined) {
+                    continue;
+                }
+                if(typeof arg[key] === 'object' && typeof destination[key] === 'object') {
+                    util.deep_extend_object(destination[key], arg[key]);
+                } else {
+                    destination[key] = arg[key];
                 }
             }
         }
@@ -23178,6 +23257,19 @@ var util = Numbas.util = /** @lends Numbas.util */ {
         var d = parseInt(m[4]);
         return {numerator:n, denominator:d};
     },
+
+    /** Transform the given string to one containing only letters, digits and hyphens.
+     * @param {string} str
+     * @returns {string}
+     */
+    slugify: function(str) {
+        if (str === undefined){
+            return '';
+        }
+        return (str + '').replace(/\s+/g,'-').replace(/[^a-zA-Z0-9\-]/g,'').replace(/-+/g,'-');
+        
+    },
+
     /** Pad string `s` on the left with a character `p` until it is `n` characters long.
      *
      * @param {string} s
@@ -23760,7 +23852,31 @@ var util = Numbas.util = /** @lends Numbas.util */ {
             cb = fn;
             go();
         }
-    }
+    },
+
+    /** Encode the contents of an ArrayBuffer in base64.
+     *
+     * @param {ArrayBuffer} arrayBuffer
+     * @returns {string}
+     */
+    b64encode: function (arrayBuffer) {
+        return btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
+    },
+
+    /** Decode a base64 string to an ArrayBuffer.
+     *
+     * @param {string} encoded
+     * @returns {ArrayBuffer}
+     */
+    b64decode: function (encoded) {
+        let byteString = atob(encoded);
+        const bytes = new Uint8Array(byteString.length);
+        for (let i = 0; i < byteString.length; i++) {
+            bytes[i] = byteString.charCodeAt(i);
+        }
+        return bytes.buffer;
+    },
+
 };
 
 /** 
@@ -24382,7 +24498,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
         Numbas.parts.CustomPart.prototype.student_answer_jme_types[name] = params.answer_to_jme;
         var input_option_types = Numbas.parts.CustomPart.prototype.input_option_types[name] = {};
         if(Numbas.storage) {
-            Numbas.storage.scorm.inputWidgetStorage[name] = params.scorm_storage;
+            Numbas.storage.inputWidgetStorage[name] = params.scorm_storage;
         }
         params.options_definition.forEach(function(def) {
             var types = {

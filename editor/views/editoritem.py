@@ -40,6 +40,7 @@ from accounts.models import UserProfile, EditorItemViewed
 
 from editor.tables import EditorItemTable, RecentlyPublishedTable
 from editor.models import EditorItem, Project, IndividualAccess, Licence, PullRequest, Taxonomy, Contributor, Folder
+import editor.lockdown_app
 import editor.models
 import editor.views.generic
 from editor.views import request_is_ajax
@@ -565,9 +566,7 @@ class PreviewView(CompileObject, generic.DetailView):
 
         exam_url = settings.GLOBAL_SETTINGS['PREVIEW_URL'] + self.get_locale() + '/' + self.location + '/index.html'
 
-        embed_url = reverse(self.editoritem.item_type+'_embed',args=(self.object.pk,self.editoritem.slug))
-        if not self.editoritem.published:
-            embed_url += '?token='+str(self.editoritem.share_uuid_view)
+        embed_url = self.editoritem.get_embed_url()
 
         context = {
             'item': self.editoritem,
@@ -576,6 +575,23 @@ class PreviewView(CompileObject, generic.DetailView):
         }
 
         return self.render_to_response(context)
+
+class MakeLockdownLinkView(generic.DetailView):
+    model = EditorItem
+
+    def get(self, *args, **kwargs):
+        password = self.request.GET.get('password')
+        if password is None:
+            return http.HttpResponseBadRequest("You must provide a password")
+
+        ei = self.get_object()
+
+        launch_url = self.request.build_absolute_uri(ei.get_embed_url())
+
+        return http.JsonResponse({
+            'launch_url': editor.lockdown_app.make_link(self.request, launch_url, password),
+            'password': password,
+        })
 
 class OembedView(generic.DetailView):
     model = EditorItem

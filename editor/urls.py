@@ -77,6 +77,8 @@ urlpatterns = [
 
     path('item/<int:pk>/preview/', editoritem.PreviewView.as_view(), name='item_preview'),
 
+    path('item/<int:pk>/make-lockdown-link', editoritem.MakeLockdownLinkView.as_view(), name='item_make_lockdown_link'),
+
     path('item/<int:pk>/oembed/', editoritem.OembedView.as_view(), name='item_oembed'),
 
     path('item/<int:pk>/publish',

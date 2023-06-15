@@ -67,6 +67,11 @@ Admin controls
         Add to a queue
             Add this exam to a :ref:`queue <item_queues>`.
 
+        Analyse attempt data
+            This action is only available when :term:`Allow students to download their attempt data?` is turned on.
+
+            See :ref:`offline-analysis`.
+
     Download
         Links to download standalone packages of the exam. 
 
@@ -161,12 +166,6 @@ Navigation
 The navigation settings control how the student can move through the exam.
 
 .. glossary::
-    Password to begin the exam
-        If not blank, the student must enter the given password before they can begin the exam.
-
-    Allow user to regenerate questions?
-        If ticked, then the :guilabel:`Try another question like this one` button is displayed at the bottom of each question, allowing the student to re-randomise the question and have another attempt at it.
-
     Question navigation mode
          If "Sequential" is chosen, then the student is shown the questions in a numbered list.
          When the exam begins, the student is immediately shown the first question.
@@ -177,6 +176,12 @@ The navigation settings control how the student can move through the exam.
          There are no :guilabel:`End exam` or :guilabel:`Pause` buttons - this mode is intended for purely formative use.
          When the exam begins, the student is shown the menu.
 
+    Show front page?
+        If ticked, then an intro screen is shown to the student before the exam starts, 
+
+    Password to begin the exam
+        If not blank, the student must enter the given password before they can begin the exam.
+
     Allow move to previous question?
         If ticked, then the user is allowed to move back to a question after leaving it.
 
@@ -186,8 +191,8 @@ The navigation settings control how the student can move through the exam.
     Enable steps?
         If unticked, then part steps will not be offered to the student, regardless of whether any have been defined in the exam's questions.
 
-    Show front page?
-        If ticked, then an intro screen is shown to the student before the exam starts, 
+    Allow user to regenerate questions?
+        If ticked, then the :guilabel:`Try another question like this one` button is displayed at the bottom of each question, allowing the student to re-randomise the question and have another attempt at it.
 
     Reveal answers to all questions
         Control when the student may see the results page, after ending the exam.
@@ -206,6 +211,19 @@ The navigation settings control how the student can move through the exam.
     On leaving a question
         What to do when the student changes question, or tries to end the exam. 
         You can either warn the student and make them confirm that they'd like to leave, or prevent them from leaving the question entirely until they've answered it.
+
+    Allow the student to download their attempt data?
+        If ticked, the student will be shown a button :guilabel:`Download your attempt data` once they have ended the exam.
+        
+        The data file that they are given contains an encrypted copy of all data to do with their attempt.
+        The encryption uses the password specified in :term:`Key for encrypting student data downloads`.
+
+        Use the :ref:`offline analysis <offline-analysis>` tools to decrypt and analyse these attempt data files.
+
+    Key for encrypting student data downloads
+        The password that should be used to encrypt student attempt data files if using offline attempt analysis.
+
+        You won't be asked for this password, but it should be unique to you and kept secret so that students can't decrypt their attempt data files.
 
 Timing
 ======

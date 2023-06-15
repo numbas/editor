@@ -88,3 +88,18 @@
     <p><span class="glyphicon glyphicon-warning-sign"></span> One or more of the questions in this exam have not been published. Users without access to those questions will not be able to see this exam.</p>
 </div>
 {% endblock %}
+
+{% block admin_controls %}
+{{ block.super }}
+<!-- ko if: allowAttemptDownload -->
+<li role="separator" class="divider"></li>
+
+<li>
+    <a href="{% url 'exam_offline_analysis' object.pk object.editoritem.slug %}" target="analysis" title="Analyse attempt data">
+        <span class="glyphicon glyphicon-check" aria-hidden="true"></span> 
+        Analyse attempt data
+    </a>
+</li>
+
+<!-- /ko -->
+{% endblock admin_controls %}

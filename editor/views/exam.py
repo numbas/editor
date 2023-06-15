@@ -365,3 +365,9 @@ def question_lists(request, pk):
 
     return HttpResponse(json.dumps(out),
                         content_type='application/json')
+
+class OfflineAnalysisView(PreviewView):
+    template_name = 'editoritem/embed.html'
+
+    def get_exam_url(self):
+        return self.get_preview_url() + '/analysis.html'

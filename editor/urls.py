@@ -140,6 +140,9 @@ urlpatterns = [
     path('exam/<int:pk>/<numbasslug:slug>/restore-point',
         login_required(exam.SetRestorePointView.as_view()), name='set_restore_point_on_exam'),
 
+    path('exam/<int:pk>/<numbasslug:slug>/offline-analysis',
+        exam.OfflineAnalysisView.as_view(), name='exam_offline_analysis'),
+
     path('exam/question-lists/<int:pk>/',
         exam.question_lists,
         name='question_lists'),

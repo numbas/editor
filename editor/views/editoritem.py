@@ -550,6 +550,12 @@ class PreviewView(CompileObject, generic.DetailView):
             return True
         return 'refresh' in self.request.GET
 
+    def get_preview_url(self):
+        return settings.GLOBAL_SETTINGS['PREVIEW_URL'] + self.get_locale() + '/' + self.location
+
+    def get_exam_url(self):
+        return self.get_preview_url() + '/index.html'
+
     def access_valid(self):
         self.location = self.editoritem.filename
 
@@ -564,9 +570,9 @@ class PreviewView(CompileObject, generic.DetailView):
         if 'refresh' in self.request.GET:
             return redirect(self.request.path)
 
-        exam_url = settings.GLOBAL_SETTINGS['PREVIEW_URL'] + self.get_locale() + '/' + self.location + '/index.html'
-
         embed_url = self.editoritem.get_embed_url()
+
+        exam_url = self.get_exam_url()
 
         context = {
             'item': self.editoritem,

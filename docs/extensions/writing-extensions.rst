@@ -380,3 +380,92 @@ Here's an example which defines an input method where the student has to pick a 
             load: function(part, data) { return data.answer; }
         }
     });
+
+Adding a new variable template type
+-----------------------------------
+
+You can define a new entry in the question editor's list of variable :ref:`data type templates <variable-data-type>` to help question authors define question variables using a data type provided by your extension.
+
+A variable template consists of an editor widget that the question author interacts with, and code to convert the value of that widget to a JME expression, and vice versa.
+
+To register a variable template type, in your extension's code first check that ``Numbas.editor`` is defined, and then call the function ``Numbas.editor.register_variable_template_type`` with a constructor function.
+The constructor function should take a single argument ``value`` and return an object containing the following properties:
+
+``id``
+    A unique identifier for the template.
+``name``
+    A readable name to show in the editor.
+``value``
+    The ``value`` argument.
+``load_definition(definition)``
+    A function which takes a JME expression and calls `this.value()` with a representation of the value to show in the editor widget.
+``jme_definition``
+    A function which produces a JME expression corresponding to the value of the editor widget.
+    You can get the current value of the widget by calling `this.value()`.
+``widget``
+    A constructor for an `HTML custom element <https://developer.mozilla.org/en-US/docs/Web/API/Web_Components/Using_custom_elements>`__ containing the editor widget for the user to interact with.
+
+    The element must have a method ``set_value(value)`` which is called when the displayed value should change.
+
+    When the value of the widget changes, it should dispatch a ``change`` event whose ``detail`` property contains an attribute ``value`` representing the value of the widget.
+
+Example
+#######
+
+Here's an example which defines a variable template for a :data:`boolean` value, where the author can use a checkbox to change the defined value:
+
+.. code-block:: javascript
+
+    if(Numbas.editor?.register_variable_template_type !== undefined) {
+        class TickboxWidget extends HTMLElement {
+            static get observedAttributes() { return ['value']; }
+
+            constructor() {
+                super();
+                this.attachShadow({mode:'open'});
+
+                const template = `
+					<label>Active? <input type="checkbox" id="active-checkbox"></label>
+                `;
+                this.shadowRoot.innerHTML = template;
+
+                const input = this.shadowRoot.querySelector('#active-checkbox');
+
+                input.addEventListener('change', e => {
+                  	const value = input.checked;
+                    this.set_value(value);
+
+                    this.dispatchEvent(new CustomEvent('change', {detail: {value: value}}));
+                });
+            }
+
+            set_value(checked) {
+                const input = this.shadowRoot.querySelector('#active-checkbox');
+              	input.checked = checked;
+            }
+        }
+        window.customElements.define('variable-template-tickbox', TickboxWidget);
+
+        Numbas.editor.register_variable_template_type(function(value) {
+            return {
+                id: 'tickbox', 
+                name: 'Tick box',
+                value: value,
+                load_definition(definition) {
+                    var tree = Numbas.jme.compile(definition);
+                    if(!tree.args || tree.tok.type == 'nothing') {
+                        this.value(false);
+                    } else {
+                        var checked = Numbas.jme.builtinScope.evaluate(tree).value;
+                        this.value(checked);
+                    }
+                },
+                jme_definition() {
+                    const checked = this.value();
+                    return checked ? 'true' : 'false';
+                },
+                widget: TickboxWidget
+            }
+        });
+
+    }

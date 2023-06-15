@@ -269,6 +269,9 @@ Definition
         For example, ``x,y`` in the :guilabel:`name` field and ``[1,2]`` would assign a variable ``x`` with the value ``1`` and ``y`` with the value ``2``.
 
     Data type
+
+        .. _variable-data-type:
+
         Specify what type of data the variable should hold. 
         The :guilabel:`JME code` option allows you to define the variable using :doc:`/jme-reference` syntax, while the other options provide simplified forms.
 

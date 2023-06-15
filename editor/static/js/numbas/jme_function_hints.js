@@ -3188,6 +3188,17 @@ var jme_function_hints =
         "doc": "jme-reference"
     },
     {
+        "name": "|>",
+        "description": "Inline substitution_reference start-string without end-string.",
+        "keywords": [
+            "pipe"
+        ],
+        "calling_patterns": [
+            "a |> f()"
+        ],
+        "doc": "jme-reference"
+    },
+    {
         "name": "html",
         "description": "Parse string <code>x</code> as HTML.",
         "keywords": [

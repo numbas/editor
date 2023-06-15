@@ -3571,6 +3571,18 @@ Control flow
         * ``try(eval(expression("x+")),err, "Error: "+err)`` → ``"Error: Not enough arguments for operation <code>+</code>"``
         * ``try(1+2,err,0)`` → ``3``
 
+.. jme:function:: a |> f()
+    :op: |>
+    :keywords: pipe
+
+    Insert the left-hand value ``a`` as the first argument of the right-hand function ``f``.
+    Several applications of this operator can be chained together, to make code that applies successive functions to a single value more readable.
+
+    When the right-hand function has more than one argument, the left-hand value is inserted before the arguments you give, so ``a |> f(b,c)`` is equivalent to ``f(a,b,c)``.
+
+    **Example**: 
+        * ``3 |> sqrt() |> precround(2)`` → ``1.73``
+
 .. _jme-fns-html:
 
 HTML

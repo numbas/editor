@@ -48,7 +48,9 @@ Enter an encryption key for additional safety. You should choose something which
 Each student must, after ending their exam, download their data via the :guilabel:`Download your exam data` button and send this to you. 
 This will provide a ``.txt`` file with an encoding of their exam data (this contains a header with basic information, followed by the encoding of their data which looks like random characters).
 
-To view this exam data, access the ``analysis`` page associated with your exam. Here, you can directly upload the files provided. You can then view the data obtained via the :guilabel:`View results` button.
+To view this exam data, access the ``analysis`` page associated with your exam. 
+This can be accessed via :guilabel:`Analyse attempt data` under the :guilabel:`Organisation` tab in the Numbas editor. 
+Here, you can directly upload the files provided. You can then view the data obtained via the :guilabel:`View results` button.
 
 There are different views for student data:
 

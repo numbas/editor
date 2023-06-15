@@ -1346,6 +1346,12 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
             ei = ei.copy_of
         return sorted(ei.descendants(), key=lambda x: x.created)
 
+    def get_embed_url(self):
+        embed_url = reverse(self.item_type+'_embed', args=(self.rel_obj.pk,self.slug))
+        if not self.published:
+            embed_url += '?token='+str(self.share_uuid_view)
+        return embed_url
+
     def descendants(self):
         return [self]+sum([ei2.descendants() for ei2 in self.copies.all()], [])
 

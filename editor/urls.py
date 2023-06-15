@@ -77,6 +77,8 @@ urlpatterns = [
 
     path('item/<int:pk>/preview/', editoritem.PreviewView.as_view(), name='item_preview'),
 
+    path('item/<int:pk>/make-lockdown-link', editoritem.MakeLockdownLinkView.as_view(), name='item_make_lockdown_link'),
+
     path('item/<int:pk>/oembed/', editoritem.OembedView.as_view(), name='item_oembed'),
 
     path('item/<int:pk>/publish',
@@ -137,6 +139,9 @@ urlpatterns = [
 
     path('exam/<int:pk>/<numbasslug:slug>/restore-point',
         login_required(exam.SetRestorePointView.as_view()), name='set_restore_point_on_exam'),
+
+    path('exam/<int:pk>/<numbasslug:slug>/offline-analysis',
+        exam.OfflineAnalysisView.as_view(), name='exam_offline_analysis'),
 
     path('exam/question-lists/<int:pk>/',
         exam.question_lists,

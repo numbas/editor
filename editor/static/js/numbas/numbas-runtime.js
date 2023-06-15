@@ -13310,8 +13310,8 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         definitions.forEach(function(def) {
             var names = def.name.split(/\s*,\s*/);
             var value = def.value;
-            if(typeof value == 'string') {
-                value = scope.evaluate(value);
+            if(typeof value != 'object') {
+                value = scope.evaluate(value+'');
             }
             names.forEach(function(name) {
                 defined_names.push(jme.normaliseName(name,scope));
@@ -22556,10 +22556,9 @@ var util = Numbas.util = /** @lends Numbas.util */ {
      */
     extend: function(a,b,extendMethods)
     {
-        var c = function()
-        {
+        var c = function() {
             a.apply(this,arguments);
-            b.apply(this,arguments);
+            return b.apply(this,arguments);
         };
         var x;
         for(x in a.prototype)
@@ -23258,6 +23257,19 @@ var util = Numbas.util = /** @lends Numbas.util */ {
         var d = parseInt(m[4]);
         return {numerator:n, denominator:d};
     },
+
+    /** Transform the given string to one containing only letters, digits and hyphens.
+     * @param {string} str
+     * @returns {string}
+     */
+    slugify: function(str) {
+        if (str === undefined){
+            return '';
+        }
+        return (str + '').replace(/\s+/g,'-').replace(/[^a-zA-Z0-9\-]/g,'').replace(/-+/g,'-');
+        
+    },
+
     /** Pad string `s` on the left with a character `p` until it is `n` characters long.
      *
      * @param {string} s
@@ -23840,7 +23852,31 @@ var util = Numbas.util = /** @lends Numbas.util */ {
             cb = fn;
             go();
         }
-    }
+    },
+
+    /** Encode the contents of an ArrayBuffer in base64.
+     *
+     * @param {ArrayBuffer} arrayBuffer
+     * @returns {string}
+     */
+    b64encode: function (arrayBuffer) {
+        return btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
+    },
+
+    /** Decode a base64 string to an ArrayBuffer.
+     *
+     * @param {string} encoded
+     * @returns {ArrayBuffer}
+     */
+    b64decode: function (encoded) {
+        let byteString = atob(encoded);
+        const bytes = new Uint8Array(byteString.length);
+        for (let i = 0; i < byteString.length; i++) {
+            bytes[i] = byteString.charCodeAt(i);
+        }
+        return bytes.buffer;
+    },
+
 };
 
 /** 
@@ -24462,7 +24498,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
         Numbas.parts.CustomPart.prototype.student_answer_jme_types[name] = params.answer_to_jme;
         var input_option_types = Numbas.parts.CustomPart.prototype.input_option_types[name] = {};
         if(Numbas.storage) {
-            Numbas.storage.scorm.inputWidgetStorage[name] = params.scorm_storage;
+            Numbas.storage.inputWidgetStorage[name] = params.scorm_storage;
         }
         params.options_definition.forEach(function(def) {
             var types = {

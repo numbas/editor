@@ -30,16 +30,7 @@ header .description {
 }
 
 .text-muted, .text-muted a {
-    color: hsl(0, 0%, 80%);
-}
-
-#copied {
-    padding-left: 0.15em;
-    padding-right: 0.15em;
-    visibility: hidden;
-}
-#copied.shown {
-    visibility: visible;
+    color: hsl(0, 0%, 95%);
 }
 
 .close-button{
@@ -53,7 +44,7 @@ header .description {
 #embed-url {
     grid-column: row;
     text-align: right;
-    padding: 0;
+    padding: 1em 0;
 }
 #embed-url:not(.shown) {
     display: none;
@@ -63,8 +54,8 @@ header .description {
     margin: 0.5em;
     user-select: contain;
 }
-#embed-url.copied .not-copied,
-#embed-url:not(.copied) .copied {
+button.copy-link.copied .not-copied,
+button.copy-link:not(.copied) .copied {
     display: none;
 }
 
@@ -102,6 +93,17 @@ header a {
 
 header abbr a {
   text-decoration: inherit;
+}
+
+header #make-lockdown-link-form {
+    display: inline;
+}
+header #make-lockdown-link-form:not(.generated) output {
+    visibility: hidden;
+}
+
+header #embed-url fieldset {
+    margin: 1em 0;
 }
 
 main {

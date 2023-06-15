@@ -10,7 +10,7 @@ Click the :guilabel:`Explore` button at the top of the page.
 
 You're shown lists of publicly available :ref:`projects <projects>`, as well as :ref:`questions <questions>` and :ref:`exams <exams>` that have been published.
 
-.. figure:: explore.png
+.. figure:: screenshots/explore.png
     :alt: Screenshot of the "explore public content" page
 
     The "Explore public content" page.
@@ -23,7 +23,7 @@ Click on a project's name to view its homepage.
 Click on the :guilabel:`Browse this project's content` button, and have a look at the questions and exams within.
 You can click the :guilabel:`Run` button (a rightward-pointing "Play" icon) to have a go at an item as if you were a student.
 
-.. figure:: browse-project.png
+.. figure:: screenshots/browse-project.png
     :alt: Screenshot of a folder in a project. There's a table of items, with play icons next to each name.
 
     Browsing a project.
@@ -36,7 +36,7 @@ You can help to improve the quality of the public database by providing feedback
 If you spot a problem with an item, click the :guilabel:`Status` button at the top-right of the page, and select an appropriate feedback stamp.
 If you've got time, give some more information about what's wrong by clicking the :guilabel:`Editing history` tab and writing a comment.
 
-.. figure:: feedback-stamp.png
+.. figure:: explore/feedback-stamp.png
     :alt: Screenshot of the question editor, with the feedback dropdown visible.
 
     Giving feedback on a question.
@@ -50,7 +50,7 @@ Use the search bar at the top of the page to search across all content you have 
 
 The search isn't very sophisticated, so you might have to try a few different keywords to find what you want.
 
-.. figure:: search.png
+.. figure:: screenshots/search.png
     :alt: Screenshot of search results, for the query "compound interest". Results are shown in a table, with filter options on the side.
 
     Searching for "compound interest".

@@ -6,7 +6,7 @@ from django.core.validators import validate_email
 from django.forms.widgets import PasswordInput, Textarea, TextInput
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User
-from accounts.models import UserProfile
+from accounts.models import UserProfile, deactivate_user
 from accounts.util import find_users
 from editor.models import reassign_content
 try:
@@ -191,23 +191,7 @@ class DeactivateUserForm(forms.ModelForm,MagicWordForm):
             import numbasmailing.mail
             numbasmailing.mail.delete(user.email)
 
-        user.is_active = False
-        user.username = 'deactivated_user_{}!'.format(user.pk)
-        user.password = ''
-        user.email = ''
-        user.last_login = None
-        user.first_name = ''
-        user.last_name = ''
-        user.save()
-
-        user.userprofile.bio = ''
-        user.userprofile.question_basket.clear()
-        user.userprofile.avatar = None
-        user.userprofile.mathjax_url = ''
-        user.userprofile.save()
-
-        user.userprofile.personal_project.name = "Deactivated user's workspace"
-        user.userprofile.personal_project.save()
+        deactivate_user(user, reassign_to_user)
 
 class ReassignContentForm(forms.ModelForm,MagicWordForm):
     class Meta:

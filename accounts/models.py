@@ -16,7 +16,7 @@ from registration import models as regmodels
 
 from sanitizer.models import SanitizedTextField
 
-from editor.models import NewQuestion, EditorTag, Project, TimelineItem, SiteBroadcast, EditorItem, ItemQueue
+from editor.models import NewQuestion, EditorTag, Project, TimelineItem, SiteBroadcast, EditorItem, ItemQueue, reassign_content
 
 class RegistrationManager(regmodels.RegistrationManager):
     @transaction.atomic
@@ -146,3 +146,25 @@ def createUserProfile(instance, created, **kwargs):
         if instance.userprofile and instance.userprofile.personal_project:
             instance.userprofile.personal_project.name = workspace_name
             instance.userprofile.personal_project.save()
+
+def deactivate_user(user, reassign_to_user = None):
+    if reassign_to_user is not None:
+        reassign_content(user, reassign_to_user)
+
+    user.is_active = False
+    user.username = 'deactivated_user_{}!'.format(user.pk)
+    user.password = ''
+    user.email = ''
+    user.last_login = None
+    user.first_name = ''
+    user.last_name = ''
+    user.save()
+
+    user.userprofile.bio = ''
+    user.userprofile.question_basket.clear()
+    user.userprofile.avatar = None
+    user.userprofile.mathjax_url = ''
+    user.userprofile.save()
+
+    user.userprofile.personal_project.name = "Deactivated user's workspace"
+    user.userprofile.personal_project.save()

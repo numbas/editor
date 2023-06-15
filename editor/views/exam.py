@@ -371,3 +371,6 @@ class OfflineAnalysisView(PreviewView):
 
     def get_exam_url(self):
         return self.get_preview_url() + '/analysis.html'
+
+    def render_to_response(self, context):
+        return redirect(self.get_exam_url())

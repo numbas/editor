@@ -649,6 +649,7 @@ $(document).ready(function() {
             this.loaded();
         }
 
+
         ko.computed(function() {
             var undefined_variables = [];
             var all_references = new Set();
@@ -838,9 +839,6 @@ $(document).ready(function() {
                     metadata: this.metadata()
                 };
             },this);
-
-            this.init_save();
-
 
             this.section_tasks = {
                 'settings': [
@@ -1626,6 +1624,7 @@ $(document).ready(function() {
             ko.applyBindings(this);
             $('.timeline').mathjax();
             document.body.classList.add('loaded');
+            this.init_save();
         },
 
         selectFirstVariable: function() {

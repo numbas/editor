@@ -508,6 +508,11 @@ $(document).ready(function() {
             if(!saver.firstSave) {
                 saver.status('unsaved');
             }
+            return data;
+        },this).extend({throttle: 100});
+
+        ko.computed(function() {
+            var data = saver.changed_data();
             if(saver.firstSave) {
                 var json = JSON.stringify(data);
                 if(saver.firstData===null || saver.firstData==json) {
@@ -517,11 +522,6 @@ $(document).ready(function() {
                     saver.firstSave = false;
                 }
             }
-            return data;
-        },this).extend({throttle: 100});
-
-        ko.computed(function() {
-            var data = saver.changed_data();
             saver.save();
         }).extend({throttle:1000, deferred: true});
     }
@@ -839,6 +839,8 @@ $(document).ready(function() {
             ko.tasks.runEarly();
             $('#name-input').focus();
         }
+
+        this.autoSave = ko.observable(null);
     }
     Editor.EditorItem.prototype = {
         init_tasks: function() {
@@ -861,7 +863,7 @@ $(document).ready(function() {
 
         init_save: function(callback) {
             var ei = this;
-            this.autoSave = new Editor.Saver(
+            this.autoSave(new Editor.Saver(
                 function() {
                     var data = ei.save();
 
@@ -894,9 +896,9 @@ $(document).ready(function() {
 
                     return request;
                 }
-            );
+            ));
             if(item_json.is_new) {
-                this.autoSave.save();
+                this.autoSave().save();
                 if(history.replaceState) {
                     history.replaceState(history.state,window.title,window.location.href.replace(/\?.*$/,''));
                 }

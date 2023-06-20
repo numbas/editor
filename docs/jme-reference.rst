@@ -1703,10 +1703,12 @@ Number theory
         * ``round(4.5)`` → ``5``
         * ``round(-0.5)`` → ``0``
 
-.. jme:function:: trunc(x)
+.. jme:function:: trunc(x, [p])
     :keywords: truncate, integer, round, nearest
 
-    If ``x`` is positive, round down to the nearest integer; if it is negative, round up to the nearest integer.
+    Round towards zero: truncate the number ``x`` to the nearest integer or to ``p`` decimal places.
+
+    If ``x`` is positive, round down; if it is negative, round up.
 
     **Definitions**:
         * :data:`number` → :data:`number`
@@ -1715,6 +1717,7 @@ Number theory
     **Example**:
         * ``trunc(3.3)`` → ``3``
         * ``trunc(-3.3)`` → ``-3``
+        * ``trunc(9.8765, 2)`` → ``9.87``
 
 .. jme:function:: fract(x)
     :keywords: fractional, part, decimal

@@ -1447,7 +1447,7 @@ var jme_function_hints =
     },
     {
         "name": "trunc",
-        "description": "If <code>x</code> is positive, round down to the nearest integer; if it is negative, round up to the nearest integer.",
+        "description": "Round towards zero: truncate the number <code>x</code> to the nearest integer or to <code>p</code> decimal places.",
         "keywords": [
             "truncate",
             "integer",
@@ -1455,7 +1455,7 @@ var jme_function_hints =
             "nearest"
         ],
         "calling_patterns": [
-            "trunc(x)"
+            "trunc(x, [p])"
         ],
         "doc": "jme-reference"
     },

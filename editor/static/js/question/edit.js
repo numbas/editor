@@ -3206,7 +3206,8 @@ $(document).ready(function() {
 
         this.variable_references = ko.pureComputed(function() {
             var o = [];
-            o.push(new VariableReference({kind:'part',part:this,tab:'prompt',value:this.prompt,type:'html',description:'prompt', scope:this.scope}));
+            const ignore = ['part_path'];
+            o.push(new VariableReference({kind:'part',part:this,tab:'prompt',value:this.prompt,type:'html',description:'prompt', scope:this.scope, ignore: ignore}));
             if(this.use_custom_algorithm() && this.markingScript() && this.marking_test() && this.marking_test().last_run() && !this.marking_test().last_run().error) {
                 var s = this.markingScript();
                 var note_names = Object.keys(s.notes).map(function(name) { return Numbas.jme.normaliseName(name); });
@@ -3214,7 +3215,7 @@ $(document).ready(function() {
                 var defined_names = note_names.concat(parameters);
                 for(var x in s.notes) {
                     var vars = s.notes[x].vars.filter(function(y) { return !defined_names.contains(Numbas.jme.normaliseName(y)); });
-                    o.push(new VariableReference({kind:'part',part:this,tab:'marking-algorithm',value:vars,type:'list',description:'marking algorithm note '+x, scope:this.scope}));
+                    o.push(new VariableReference({kind:'part',part:this,tab:'marking-algorithm',value:vars,type:'list',description:'marking algorithm note '+x, scope:this.scope, ignore: ignore}));
                 }
             }
             this.nextParts().forEach(function(np) {
@@ -3224,6 +3225,7 @@ $(document).ready(function() {
                 def.kind = 'part';
                 def.part = p;
                 def.scope = p.scope;
+                def.ignore = (def.ignore || []).concat(ignore);
                 o.push(new VariableReference(def));
             });
             return o;

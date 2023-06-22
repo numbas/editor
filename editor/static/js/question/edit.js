@@ -3225,7 +3225,10 @@ $(document).ready(function() {
                 def.kind = 'part';
                 def.part = p;
                 def.scope = p.scope;
-                def.ignore = (def.ignore || []).concat(ignore);
+                var oignore = def.ignore;
+                def.ignore = ko.computed(function() {
+                    return (ko.unwrap(oignore) || []).concat(ignore);
+                });
                 o.push(new VariableReference(def));
             });
             return o;

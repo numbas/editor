@@ -1859,7 +1859,61 @@ $(document).ready(function() {
                 description = 'Vector with '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'component','components');
                 break;
             case 'list':
-                description = 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
+                function get_nested_layers() {
+                    const layer_lengths = [];
+
+                    function get_layer_lengths(v) {
+                        let next_layer = v.value;
+                        if (next_layer.length !== 0) {
+                            next_layer = next_layer[0]
+                            const nested_length = next_layer.type == "list"
+                                                  ? next_layer.value.length
+                                                  : 0;
+
+                            if (nested_length > 0) {
+                                layer_lengths.push(nested_length);
+                                get_layer_lengths(next_layer)
+                            }
+                        }
+                    }
+
+                    function get_deepest_layer(v, depth) {
+                        // depth is the current layer depth, lowest_depth is the lowest depth
+                        // achieved so far through recursive calls.
+                        lowest_depth = Infinity;
+                        if (v.type !== "list" || layer_lengths[depth - 1] === undefined) {
+                            return depth - 1;
+                        }
+
+                        for (const item of v.value) {
+                            if (item.value.length !== layer_lengths[depth - 1]) {
+                                return depth - 1;
+                            }
+
+                            next_layer_depth = get_deepest_layer(item, depth + 1);
+                            if (next_layer_depth < lowest_depth) {
+                                lowest_depth = next_layer_depth;
+                            } 
+                        }
+                        return lowest_depth;
+                    }
+
+                    get_layer_lengths(v);
+                    const deepest_layer = get_deepest_layer(v, 1);
+                    return layer_lengths.slice(0, deepest_layer);
+                }
+
+                const nested_layers = get_nested_layers();
+
+                if (nested_layers.length > 0) {
+                    description = `Nested ${v.value.length}`;
+                    for (const layer_size of nested_layers) {
+                        description += `x${layer_size}`;
+                    }
+                    description += " list";
+                } else {
+                    description = 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
+                }
                 break;
             case 'dict':
                 description = 'Dictionary with '+Object.keys(v.value).length+" entries";

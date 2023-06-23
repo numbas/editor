@@ -1859,7 +1859,45 @@ $(document).ready(function() {
                 description = 'Vector with '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'component','components');
                 break;
             case 'list':
-                description = 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
+                function get_nested_layers() {
+                    const layer_lengths = [];
+
+                    function get_deepest_layer(v, depth) {
+                        // depth is the current layer depth, lowest_depth is the lowest depth
+                        // achieved so far through recursive calls.
+                        lowest_depth = Infinity;
+
+                        if (v.type !== "list") {
+                            return depth - 1;
+                        } else if (v.value.length === 0) {
+                            layer_lengths[depth - 1] = 0;
+                            return depth - 1;
+                        } else if (layer_lengths[depth - 1] === undefined && v.value[0].type === "list") {
+                            layer_lengths[depth - 1] = v.value[0].value.length;
+                        }
+
+                        for (const item of v.value) {
+                            if (item.value.length !== layer_lengths[depth - 1]) {
+                                return depth - 1;
+                            }
+
+                            next_layer_depth = get_deepest_layer(item, depth + 1);
+                            if (next_layer_depth < lowest_depth) {
+                                lowest_depth = next_layer_depth;
+                            } 
+                        }
+                        return lowest_depth;
+                    }
+                    return layer_lengths.slice(0, get_deepest_layer(v, 1));
+                }
+
+                const nested_layers = get_nested_layers();
+                if (nested_layers.length > 0) {
+                    nested_layers.unshift(v.value.length);
+                    description = `Nested ${nested_layers.join("×")} list`;
+                } else {
+                    description = 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
+                }
                 break;
             case 'dict':
                 description = 'Dictionary with '+Object.keys(v.value).length+" entries";

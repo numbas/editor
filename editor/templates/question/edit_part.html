@@ -164,6 +164,36 @@
                         </section>
                     </form>
                 <!-- /ko -->
+                <!-- ko if: $parent.type().name=='extension' -->
+                    <div class="help-block">
+                        <p>This is an <em>extension</em> type part. There is no expected answer, and it's assumed that the marking depends on interactions within the part's prompt.</p>
+                        <p>You can test this part's marking algorithm by interacting with the rendering of the part's prompt below.</p>
+                    </div>
+                    <form class="form-horizontal answer-input" data-bind="submit: run">
+                        <div class="form-group">
+                            <label class="label-block">
+                                <div class="col-sm-12 col-md-3">
+                                    Student's answer
+                                </div>
+                                <div class="col-sm-12 col-md-9" data-bind="jme_scope: $root.questionScope, DOMsubvars: $parent.prompt">
+                                </div>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-offset-3">
+                                <button type="submit" class="btn btn-primary" data-bind="disabled: waiting_for_pre_submit">Submit this answer</button>
+                                <span class="text-info" data-bind="visible: waiting_for_pre_submit">Your answer is being marked.</span>
+                            </div>
+                        </div>
+                        <section class="last-run-feedback" data-bind="if: last_run() && last_run().message_displays">
+                            <h5>Feedback</h5>
+                            <ul class="list-unstyled" data-bind="foreach: last_run().message_displays">
+                                <li class="feedbackMessage" data-bind="attr: {'data-credit-change': credit_change}"><span data-bind="css: 'feedback-icon glyphicon '+icon" aria-hidden="true"></span> <!-- ko if: format=='html' --><span data-bind="dom: message"></span><!-- /ko --><!-- ko if: format=='string' --><span class="message" data-bind="html: message"></span><!-- /ko --></li>
+                            </ul>
+                            <p><strong>Score:</strong> <span data-bind="text: last_run().score"></span></p>
+                        </section>
+                    </form>
+                <!-- /ko -->
                 <!-- ko if: $parent.type().name=='gapfill' -->
                 <form class="form-horizontal answer-input" data-bind="submit: run">
                     <table class="table">

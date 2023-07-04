@@ -2214,6 +2214,33 @@ $(document).ready(function() {
         }
     };
 
+    ko.bindingHandlers.DOMsubvars = {
+        update: function(element,valueAccessor) {
+            const html_string = ko.unwrap(valueAccessor());
+            var d = document.createElement('div');
+            d.innerHTML = html_string;
+            let html = d.firstElementChild;
+            element.appendChild(d);
+            const scope = find_jme_scope(d).scope;
+            html = Numbas.jme.variables.DOMcontentsubvars(d,scope);
+            element.innerHTML = '';
+            element.appendChild(html);
+            $(element).mathjax();
+        }
+    }
+
+    ko.bindingHandlers.jme_scope = {
+        update: function(element, valueAccessor) {
+            const scope = ko.unwrap(valueAccessor());
+            if(scope) {
+                element.classList.add('jme-scope');
+                $(element).data('jme-scope',scope);
+            } else {
+                element.classList.remove('jme-scope');
+            }
+        }
+    }
+
     ko.bindingHandlers.latex = {
         update: function(element,valueAccessor) {
             ko.bindingHandlers.html.update.apply(this,arguments);

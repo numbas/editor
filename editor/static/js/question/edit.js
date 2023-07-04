@@ -3963,7 +3963,7 @@ $(document).ready(function() {
                 if(!answer) {
                     throw(new Numbas.Error("Student's answer not set. There may be an error in the input widget."));
                 }
-                if(!answer.valid) {
+                if(part.type !='extension' && !answer.valid) {
                     if(answer.empty) {
                         mt.last_run({error: ''})
                     } else {

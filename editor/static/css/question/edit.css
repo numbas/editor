@@ -115,6 +115,10 @@
     display: inline;
 }
 
+.part .form-group .label-block > :nth-child(2) {
+    font-weight: normal;
+}
+
 table.variable-list > tbody > tr > td {
     padding: 8px 0;
 }

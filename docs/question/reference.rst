@@ -69,7 +69,7 @@ Admin controls
         .. warning:: 
             Do **NOT** use this link to deliver the question to students. 
             This link is not permanent and could stop working at any time.
-            Instead, either download the exam and put it on your own webspace or in a VLE, or use the :guilabel:`Share` button on the preview to obtina a permanent link.
+            Instead, either download the exam and put it on your own webspace or in a VLE, or use the :guilabel:`Share` button on the preview to obtain a permanent link.
 
     Make a copy
         Create a copy of the question. 

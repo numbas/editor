@@ -28,13 +28,13 @@ Upload the extension package - this should at minimum contain a ``.js`` file mat
 
 Upon saving the extension, it will become available for use within your editor.
 
-Downloading extensions from github
+Downloading extensions from GitHub
 ----------------------------------
 
-The extension packages for first-party extensions can be obtained from the `Numbas page on github <https://github.com/numbas?q=numbas-extension>`__
+The extension packages for first-party extensions can be obtained from the `Numbas page on GitHub <https://github.com/numbas?q=numbas-extension>`__
 
 To obtain the package for an extension, click on the :guilabel:`Code` button and then :guilabel:`Download ZIP`. 
 This can then be directly uploaded as above - ensure that the short name matches the ``.js`` in the package folder.
 
 .. image:: images/extension-git.png
-   :alt: Downloading a zip of an extension from github via the drop-down beside 'Code' and clicking 'Download Zip'.
+   :alt: Downloading a zip of an extension from GitHub via the drop-down beside 'Code' and clicking 'Download Zip'.

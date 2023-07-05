@@ -1862,27 +1862,18 @@ $(document).ready(function() {
                 function get_nested_layers() {
                     const layer_lengths = [];
 
-                    function get_layer_lengths(v) {
-                        let next_layer = v.value;
-                        if (next_layer.length !== 0) {
-                            next_layer = next_layer[0]
-                            const nested_length = next_layer.type == "list"
-                                                  ? next_layer.value.length
-                                                  : 0;
-
-                            if (nested_length > 0) {
-                                layer_lengths.push(nested_length);
-                                get_layer_lengths(next_layer)
-                            }
-                        }
-                    }
-
                     function get_deepest_layer(v, depth) {
                         // depth is the current layer depth, lowest_depth is the lowest depth
                         // achieved so far through recursive calls.
                         lowest_depth = Infinity;
-                        if (v.type !== "list" || layer_lengths[depth - 1] === undefined) {
+
+                        if (v.type !== "list") {
                             return depth - 1;
+                        } else if (v.value.length === 0) {
+                            layer_lengths[depth - 1] = 0;
+                            return depth - 1;
+                        } else if (layer_lengths[depth - 1] === undefined && v.value[0].type === "list") {
+                            layer_lengths[depth - 1] = v.value[0].value.length;
                         }
 
                         for (const item of v.value) {
@@ -1897,20 +1888,13 @@ $(document).ready(function() {
                         }
                         return lowest_depth;
                     }
-
-                    get_layer_lengths(v);
-                    const deepest_layer = get_deepest_layer(v, 1);
-                    return layer_lengths.slice(0, deepest_layer);
+                    return layer_lengths.slice(0, get_deepest_layer(v, 1));
                 }
 
                 const nested_layers = get_nested_layers();
-
                 if (nested_layers.length > 0) {
-                    description = `Nested ${v.value.length}`;
-                    for (const layer_size of nested_layers) {
-                        description += `x${layer_size}`;
-                    }
-                    description += " list";
+                    nested_layers.unshift(v.value.length);
+                    description = `Nested ${nested_layers.join("×")} list`;
                 } else {
                     description = 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
                 }

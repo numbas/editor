@@ -2994,6 +2994,8 @@ Lists
         * ``let(x,1, y,2, x+y)`` → ``3``
         * ``let(["x": 1, "y": 2], x+y)`` → ``3``
 
+.. _pipe:
+
 .. jme:function:: |>
     :keywords: pipe, compose, function, sequence
 

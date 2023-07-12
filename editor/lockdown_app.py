@@ -13,7 +13,6 @@ def make_key(password):
 def encrypt(password, message):
     msglist = []
     key = make_key(password)
-    print('KEY: ',binascii.hexlify(key))
     iv = Random.new().read(AES.block_size)
     cipher = AES.new(key, AES.MODE_CBC, iv)
     encrypted = cipher.encrypt(pad(message.encode('utf-8'), AES.block_size))
@@ -29,9 +28,5 @@ def make_link(request, launch_url, password):
     }
 
     iv, encrypted = encrypt(password, json.dumps(link_settings))
-    print(getattr(settings,'LOCKDOWN_APP').get('salt',''))
-    print(password)
-    print(iv)
-    print(encrypted)
     url = f'numbas://{request.get_host()}/'+binascii.hexlify(iv+encrypted).decode('ascii')
     return url

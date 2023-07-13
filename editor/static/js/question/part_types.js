@@ -828,7 +828,7 @@ part_types.models = [
 
             model.addChoice = function() {
                 var c = {
-                    content: Editor.contentObservable('Choice '+(model.choices().length+1)),
+                    content: Editor.contentObservable(''),
                     marks: ko.observable(0),
                     distractor: Editor.contentObservable(''),
                     answers: ko.observableArray([])
@@ -1037,7 +1037,7 @@ part_types.models = [
 
             model.addChoice = function() {
                 var c = {
-                    content: Editor.contentObservable('Choice '+(model.choices().length+1)),
+                    content: Editor.contentObservable(''),
                     marks: ko.observable(0),
                     distractor: Editor.contentObservable('')
                 };

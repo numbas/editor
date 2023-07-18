@@ -829,7 +829,7 @@ part_types.models = [
             model.addChoice = function() {
                 var c = {
                     content: Editor.contentObservable(''),
-                    marks: ko.observable(0),d
+                    marks: ko.observable(0),
                     distractor: Editor.contentObservable(''),
                     answers: ko.observableArray([])
                 };
@@ -1055,7 +1055,7 @@ part_types.models = [
 
             model.addAnswer = function() {
                 var a = {
-                    content: ko.observable(''))
+                    content: ko.observable('')
                 };
                 a.remove = function() {
                     model.removeAnswer(a);

@@ -1055,7 +1055,7 @@ part_types.models = [
 
             model.addAnswer = function() {
                 var a = {
-                    content: ko.observable(''))
+                    content: ko.observable('')
                 };
                 a.remove = function() {
                     model.removeAnswer(a);

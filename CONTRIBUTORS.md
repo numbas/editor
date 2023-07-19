@@ -18,5 +18,6 @@
 * [Maheshwaran Dhandapani](https://github.com/Maheshwaran17)
 * [Maanas Arora](https://github.com/MaanasArora)
   [George Li](https://github.com/Keyboardguy)
-
+* [Janet Cheung](https://github.com/JanOnBread)
+ 
 *Add your name here - [contribute to the Numbas project](http://www.numbas.org.uk/contributing-to-numbas/)!*

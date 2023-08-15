@@ -8334,6 +8334,9 @@ jme.display = /** @lends Numbas.jme.display */ {
         parser = parser || Numbas.jme.standardParser;
         try {
             var exprTree = parser.compile(expr,{},true);    //compile the expression to a tree. notypecheck is true, so undefined function names can be used.
+            if(!exprTree) {
+                return '';
+            }
             return jme.display.simplifyTree(exprTree,ruleset,scope);    // simplify the tree
         } catch(e) {
             //e.message += '\nSimplifying expression failed. Expression was: '+expr;
@@ -10531,12 +10534,12 @@ JMEifier.prototype = {
             }
         } else if(n instanceof Decimal) {
             var out = math.niceDecimal(n,options);
-            if(out.length>20) {
-                out = n.toExponential().replace(/e\+0$/,'');
-            }
             if(this.settings.plaindecimal) {
                 return out;
             } else { 
+                if(out.length > 20) {
+                    out = n.toExponential().replace(/e\+0$/,'');
+                }
                 return 'dec("'+out+'")';
             }
         } else {

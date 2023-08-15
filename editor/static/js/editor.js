@@ -1877,7 +1877,7 @@ $(document).ready(function() {
                         }
 
                         for (const item of v.value) {
-                            if (item.value.length !== layer_lengths[depth - 1]) {
+                            if (item.type !== 'list' || item.value.length !== layer_lengths[depth - 1]) {
                                 return depth - 1;
                             }
 

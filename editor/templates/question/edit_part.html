@@ -616,7 +616,7 @@
                     <tr>
                         <td><select {% if not editable %}disabled{% endif %} class="form-control name-to-replace" data-bind="options: variableDisplay, value: variable"/></td>
                         <td>
-                            <select {% if not editable %}disabled{% endif %} class="form-control replace-with" data-bind="options: availableParts, optionsText: 'name', optionsValue: 'path', value: replacement"></select>
+                            <select {% if not editable %}disabled{% endif %} class="form-control replace-with" data-bind="options: availableParts, optionsText: 'name', optionsValue: 'id', value: replacement"></select>
                             <div class="alert alert-warning" data-bind="fadeVisible: variableWarning, text: variableWarning"></div>
                         </td>
                         <td>

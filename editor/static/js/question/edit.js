@@ -128,8 +128,8 @@ $(document).ready(function() {
         ];
         this.partsMode = ko.observable(this.partsModes[0]);
 
-
         this.parts = ko.observableArray([]);
+
         ko.computed(function() {
             if(this.partsMode().value=='all') {
                 this.parts().forEach(function(p) {
@@ -173,7 +173,7 @@ $(document).ready(function() {
                 o = o.concat(p.alternatives());
             });
             return o;
-        },this);
+        },this).extend({rateLimit: 50});
 
         this.currentPart = ko.observable(null);
 
@@ -1076,6 +1076,10 @@ $(document).ready(function() {
             } else {
                 return p;
             }
+        },
+
+        getPartById: function(id) {
+            return this.allParts().find(p => p.id == id);
         },
 
         generateVariablePreview: function() {
@@ -2819,8 +2823,13 @@ $(document).ready(function() {
         }
     };
 
+    var part_id_acc = 0;
+
     var Part = Editor.question.Part = function(levelName,q,parent,parentList,data) {
         var p = this;
+
+        this.id = 'part-'+(part_id_acc++);  // The ID property is used to refer to parts unambiguously as they are re-ordered. It has no other meaning and isn't saved in the output JSON.
+        
         this.levelName = ko.observable(levelName);
         this.q = q;
         this.prompt = Editor.contentObservable('');
@@ -3350,20 +3359,27 @@ $(document).ready(function() {
         },
 
         remove: function() {
-            var p = this;
             if(confirm("Remove "+this.name()+"?")) {
-                this.parentList.remove(this);
-                if(this.q.currentPart()==this) {
-                    this.q.currentPart(this.parent() || null);
-                }
-                viewModel.allParts().forEach(function(p2) {
-                    p2.nextParts().forEach(function(np) {
-                        if(np.otherPart()==p) {
-                            p2.nextParts.remove(np);
-                        }
-                    });
-                });
+                this.forceRemove();
             }
+        },
+
+        forceRemove: function() {
+            console.log('remove',this.path(), this.id);
+            var p = this;
+            this.parentList.remove(this);
+
+            if(this.q.currentPart() == this) {
+                this.q.currentPart(this.parent() || null);
+            }
+
+            viewModel.allParts().forEach(function(p2) {
+                p2.nextParts().forEach(function(np) {
+                    if(np.otherPart()==p) {
+                        p2.nextParts.remove(np);
+                    }
+                });
+            });
         },
 
         moveUp: function() {
@@ -3581,8 +3597,8 @@ $(document).ready(function() {
         this.must_go_first = ko.observable(false);
         this.availableParts = ko.pureComputed(function() {
             var p = this.part
-            return p.q.allParts().filter(function(p2){
-                return p!=p2 && p2.type().has_marks && p2.parent()!=p && !p2.isAlternative();
+            return p.q.allParts().filter(function(p2 ){
+                return p!=p2 && p2.type().has_marks && p2.parent() != p && !p2.isAlternative();
             });
         },this);
         this.variableWarning = ko.computed(function() {
@@ -3616,16 +3632,17 @@ $(document).ready(function() {
     }
     VariableReplacement.prototype = {
         toJSON: function() {
+            const replacement = this.part.q.getPartById(this.replacement());
             return {
                 variable: this.variable(),
-                part: this.replacement(),
+                part: replacement ? replacement.path() : '',
                 must_go_first: this.must_go_first()
             }
         },
         load: function(data) {
             tryLoad(data,['variable','must_go_first'],this);
             var path = data.part;
-            this.replacement(data.part);
+            this.replacement(this.part.q.getPart(data.part).id);
         }
     }
 

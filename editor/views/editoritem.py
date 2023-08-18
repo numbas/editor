@@ -509,7 +509,8 @@ class CompileObject(MustHaveAccessMixin):
             '-o'+str(output_location),
             '-t'+str(theme_path),
             '-l'+locale,
-            '--mathjax-url',self.get_mathjax_url()
+            '--mathjax-url',self.get_mathjax_url(),
+            '--accessibility-statement-url', self.get_accessibility_statement_url(),
         ] + switches
 
         if settings.DEBUG:
@@ -528,6 +529,9 @@ class CompileObject(MustHaveAccessMixin):
             return settings.MATHJAX_URL
         else:
             return self.request.user.userprofile.mathjax_url
+    
+    def get_accessibility_statement_url(self):
+        return settings.GLOBAL_SETTINGS['HELP_URL'] + 'accessibility/exam.html'
     
     def get_error_response(self, error):
         template = get_template("compile/error.html")

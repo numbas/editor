@@ -8,7 +8,11 @@ Numbas should be accessible to everyone who needs to or would like to use it.
 Accessibility is an important consideration during the design and development process.
 We regularly test Numbas against a variety of accessibility requirements.
 
-This statement was prepared in October 2019.
+This statement was first prepared in October 2019 and last updated in August 2023.
+
+.. contents:: Table of Contents
+   :depth: 2
+   :local:
 
 What’s covered by this statement
 --------------------------------
@@ -47,15 +51,9 @@ Particular accessibility requirements we’ve designed around
 Compatibility with browsers
 ---------------------------
 
-We have tested Numbas on the following browsers.
-Any more recent versions should be assumed to work.
+We aim for compatibility with at least 95% of browsers currently in use.
 
-* **Chrome** version 73 (released 2019-03-12).
-* **Firefox** version 81 (released 2020-09-22).
-* **Edge** version 79 (released 2020-01-15).
-* **macOS Safari** version 13 (released 2019-09-19).
-* **iOS Safari (iPhone/iPad)** version 13 (released 2019-09-19).
-* **Android WebView** version 73 (released 2019-03-12).
+More detail on minimum supported versions of different browsers is given in `our feature compatibility table <https://somethingorotherwhatever.com/can-i-also-use/?settings=https://raw.githubusercontent.com/numbas/Numbas/master/can-i-also-use-settings.json>`__.
 
 Accessibility guide
 -------------------

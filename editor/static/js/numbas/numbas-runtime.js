@@ -4588,6 +4588,9 @@ jme.sortTokensBy = function(fn) {
  * @returns {boolean}
  */
 var treesSame = jme.treesSame = function(a,b,scope) {
+    if(a == undefined || b == undefined) {
+        return a == undefined && b == undefined;
+    }
     var ta = a.tok;
     var tb = b.tok;
     if(a.args || b.args) {
@@ -13693,6 +13696,9 @@ DOMcontentsubber.prototype = {
                 }
                 object.setAttribute('type','image/svg+xml');
                 object.setAttribute('data',element.getAttribute('src'));
+                if(element.hasAttribute('alt')) {
+                    object.setAttribute('aria-label', element.getAttribute('alt'));
+                }
                 if(element.parentElement) {
                     element.parentElement.replaceChild(object,element);
                 }
@@ -14296,6 +14302,7 @@ var createPart = Numbas.createPart = function(index, type, path, question, paren
  * @param {Numbas.storage.BlankStorage} [store]
  * @property {boolean} isStep - Is this part a step?
  * @property {boolean} isGap - Is this part a gap?
+ * @property {string} full_path - A globally-unique path to this part, including the parent question's number.
  * @see Numbas.createPart
  */
 var Part = Numbas.parts.Part = function(index, path, question, parentPart, store)
@@ -14311,6 +14318,8 @@ var Part = Numbas.parts.Part = function(index, path, question, parentPart, store
     this.parentPart = parentPart;
     //remember a path for this part, for stuff like marking and warnings
     this.path = path || 'p0';
+
+    this.full_path = (this.question ? 'q'+this.question.number : '') + this.path;
 
     this.name = util.capitalise(util.nicePartName(path));
 
@@ -15394,7 +15403,7 @@ if(res) { \
                 this.answered = result.answered;
             }
         } else {
-            this.giveWarning(R('part.marking.not submitted'));
+            this.submit_no_staged_answer();
             this.setCredit(0,R('part.marking.did not answer'));;
             this.answered = false;
         }
@@ -15467,6 +15476,13 @@ if(res) { \
         }
         this.events.trigger('post-submit');
     },
+
+    /** Called when this part is submitted but it has no staged answer.
+     */
+    submit_no_staged_answer: function() {
+        this.giveWarning(R('part.marking.not submitted'));
+    },
+
     /** Has the student entered an answer to this part?
      *
      * @see Numbas.parts.Part#stagedAnswer
@@ -15475,6 +15491,7 @@ if(res) { \
     hasStagedAnswer: function() {
         return !(this.stagedAnswer==undefined);
     },
+
     /** Called by another part when its marking means that the marking for this part might change (i.e., when this part replaces a variable with the answer from the other part).
      * Sets this part as dirty, and gives a warning explaining why the student must resubmit.
      */
@@ -16526,6 +16543,7 @@ var Question = Numbas.Question = function( number, exam, group, gscope, store)
     q.group = group;
     q.adviceThreshold = q.exam ? q.exam.adviceGlobalThreshold : 0;
     q.number = number;
+    q.path = `q${this.number}`;
     gscope = gscope || (exam && exam.scope) || Numbas.jme.builtinScope;
     q.scope = new jme.Scope(gscope);
     q.scope.question = q;
@@ -16717,8 +16735,12 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             q.useExtension(node.textContent);
         });
 
+        var part_defs = Array.from(q.xml.selectNodes('parts//part'));
+        if(q.partsMode == 'explore' && part_defs.length == 0) {
+            throw(new Numbas.Error('question.explore.no parts defined'));
+        }
 
-        var part_types = Array.from(q.xml.selectNodes('parts//part')).forEach(function(p) {
+        var part_types = part_defs.forEach(function(p) {
             var type = tryGetAttribute(null,p,'.','type',[]);
             var cpt = Numbas.custom_part_types[type];
             if(!cpt) {
@@ -24564,9 +24586,11 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.events = params.events;
             this.title = params.title || '';
         },
-        template: '\
-        <span data-bind="if: widget"><span data-bind="css: classes, component: {name: \'answer-widget-\'+Knockout.unwrap(widget), params: {answerJSON: answerJSON, part: part, disable: disable, options: widget_options, events: events, title: title}}"></span></span>\
-        '
+        template: `
+            <span data-bind="if: widget">
+                <span data-bind="css: classes, component: {name: 'answer-widget-'+Knockout.unwrap(widget), params: {answerJSON: answerJSON, part: part, disable: disable, options: widget_options, events: events, title: title}}"></span>
+            </span>
+        `
     });
     Knockout.components.register('answer-widget-string', {
         viewModel: function(params) {
@@ -24599,9 +24623,9 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                 this.subscriptions.forEach(function(sub) { sub.dispose(); });
             }
         },
-        template: '\
-            <input type="text" autocapitalize="off" inputmode="text" spellcheck="false" data-bind="textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed) || Knockout.unwrap(part.locked), event: events, attr: {title: title}"/>\
-        '
+        template: `
+            <input type="text" autocapitalize="off" inputmode="text" spellcheck="false" data-bind="textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed) || Knockout.unwrap(part.locked), event: events, attr: {title: title, id: part.full_path+'-input'}, part_aria_validity: part.display.hasWarnings, part: part.display"/>
+        `
     });
     Knockout.components.register('answer-widget-number', {
         viewModel: function(params) {
@@ -24669,9 +24693,9 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                 this.setAnswerJSON.dispose();
             }
         },
-        template: '\
-            <input type="text" autocapitalize="off" inputmode="text" spellcheck="false" data-bind="textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed) || Knockout.unwrap(part.locked), event: events, attr: {title: title}"/>\
-        '
+        template: `
+            <input type="text" autocapitalize="off" inputmode="text" spellcheck="false" data-bind="textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed) || Knockout.unwrap(part.locked), event: events, attr: {title: title, id: part.full_path+'-input'}, part_aria_validity: part.display.hasWarnings, part: part.display"/>
+        `
     });
     Knockout.components.register('answer-widget-jme', {
         viewModel: function(params) {
@@ -24729,6 +24753,9 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                 } else {
                     try {
                         var expr = Numbas.jme.compile(input);
+                        if(!expr) {
+                            return {valid: false, empty: true};
+                        }
                         var scope = Knockout.unwrap(p).getScope();
                         var ruleset = new Numbas.jme.rules.Ruleset([],{});
                         expr = Numbas.jme.display.simplifyTree(expr, ruleset, scope);
@@ -24763,10 +24790,16 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                 this.setAnswerJSON.dispose();
             }
         },
-        template: '\
-            <input type="text" autocapitalize="off" inputmode="text" spellcheck="false" data-bind="event: events, textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed) || Knockout.unwrap(part.locked), attr: {title: title}"/>\
-            <span class="jme-preview" aria-live="polite" data-bind="visible: showPreview && latex(), maths: \'\\\\displaystyle{{\'+latex()+\'}}\'"></span>\
-        '
+        template: `
+            <input 
+                type="text"
+                autocapitalize="off"
+                inputmode="text"
+                spellcheck="false"
+                data-bind="event: events, textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed) || Knockout.unwrap(part.locked), attr: {id: part.full_path+'-input', title: title}, part_aria_validity: part.display.hasWarnings, part: part.display"
+            />
+            <output class="jme-preview" aria-live="polite" data-bind="visible: showPreview && latex(), attr: {for: part.full_path+'-input'}, maths: '\\\\displaystyle{{'+latex()+'}}'"></output>
+        `
     });
     Knockout.components.register('answer-widget-gapfill', {
         viewModel: function(params) {
@@ -24786,21 +24819,22 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                 this.setAnswerJSON.dispose();
             }
         },
-        template: '\
-            <table class="table">\
-                <tbody data-bind="foreach: gaps">\
-                    <tr>\
-                        <th><span data-bind="text: part.header"></span></th>\
-                        <td><div data-bind="component: {name: \'answer-widget\', params: {answer: answerJSON, widget: Knockout.unwrap(part.type).widget, part: part, disable: disable}}"></div></td>\
-                    </tr>\
-                </tbody>\
-            </table>\
-        '
+        template: `
+            <table class="table">
+                <tbody data-bind="foreach: gaps">
+                    <tr>
+                        <th><span data-bind="text: part.header"></span></th>
+                        <td><div data-bind="component: {name: \'answer-widget\', params: {answer: answerJSON, widget: Knockout.unwrap(part.type).widget, part: part, disable: disable}}"></div></td>
+                    </tr>
+                </tbody>
+            </table>
+        `
     });
     Knockout.components.register('answer-widget-matrix', {
         viewModel: function(params) {
             var vm = this;
             this.answerJSON = params.answerJSON;
+            this.part = params.part;
             this.options = Knockout.unwrap(params.options);
             this.disable = params.disable;
             this.title = params.title || '';
@@ -24896,26 +24930,36 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                 this.setAnswerJSON.dispose();
             }
         },
-        template: '\
-            <matrix-input params="value: input, \
-                allowResize: true,\
-                disable: disable,\
-                allowResize: allowResize,\
-                rows: numRows,\
-                columns: numColumns,\
-                minColumns: minColumns,\
-                maxColumns: maxColumns,\
-                minRows: minRows,\
-                maxRows: maxRows,\
-                prefilledCells: prefilledCells,\
-                showBrackets: showBrackets,\
-                rowHeaders: rowHeaders,\
-                columnHeaders: columnHeaders,\
-                events: events,\
-                title: title\
-            "></matrix-input>\
-        '
+        template: `
+            <fieldset data-bind="part_aria_validity: part.display.hasWarnings, part: part.display">
+                <matrix-input 
+                data-bind="attr: {id: part.full_path+'-input'}"
+                params="value: input, 
+                    allowResize: true,
+                    disable: disable,
+                    allowResize: allowResize,
+                    rows: numRows,
+                    columns: numColumns,
+                    minColumns: minColumns,
+                    maxColumns: maxColumns,
+                    minRows: minRows,
+                    maxRows: maxRows,
+                    prefilledCells: prefilledCells,
+                    showBrackets: showBrackets,
+                    rowHeaders: rowHeaders,
+                    columnHeaders: columnHeaders,
+                    events: events,
+                    title: title
+                "></matrix-input>
+            </fieldset>
+        `
     });
+
+
+    /** 
+     * A generic component for entering a matrix.
+     * Shows a grid of text inputs, optionally surrounded by brackets and/or with a control box on top to change the number of rows and columns.
+     */
     Knockout.components.register('matrix-input',{
         viewModel: function(params) {
             var vm = this;
@@ -25012,25 +25056,25 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.moveArrow = function(obj,e) {
                 var cell = $(e.target).parent('td');
                 var selectionStart = e.target.selectionStart;
-                switch(e.which) {
-                case 39:
+                switch(e.key) {
+                case 'ArrowRight':
                     if(e.target.selectionStart == this.oldPos && e.target.selectionStart==e.target.selectionEnd && e.target.selectionEnd==e.target.value.length) {
                         cell.next().find('input').focus();
                     }
                     break;
-                case 37:
+                case 'ArrowLeft':
                     if(e.target.selectionStart == this.oldPos && e.target.selectionStart==e.target.selectionEnd && e.target.selectionEnd==0) {
                         cell.prev().find('input').focus();
                     }
                     break;
-                case 38:
+                case 'ArrowUp':
                     var e = cell.parents('tr').prev().children().eq(cell.index()).find('input');
                     if(e.length) {
                         e.focus();
                         e[0].setSelectionRange(this.oldPos,this.oldPos);
                     }
                     break;
-                case 40:
+                case 'ArrowDown':
                     var e = cell.parents('tr').next().children().eq(cell.index()).find('input');
                     if(e.length) {
                         e.focus();
@@ -25117,39 +25161,40 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                 this.setValue.dispose();
             }
         },
-        template:
-         '<div class="matrix-input" data-bind="attr: {title: title}">'
-        +'    <!-- ko if: allowResize --><div class="matrix-size">'
-        +'        <fieldset><legend aria-label="'+R('matrix input.size control legend')+'"></legend>'
-        +'        <label class="num-rows">'+R('matrix input.rows')+': <input type="number" data-bind="value: numRows, autosize: true, disable: disable, attr: {\'min\': minRows()==0 ? 1 : minRows(), \'max\': maxRows()==0 ? \'\' : maxRows()}"/></label>'
-        +'        <label class="num-columns">'+R('matrix input.columns')+': <input type="number" min="1" data-bind="value: numColumns, autosize: true, disable: disable, attr: {\'min\': minColumns()==0 ? 1 : minColumns(), \'max\': maxColumns()==0 ? \'\' : maxColumns()}"/></label>'
-        +'        </fieldset>'
-        +'    </div><!-- /ko -->'
-        +'    <div class="matrix-wrapper">'
-        +'        <fieldset><legend data-bind="attr: {\'aria-label\': title}"></legend>'
-        +'        <span class="left-bracket" data-bind="visible: showBrackets"></span>'
-        +'        <table class="matrix">'
-        +'            <thead data-bind="if: hasColumnHeaders">'
-        +'                <tr>'
-        +'                    <th data-bind="visible: hasRowHeaders"><span data-bind="latex: rowHeaders()[0]"></span></th>'
-        +'                    <!-- ko foreach: columnHeaders --><th data-bind="latex: $data"></th><!-- /ko -->'
-        +'                </tr>'
-        +'            </thead>'
-        +'            <tbody data-bind="foreach: value">'
-        +'                <tr>'
-        +'                    <th data-bind="visible: $parent.hasRowHeaders"><span data-bind="latex: $parent.rowHeaders()[$index()+1] || \'\'"></span></th>'
-        +'                    <!-- ko foreach: $data -->'
-        +'                    <td class="cell"><input type="text" autocapitalize="off" inputmode="text" spellcheck="false" data-bind="attr: {\'aria-label\': label}, textInput: cell, autosize: true, disable: prefilled || $parents[1].disable, event: $parents[1].events"/></td>'
-        +'                    <!-- /ko -->'
-        +'                </tr>'
-        +'            </tbody>'
-        +'        </table>'
-        +'        <span class="right-bracket" data-bind="visible: showBrackets"></span>'
-        +'        </fieldset>'
-        +'    </div>'
-        +'</div>'
-        }
-    )
+        template: `
+            <div class="matrix-input" data-bind="attr: {title: title}">
+                <!-- ko if: allowResize --><div class="matrix-size">
+                    <fieldset><legend aria-label="${R('matrix input.size control legend')}"></legend>
+                    <label class="num-rows">${R('matrix input.rows')}: <input type="number" data-bind="value: numRows, autosize: true, disable: disable, attr: {'min': minRows()==0 ? 1 : minRows(), 'max': maxRows()==0 ? '' : maxRows()}"/></label>
+                    <label class="num-columns">${R('matrix input.columns')}: <input type="number" min="1" data-bind="value: numColumns, autosize: true, disable: disable, attr: {'min': minColumns()==0 ? 1 : minColumns(), 'max': maxColumns()==0 ? '' : maxColumns()}"/></label>
+                    </fieldset>
+                </div><!-- /ko -->
+                <div class="matrix-wrapper">
+                    <fieldset><legend data-bind="attr: {'aria-label': title}"></legend>
+                    <span class="left-bracket" data-bind="visible: showBrackets"></span>
+                    <table class="matrix">
+                        <thead data-bind="if: hasColumnHeaders">
+                            <tr>
+                                <th data-bind="visible: hasRowHeaders"><span data-bind="latex: rowHeaders()[0]"></span></th>
+                                <!-- ko foreach: columnHeaders --><th data-bind="latex: $data"></th><!-- /ko -->
+                            </tr>
+                        </thead>
+                        <tbody data-bind="foreach: value">
+                            <tr>
+                                <th data-bind="visible: $parent.hasRowHeaders"><span data-bind="latex: $parent.rowHeaders()[$index()+1] || ''"></span></th>
+                                <!-- ko foreach: $data -->
+                                <td class="cell"><input type="text" autocapitalize="off" inputmode="text" spellcheck="false" data-bind="attr: {'aria-label': label}, textInput: cell, autosize: true, disable: prefilled || $parents[1].disable, event: $parents[1].events"/></td>
+                                <!-- /ko -->
+                            </tr>
+                        </tbody>
+                    </table>
+                    <span class="right-bracket" data-bind="visible: showBrackets"></span>
+                    </fieldset>
+                </div>
+            </div>
+        `
+    });
+
     Knockout.components.register('answer-widget-radios', {
         viewModel: function(params) {
             this.part = params.part;
@@ -25217,13 +25262,20 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                 this.setAnswerJSON.dispose();
             }
         },
-        template: '\
-            <form>\
-            <ul class="list-unstyled" data-bind="foreach: choices">\
-                <li><label><input type="radio" name="choice" data-bind="checkedValue: $index, checked: $parent.choice, disable: $parent.disable, event: $parent.events"/> <span data-bind="html: $data"></span></label></li>\
-            </ul>\
-            </form>\
-        '
+        template: `
+            <form>
+                <fieldset data-bind="part_aria_validity: part.display.hasWarnings, part: part, attr: {id: part.full_path+'-input'}">
+                    <ul class="list-unstyled" data-bind="foreach: choices">
+                        <li>
+                            <label>
+                                <input type="radio" name="choice" data-bind="checkedValue: $index, checked: $parent.choice, disable: $parent.disable, event: $parent.events"/> 
+                                <span data-bind="html: $data"></span>
+                            </label>
+                        </li>
+                    </ul>
+                </fieldset>
+            </form>
+        `
     });
     Knockout.components.register('answer-widget-dropdown', {
         viewModel: function(params) {
@@ -25282,9 +25334,9 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                 this.setAnswerJSON.dispose();
             }
         },
-        template: '\
-            <select data-bind="options: choices, optionsText: \'label\', value: choice, disable: disable, event: events, attr: {title: title}"></select>\
-        '
+        template: `
+            <select data-bind="options: choices, optionsText: 'label', value: choice, disable: disable, event: events, attr: {title: title, id: part.full_path+'-input'}, part_aria_validity: part.display.hasWarnings, part: part.display"></select>
+        `
     });
     Knockout.components.register('answer-widget-checkboxes', {
         viewModel: function(params) {
@@ -25342,13 +25394,20 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                 this.setAnswerJSON.dispose();
             }
         },
-        template: '\
-            <form>\
-            <ul class="list-unstyled" data-bind="foreach: choices">\
-                <li><label><input type="checkbox" name="choice" data-bind="checked: ticked, disable: $parent.disable, event: $parent.events"/> <span data-bind="html: content"></span></label></li>\
-            </ul>\
-            </form>\
-        '
+        template: `
+            <form>
+                <fieldset data-bind="part_aria_validity: part.display.hasWarnings, part: part, attr: {id: part.full_path+'-input'}">
+                    <ul class="list-unstyled" data-bind="foreach: choices">
+                        <li>
+                            <label>
+                                <input type="checkbox" name="choice" data-bind="checked: ticked, disable: $parent.disable, event: $parent.events"/>
+                                <span data-bind="html: content"></span>
+                            </label>
+                        </li>
+                    </ul>
+                </fieldset>
+            </form>
+        `
     });
     Knockout.components.register('answer-widget-m_n_x', {
         viewModel: function(params) {
@@ -25459,34 +25518,37 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                 this.setAnswerJSON.dispose();
             }
         },
-        template: '\
-            <form>\
-                <table>\
-                <thead>\
-                <tr>\
-                    <td></td>\
-                    <!-- ko foreach: answers -->\
-                    <th><span data-bind="html: $data"></span></th>\
-                    <!-- /ko -->\
-                </tr>\
-                <tbody data-bind="foreach: choices">\
-                    <tr>\
-                        <th><span data-bind="html: $data"></span></th>\
-                        <!-- ko foreach: $parent.ticks()[$index()] -->\
-                            <td>\
-                            <!-- ko if: $parents[1].input_type=="checkbox" -->\
-                                <input type="checkbox" data-bind="visible: display, checked: ticked, disable: $parents[1].disable, event: $parents[1].events"/>\
-                            <!-- /ko -->\
-                            <!-- ko if: $parents[1].input_type=="radio" -->\
-                                <input type="radio" data-bind="visible: display, attr: {name: name, value: $index()}, checked: ticked, disable: $parents[1].disable, event: $parents[1].events, checkedValue: $index()"/>\
-                            <!-- /ko -->\
-                            </td>\
-                        <!-- /ko -->\
-                    </tr>\
-                </tbody>\
-                </table>\
-            </form>\
-        '
+        template: `
+            <form>
+                <fieldset data-bind="part_aria_validity: part.display.hasWarnings, part: part, attr: {id: part.full_path+'-input'}">
+                    <table>
+                        <thead>
+                            <tr>
+                                <td></td>
+                                <!-- ko foreach: answers -->
+                                <th><span data-bind="html: $data"></span></th>
+                                <!-- /ko -->
+                            </tr>
+                        </thead>
+                        <tbody data-bind="foreach: choices">
+                            <tr>
+                                <th><span data-bind="html: $data"></span></th>
+                                <!-- ko foreach: $parent.ticks()[$index()] -->
+                                    <td>
+                                    <!-- ko if: $parents[1].input_type=="checkbox" -->
+                                        <input type="checkbox" data-bind="visible: display, checked: ticked, disable: $parents[1].disable, event: $parents[1].events"/>
+                                    <!-- /ko -->
+                                    <!-- ko if: $parents[1].input_type=="radio" -->
+                                        <input type="radio" data-bind="visible: display, attr: {name: name, value: $index()}, checked: ticked, disable: $parents[1].disable, event: $parents[1].events, checkedValue: $index()"/>
+                                    <!-- /ko -->
+                                    </td>
+                                <!-- /ko -->
+                            </tr>
+                        </tbody>
+                    </table>
+                </fieldset>
+            </form>
+        `
     });
 
     Knockout.bindingHandlers.custom_answer_widget = {
@@ -25829,6 +25891,14 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         },
         'dropdown': function(answer) {
             return new types.TNum(answer);
+        }
+    },
+
+    submit_no_staged_answer: function() {
+        if(this.widget_warnings) {
+            this.widget_warnings.forEach(warning => this.giveWarning(warning));
+        } else {
+            this.giveWarning(R('part.marking.not submitted'));
         }
     }
 };

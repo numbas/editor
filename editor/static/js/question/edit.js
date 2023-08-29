@@ -1252,6 +1252,8 @@ $(document).ready(function() {
             var scope = result.scope = new jme.Scope([prep.scope]);
             var todo = prep.todo;
 
+            var errors = [];
+
             function computeVariable(name,todo,scope,path,computeFn) {
                 scope.editor_evaluation_warnings = [];
                 var value;
@@ -1264,6 +1266,7 @@ $(document).ready(function() {
                         result.variables[name] = {error: e.message};
                     }
                     result.error = true;
+                    errors.push(e);
                 }
                 if(scope.editor_evaluation_warnings.length) {
                     if(!result.variables[name]) {
@@ -1275,7 +1278,7 @@ $(document).ready(function() {
             }
 
             try {
-                var vresult = Numbas.jme.variables.makeVariables(todo,scope,prep.condition,computeVariable)
+                var vresult = Numbas.jme.variables.makeVariables(todo,scope,prep.condition,computeVariable);
                 result.conditionSatisfied = vresult.conditionSatisfied;
                 Object.keys(vresult.variables).forEach(function(name) {
                     result.variables[name] = result.variables[name] || {};
@@ -1283,7 +1286,9 @@ $(document).ready(function() {
                         result.variables[name].value = vresult.variables[name];
                     }
                 });
-            } catch(e) {
+            } catch(err) {
+                var e = errors[0] || err;
+                errors.push(e);
                 console.error(e);
                 this.variablesTest.conditionError(e.message);
                 result.conditionSatisfied = false;

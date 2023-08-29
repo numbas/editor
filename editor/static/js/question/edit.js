@@ -1288,7 +1288,6 @@ $(document).ready(function() {
                 });
             } catch(err) {
                 var e = errors[0] || err;
-                errors.push(e);
                 console.error(e);
                 this.variablesTest.conditionError(e.message);
                 result.conditionSatisfied = false;

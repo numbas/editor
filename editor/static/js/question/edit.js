@@ -1603,6 +1603,12 @@ $(document).ready(function() {
                     break;
             }
             this.allParts().forEach(function(p) {
+                p.variableReplacements().forEach(function(vr) {
+                    if(vr.data) {
+                        vr.load(vr.data);
+                    }
+                    delete vr.data;
+                });
                 p.nextParts().forEach(function(np) {
                     np.otherPart(np.part.parentList()[np.otherPartIndex]);
                     np.variableReplacements().forEach(function(vr) {
@@ -3369,7 +3375,6 @@ $(document).ready(function() {
         },
 
         forceRemove: function() {
-            console.log('remove',this.path(), this.id);
             var p = this;
             this.parentList.remove(this);
 
@@ -3591,6 +3596,7 @@ $(document).ready(function() {
 
     function VariableReplacement(part,data) {
         this.part = part;
+        this.data = data; // The data will be loaded after all parts have been loaded, and then this property will be removed.
         this.variable = ko.observable('');
         this.variableDisplay = ko.pureComputed(function(){
             return this.part.q.variables().map(function(v){
@@ -3630,9 +3636,6 @@ $(document).ready(function() {
                 return 'This replacement refers to a gap-fill part, but the replaced variable is not a list. Did you mean to use one of the gaps?';
             }
         },this);
-        if(data) {
-            this.load(data);
-        }
     }
     VariableReplacement.prototype = {
         toJSON: function() {
@@ -3643,6 +3646,11 @@ $(document).ready(function() {
                 must_go_first: this.must_go_first()
             }
         },
+
+        /**
+         * Load this VariableReplacement's definition.
+         * Must be called after all parts have loaded.
+         */
         load: function(data) {
             tryLoad(data,['variable','must_go_first'],this);
             var path = data.part;

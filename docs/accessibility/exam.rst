@@ -1,3 +1,5 @@
+.. _exam-accessibility-statement:
+
 .. title:: Accessibility statement for Numbas exams
 
 Accessibility statement for Numbas exams
@@ -8,7 +10,7 @@ Numbas should be accessible to everyone who needs to or would like to use it.
 Accessibility is an important consideration during the design and development process.
 We regularly test Numbas against a variety of accessibility requirements.
 
-This statement was first prepared in October 2019 and last updated in August 2023.
+This statement was first prepared in October 2019 and last updated in September 2023.
 
 .. contents:: Table of Contents
    :depth: 2
@@ -35,7 +37,9 @@ Themes and extensions developed by the Numbas team are designed with the same ac
 Compliance with standards
 -------------------------
 
-We aim to meet `WCAG 2.1 <https://www.w3.org/TR/WCAG21/>`__ AA level standards.
+Numbas satisfies all of the criteria of WCAG 2.1 Level AA, and all of the criteria of WCAG 2.1 Level AAA except :ref:`2.2.4: Interruptions <exam-vpat-wcag-2-2-4>`, :ref:`3.1.3: Unusual Words <exam-vpat-wcag-3-1-3>` and :ref:`3.1.5: Reading Level <exam-vpat-wcag-3-1-5>`, which are **partially supported**.
+
+See :ref:`the accessibility conformance report <exam-vpat>` for more detail.
 
 Particular accessibility requirements we’ve designed around
 -----------------------------------------------------------
@@ -45,7 +49,7 @@ Particular accessibility requirements we’ve designed around
 -  Ensure a colour contrast ratio of at least 7:1 (WCAG level AAA) throughout the interface.
 -  The interface can be navigated entirely with the keyboard.
 -  All content on the page is screen-readable, with sensible descriptions.
--  Very few animations; reduce motion as much as possible when browsers request it.
+-  No animations.
 -  Layout is responsive and usable on screens with a variety of resolutions, including mobile devices.
 
 Compatibility with browsers
@@ -71,6 +75,17 @@ On narrow screens, the navigation sidebar is hidden and instead a smaller naviga
 This contains buttons to move to the previous or next question, an :guilabel:`End exam` button, and a button to show the sidebar, with an icon of three horizontal lines.
 To hide the sidebar again, click anywhere outside the sidebar.
 
+During an exam, there is a single level 1 header at the top of the navigation area, containing the exam's name.
+Within the navigation area, each question group has a level 2 header.
+
+The :guilabel:`main` landmark holds the content of the current question, and is labelled with the question's name in a level 2 header.
+Each question part has a level 3 header, labelled with the part's name.
+
+When the question's expected answers have been revealed, there may be a final :guilabel:`Advice` section with a level 3 header at the end of the question content, just before the :guilabel:`Question controls` navigation area.
+
+Numbas exams are often presented inside a frame, to enable communication with the host virtual learning environment.
+There is usually no content on the page other than the Numbas exam frame.
+
 Interacting with a question
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -88,6 +103,7 @@ This rendering updates immediately whenever your answer changes.
 
 If the answer you have entered is invalid, a box with an explanation of the error is shown next to the input box, as long as the input is focused.
 Screenreaders will read this explanation as soon as it appears.
+You can dismiss this explanation by pressing the :kbd:`Escape` key or by moving focus out of the input box.
 
 After the answers to a question have been revealed, there is often a box showing the expected answer after each input.
 
@@ -138,7 +154,7 @@ Click outside the image or press the :kbd:`Escape` key to return to the main int
 Navigating with a keyboard
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In most browsers, pressing the Tab key will move focus between interactive elements in the display.
+In most browsers, pressing the :kbd:`Tab` key will move focus between interactive elements in the display.
 
 Numbas uses the `MathJax accessibility extensions <https://docs.mathjax.org/en/v2.7-latest/misc/accessibility-features.html>`__ to provide interactive exploration of mathematical notation.
 
@@ -151,10 +167,12 @@ After starting a Numbas exam, use your browser’s :guilabel:`Print` feature.
 Using a screenreader
 ~~~~~~~~~~~~~~~~~~~~
 
-A screenreader such as `NVDA <https://www.nvaccess.org/>`__, JAWS or Orca will read all of the content in a Numbas exam.
-We’ve tested Numbas with NVDA and Orca.
+A screenreader such as VoiceOver, `NVDA <https://www.nvaccess.org/>`__, JAWS or Orca will read all of the content in a Numbas exam.
+We’ve tested Numbas with VoiceOver, NVDA and Orca.
 
 When you submit an answer, the score and any feedback messages will be read out.
+
+While entering an answer, if your input is invalid, a warning message will be read out.
 
 Mathematical notation is made accessible to a screenreader by the `MathJax accessibility extensions <https://docs.mathjax.org/en/v2.7-latest/misc/accessibility-features.html>`__.
 

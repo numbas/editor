@@ -1744,10 +1744,17 @@ $(document).ready(function() {
                 well.setAttribute('role','button');
                 element.appendChild(well);
 
-                well.addEventListener('click',function(e) {
+                function activate_editor(e) {
                     e.stopPropagation();
                     if(!element.hasAttribute('disabled')) {
                         make_tinymce();
+                    }
+                }
+
+                well.addEventListener('click', activate_editor);
+                well.addEventListener('keypress',function(e) {
+                    if(e.key == 'Enter') {
+                        activate_editor(e);
                     }
                 });
             } else {

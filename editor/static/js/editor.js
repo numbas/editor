@@ -1858,6 +1858,13 @@ $(document).ready(function() {
             case 'vector':
                 description = 'Vector with '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'component','components');
                 break;
+            case 'range':
+                if(v.step == 0) {
+                    description = `Continuous interval between ${v.start} and ${v.end}`;
+                } else {
+                    description = `Numbers between ${v.start} and ${v.end}, with step size ${v.step}`;
+                }
+                break;
             case 'list':
                 function get_nested_layers() {
                     const layer_lengths = [];

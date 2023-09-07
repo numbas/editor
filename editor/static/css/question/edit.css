@@ -238,8 +238,13 @@ table.variable-list .value-cell .value-wrapper {
     font-size: 1.1em;
     font-weight: bold;
 }
-.value-preview > h3 .type {
+.value-preview > h3 .type,
+.value-preview > dl > dt .type {
     font-weight: normal;
+}
+.value-preview > dl > dd {
+    margin-left: 2em;
+    margin-bottom: 1em;
 }
 
 .empty-receiver * {

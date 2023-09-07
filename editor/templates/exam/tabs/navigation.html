@@ -14,9 +14,7 @@
         </div>
         {% booleanproperty 'allowsteps' 'Enable steps?' help_url='exam/reference.html#term-Enable-steps' %}
         {% booleanproperty 'allowregen' 'Allow user to regenerate questions?' help_url='exam/reference.html#term-Allow-user-to-regenerate-questions' %}
-        <div data-bind="fadeVisible: navigatemode().name=='sequence'">
-            {% selectproperty 'showresultspage' 'Reveal answers to all questions' options='showResultsPageOptions' options_text='niceName' help_url='exam/reference.html#term-Reveal-answers-to-all-questions' %}
-        </div>
+        {% selectproperty 'showresultspage' 'Reveal answers to all questions' options='showResultsPageOptions' options_text='niceName' help_url='exam/reference.html#term-Reveal-answers-to-all-questions' %}
         {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='exam/reference.html#term-Confirm-before-leaving-the-exam-while-it-s-running' %}
         <div data-bind="fadeVisible: navigatemode().name=='sequence' || navigatemode().name=='diagnostic'">
             {% exam_event 'onleave' 'On leaving a question' help_url='exam/reference.html#term-On-leaving-a-question' %}

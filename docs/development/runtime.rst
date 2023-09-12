@@ -10,7 +10,7 @@ In the Numbas compiler directory, run:
 
 .. code-block:: console
 
-    $ make tests
+    $ make update_tests
 
 In the Numbas editor directory, run:
 

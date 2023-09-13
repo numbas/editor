@@ -185,40 +185,46 @@
                                 <span class="text-info" data-bind="visible: waiting_for_pre_submit">Your answer is being marked.</span>
                             </div>
                         </div>
-                        <section class="last-run-feedback" data-bind="if: last_run() && last_run().message_displays">
-                            <h5>Feedback</h5>
-                            <ul class="list-unstyled" data-bind="foreach: last_run().message_displays">
-                                <li class="feedbackMessage" data-bind="attr: {'data-credit-change': credit_change}"><span data-bind="css: 'feedback-icon glyphicon '+icon" aria-hidden="true"></span> <!-- ko if: format=='html' --><span data-bind="dom: message"></span><!-- /ko --><!-- ko if: format=='string' --><span class="message" data-bind="html: message"></span><!-- /ko --></li>
-                            </ul>
-                            <p><strong>Score:</strong> <span data-bind="text: last_run().score"></span></p>
-                        </section>
                     </form>
                 <!-- /ko -->
                 <!-- ko if: $parent.type().name=='gapfill' -->
-                <form class="form-horizontal answer-input" data-bind="submit: run">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Gap</th>
-                                <th>Expected answer</th>
-                                <th>Student's answer</th>
-                            </tr>
-                        </thead>
-                        <tbody data-bind="foreach: $parent.gaps">
-                            <tr>
-                                <td data-bind="text: name"></td>
-                                <td data-bind="with: marking_test">
-                                    <div data-bind="component: {name: 'answer-widget', params: {answer: correctAnswer, part: runtime_part, disable: true}}"></div>
-                                </td>
-                                <td data-bind="with: marking_test">
-                                    <div data-bind="component: {name: 'answer-widget', params: {answer: answer, part: runtime_part}}"></div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <button type="submit" class="btn btn-default" >Submit this answer</button>
-                </form>
+                    <form class="form-horizontal answer-input" data-bind="submit: run">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Gap</th>
+                                    <th>Expected answer</th>
+                                    <th>Student's answer</th>
+                                </tr>
+                            </thead>
+                            <tbody data-bind="foreach: $parent.gaps">
+                                <tr>
+                                    <td data-bind="text: name"></td>
+                                    <td data-bind="with: marking_test">
+                                        <div data-bind="component: {name: 'answer-widget', params: {answer: correctAnswer, part: runtime_part, disable: true}}"></div>
+                                    </td>
+                                    <td data-bind="with: marking_test">
+                                        <div data-bind="component: {name: 'answer-widget', params: {answer: answer, part: runtime_part}}"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="2"></td>
+                                    <td>
+                                        <button type="submit" class="btn btn-primary" data-bind="disabled: waiting_for_pre_submit">Submit this answer</button>
+                                    </td>
+                                </tr>
+                        </table>
+                    </form>
                 <!-- /ko -->
+                    <section class="last-run-feedback" data-bind="if: last_run() && last_run().message_displays">
+                        <h5>Feedback</h5>
+                        <ul class="list-unstyled" data-bind="foreach: last_run().message_displays">
+                            <li class="feedbackMessage" data-bind="attr: {'data-credit-change': credit_change}"><span data-bind="css: 'feedback-icon glyphicon '+icon" aria-hidden="true"></span> <!-- ko if: format=='html' --><span data-bind="dom: message"></span><!-- /ko --><!-- ko if: format=='string' --><span class="message" data-bind="html: message"></span><!-- /ko --></li>
+                        </ul>
+                        <p><strong>Score:</strong> <span data-bind="text: last_run().score"></span></p>
+                    </section>
             <!-- /ko -->
 
             <ul class="nav nav-tabs" data-bind="foreach: tabber.tabs">

@@ -168,23 +168,34 @@ $(document).ready(function() {
     ko.bindingHandlers.autosize = {
         update: function(element,valueAccessor) {
             var settings = { max: null, min: 60, padding: 30 };
-
-            var value = ko.utils.unwrapObservable(valueAccessor());
-            var str = value+'';
-            if(typeof value == 'object') {
-                settings = $.extend(settings,value);
-                value = ko.utils.unwrapObservable(settings.value);
-                str = settings.useValue ? value : '';
-            }
+            var str = '';
             var placeholder = element.getAttribute('placeholder') || '';
 
-            var w = Math.max($.textMetrics(element,str).width, $.textMetrics(element,placeholder).width) + settings.padding;
-            w = Math.max(w,settings.min||0);
-            if(settings.max!=null) {
-                w = Math.min(w,settings.max);
+            function resizeF() {
+                var w = Math.max($.textMetrics(element,str).width, $.textMetrics(element,placeholder).width) + settings.padding;
+                w = Math.max(w,settings.min||0);
+                if(settings.max!=null) {
+                    w = Math.min(w,settings.max);
+                }
+                $(element).width(w+'px');
+                element.style['max-width'] = '100%';
             }
-            $(element).width(w+'px');
-            element.style['max-width'] = '100%';
+
+            var value = ko.utils.unwrapObservable(valueAccessor());
+            if(value !== true) {
+                var str = value+'';
+                if(typeof value == 'object') {
+                    settings = $.extend(settings,value);
+                    value = ko.utils.unwrapObservable(settings.value);
+                    str = settings.useValue ? value : '';
+                }
+                resizeF();
+            } else {
+                ['keypress','keydown','keyup','change'].forEach(evt => {
+                    element.addEventListener(evt, resizeF);
+                });
+                resizeF();
+            }
         }
     }
 

@@ -12987,9 +12987,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
             paramNames.push(name);
             return v;
         });
-        jme.findvarsOps[fn.name] = function(tree,boundvars,scope) {
-            return [];
-        }
+        delete jme.findvarsOps[fn.name];
         try {
             var jfn = new Function(paramNames,fn.definition);
         } catch(e) {
@@ -24716,8 +24714,15 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                     }
                 },this)
             ];
+            var lastValue = this.input();
             this.setAnswerJSON = Knockout.computed(function() {
-                this.answerJSON(this.result())
+                if(Knockout.unwrap(this.disable)) {
+                    return;
+                }
+                if(this.input()!=lastValue) {
+                    this.answerJSON(this.result());
+                    lastValue = this.input();
+                }
             },this);
             this.dispose = function() {
                 this.subscriptions.forEach(function(sub) { sub.dispose(); });

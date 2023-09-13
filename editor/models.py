@@ -645,6 +645,18 @@ def extract_editable_package_zip_post(sender,instance,**kwargs):
     if getattr(instance,'__changed_zipfile',False):
         instance.extract_zip()
 
+@receiver(signals.pre_save, sender=Extension)
+def editable_package_rename_extracted_path_post_save(sender,instance,**kwargs):
+    """
+        When the location of an editable extension is changed, move the directory containing its extracted files to the new location.
+    """
+    if not instance.editable:
+        return
+
+    old_instance = Extension.objects.get(pk=instance.pk)
+
+    Path(old_instance.extracted_path).rename(instance.extracted_path)
+
 @receiver(signals.pre_delete, sender=Extension)
 def delete_extracted_extension(sender,instance,**kwargs):
     if not instance.editable:

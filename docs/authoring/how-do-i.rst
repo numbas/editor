@@ -489,7 +489,7 @@ JavaScript
 Define a recursive function
 ---------------------------
 
-While custom functions can't easily refer to other custom functions defined in the question, they can contain nested functoin definitions.
+While custom functions can't easily refer to other custom functions defined in the question, they can contain nested function definitions.
 You can use this to define a recursive function, and then call it immediately.
 
 See `this example question <https://numbas.mathcentre.ac.uk/question/87373/recursive-js-function/>`__, which computes factorials recursively.

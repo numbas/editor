@@ -1215,12 +1215,18 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
                     return false;
                 }
                 for(var i=0;i<expr.args.length;i++) {
+                    if(op=='safe' && expr.args[i].tok.type=='string') {
+                        continue;
+                    }
                     if(!jme.isDeterministic(expr.args[i],scope)) {
                         return false;
                     }
                 }
                 return true;
             case 'string':
+                if(expr.tok.safe) {
+                    return true;
+                }
                 var bits = util.splitbrackets(expr.tok.value,'{','}','(',')');
                 for(var i=1;i<bits.length;i+=2) {
                     try {
@@ -17282,6 +17288,11 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             var condition = jme.compile(q.variablesTest.condition);
             var runs = 0;
             var scope;
+            var maxRuns = q.variablesTest.maxRuns;
+            if(isNaN(maxRuns) || maxRuns < 1) {
+                maxRuns = 1;
+            }
+            maxRuns = Math.min(1000000, maxRuns);
             while(runs<q.variablesTest.maxRuns && !conditionSatisfied) {
                 runs += 1;
                 scope = new jme.Scope([q.scope]);
@@ -25836,7 +25847,7 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         this.correctAnswer = jme.castToType(correctAnswer,m[0]);
         switch(this.definition.input_widget) {
             case 'jme':
-                return jme.display.treeToJME(this.correctAnswer.tree,{},scope);
+                return this.correctAnswer.tree;
             case 'checkboxes':
                 return this.correctAnswer.value.map(function(c){ return c.value; });
             case 'matrix':

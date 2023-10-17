@@ -154,6 +154,8 @@ $(document).ready(function() {
         this.reviewshowfeedback = ko.observable(true);
         this.reviewshowexpectedanswer = ko.observable(true);
         this.reviewshowadvice = ko.observable(true);
+        this.resultsshowquestions = ko.observable(true);
+        this.resultsshowadvice = ko.observable(true);
 
         this.intro = ko.observable('');
         this.end_message = ko.observable('');
@@ -466,6 +468,10 @@ $(document).ready(function() {
                     reviewshowfeedback: this.reviewshowfeedback(),
                     reviewshowexpectedanswer: this.reviewshowexpectedanswer(),
                     reviewshowadvice: this.reviewshowadvice(),
+                    results_options : {
+                        resultsshowquestions : this.resultsshowquestions(),
+                        resultsshowadvice : this.resultsshowadvice(),
+                    },
                     feedbackmessages: this.feedbackMessages().map(function(f){return f.toJSON()})
                 },
                 diagnostic: {
@@ -515,6 +521,9 @@ $(document).ready(function() {
 
             if('feedback' in content) {
                 tryLoad(content.feedback,['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold','intro','end_message','reviewshowscore','reviewshowfeedback','reviewshowexpectedanswer','reviewshowadvice'],this);
+                if ('results_options' in content.feedback){
+                    tryLoad(content.feedback.results_options,['resultsshowquestions','resultsshowadvice'],this);
+                }
                 if('feedbackmessages' in content.feedback) {
                     this.feedbackMessages(content.feedback.feedbackmessages.map(function(d){var f = new FeedbackMessage(); f.load(d); return f}));
                 }

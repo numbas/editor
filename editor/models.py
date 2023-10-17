@@ -653,9 +653,11 @@ def editable_package_rename_extracted_path_post_save(sender,instance,**kwargs):
     if not instance.editable:
         return
 
-    old_instance = Extension.objects.get(pk=instance.pk)
-
-    Path(old_instance.extracted_path).rename(instance.extracted_path)
+    try:
+        old_instance = Extension.objects.get(pk=instance.pk)
+        Path(old_instance.extracted_path).rename(instance.extracted_path)
+    except Extension.DoesNotExist:
+        pass
 
 @receiver(signals.pre_delete, sender=Extension)
 def delete_extracted_extension(sender,instance,**kwargs):

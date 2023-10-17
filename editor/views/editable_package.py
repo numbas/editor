@@ -30,9 +30,23 @@ class ShowPackageFilesMixin:
 
     def get_context_data(self,**kwargs):
         context = super().get_context_data(**kwargs)
+
+        package = self.get_object()
+
         context['filenames'] = [(x, (self.get_object().extracted_path / x).is_dir()) for x in self.get_package_filenames()]
         context['editable'] = self.package.can_be_edited_by(self.request.user)
         context['upload_file_form'] = self.upload_file_form_class(instance=self.get_object())
+
+        filename = self.get_filename()
+        path = context['path'] = self.get_path()
+        current_directory = context['current_directory'] = self.get_current_directory().relative_to(package.extracted_path)
+        context['filename'] = path.relative_to(package.extracted_path)
+        context['parent_directory'] = current_directory.parent
+        context['exists'] = path.exists()
+        if context['exists']:
+            context['last_modified'] = make_aware(datetime.fromtimestamp(path.stat().st_mtime))
+        context['fileext'] = path.suffix
+
         return context
 
 class UpdateView(ShowPackageFilesMixin, CanEditMixin, generic.UpdateView):
@@ -45,7 +59,27 @@ class UpdateView(ShowPackageFilesMixin, CanEditMixin, generic.UpdateView):
         context['options_active'] = True
         return context
 
-class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
+class SinglePackageFileMixin:
+    def get_filename(self):
+        package = self.get_object()
+        d = self.request.GET if self.request.method.lower()=='get' else self.request.POST
+        filename = d.get('filename')
+        if not filename:
+            filename = package.main_filename
+        return filename
+
+    def get_path(self):
+        package = self.get_object()
+        return Path(package.extracted_path) / self.get_filename()
+
+    def get_current_directory(self):
+        path = self.get_path()
+        if path.is_dir():
+            return path
+        else:
+            return path.parent
+
+class EditView(SinglePackageFileMixin, ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
     """ Edit an package's source code """
     template_name = 'editable_package/edit_source.html'
 
@@ -78,17 +112,6 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
                 self.is_binary = True
         return source
 
-    def get_path(self):
-        package = self.get_object()
-        return Path(package.extracted_path) / self.get_filename()
-
-    def get_current_directory(self):
-        path = self.get_path()
-        if path.is_dir():
-            return path
-        else:
-            return path.parent
-
     def get_initial(self):
         initial = super().get_initial()
 
@@ -101,30 +124,13 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
 
         return initial
 
-    def get_filename(self):
-        package = self.get_object()
-        d = self.request.GET if self.request.method.lower()=='get' else self.request.POST
-        filename = d.get('filename')
-        if not filename:
-            filename = package.main_filename
-        return filename
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         package = self.get_object()
 
-        context['editable'] = package.can_be_edited_by(self.request.user)
-
         filename = self.get_filename()
         path = context['path'] = self.get_path()
-        current_directory = context['current_directory'] = self.get_current_directory().relative_to(package.extracted_path)
-        context['filename'] = path.relative_to(package.extracted_path)
-        context['parent_directory'] = current_directory.parent
-        context['exists'] = path.exists()
-        if context['exists']:
-            context['last_modified'] = make_aware(datetime.fromtimestamp(path.stat().st_mtime))
-        context['fileext'] = path.suffix
 
         filenames = context['filenames']
         if not context['exists']:
@@ -154,7 +160,7 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
     def get_success_url(self):
         return reverse(self.success_view, args=(self.get_object().pk,))+'?filename='+self.get_filename()
 
-class ReplaceFileView(CanEditMixin, generic.UpdateView):
+class ReplaceFileView(SinglePackageFileMixin, ShowPackageFilesMixin, CanEditMixin, generic.UpdateView):
     template_name = 'editable_package/replace_file.html'
     def get_success_url(self):
         return reverse(self.success_view, args=(self.get_object().pk,))+'?filename='+self.filename
@@ -163,7 +169,7 @@ class ReplaceFileView(CanEditMixin, generic.UpdateView):
         self.filename = form.cleaned_data.get('content').name
         return super().form_valid(form)
 
-class DeleteFileView(CanEditMixin, generic.UpdateView):
+class DeleteFileView(SinglePackageFileMixin, ShowPackageFilesMixin, CanEditMixin, generic.UpdateView):
     template_name = 'editable_package/delete_file.html'
 
     def get_filename(self):
@@ -173,7 +179,7 @@ class DeleteFileView(CanEditMixin, generic.UpdateView):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args,**kwargs)
-        context['filename'] = self.get_filename()
+        context['filename'] = Path(self.get_filename())
         return context
 
     def get_initial(self):

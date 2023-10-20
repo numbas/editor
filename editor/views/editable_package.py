@@ -38,14 +38,16 @@ class ShowPackageFilesMixin:
         context['upload_file_form'] = self.upload_file_form_class(instance=self.get_object())
 
         filename = self.get_filename()
-        path = context['path'] = self.get_path()
-        current_directory = context['current_directory'] = self.get_current_directory().relative_to(package.extracted_path)
-        context['filename'] = path.relative_to(package.extracted_path)
-        context['parent_directory'] = current_directory.parent
-        context['exists'] = path.exists()
-        if context['exists']:
-            context['last_modified'] = make_aware(datetime.fromtimestamp(path.stat().st_mtime))
-        context['fileext'] = path.suffix
+        if filename is not None:
+            path = context['path'] = self.get_path()
+            current_directory = context['current_directory'] = self.get_current_directory().relative_to(package.extracted_path)
+            context['filename'] = path.relative_to(package.extracted_path)
+            context['parent_directory'] = current_directory.parent
+
+            context['exists'] = path.exists()
+            if context['exists']:
+                context['last_modified'] = make_aware(datetime.fromtimestamp(path.stat().st_mtime))
+            context['fileext'] = path.suffix
 
         return context
 

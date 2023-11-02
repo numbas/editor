@@ -1,4 +1,4 @@
-Django==4.2.6
+Django==4.2.7
 Pillow==10.1.0
 Unidecode==1.0.23
 bleach==3.3.0

@@ -1215,12 +1215,18 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
                     return false;
                 }
                 for(var i=0;i<expr.args.length;i++) {
+                    if(op=='safe' && expr.args[i].tok.type=='string') {
+                        continue;
+                    }
                     if(!jme.isDeterministic(expr.args[i],scope)) {
                         return false;
                     }
                 }
                 return true;
             case 'string':
+                if(expr.tok.safe) {
+                    return true;
+                }
                 var bits = util.splitbrackets(expr.tok.value,'{','}','(',')');
                 for(var i=1;i<bits.length;i+=2) {
                     try {
@@ -10538,7 +10544,7 @@ JMEifier.prototype = {
                 }
             }
         } else if(n instanceof Decimal) {
-            var out = math.niceDecimal(n,options);
+            var out = math.niceDecimal(n, this.settings.plaindecimal ? {} : options);
             if(this.settings.plaindecimal) {
                 return out;
             } else { 
@@ -17282,7 +17288,12 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             var condition = jme.compile(q.variablesTest.condition);
             var runs = 0;
             var scope;
-            while(runs<q.variablesTest.maxRuns && !conditionSatisfied) {
+            var maxRuns = q.variablesTest.maxRuns;
+            if(isNaN(maxRuns) || maxRuns < 1) {
+                maxRuns = 1;
+            }
+            maxRuns = Math.min(1000000, maxRuns);
+            while(runs<maxRuns && !conditionSatisfied) {
                 runs += 1;
                 scope = new jme.Scope([q.scope]);
                 var result = jme.variables.makeVariables(q.variablesTodo,scope,condition);
@@ -25304,7 +25315,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
         },
         template: `
             <form>
-                <fieldset data-bind="part_aria_validity: part.display.hasWarnings, part: part, attr: {id: id+'-input'}">
+                <fieldset data-bind="part_aria_validity: part.display.hasWarnings, part: part.display, attr: {id: id+'-input'}">
                     <ul class="list-unstyled" data-bind="foreach: choices">
                         <li>
                             <label>
@@ -25438,7 +25449,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
         },
         template: `
             <form>
-                <fieldset data-bind="part_aria_validity: part.display.hasWarnings, part: part, attr: {id: id+'-input'}">
+                <fieldset data-bind="part_aria_validity: part.display.hasWarnings, part: part.display, attr: {id: id+'-input'}">
                     <ul class="list-unstyled" data-bind="foreach: choices">
                         <li>
                             <label>
@@ -25563,7 +25574,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
         },
         template: `
             <form>
-                <fieldset data-bind="part_aria_validity: part.display.hasWarnings, part: part, attr: {id: id+'-input'}">
+                <fieldset data-bind="part_aria_validity: part.display.hasWarnings, part: part.display, attr: {id: id+'-input'}">
                     <table>
                         <thead>
                             <tr>
@@ -25836,7 +25847,7 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         this.correctAnswer = jme.castToType(correctAnswer,m[0]);
         switch(this.definition.input_widget) {
             case 'jme':
-                return jme.display.treeToJME(this.correctAnswer.tree,{},scope);
+                return this.correctAnswer.tree;
             case 'checkboxes':
                 return this.correctAnswer.value.map(function(c){ return c.value; });
             case 'matrix':

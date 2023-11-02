@@ -48,6 +48,9 @@ class UpdateView(ExtensionViewMixin,editable_package.UpdateView):
     model = Extension
     form_class = forms.UpdateExtensionForm
 
+    def get_filename(self):
+        return None
+
     def get_success_url(self):
         return reverse('extension_list_profile', args=(self.request.user.pk,))
 

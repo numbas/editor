@@ -2,7 +2,7 @@
 {% load editable_package %}
 
 {% block package_edit_content %}
-    <form action="{% package_url 'delete_file' object.pk %}" method="POST">
+    <form action="{% package_url 'replace_file' object.pk %}" method="POST">
         {% csrf_token %}
         {{form}}
         <div>

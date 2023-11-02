@@ -82,6 +82,9 @@ class UpdateView(ThemeViewMixin,editable_package.UpdateView):
     model = Theme
     form_class = forms.UpdateThemeForm
 
+    def get_filename(self):
+        return None
+
     def get_success_url(self):
         return reverse('theme_list_profile', args=(self.request.user.pk,))
 

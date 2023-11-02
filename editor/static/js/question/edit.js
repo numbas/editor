@@ -1127,7 +1127,10 @@ $(document).ready(function() {
             var conditionSatisfied = false;
             var results;
             var runs = 0;
-            var maxRuns = this.variablesTest.maxRuns();
+            var maxRuns = parseInt(this.variablesTest.maxRuns());
+            if(isNaN(maxRuns) || maxRuns < 1) {
+                maxRuns = 1;
+            }
             while(runs<maxRuns && !conditionSatisfied) {
                 results = this.computeVariables(prep);
                 conditionSatisfied = results.conditionSatisfied;

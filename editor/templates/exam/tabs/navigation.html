@@ -16,6 +16,7 @@
         {% booleanproperty 'allowregen' 'Allow user to regenerate questions?' help_url='exam/reference.html#term-Allow-user-to-regenerate-questions' %}
         {% selectproperty 'showresultspage' 'Reveal answers to all questions' options='showResultsPageOptions' options_text='niceName' help_url='exam/reference.html#term-Reveal-answers-to-all-questions' %}
         {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='exam/reference.html#term-Confirm-before-leaving-the-exam-while-it-s-running' %}
+        {% booleanproperty 'typeendtoleave' 'Require written confirmation before leaving the exam?' help_url='exam/reference.html#term-Require-written-confirmation-before-leaving-the-exam' %}
         <div data-bind="fadeVisible: navigatemode().name=='sequence' || navigatemode().name=='diagnostic'">
             {% exam_event 'onleave' 'On leaving a question' help_url='exam/reference.html#term-On-leaving-a-question' %}
         </div>

@@ -1776,7 +1776,7 @@ class NewQuestion(models.Model):
             ('extensions', [e.location for e in extensions]),
             ('custom_part_types', [p.as_json() for p in self.custom_part_types.all()]),
             ('resources', self.resource_paths),
-            ('navigation', {'allowregen': True, 'showfrontpage': False, 'preventleave': False}),
+            ('navigation', {'allowregen': True, 'showfrontpage': False, 'preventleave': False, 'typeendtoleave': False}),
             ('question_groups', [{'pickingStrategy':'all-ordered', 'questions':[question_data]}]),
         ])
         data['contributors'] = contributor_data

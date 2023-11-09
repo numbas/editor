@@ -208,6 +208,9 @@ The navigation settings control how the student can move through the exam.
     Confirm before leaving the exam while it's running?
         If ticked, the student will be asked to confirm that they really want to leave if they try to close the exam while it's running, for example by pressing the browser's back button or closing the tab the exam is running in.
 
+    Require written confirmation before leaving the exam
+        If ticked, then on clicking :guilabel:`End Exam` student will be asked to write the word 'end' in the :guilabel:`Confirm` dialog, before they are allowed to leave the exam.
+
     On leaving a question
         What to do when the student changes question, or tries to end the exam. 
         You can either warn the student and make them confirm that they'd like to leave, or prevent them from leaving the question entirely until they've answered it.

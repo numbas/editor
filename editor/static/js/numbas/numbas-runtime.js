@@ -6522,8 +6522,9 @@ newBuiltin('mod', [TDecimal,TDecimal], TDecimal, function(a,b) {
     }
     return m;
 });
-newBuiltin('exp',[TDecimal], TDecimal, function(a) {return a.re.exp(); });
-newBuiltin('ln',[TDecimal], TDecimal, function(a) {return a.re.ln(); });
+newBuiltin('exp',[TDecimal], TDecimal, function(a) {return a.exp(); });
+newBuiltin('ln',[TDecimal], TDecimal, function(a) {return a.ln(); });
+newBuiltin('arg', [TDecimal], TDecimal, function(a) { return a.argument(); } );
 newBuiltin('countsigfigs',[TDecimal], TInt, function(a) {return a.re.countSigFigs(); });
 newBuiltin('round',[TDecimal], TDecimal, function(a) {return a.round(); });
 newBuiltin('sin',[TDecimal], TDecimal, function(a) {return a.re.sin(); });
@@ -19564,6 +19565,11 @@ var math = Numbas.math = /** @lends Numbas.math */ {
         }
         rel_tol = rel_tol===undefined ? 1e-15 : rel_tol;
         abs_tol = abs_tol===undefined ? 1e-15: abs_tol;
+
+        if(a.complex || b.complex) {
+            return math.abs(math.sub(a,b)) < abs_tol;
+        }
+
         return Math.abs(a-b) <= Math.max( rel_tol * Math.max(Math.abs(a), Math.abs(b)), abs_tol );
     },
 
@@ -21670,8 +21676,14 @@ ComplexDecimal.prototype = {
     },
 
     ln: function() {
-        return new ComplexDecimal(this.absoluteValue().re.ln(), this.argument());
+        return new ComplexDecimal(this.absoluteValue().re.ln(), this.argument().re);
     },
+
+    exp: function() {
+        var r = this.re.exp();
+        return new ComplexDecimal(r.times(Decimal.cos(this.im)), r.times(Decimal.sin(this.im)));
+    },
+
     isInt: function() {
         return this.re.isInt() && this.im.isInt();
     },
@@ -23922,6 +23934,18 @@ var util = Numbas.util = /** @lends Numbas.util */ {
         return bytes.buffer;
     },
 
+    /** Compare two strings, ignoring differences in case.
+     * Does not ignore differences in accent, even where
+     * base characters are identical
+    *
+    * @param {string} a - reference string
+    * @param {string} b - comparison string
+    * @returns {boolean}
+    */
+    caselessCompare: function (a,b) {
+        return a.localeCompare(b, undefined, { sensitivity: 'accent' }) === 0
+    },
+
 };
 
 /** 
@@ -24692,7 +24716,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                     return '';
                 }
                 if(util.isNumber(n, vm.allowFractions, vm.allowedNotationStyles)) {
-                    return n;
+                    return n + '';
                 }
                 return Numbas.math.niceNumber(n,{style: vm.allowedNotationStyles[0]}) || '';
             }

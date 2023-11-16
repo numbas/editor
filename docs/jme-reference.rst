@@ -2172,6 +2172,20 @@ Strings
         * ``string(expression("0.5"),"fractionNumbers")`` → ``"1/2"``
 
 
+.. jme:function:: jme_string(x)
+    :keywords: convert, string, write
+
+    Convert any jme type ``x`` to a string representation.
+
+    **Definitions**:
+        * :data:`anything` → :data:`string`
+
+    **Example**:
+        * ``jme_string(123)`` → ``"123"``
+        * ``jme_string(expression("x+y"))`` → ``"x + y"``
+        * ``jme_string(vector(1,2,3))`` → ``"vector(1,2,3)"``
+
+
 .. jme:function:: latex(x)
     :keywords: convert, string, latex
 

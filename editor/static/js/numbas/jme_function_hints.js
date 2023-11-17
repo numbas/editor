@@ -1922,6 +1922,19 @@ var jme_function_hints =
         "doc": "jme-reference"
     },
     {
+        "name": "jme_string",
+        "description": "Convert any jme type <code>x</code> to a string representation.",
+        "keywords": [
+            "convert",
+            "string",
+            "write"
+        ],
+        "calling_patterns": [
+            "jme_string(x)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
         "name": "latex",
         "description": "Mark string <code>x</code> as containing raw LaTeX, so when it's included in a mathmode environment it doesn't get wrapped in a <code>\\textrm</code> environment.",
         "keywords": [

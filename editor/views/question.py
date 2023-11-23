@@ -153,7 +153,11 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         self.item_json['numbasExtensions'] = context['extensions'] = [e.as_json() for e in extensions]
 
         self.item_json['used_in_exams'] = self.object.exams_using_this.exists()
-        self.item_json['other_versions_exist'] = len(self.object.editoritem.network)>1
+        user = self.request.user
+        network, network_hidden_items = self.object.editoritem.network(user=self.request.user)
+        context['network'] = network
+        context['network_hidden_items'] = network_hidden_items
+        context['other_versions_exist'] = self.item_json['other_versions_exist'] = len(network) > 1
         self.item_json['editing_history_used'] = self.object.editoritem.comments.exists() or self.object.editoritem.restore_points.exists()
 
         # get publicly available part types first

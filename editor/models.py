@@ -1359,12 +1359,13 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
     def filename(self):
         return '{}-{}-{}'.format(self.item_type, self.pk, self.slug)
 
-    @property
-    def network(self):
+    def network(self, user = None):
         ei = self
         while ei.copy_of:
             ei = ei.copy_of
-        return sorted(ei.descendants(), key=lambda x: x.created)
+        all_items = sorted(ei.descendants(), key=lambda x: x.created)
+        visible_items = [ei2 for ei2 in all_items if ei2.can_be_viewed_by(user)]
+        return (visible_items, len(all_items) - len(visible_items))
 
     def get_embed_url(self):
         embed_url = reverse(self.item_type+'_embed', args=(self.rel_obj.pk,self.slug))

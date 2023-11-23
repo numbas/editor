@@ -5,9 +5,7 @@
 {% load helplink %}
 {% load editor_controls %}
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.mainTabber.currentTab().id)=='network'}">
-    {% if object.editoritem.network|length == 1 %}
-        <p>There is only one version of this {{item_type}}.<p>
-    {% else %}
+    {% if other_versions_exist %}
         <table class="network table">
             <thead>
                 <tr>
@@ -19,7 +17,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for ei2 in object.editoritem.network %}
+                {% for ei2 in network %}
                 <tr class="network-item{% if ei2 == object.editoritem %} active{% endif %}">
                     <td>{% if ei2 != object.editoritem %}{% editoritem_link ei2.rel_obj %}{% else %}{{ei2.name}}{% endif %}</td>
                     <td>{% include "stamp_column.html" with record=ei2 %}</td>
@@ -36,6 +34,14 @@
                 {% endfor %}
             </tbody>
         </table>
+    {% else %}
+        <p>There is only one version of this {{item_type}} that you have access to.<p>
+    {% endif %}
+
+    {% if network_hidden_items == 1 %}
+        <p>There is one other version that you do not have access to.</p>
+    {% elif network_hidden_items > 1 %}
+        <p>There are {{network_hidden_items}} other versions that do you not have access to.</p>
     {% endif %}
 
     {% if editable %}

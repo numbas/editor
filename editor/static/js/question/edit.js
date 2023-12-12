@@ -622,7 +622,7 @@ $(document).ready(function() {
                 v.definition();
             });
             this.generateVariablePreview();
-        },this).extend({throttle:300});
+        },this).extend({rateLimit:300});
 
         this.regenerateVariables = function() {
             q.generateVariablePreview();
@@ -779,7 +779,7 @@ $(document).ready(function() {
                 }
             });
             handle_group(names.slice(start));
-        },this).extend({throttle: 2000});
+        },this).extend({rateLimit: 2000});
 
         /** Create an instance of this question as a Numbas.Question object.
          */
@@ -2386,7 +2386,7 @@ $(document).ready(function() {
                 };
                 return out;
             });
-        },this).extend({throttle: 1000});
+        },this).extend({rateLimit: 1000});
         this.usedIn = ko.pureComputed(function() {
             return q.variables().filter(function(v2) {
                 return v.names().some(function(n) {
@@ -2397,7 +2397,7 @@ $(document).ready(function() {
                 b = b.name();
                 return a<b ? -1 : a>b ? 1 : 0;
             });
-        },this).extend({throttle: 1000});
+        },this).extend({rateLimit: 1000});
         this.references = ko.observableArray([]);
         this.unique_references = ko.pureComputed(function() {
             var references = [];
@@ -2407,10 +2407,10 @@ $(document).ready(function() {
                 }
             });
             return references;
-        },this).extend({throttle: 1000});
+        },this).extend({rateLimit: 1000});
         this.unused = ko.pureComputed(function() {
             return this.usedIn().length==0 && this.references().length==0;
-        },this).extend({throttle: 1000});
+        },this).extend({rateLimit: 1000});
 
         this.can_override = ko.observable(false);
 
@@ -3179,7 +3179,7 @@ $(document).ready(function() {
                     this.markingScriptError(e.message);
                 }
             }
-        },this).extend({throttle: 1000});
+        },this).extend({rateLimit: 1000});
 
         this.unit_tests = ko.observableArray([]);
 
@@ -3206,7 +3206,7 @@ $(document).ready(function() {
         ko.computed(function() {
             var mt = this.marking_test();
             mt.make_question();
-        },this).extend({throttle:1000});
+        },this).extend({rateLimit:1000});
         this.submit_test = function() {
             p.marking_test().run();
         }
@@ -3859,7 +3859,7 @@ $(document).ready(function() {
                 this.variables(vs);
                 this.variablesReady(this.part.q.variablesReady());
             }
-        },this).extend({throttle:500});
+        },this).extend({rateLimit:500});
 
         this.remove = function() {
             // Remove this test from the parent part
@@ -4194,7 +4194,7 @@ $(document).ready(function() {
             if(this.editing() && this.editable) {
                 this.setExpected();
             }
-        },this).extend({throttle:100});
+        },this).extend({rateLimit:100});
 
         // The marking notes, in alphabetical order by name
         this.sortedNotes = ko.pureComputed(function() {

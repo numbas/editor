@@ -318,7 +318,7 @@ $(document).ready(function() {
             } catch(err) {
                 e.diagnostic.scriptError(err.message);
             }
-        },this).extend({throttle: 1000});
+        },this).extend({rateLimit: 1000});
 
 
         this.init_output();

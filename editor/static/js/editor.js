@@ -509,7 +509,7 @@ $(document).ready(function() {
                 saver.status('unsaved');
             }
             return data;
-        },this).extend({throttle: 100});
+        },this).extend({rateLimit: 100});
 
         ko.computed(function() {
             var data = saver.changed_data();
@@ -523,7 +523,7 @@ $(document).ready(function() {
                 }
             }
             saver.save();
-        }).extend({throttle:1000, deferred: true});
+        }).extend({rateLimit: {timeout: 1000, method: "notifyWhenChangesStop"}});
     }
     Editor.Saver.prototype = {
         save: function() {
@@ -1716,7 +1716,7 @@ $(document).ready(function() {
                                     var gaps = ko.unwrap(allBindingsAccessor.gaps);
                                     var part = ko.unwrap(allBindingsAccessor.part);
                                     ed.fire('gaps_changed',gaps);
-                                }).extend({throttle: 50});
+                                }).extend({rateLimit: 50});
                             }
 
                         }
@@ -1781,7 +1781,7 @@ $(document).ready(function() {
                             var n = parseInt(dg.getAttribute('data-number'));
                             dg.textContent = name_for_gap(n,gaps);
                         }
-                    }).extend({throttle: 50});
+                    }).extend({rateLimit: 50});
                 }
             }
 

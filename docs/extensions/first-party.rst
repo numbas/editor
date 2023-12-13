@@ -71,6 +71,26 @@ For more information on how to use the extension, see `its documentation <https:
 
 There are `a few questions demonstrating how to use the Eukleides extension <https://numbas.mathcentre.ac.uk/project/698/browse/Extensions/Eukleides/>`__ in the 'Demos' project on numbas.mathcentre.ac.uk.
 
+Other interactive objects
+*************************
+
+.. _spreadsheets-extension:
+
+Spreadsheets
+------------
+
+The spreadsheets extension adds a data type, ``spreadsheet``, representing a 2D grid of text cells with styling information, similar to a spreadsheet in a program such as Microsoft Excel.
+
+In the Numbas question editor, this extension adds a "Spreadsheet" variable template type which allows you to load a spreadsheet from an uploaded ``.xlsx`` file.
+
+When inserted into content areas, spreadsheet values are rendered as non-editable grids.
+
+This extension adds a "Spreadsheet" answer input method for custom part types, and a "Spreadsheet" custom part type which asks the student to enter values into a given spreadsheet and compares entries against a completed spreadsheet given by the question author.
+
+For more information on how to use the extension, see `its documentation <https://github.com/numbas/numbas-extension-sheets>`__.
+
+There are `a few questions demonstrating the spreadsheet extension <https://numbas.mathcentre.ac.uk/project/698/browse/Extensions/Spreadsheets/>`__ in the 'Demos' project on numbas.mathcentre.ac.uk.
+
 Coding
 ******
 

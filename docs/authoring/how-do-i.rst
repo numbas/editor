@@ -384,6 +384,13 @@ You can use a :ref:`gap-fill <gap-fill>` part with a :ref:`custom marking algori
 
 See `this example question <https://numbas.mathcentre.ac.uk/question/87350/tick-box-for-this-is-impossible/>`__.
 
+Ask the student to fill in a table of values
+--------------------------------------------
+
+The "Spreadsheet" custom part type provided by the spreadsheets extension lets you give the student a table to fill in.
+
+See `this example question <https://numbas.mathcentre.ac.uk/question/150943/fill-in-a-table-of-values/>`__ which asks the student to fill in a table of values for a quadratic function.
+
 *******************
 Variable generation
 *******************
@@ -391,8 +398,17 @@ Variable generation
 Make sure generated variables satisfy a condition
 -------------------------------------------------
 
-Use the :ref:`variable testing <variable-testing>` tools.
+A common pattern is that you would like to generate parameters for a system such that the solution variables have "nice" values from a certain set.
+For example, you'd like to generate a quadratic equation with random coefficients, and you'd like the solutions to be integers.
 
+In cases like these, you can usually work backwards: pick values for the solutions, and then pick the other values so that those values are satisfied.
+
+In `this example question <https://numbas.mathcentre.ac.uk/question/150949/solve-a-pair-of-simultaneous-equations/>`__, the student must solve a pair of simultaneous equations in $x$ and $y$.
+If picking integer coefficients completely at random for these equations, then the equations might have no solution, or have a non-integer solution.
+Instead, in the example, the values of $x$ and $y$ are picked first, and then their coefficients on the left-hand side can be chosen freely.
+The constant terms on the right-hand sides of the equations are then entirely determined.
+
+In cases where it's not clear how to work backwards from a good solution, you can use the :ref:`variable testing <variable-testing>` tools to specify a condition that the question's variables must satisfy, and Numbas will re-generate sets of values until the condition is satisfied.
 
 Generate a random list of unique numbers
 ----------------------------------------

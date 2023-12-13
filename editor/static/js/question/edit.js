@@ -605,6 +605,12 @@ $(document).ready(function() {
             q.mainTabber.setTab('variables')();
         }
 
+        this.autocalc_storage_key = 'numbas-editor-question-'+item_json.itemJSON.id+'-autocalc-on-load';
+        if(window.localStorage && localStorage.getItem(this.autocalc_storage_key)==='false') {
+            this.autoCalculateVariables(false);
+        }
+        localStorage.setItem(this.autocalc_storage_key, 'false');
+
         ko.computed(function() {
             if(!this.autoCalculateVariables())
                 return;
@@ -1137,6 +1143,10 @@ $(document).ready(function() {
                 runs += 1;
             }
             this.variablesTest.conditionSatisfied(conditionSatisfied);
+
+            if(window.localStorage && this.variables().length) {
+                localStorage.removeItem(this.autocalc_storage_key);
+            }
 
             // fill in observables
             this.variables().map(function(v) {

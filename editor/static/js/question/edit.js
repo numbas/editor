@@ -3667,7 +3667,10 @@ $(document).ready(function() {
         load: function(data) {
             tryLoad(data,['variable','must_go_first'],this);
             var path = data.part;
-            this.replacement(this.part.q.getPart(data.part).id);
+            var part = this.part.q.getPart(data.part);
+            if(part) {
+                this.replacement(part.id);
+            }
         }
     }
 

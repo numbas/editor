@@ -20,6 +20,13 @@ jme_sig_re = re.compile(
 space_re = re.compile(r'\s+')
 bracket_re = re.compile(r'[\[\]()]')
 name_re = re.compile(r'''((?:\$?[a-zA-Z_][a-zA-Z0-9_]*'*)|\?|[π∞])|\W[^\s\[\]()\w]*''')
+ops = ['not','and','or','xor','implies','isa','except','in','for:','where:','divides','as','..','#','<=','>=','<>','&&','||','|','*','+','-','/','^','<','>','=','!','&', '|>']
+
+def first(iterable, condition):
+    try:
+        return next(x for x in iterable if condition(x))
+    except StopIteration:
+        return None
 
 class opname(nodes.Part, nodes.Inline, nodes.FixedTextElement):
     pass
@@ -31,11 +38,19 @@ def op_parse_arglist(signode, sig, fullname):
             signode += nodes.Text('\u00A0'*len(ms.group(0)))
             sig = sig[ms.end():]
             continue
+
         mb = bracket_re.match(sig)
         if mb:
             signode += nodes.Text(mb.group(0))
             sig = sig[mb.end():]
             continue
+
+        op = first(ops, lambda x: sig.startswith(x))
+        if op is not None:
+            signode += addnodes.desc_name(op, op)
+            sig = sig[len(op):]
+            continue
+
         mn = name_re.match(sig)
         if mn:
             name = mn.group(0)
@@ -45,6 +60,7 @@ def op_parse_arglist(signode, sig, fullname):
                 signode += nodes.emphasis(name,name)
             sig = sig[mn.end():]
             continue
+
         signode += nodes.Text(sig[0])
         sig = sig[1:]
 

@@ -2547,10 +2547,25 @@ var jme_function_hints =
         "keywords": [
             "transform",
             "functional",
-            "loop"
+            "loop",
+            "map"
         ],
         "calling_patterns": [
             "map(expression,name[s],d)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "for:",
+        "description": "This is similar to <code>map</code> and <code>filter</code>, with different syntax.",
+        "keywords": [
+            "transform",
+            "map",
+            "generator",
+            "comprehension"
+        ],
+        "calling_patterns": [
+            "expression for: name of: list where: condition"
         ],
         "doc": "jme-reference"
     },

@@ -2883,7 +2883,7 @@ Lists
         * ``some([])`` → ``false``
 
 .. jme:function:: map(expression,name[s],d)
-    :keywords: transform, functional, loop
+    :keywords: transform, functional, loop, map
 
     Evaluate ``expression`` for each item in list, range, vector or matrix ``d``, replacing variable ``name`` with the element from ``d`` each time.
 
@@ -2899,6 +2899,38 @@ Lists
         * ``map(sqrt(x^2+y^2),[x,y],[ [3,4], [5,12] ])`` → ``[5,13]``
         * ``map(x+1,x,id(2))`` → ``matrix([2,1],[1,2])``
         * ``map(sqrt(x),x,vector(1,4,9))`` → ``vector(1,2,3)``
+
+.. jme:function:: expression for: name of: list where: condition
+    :keywords: transform, map, generator, comprehension
+    :op: for:
+
+    This is similar to :jme:func:`map` and :jme:func:`filter`, with different syntax.
+
+    Evaluate ``expression`` for each item in ``list``, replacing variable ``name`` with the element from ``list`` each time.
+
+    You can also give a list of names if each element of ``d`` is a list of values.
+    The Nth element of the list will be mapped to the Nth name.
+
+    You can chain several ``for: ... of: ...`` statements together to work over the Cartesian product of the given lists.
+    Variables assigned by earlier ``for:`` statements are available in later ``for:`` statements in the chain.
+    Note that with bracketing you can change the shape of the resulting list.
+
+    Each ``for: ... of: ...`` statement can be followed by an optional ``where: condition`` statement, restricting the values to be iterated over.
+    Only values which satisfy the condition will be used.
+
+    **Examples**:
+        * ``x^2 for: x of: 1..5`` → ``[1, 4, 9, 16, 25]`` (square the numbers 1 to 5)
+        * ``x for: x of: 1..10 where: mod(x,3)=0`` → ``[3, 6, 9]`` (find multiples of 3 between 1 and 10)
+        * ``log(x,b) for: [x,b] of: [[100,10], [16,2]]`` → ``[2, 4]`` (given pairs of numbers and bases, take the logarithm of each number with the corresponding base)
+        * ``[a,b] for: [a,b] of: zip(1..3, 4..6)`` → ``[ [1,4], [2,5], [3,6] ]`` (pair the numbers from the range ``1..3`` and numbers from the range ``4..6``)
+        * ``[a,b] for: a of: 1..3 for: b of: 4..6`` → ``[ [1,4], [1,5], [1,6], [2,4], [2,5], [2,6], [3,4], [3,5], [3,6] ]`` (produce all possible pairs of numbers from the ranges ``1..3`` and ``4.6``)
+        * ``mod(a,b) for: a of: 1..5 for: b of: [2,3]`` → ``[1, 1, 0, 2, 1, 0, 0, 1, 1, 2]``
+        * ``(mod(a,b) for: a of: 1..5) for: b of: [2,3]`` → ``[ [1,0,1,0,1], [1,2,0,1,2] ]``
+        * ``(mod(a,b) for: b of: [2,3]) for: a of: 1..5`` → ``[ [1,1], [0,2], [1,0], [0,1], [1,2] ]``
+        * ``[x,y] for: x of: 1..3 for: y of: 1..x`` → ``[ [1,1], [2,1] ,[2,2], [3,1], [3,2], [3,3] ]``
+        * ``[x,y] for: x of: 2..7 for: y of: (x+1)..7 where: gcd(x,y)=1`` → ``[ [2,3], [2,5], [2,7], [3,4], [3,5], [3,7], [4,5], [4,7], [5,6], [5,7], [6,7] ]`` (find coprime pairs of numbers between 2 and 7)
+        * ``[a,b,c] for: a of: 1..20 for: b of: 1..20 for: c of: 1..20 where: a<b<c and a^2+b^2 = c^2`` → ``[ [ 3, 4, 5 ], [ 5, 12, 13 ], [ 6, 8, 10 ], [ 8, 15, 17 ], [ 9, 12, 15 ], [ 12, 16, 20 ] ]`` (find Pythagorean triples with side lengths up to 20)
+        * ``[a,b,c] for: [a,b,c] of: product(1..20, 3) where: a<b<c and a^2+b^2 = c^2`` → ``[ [ 3, 4, 5 ], [ 5, 12, 13 ], [ 6, 8, 10 ], [ 8, 15, 17 ], [ 9, 12, 15 ], [ 12, 16, 20 ] ]`` (the same as above, but written more concisely)
 
 .. jme:function:: filter(expression,name,d)
     :keywords: only, require, constraint, test, functional, loop

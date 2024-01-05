@@ -16,4 +16,4 @@ python-slugify==4.0.1
 six==1.15.0
 mistune==2.0.3
 emoji==0.6.0
-pycryptodome==3.14.1
+pycryptodome==3.19.1

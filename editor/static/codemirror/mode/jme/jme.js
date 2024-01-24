@@ -3,11 +3,12 @@ CodeMirror.defineMode("jme", function(config, parserConfig) {
     var re = Numbas.jme.standardParser.re;
 
     var tokenTypes = [
+        {name: 'op', class: 'operator', re: re.re_op},
         {name: 'space', class: 'space', re: new RegExp('^'+re.re_whitespace)},
         {name: 'bool', class: 'atom', re: re.re_bool},
         {name: 'number', class: 'number', re: re.re_number},
+        {name: 'superscript', class: 'number', re: re.re_superscript},
         {name: 'name', class: 'variable', re: re.re_name},
-        {name: 'op', class: 'operator', re: re.re_op},
         {name: 'string', class: 'string', re: re.re_string},
         {name: 'keypair', class: 'punctuation', re: re.re_keypair}
     ]
@@ -20,12 +21,20 @@ CodeMirror.defineMode("jme", function(config, parserConfig) {
             }
             var ch = stream.peek();
             if(stream.eat(/[\(\[]/)) {
-                state.inBrackets+= 1;
+                state.inBrackets += 1;
                 return 'bracket';
             }
             else if(stream.eat(/[\)\]]/)) {
-                state.inBrackets-= state.inBrackets>0 ? 1 : 0;
+                state.inBrackets -= state.inBrackets>0 ? 1 : 0;
                 return 'bracket';
+            }
+            var m;
+            if(m = stream.match(re.re_op)) {
+                if(m[0].match(/^[\p{Ll}\p{Lu}\p{Lt}]/u)) {
+                    return 'keyword';
+                } else {
+                    return 'operator';
+                }
             }
 
             for(var i=0;i<tokenTypes.length;i++) {

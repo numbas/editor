@@ -7249,8 +7249,8 @@ jme.substituteTreeOps['for:'] = function(tree,scope,allowUnbound) {
         }
         return arg;
     }
-    tree.args[0] = jme.substituteTree(tree.args[0], nscope, true);
     tree.args[1] = visit_for(tree.args[1]);
+    tree.args[0] = jme.substituteTree(tree.args[0], nscope, true);
     return tree;
 }
 
@@ -13585,7 +13585,10 @@ jme.variables = /** @lends Numbas.jme.variables */ {
             if(name in changed_variables) {
                 delete dependents_todo[name];
             } else {
-                scope.deleteVariable(name);
+                var names = jme.variables.splitVariableNames(name);
+                for(let sname of names) {
+                    scope.deleteVariable(sname);
+                }
             }
         }
         if(targets) {

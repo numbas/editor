@@ -707,6 +707,17 @@ var jme_function_hints =
         "doc": "jme-reference"
     },
     {
+        "name": "imprecise",
+        "description": "Remove a <code>number</code> value's precision information.\nEquivalent to <code>with_precision(n, nothing, nothing)</code>.",
+        "keywords": [
+            "precision"
+        ],
+        "calling_patterns": [
+            "imprecise(n)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
         "name": "withintolerance",
         "description": "Returns <code>true</code> if $b-t \\leq a \\leq b+t$.",
         "keywords": [

@@ -5098,7 +5098,6 @@ jme.inferExpressionType = function(tree,scope) {
  * @returns {Function}
  */
 jme.makeFast = function(tree,scope,names) {
-    const typed_tree = jme.inferTreeType(tree, scope);
     const given_names = names !== undefined;
     
     function fast_eval(t) {
@@ -5123,9 +5122,9 @@ jme.makeFast = function(tree,scope,names) {
             case 'function':
             case 'op':
                 const args = t.args.map(t2 => fast_eval(t2));
-                const fn = t.matched_function?.fn?.fn;
+                const fn = t.matched_function && t.matched_function.fn && t.matched_function.fn.fn;
                 if(!fn) {
-                    throw(new Error(`The function ${t.tok.name} here isn't defined in a way that can be made fast.`));
+                    throw(new Numbas.Error("jme.makeFast.no fast definition of function", {name: t.tok.name}));
                 }
                 if(given_names) {
                     if(names.length > 5 || args.length > 5) {
@@ -5193,6 +5192,9 @@ jme.makeFast = function(tree,scope,names) {
                 return function() { return value; }
         }
     }
+
+    let subbed_tree = jme.substituteTree(tree, scope, true, true);
+    const typed_tree = jme.inferTreeType(subbed_tree, scope);
 
     let f = fast_eval(typed_tree);
 
@@ -6410,6 +6412,17 @@ newBuiltin('with_precision', [TNum,'nothing or number', 'nothing or string'], TN
         } else {
             n.precisionType = precisionType.value;
         }
+
+        return n;
+    }
+});
+
+newBuiltin('imprecise', [TNum], TNum, null, {
+    evaluate: function(args, scope) {
+        var n = args[0];
+
+        delete n.precision;
+        delete n.precisionType;
 
         return n;
     }
@@ -10798,7 +10811,11 @@ JMEifier.prototype = {
             var precisionType = options.precisionType === undefined ? 'nothing' : this.string(options.precisionType,{});
             var store_precision = options.store_precision === undefined ? this.settings.store_precision : options.store_precision;
             if(store_precision) {
-                out = 'with_precision('+out+', ' + precision + ', '+ precisionType +')';
+                if(precision == 'nothing' && precisionType == 'nothing') {
+                    out = 'imprecise('+out+')';
+                } else {
+                    out = 'with_precision('+out+', ' + precision + ', '+ precisionType +')';
+                }
                 return out;
             }
         } else {

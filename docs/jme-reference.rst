@@ -962,6 +962,15 @@ Number operations
     **Definition**:
         * ``with_precision(3.00, 2, "dp")``
 
+.. jme:function:: imprecise(n)
+    :keywords: precision
+    :noexamples:
+
+    Remove a :data:`number` value's precision information.
+    Equivalent to ``with_precision(n, nothing, nothing)``.
+
+    This function is used in the attempt suspend data process; it's unlikely you'd want to use it in another context.
+
 .. jme:function:: withintolerance(a,b,t)
     :keywords: close, near, tolerance
 

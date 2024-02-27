@@ -278,8 +278,18 @@ class ValidateZipField:
             raise forms.ValidationError('Uploaded file is not a zip file')
         return value
 
+class PackageFileFormMixin:
+    def clean(self):
+        cleaned_data = super().clean()
+        package = self.instance
+        filename = cleaned_data.get('filename')
+        package_path = Path(package.extracted_path).resolve()
+        path = (package_path / filename).resolve()
+        if not path.is_relative_to(package_path):
+            raise forms.ValidationError("This file is not in the package's directory.")
+        return cleaned_data
 
-class EditPackageForm(forms.ModelForm):
+class EditPackageForm(PackageFileFormMixin, forms.ModelForm):
     
     """Form to edit a file in a package."""
 
@@ -299,7 +309,7 @@ class EditPackageForm(forms.ModelForm):
                 f.write(self.cleaned_data.get('source'))
         return package
 
-class EditPackageReplaceFileForm(forms.ModelForm):
+class EditPackageReplaceFileForm(PackageFileFormMixin, forms.ModelForm):
     
     """Form to replace a file in a package."""
 
@@ -330,7 +340,7 @@ class ReplaceExtensionFileForm(EditPackageReplaceFileForm):
     class Meta(EditPackageReplaceFileForm.Meta):
         model = Extension
 
-class PackageDeleteFileForm(forms.ModelForm):
+class PackageDeleteFileForm(PackageFileFormMixin, forms.ModelForm):
     filename = forms.CharField(widget=forms.HiddenInput)
 
     class Meta:

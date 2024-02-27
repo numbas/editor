@@ -57,22 +57,32 @@
         {% endif %}
     </div>
 
+    <form action="{% package_url 'edit_source' form.instance.pk %}" method="POST" id="save-file">
     {% if is_image %}
         {% if exists %}
             <a href="{{file_url}}" download="{{filename_without_directories}}"><img class="image-file thumbnail" src="{{file_url}}"></a>
         {% endif %}
     {% else %}
         {% if not is_binary %}
-            <form action="{% package_url 'edit_source' form.instance.pk %}" method="POST" id="save-file">
-                {% csrf_token %}
-                {% for field in form %}
-                    {{field}}
+            {% if form.errors %}
+                {% for error_group in form.errors.values %}
+                    {% for error in error_group %}
+                        <div class="alert alert-danger">
+                            <p>{{error}}</p>
+                        </div>
+                    {% endfor %}
                 {% endfor %}
-            </form>
+            {% endif %}
+
+            {% csrf_token %}
+            {% for field in form %}
+                {{field}}
+            {% endfor %}
         {% else %}
             <p>This is a binary file.</p>
         {% endif %}
     {% endif %}
+    </form>
 {% endif %}
 {% endblock package_edit_content %}
 

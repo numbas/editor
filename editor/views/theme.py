@@ -23,6 +23,9 @@ class ThemeViewMixin:
         return self.place_filename(filename)
 
     def place_filename(self, filename):
+        if filename is None:
+            return None
+
         extension_dirs = {
             '.md': '',
             '.txt': '',

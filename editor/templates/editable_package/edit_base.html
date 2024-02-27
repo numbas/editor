@@ -35,7 +35,7 @@
             {% endif %}
         </ul>
         {% if object.editable %}
-        <div class="panel-heading">Files {{filename}}</div>
+        <div class="panel-heading">Files</div>
         <ul class="list-group">
             {% if parent_directory != current_directory %}
             <div class="list-group-item parent-directories">
@@ -49,8 +49,8 @@
                 </nav>
             </div>
             {% endif %}
-            {% for fname, is_dir in filenames %}
-            <a class="list-group-item monospace{% if fname == filename %} active{% endif %}{% if is_dir %} dir{% endif %}" href="{% package_url 'edit_source' object.pk %}?filename={{fname}}">{{fname}}</a>
+            {% for absfname, relfname, is_dir in filenames %}
+            <a class="list-group-item monospace{% if absfname == filename %} active{% endif %}{% if is_dir %} dir{% endif %}" href="{% package_url 'edit_source' object.pk %}?filename={{absfname}}">{{relfname}}</a>
             {% endfor %}
 
             {% if editable %}

@@ -9,6 +9,7 @@ import mimetypes
 from django import http
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import PermissionDenied
 from django.views import generic
 from django.urls import reverse
 from django.utils.timezone import make_aware
@@ -33,15 +34,25 @@ class ShowPackageFilesMixin:
 
         package = self.get_object()
 
-        context['filenames'] = [(x, (self.get_object().extracted_path / x).is_dir()) for x in self.get_package_filenames()]
+        package_path = Path(package.extracted_path).resolve()
+
+        current_dir = (package_path / self.get_current_directory()).resolve()
+
+        # For a given path, return a triple: (path relative to package root, path relative to current directory, is a directory?)
+        def path_info(path):
+            abspath = (package_path / path).resolve()
+            return (abspath.relative_to(package_path), abspath.relative_to(current_dir), abspath.is_dir())
+
+        context['filenames'] = [path_info(x) for x in self.get_package_filenames()]
         context['editable'] = self.package.can_be_edited_by(self.request.user)
         context['upload_file_form'] = self.upload_file_form_class(instance=self.get_object())
 
         filename = self.get_filename()
+
         if filename is not None:
             path = context['path'] = self.get_path()
             current_directory = context['current_directory'] = self.get_current_directory().relative_to(package.extracted_path)
-            context['filename'] = path.relative_to(package.extracted_path)
+            context['filename'] = (package_path / path).resolve().relative_to(package_path)
             context['parent_directory'] = current_directory.parent
 
             context['exists'] = path.exists()
@@ -72,10 +83,14 @@ class SinglePackageFileMixin:
 
     def get_path(self):
         package = self.get_object()
-        return Path(package.extracted_path) / self.get_filename()
+        package_path = Path(package.extracted_path)
+        path = package_path / self.get_filename()
+        if not path.is_relative_to(package_path):
+            raise PermissionDenied("This file is not in the package's directory.")
+        return path
 
     def get_current_directory(self):
-        path = self.get_path()
+        path = self.get_path().resolve()
         if path.is_dir():
             return path
         else:
@@ -93,12 +108,15 @@ class EditView(SinglePackageFileMixin, ShowPackageFilesMixin, CanViewMixin, gene
         super().__init__(*args,**kwargs)
 
     def dispatch(self,request,*args,**kwargs):
-        package = self.get_object()
+        package = self.package = self.get_object()
         if not package.editable:
             return forbidden_response(self.request,"This package is not editable.")
         return super().dispatch(request,*args,**kwargs)
 
     def load_source(self,path):
+        if not path.resolve().is_relative_to(self.package.extracted_path):
+            raise PermissionDenied(f"This file is not in the package's directory.")
+
         if path.is_dir():
             return None
         try:
@@ -135,8 +153,14 @@ class EditView(SinglePackageFileMixin, ShowPackageFilesMixin, CanViewMixin, gene
         path = context['path'] = self.get_path()
 
         filenames = context['filenames']
+
+        package_path = Path(package.extracted_path)
+
+        current_dir = (package_path / self.get_current_directory()).resolve()
+
         if not context['exists']:
-            filenames.append((self.get_current_directory() / filename, False))
+            filenames.append((Path(filename), (package_path / filename).resolve().relative_to(current_dir), False))
+
         filenames.sort()
 
         context['is_binary'] = self.is_binary
@@ -194,6 +218,9 @@ class DeleteFileView(SinglePackageFileMixin, ShowPackageFilesMixin, CanEditMixin
 
 class AccessView(ShowPackageFilesMixin, AuthorRequiredMixin, generic.UpdateView):
     template_name = 'editable_package/access.html'
+
+    def get_filename(self):
+        return None
     
     def get_form_kwargs(self, *args, **kwargs):
         kwargs = super().get_form_kwargs(*args,**kwargs)

@@ -313,6 +313,14 @@ The following settings apply to review mode: when a student has finished the exa
         If ticked, then the advice section will be displayed under each question in review mode.
         If not ticked, the advice will never be shown.
 
+    Show questions in printed results summary?
+        If ticked, then the content of questions will be shown when printing an exam in review mode.
+        If not ticked, then only the results page will be shown.
+
+    Show advice in printed results summary?
+        If ticked, then the advice section will be displayed under each question when printing an exam in review mode.
+        If not ticked, then only the question statement and parts will be shown, only if :term:`Show questions in printed results summary?` is ticked.
+
 
 Events
 ======

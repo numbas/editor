@@ -106,15 +106,14 @@ $(document).ready(function() {
             new Editor.Tab('questions','Questions','file',{in_use: ko.computed(function() { return this.questions().length>0; },this)}),
             new Editor.Tab('diagnostic', 'Diagnostic', 'object-align-horizontal', {visible: ko.computed(function() { return this.navigatemode().name=='diagnostic'; },this)}),
             new Editor.Tab('display','Display','picture',{in_use: ko.computed(function() { return this.theme() && this.theme().path!='default'; },this)}),
-            new Editor.Tab('navigation','Navigation','tasks'),
-            new Editor.Tab('timing','Timing','time'),
+            new Editor.Tab('navigation', 'Navigation','tasks'),
             new Editor.Tab('feedback','Feedback','comment'),
             new Editor.Tab('settings','Settings','cog'),
             new Editor.Tab('network','Other versions','link',{in_use:item_json.other_versions_exist}),
             new Editor.Tab('history','Editing history','time',{in_use:item_json.editing_history_used})
         ]);
         if(item_json.editable) {
-            this.mainTabber.tabs.splice(6,0,new Editor.Tab('access','Access','lock'));
+            this.mainTabber.tabs.splice(8,0,new Editor.Tab('access','Access','lock'));
         }
         this.mainTabber.currentTab(this.mainTabber.tabs()[0]);
 
@@ -122,12 +121,6 @@ $(document).ready(function() {
         this.allowPause = ko.observable(true);
         this.percentPass = ko.observable(0);
         this.showfrontpage = ko.observable(true);
-        this.showResultsPageOptions = [
-            {name: 'oncompletion', niceName: 'On completion'},
-            {name: 'review', niceName: 'When entering in review mode'},
-            {name: 'never', niceName: 'Never'}
-        ];
-        this.showresultspage = ko.observable(this.showResultsPageOptions[0]);
 
         this.allowregen = ko.observable(true);
         this.reverse = ko.observable(true);
@@ -151,10 +144,13 @@ $(document).ready(function() {
         this.advicethreshold = ko.observable(0);
         this.showstudentname = ko.observable(true);
 
-        this.reviewshowscore = ko.observable(true);
-        this.reviewshowfeedback = ko.observable(true);
-        this.reviewshowexpectedanswer = ko.observable(true);
-        this.reviewshowadvice = ko.observable(true);
+        this.activateReviewModeOptions = [
+            {name: 'oncompletion', niceName: 'On completion'},
+            {name: 'onreenter', niceName: 'When re-entering the exam'},
+            {name: 'never', niceName: 'Never'}
+        ];
+        this.activatereviewmode = ko.observable(this.activateReviewModeOptions[0]);
+
         this.resultsprintquestions = ko.observable(true);
         this.resultsprintadvice = ko.observable(true);
 
@@ -444,7 +440,6 @@ $(document).ready(function() {
                     browse: this.browse(),
                     allowsteps: this.allowsteps(),
                     showfrontpage: this.showfrontpage(),
-                    showresultspage: this.showresultspage().name,
                     navigatemode: this.navigatemode().name,
                     onleave: this.onleave.toJSON(),
                     preventleave: this.preventleave(),
@@ -466,10 +461,6 @@ $(document).ready(function() {
                     advicethreshold: this.advicethreshold(),
                     intro: this.intro(),
                     end_message: this.end_message(),
-                    reviewshowscore: this.reviewshowscore(),
-                    reviewshowfeedback: this.reviewshowfeedback(),
-                    reviewshowexpectedanswer: this.reviewshowexpectedanswer(),
-                    reviewshowadvice: this.reviewshowadvice(),
                     results_options : {
                         printquestions : this.resultsprintquestions(),
                         printadvice : this.resultsprintadvice(),
@@ -501,10 +492,6 @@ $(document).ready(function() {
 
             if('navigation' in content) {
                 tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','preventleave','typeendtoleave','startpassword','allowAttemptDownload','downloadEncryptionKey','allowsteps'],this);
-                var showresultspage = Editor.tryGetAttribute(content.navigation, 'showresultspage');
-                if(showresultspage) {
-                    this.showresultspage(this.showResultsPageOptions.find(function(o){return o.name==showresultspage}));
-                }
                 if(content.navigation.navigatemode=='adaptive') {
                     content.navigation.navigatemode = 'diagnostic';
                 }
@@ -522,7 +509,7 @@ $(document).ready(function() {
             }
 
             if('feedback' in content) {
-                tryLoad(content.feedback,['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold','intro','end_message','reviewshowscore','reviewshowfeedback','reviewshowexpectedanswer','reviewshowadvice'],this);
+                tryLoad(content.feedback,['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold','intro','end_message'],this);
                 if ('results_options' in content.feedback){
                     tryLoad(content.feedback.results_options,['printquestions','printadvice'],this, ['resultsprintquestions', 'resultsprintadvice']);
                 }

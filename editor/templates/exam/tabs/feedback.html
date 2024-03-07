@@ -4,91 +4,80 @@
 
 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='feedback'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
+    </form>
+
+    <form class="form-horizontal" data-bind="submit: Editor.noop">
         {% with form_label_class='col-sm-3' form_control_class='col-sm-6' form_offset_class='col-sm-offset-3' %}
-        {% booleanproperty 'showactualmark' 'Show current score?' help_url='exam/reference.html#term-Show-current-score' %}
-        {% booleanproperty 'showtotalmark' 'Show maximum score?' help_url='exam/reference.html#term-Show-maximum-score' %}
-        {% booleanproperty 'showanswerstate' 'Show answer state?' help_url='exam/reference.html#term-Show-answer-state' %}
-        {% booleanproperty 'allowrevealanswer' 'Allow reveal answer?' help_url='exam/reference.html#term-Allow-reveal-answer' %}
-        {% booleanproperty 'showstudentname' 'Show student\'s name?' help_url='exam/reference.html#term-Show-student-s-name' %}
-        {% percentproperty 'percentPass' 'Pass threshold' help_url='exam/reference.html#term-Pass-threshold' %}
 
         <div class="form-group">
             <label class="{{form_label_class}} control-label">
-                Introduction
-                {% helplink 'exam/reference.html#term-Introduction' subject='the exam introduction' %}
+                When to give feedback
             </label>
             <div class="{{form_control_class}}">
-                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: intro"></div>
-                <p class="help-block">
-                    Give any information applying to the whole exam, which the student will see before they begin.
-                </p>
+                <table class="table feedback-settings-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th scope="col" id="radio-during-exam">Always</th>
+                            <th scope="col" id="radio-on-completion">After completion</th>
+                            <th scope="col" id="radio-in-review">Only in review mode</th>
+                            <th scope="col" id="radio-never">Never</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">Show answer state {% helplink 'exam/reference.html#term-Show-answer-state' %}</th>
+                            <td>{% radioproperty name='showanswerstate' value='during-exam' %}</td>
+                            <td>{% radioproperty name='showanswerstate' value='on-completion' %}</td>
+                            <td>{% radioproperty name='showanswerstate' value='in-review' %}</td>
+                            <td>{% radioproperty name='showanswerstate' value='never' %}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Show the student's score {% helplink 'exam/reference.html#term-Show-the-student-s-score' %}</th>
+                            <td>{% radioproperty name='showscore' value='during-exam' %}</td>
+                            <td>{% radioproperty name='showscore' value='on-completion' %}</td>
+                            <td>{% radioproperty name='showscore' value='in-review' %}</td>
+                            <td>{% radioproperty name='showscore' value='never' %}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Show the maximum score {% helplink 'exam/reference.html#term-Show-the-maximum-score' %}</th>
+                            <td>{% radioproperty name='showmaximumscore' value='during-exam' %}</td>
+                            <td>{% radioproperty name='showmaximumscore' value='on-completion' %}</td>
+                            <td>{% radioproperty name='showmaximumscore' value='in-review' %}</td>
+                            <td>{% radioproperty name='showmaximumscore' value='never' %}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Show part feedback messages {% helplink 'exam/reference.html#term-Show-part-feedback-messages' %}</th>
+                            <td>{% radioproperty name='showpartfeedbackmessages' value='during-exam' %}</td>
+                            <td>{% radioproperty name='showpartfeedbackmessages' value='on-completion' %}</td>
+                            <td>{% radioproperty name='showpartfeedbackmessages' value='in-review' %}</td>
+                            <td>{% radioproperty name='showpartfeedbackmessages' value='never' %}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Show expected answers {% helplink 'exam/reference.html#term-Show-expected-answers' %}</th>
+                            <td></td>
+                            <td>{% radioproperty name='revealallanswers' value='on-completion' %}</td>
+                            <td>{% radioproperty name='revealallanswers' value='in-review' %}</td>
+                            <td>{% radioproperty name='revealallanswers' value='never' %}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Show question advice {% helplink 'exam/reference.html#term-Show-question-advice' %}</th>
+                            <td></td>
+                            <td>{% radioproperty name='advice' value='on-completion' %}</td>
+                            <td>{% radioproperty name='advice' value='in-review' %}</td>
+                            <td>{% radioproperty name='advice' value='never' %}</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
-
-        <div class="form-group">
-            <label class="{{form_label_class}} control-label">
-                End message
-                {% helplink 'exam/reference.html#term-End-message' subject='the exam end message' %}
-            </label>
-            <div class="{{form_control_class}}">
-                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: end_message"></div>
-                <p class="help-block">
-                    This will be shown to the student once the exam is finished.
-                </p>
-            </div>
-        </div>
-
-        <h4>Review mode</h4>
-        <p class="help-block">
-            The following settings only apply in review mode, once the exam is finished.
-        </p>
-
-        {% booleanproperty 'reviewshowscore' 'Show score in review mode?' help_url='exam/reference.html#term-Show-score-in-review-mode' %}
-        {% booleanproperty 'reviewshowfeedback' 'Show part feedback messages in review mode?' help_url='exam/reference.html#term-Show-part-feedback-messages-in-review-mode' %}
-        {% booleanproperty 'reviewshowexpectedanswer' 'Show expected answers in review mode?' help_url='exam/reference.html#term-Show-expected-answers-in-review-mode' %}
-        {% booleanproperty 'reviewshowadvice' 'Show question advice in review mode?' help_url='exam/reference.html#term-Show-question-advice-in-review-mode' %}
-
-        {% booleanproperty 'resultsprintquestions' 'Show questions in printed results summary?' help_url='exam/reference.html#term-Show-questions-in-printed-results-summary' %}
-        <div data-bind="fadeVisible: resultsprintquestions">
-            {% booleanproperty 'resultsprintadvice' 'Show advice in printed results summary?' help_url='exam/reference.html#term-Show-advice-in-printed-results-summary' %}
-        </div>
-
-        <h4>
-            Feedback messages
-            {% helplink 'exam/reference.html#term-Feedback-messages' subject='feedback messages' %}
-        </h4>
-        <ul class="feedback-messages list-unstyled list-group" data-bind="foreach: feedbackMessages">
-            <li class="feedback-message list-group-item clearfix">
-                <div class="form-group">
-                    <label class="{{form_label_class}} control-label">
-                        If the student's score is at least
-                    </label>
-                    <div class="{{form_control_class}} form-inline">
-                        <input type="range" data-bind="inputValue: threshold" step="1" min="0" max="100"> <span class="percentproperty value" data-bind="text: ko.unwrap(threshold)+'%'"></span>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="{{form_label_class}} control-label">
-                        Show this message
-                    </label>
-                    <div class="{{form_control_class}}">
-                        <div {% if not editable %}disabled{% endif %} data-bind="writemaths: message"></div>
-                    </div>
-                </div>
-                <div class="{{form_control_class}} {{form_offset_class}}">
-                    {% if editable %}<button type="button" type="button" class="delete btn btn-sm btn-danger" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this feedback message</button>{% endif %}
-                </div>
-            </li>
-        </ul>
-        {% if editable %}<button type="button" class="btn btn-primary" data-bind="click: addFeedbackMessage"><span class="glyphicon glyphicon-plus"></span> Add a feedback message</button>{% endif %}
-
         {% endwith %}
 
 
     </form>
 
     {% if editable %}
-    <editor-pager params="editor: $root, previousTab: 'timing', nextTab: 'settings', task_group: 'feedback'"></editor-pager>
+    <editor-pager params="editor: $root, previousTab: 'during-exam', nextTab: 'after-end', task_group: 'feedback'"></editor-pager>
     {% endif %}
 
 </section>

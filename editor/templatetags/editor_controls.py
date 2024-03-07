@@ -141,3 +141,12 @@ def exam_event(context, property_name, name, *args, **kwargs):
         'form_control_class': context.get('form_control_class', 'col-sm-9'),
     })
     return context
+
+@register.inclusion_tag('editor-controls/radioproperty.html', takes_context=True)
+def radioproperty(context, name, value):
+    print(name, value)
+    context.update({
+        'name': name,
+        'value': value,
+    })
+    return context

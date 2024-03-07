@@ -21,20 +21,17 @@
 
 {% block main_tab_content %}
 {{ block.super }}
-    <!-- Display -->
-    {% include "exam/tabs/display.html" %}
-
     <!-- Questions -->
     {% include "exam/tabs/questions.html" %}
 
     <!-- Knowledge graph -->
     {% include "exam/tabs/knowledge_graph.html" %}
 
+    <!-- Display -->
+    {% include "exam/tabs/display.html" %}
+
     <!-- Navigation -->
     {% include "exam/tabs/navigation.html" %}
-
-    <!-- Timing -->
-    {% include "exam/tabs/timing.html" %}
 
     <!-- Feedback -->
     {% include "exam/tabs/feedback.html" %}

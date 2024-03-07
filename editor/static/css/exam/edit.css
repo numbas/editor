@@ -131,3 +131,10 @@ body:not(.dragging-question) .group-drop-question {
         grid-column: 2;
     }
 }
+
+.feedback-settings-table thead {
+    text-align: center;
+}
+.feedback-settings-table td {
+    text-align: center;
+}

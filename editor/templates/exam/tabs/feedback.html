@@ -9,71 +9,74 @@
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         {% with form_label_class='col-sm-3' form_control_class='col-sm-6' form_offset_class='col-sm-offset-3' %}
 
-        <div class="form-group">
-            <label class="{{form_label_class}} control-label">
-                When to give feedback
-            </label>
-            <div class="{{form_control_class}}">
-                <table class="table feedback-settings-table">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th scope="col" id="radio-during-exam">Always</th>
-                            <th scope="col" id="radio-on-completion">After completion</th>
-                            <th scope="col" id="radio-in-review">Only in review mode</th>
-                            <th scope="col" id="radio-never">Never</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <th scope="row">Show answer state {% helplink 'exam/reference.html#term-Show-answer-state' %}</th>
-                            <td>{% radioproperty name='showanswerstate' value='during-exam' %}</td>
-                            <td>{% radioproperty name='showanswerstate' value='on-completion' %}</td>
-                            <td>{% radioproperty name='showanswerstate' value='in-review' %}</td>
-                            <td>{% radioproperty name='showanswerstate' value='never' %}</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Show the student's score {% helplink 'exam/reference.html#term-Show-the-student-s-score' %}</th>
-                            <td>{% radioproperty name='showscore' value='during-exam' %}</td>
-                            <td>{% radioproperty name='showscore' value='on-completion' %}</td>
-                            <td>{% radioproperty name='showscore' value='in-review' %}</td>
-                            <td>{% radioproperty name='showscore' value='never' %}</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Show the maximum score {% helplink 'exam/reference.html#term-Show-the-maximum-score' %}</th>
-                            <td>{% radioproperty name='showmaximumscore' value='during-exam' %}</td>
-                            <td>{% radioproperty name='showmaximumscore' value='on-completion' %}</td>
-                            <td>{% radioproperty name='showmaximumscore' value='in-review' %}</td>
-                            <td>{% radioproperty name='showmaximumscore' value='never' %}</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Show part feedback messages {% helplink 'exam/reference.html#term-Show-part-feedback-messages' %}</th>
-                            <td>{% radioproperty name='showpartfeedbackmessages' value='during-exam' %}</td>
-                            <td>{% radioproperty name='showpartfeedbackmessages' value='on-completion' %}</td>
-                            <td>{% radioproperty name='showpartfeedbackmessages' value='in-review' %}</td>
-                            <td>{% radioproperty name='showpartfeedbackmessages' value='never' %}</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Show expected answers {% helplink 'exam/reference.html#term-Show-expected-answers' %}</th>
-                            <td></td>
-                            <td>{% radioproperty name='revealallanswers' value='on-completion' %}</td>
-                            <td>{% radioproperty name='revealallanswers' value='in-review' %}</td>
-                            <td>{% radioproperty name='revealallanswers' value='never' %}</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Show question advice {% helplink 'exam/reference.html#term-Show-question-advice' %}</th>
-                            <td></td>
-                            <td>{% radioproperty name='advice' value='on-completion' %}</td>
-                            <td>{% radioproperty name='advice' value='in-review' %}</td>
-                            <td>{% radioproperty name='advice' value='never' %}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <fieldset>
+            <legend>When to show feedback</legend>
+            <table class="table feedback-settings-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th scope="col" id="radio-always">Always</th>
+                        <th scope="col" id="radio-inreview">Only in review mode</th>
+                        <th scope="col" id="radio-never">Never</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row">Show answer state {% helplink 'exam/reference.html#term-Show-answer-state' %}</th>
+                        <!-- ko foreach: feedback_timing_choices -->
+                        <td><input type="radio" name="showanswerstate" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.showanswerstate"></td>
+                        <!-- /ko -->
+                    </tr>
+                    <tr>
+                        <th scope="row">Show the student's score {% helplink 'exam/reference.html#term-Show-the-student-s-score' %}</th>
+                        <!-- ko foreach: feedback_timing_choices -->
+                        <td><input type="radio" name="showactualmark" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.showactualmark"></td>
+                        <!-- /ko -->
+                    </tr>
+                    <tr>
+                        <th scope="row">Show the maximum score {% helplink 'exam/reference.html#term-Show-the-maximum-score' %}</th>
+                        <!-- ko foreach: feedback_timing_choices -->
+                        <td><input type="radio" name="showtotalmark" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.showtotalmark"></td>
+                        <!-- /ko -->
+                    </tr>
+                    <tr>
+                        <th scope="row">Show part feedback messages {% helplink 'exam/reference.html#term-Show-part-feedback-messages' %}</th>
+                        <!-- ko foreach: feedback_timing_choices -->
+                        <td><input type="radio" name="showpartfeedbackmessages" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.showpartfeedbackmessages"></td>
+                        <!-- /ko -->
+                    </tr>
+                </tbody>
+            </table>
+        </fieldset>
+
+        <fieldset>
+            <legend>When to reveal answers</legend>
+            <table class="table feedback-settings-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th scope="col" id="radio-oncompletion">After completion</th>
+                        <th scope="col" id="radio-inreview">Only in review mode</th>
+                        <th scope="col" id="radio-never">Never</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row">Show expected answers {% helplink 'exam/reference.html#term-Show-expected-answers' %}</th>
+                        <!-- ko foreach: reveal_choices -->
+                        <td><input type="radio" name="revealexpectedanswers" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.revealexpectedanswers"></td>
+                        <!-- /ko -->
+                    </tr>
+                    <tr>
+                        <th scope="row">Show question advice {% helplink 'exam/reference.html#term-Show-question-advice' %}</th>
+                        <!-- ko foreach: reveal_choices -->
+                        <td><input type="radio" name="revealadvice" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.revealadvice"></td>
+                        <!-- /ko -->
+                    </tr>
+                </tbody>
+            </table>
+        </legend>
         {% endwith %}
-
-
     </form>
 
     {% if editable %}

@@ -132,9 +132,21 @@ body:not(.dragging-question) .group-drop-question {
     }
 }
 
+.table.feedback-settings-table {
+    width: auto;
+    margin: 1em auto 2em auto;
+}
+
 .feedback-settings-table thead {
     text-align: center;
 }
 .feedback-settings-table td {
     text-align: center;
+}
+
+fieldset fieldset {
+    margin-left: 2em;
+}
+fieldset fieldset legend {
+    font-size: 1.3em;
 }

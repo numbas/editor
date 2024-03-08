@@ -3,8 +3,8 @@
 {% load editor_controls %}
 
 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='navigation'}">
-    <section>
-        <h2>Before the exam starts</h2>
+    <fieldset>
+        <legend>Before the exam starts</legend>
 
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
@@ -28,20 +28,18 @@
 
             {% endwith %}
         </form>
-    </section>
+    </fieldset>
 
-    <hr>
-
-    <section>
-        <h2>During the exam</h2>
+    <fieldset>
+        <legend>During the exam</legend>
 
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
 
             {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='exam/reference.html#term-Confirm-before-leaving-the-exam-while-it-s-running' %}
 
-            <section>
-                <h3>Moving between questions</h3>
+            <fieldset>
+                <legend>Moving between questions</legend>
 
                 {% selectproperty 'navigatemode' 'Question navigation mode' options='navigateModeOptions' options_text='niceName' help_url='exam/reference.html#term-Question-navigation-mode' %}
 
@@ -60,20 +58,16 @@
                     {% exam_event 'onleave' 'On leaving a question' help_url='exam/reference.html#term-On-leaving-a-question' %}
                 </div>
 
-            </section>
+            </fieldset>
 
-            <hr>
-
-            <section>
-                <h3>Ending the exam</h3>
+            <fieldset>
+                <legend>Ending the exam</legend>
 
                 {% booleanproperty 'typeendtoleave' 'Require written confirmation before ending the exam?' help_url='exam/reference.html#term-Require-written-confirmation-before-ending-the-exam' %}
-            </section>
+            </fieldset>
 
-            <hr>
-
-            <section>
-                <h3>Timing</h3>
+            <fieldset>
+                <legend>Timing</legend>
 
                 {% property 'duration' 'Exam duration (minutes)' min=0 help_url='exam/reference.html#term-Exam-duration' %}
 
@@ -82,16 +76,14 @@
                 {% exam_event 'timeout' 'On timeout' help_url='exam/reference.html#term-On-timeout-event' %}
 
                 {% exam_event 'timedwarning' '5 minutes before timeout' help_url='exam/reference.html#term-5-minutes-before-timeout-event' %}
-            </section>
+            </fieldset>
 
             {% endwith %}
         </form>
-    </section>
+    </fieldset>
 
-    <hr>
-
-    <section>
-        <h2>After the exam ends</h2>
+    <fieldset>
+        <legend>After the exam ends</legend>
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
 
@@ -149,7 +141,7 @@
 
             {% endwith %}
         </form>
-    </section>
+    </fieldset>
 
     {% if editable %}
     <editor-pager params="editor: $root, previousTab: 'display', nextTab: 'timing', task_group: 'navigation'"></editor-pager>

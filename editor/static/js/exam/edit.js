@@ -137,19 +137,24 @@ $(document).ready(function() {
         this.timeout = ko.observable(null);
         this.timedwarning = ko.observable(null);
 
-        this.showactualmark = ko.observable(true);
-        this.showtotalmark = ko.observable(true);
-        this.showanswerstate = ko.observable(true);
+        var feedback_timing_choices = this.feedback_timing_choices = ['always', 'inreview', 'never'];
+
+        this.showactualmark = Editor.choiceObservable(this.feedback_timing_choices);
+        this.showtotalmark = Editor.choiceObservable(this.feedback_timing_choices);
+        this.showanswerstate = Editor.choiceObservable(this.feedback_timing_choices);
+        this.showpartfeedbackmessages = Editor.choiceObservable(this.feedback_timing_choices);
+
+        this.reveal_choices = ['oncompletion', 'inreview', 'never'];
+
+        this.revealexpectedanswers = Editor.choiceObservable(this.reveal_choices);
+        this.revealadvice = Editor.choiceObservable(this.reveal_choices);
+
         this.allowrevealanswer = ko.observable(true);
         this.advicethreshold = ko.observable(0);
         this.showstudentname = ko.observable(true);
 
-        this.activateReviewModeOptions = [
-            {name: 'oncompletion', niceName: 'On completion'},
-            {name: 'onreenter', niceName: 'When re-entering the exam'},
-            {name: 'never', niceName: 'Never'}
-        ];
-        this.activatereviewmode = ko.observable(this.activateReviewModeOptions[0]);
+        this.activateReviewModeOptions = ['oncompletion', 'onreenter', 'never'];
+        this.activatereviewmode = Editor.choiceObservable(this.activateReviewModeOptions);
 
         this.resultsprintquestions = ko.observable(true);
         this.resultsprintadvice = ko.observable(true);
@@ -424,6 +429,7 @@ $(document).ready(function() {
 
         //returns a JSON-y object representing the exam
         toJSON: function() {
+
             return {
                 name: this.name(),
                 metadata: this.metadata(),
@@ -457,6 +463,10 @@ $(document).ready(function() {
                     showactualmark: this.showactualmark(),
                     showtotalmark: this.showtotalmark(),
                     showanswerstate: this.showanswerstate(),
+                    showpartfeedbackmessages: this.showpartfeedbackmessages(),
+                    revealexpectedanswers: this.revealexpectedanswers(),
+                    revealadvice: this.revealadvice(),
+                    activatereviewmode: this.activatereviewmode(),
                     allowrevealanswer: this.allowrevealanswer(),
                     advicethreshold: this.advicethreshold(),
                     intro: this.intro(),
@@ -509,7 +519,7 @@ $(document).ready(function() {
             }
 
             if('feedback' in content) {
-                tryLoad(content.feedback,['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold','intro','end_message'],this);
+                tryLoad(content.feedback,['showactualmark','showtotalmark','showanswerstate','showpartfeedbackmessages','revealexpectedanswers','revealadvice','activatereviewmode','allowrevealanswer','advicethreshold','intro','end_message'],this);
                 if ('results_options' in content.feedback){
                     tryLoad(content.feedback.results_options,['printquestions','printadvice'],this, ['resultsprintquestions', 'resultsprintadvice']);
                 }

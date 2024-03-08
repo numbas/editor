@@ -309,6 +309,12 @@ $(document).ready(function() {
         });
     };
 
+    Editor.choiceObservable = function(choices) {
+        var obs = ko.observable(choices[0]);
+        obs.choices = choices;
+        return obs;question.getPart)(
+    }
+
 
     // A task to make a string observable non-empty, e.g. give something a name.
     Editor.nonempty_task = function(text,observable,focus_on) {

@@ -10,6 +10,8 @@
 
 {% block title %}{{object.name}} - Custom part type - {{block.super}}{% endblock %}
 
+{% block body_classes %}{{block.super}} custom-part-type-editor{% endblock %}
+
 {% block stylesheets %}
     {{block.super}}
     <link href="{% sstatic 'css/custom_part_type/edit.css' %}" type="text/css" rel="stylesheet" />
@@ -87,6 +89,7 @@
 <div class="loaded-content">
     <div class="page-header">
         {% block page_header %}
+        <a class="back" href="{% url 'profile_custom_part_types' request.user.pk %}">Back to custom part types</a>
         <h1 class="name-header">
             <span class="glyphicon glyphicon-ok"></span> 
             <span class="name" data-bind="mathjaxHTML: name"></span>

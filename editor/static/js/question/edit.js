@@ -4044,13 +4044,21 @@ $(document).ready(function() {
                 await promise;
                 mt.waiting_for_pre_submit(false);
                 try {
-                    var alternatives_result = part.markAlternatives(part.getScope(), undefined, '');
-                    var res = alternatives_result.result.script_result;
+                    var res = part.script_result;
                     if(!res) {
                         var out = {script: part.markingScript, error: 'The marking algorithm did not return a result.'};
                     } else {
-                        var alternative_used = alternatives_result.best_alternative ? alternatives_result.best_alternative.path : null;
-                        var out = {script: part.markingScript, result: res, marking_result: part.marking_result, message_displays: make_message_displays(part.markingFeedback.slice()), marks: part.marks, credit: part.credit, score: part.score, alternative_used: alternative_used};
+                        var alternative_used = part.best_alternative ? part.best_alternative.path : null;
+                        var out = {
+                            script: part.markingScript,
+                            result: res,
+                            marking_result: part.marking_result,
+                            message_displays: make_message_displays(part.markingFeedback.slice()),
+                            marks: part.marks,
+                            credit: part.credit,
+                            score: part.score,
+                            alternative_used: alternative_used
+                        };
                         if(res.state_errors.mark) {
                             out.error = 'Error when computing the <code>mark</code> note: '+res.state_errors.mark.message;
                         } else if(!res.state_valid.mark) {

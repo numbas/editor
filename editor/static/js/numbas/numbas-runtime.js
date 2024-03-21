@@ -13249,7 +13249,7 @@ var simplificationRules = jme.rules.simplificationRules = {
         ['($n;n * (?`* `: 1);top) / ($n;m * (?`* `: 1);bottom) `where gcd_without_pi_or_i(n,m)>1','acg','(eval(n/gcd_without_pi_or_i(n,m))*top)/(eval(m/gcd_without_pi_or_i(n,m))*bottom)'],    // Cancel common factors of integers on top and bottom of a fraction
         ['imaginary:$n;n / imaginary:$n;m','','eval(n/i)/eval(m/i)'],            // Cancel i when numerator and denominator are both purely imaginary
         ['?;=a / ?;=a','acg','1'],              // Cancel fractions equal to 1
-        ['?;a / (?;b/?;c)','acg','(a*c)/b']     // Un-nest nested fractions
+        ['?;a / (?;b/?;c * ?`*;rest)','acg','(a*c)/(b * rest)']     // Un-nest nested fractions
     ],
     zeroBase: [
         ['0^?;x','','0']
@@ -15485,6 +15485,9 @@ if(res) { \
                     function after(script,originalScript) {
                         return function() {
                             var original_result = originalScript.apply(part,arguments);
+                            if(original_result.waiting_for_pre_submit) {
+                                return original_result;
+                            }
                             var after_result = script.apply(part,arguments);
                             if(!after_result) {
                                 return original_result;
@@ -15893,6 +15896,8 @@ if(res) { \
                 this.markingFeedback = result.markingFeedback.slice();
                 this.finalised_result = result.finalised_result;
                 this.adaptiveMarkingUsed = result.adaptiveMarkingUsed;
+                this.best_alternative = result.best_alternative;
+                this.script_result = result.script_result;
                 this.marking_values = result.values;
                 this.credit = result.credit;
                 this.answered = result.answered;
@@ -16185,6 +16190,8 @@ if(res) { \
         return {
             warnings: this.warnings.slice(),
             markingFeedback: this.markingFeedback.slice(),
+            best_alternative: altres.best_alternative,
+            script_result: res.script_result,
             finalised_result: res.finalised_result,
             values: res.values,
             credit: this.credit,
@@ -16346,15 +16353,15 @@ if(res) { \
                     part.markingComment(state.message,state.reason, state.format);
                     break;
                 case FeedbackOps.END:
+                    if(state.invalid) {
+                        valid = false;
+                    }
                     if(lifts.length) {
                         while(i+1<states.length && states[i+1].op!="end_lift") {
                             i += 1;
                         }
                     } else {
                         end = true;
-                        if(state.invalid) {
-                            valid = false;
-                        }
                     }
                     break;
                 case "start_lift":
@@ -19543,15 +19550,16 @@ Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables','math
                     credit = credit.subtract(Fraction.fromFloat(state.credit));
                     break;
                 case FeedbackOps.END:
+                    out_states.push(state);
+                    if(state.invalid) {
+                        valid = false;
+                    }
                     if(num_lifts) {
                         while(i+1<states.length && states[i+1].op!="end_lift") {
                             i += 1;
                         }
                     } else {
                         end = true;
-                        if(state.invalid) {
-                            valid = false;
-                        }
                     }
                     break;
                 case FeedbackOps.CONCAT:

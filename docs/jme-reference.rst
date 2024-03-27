@@ -3737,6 +3737,17 @@ HTML
     **Example**:
         ``max_height(400,html("<p>Text</p>"))`` → ``html("<p style=\"max-height: 400em;\">a</p>")``
 
+.. jme:function:: escape_html(text)
+    :keywords: escape, safe
+    
+    Rewrite the given string, replacing characters that might be HTML code with the corresponding HTML entity escape codes, so the resulting string can be safely displayed as plain text.
+
+    **Definitions**:
+        * :data:`string` → :data:`string`
+
+    **Example**:
+        * ``escape_html("<p>Text</p>")`` → ``"&lt;p&gt;Text&lt;/p&gt;"``
+
 .. _jme-fns-json:
 
 JSON

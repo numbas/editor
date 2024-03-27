@@ -3316,6 +3316,18 @@ var jme_function_hints =
         "doc": "jme-reference"
     },
     {
+        "name": "escape_html",
+        "description": "Rewrite the given string, replacing characters that might be HTML code with the corresponding HTML entity escape codes, so the resulting string can be safely displayed as plain text.",
+        "keywords": [
+            "escape",
+            "safe"
+        ],
+        "calling_patterns": [
+            "escape_html(text)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
         "name": "json_decode",
         "description": "Decode a JSON string into JME data types.",
         "keywords": [

@@ -72,6 +72,12 @@ Pattern restriction
     Partial credit for not matching pattern
         If the student's answer does not match the given pattern, their score is multiplied by this percentage.
 
+    When to warn the student if their answer does not match the pattern
+        If :guilabel:`On submission` is selected, the student will only be told that their answer does not match the pattern after they submit their answer.
+        
+        If :guilabel:`On input, and prevent submission` is selected, the student will be shown a warning next to the input box as soon as they enter an expression which does not match the pattern.
+        If they try to submit the answer, it will be marked as invalid.
+
 .. _mathematical-expression-variable-options:
 
 Variables

@@ -134,7 +134,11 @@ part_types.models = [
                     pattern: ko.observable(''),
                     partialCredit: ko.observable(0),
                     message: ko.observable(''),
-                    nameToCompare: ko.observable('')
+                    nameToCompare: ko.observable(''),
+                    warningTime: Editor.optionObservable([
+                        {name: 'submission', niceName: 'On submission'},
+                        {name: 'input', niceName: 'On input, and prevent submission'}
+                    ])
                 },
                 checkVariableNames: ko.observable(false),
                 singleLetterVariables: ko.observable(false),
@@ -288,7 +292,8 @@ part_types.models = [
                     pattern: this.mustmatchpattern.pattern(),
                     partialCredit: this.mustmatchpattern.partialCredit(),
                     message: this.mustmatchpattern.message(),
-                    nameToCompare: this.mustmatchpattern.nameToCompare()
+                    nameToCompare: this.mustmatchpattern.nameToCompare(),
+                    warningTime: this.mustmatchpattern.warningTime().name
                 }
             }
             data.valuegenerators = this.valueGenerators().map(function(d) {
@@ -330,7 +335,7 @@ part_types.models = [
             tryLoad(tryGetAttribute(data,'minLength'),['length','partialCredit','message'],this.minlength);
             tryLoad(tryGetAttribute(data,'mustHave'),['strings','showStrings','partialCredit','message'],this.musthave);
             tryLoad(tryGetAttribute(data,'notAllowed'),['strings','showStrings','partialCredt','message'],this.notallowed);
-            tryLoad(tryGetAttribute(data,'mustMatchPattern'),['pattern','partialCredit','message','nameToCompare'],this.mustmatchpattern);
+            tryLoad(tryGetAttribute(data,'mustMatchPattern'),['pattern', 'partialCredit', 'message', 'nameToCompare', 'warningTime'],this.mustmatchpattern);
             
             var valueGenerators = tryGetAttribute(data,'valueGenerators');
             if(valueGenerators) {

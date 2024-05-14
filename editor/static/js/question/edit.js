@@ -773,7 +773,7 @@ $(document).ready(function() {
             names.sort(Numbas.util.sortBy('name'));
             function handle_group(group) {
                 group.forEach(function(n) {
-                    n.v.duplicateNameError(group.length > 1 ? n.name : null);
+                    //n.v.duplicateNameError(group.length > 1 ? n.name : null);
                 });
             }
 
@@ -1963,11 +1963,15 @@ $(document).ready(function() {
 
         var nameError = ko.pureComputed(function() {
             var duplicateNameError = v.duplicateNameError();
+            var nameErrDuplicates = {} // tracks duplicate names using an object
             var name_errors = names().map(function(nd) {
-                var name = nd.name;
-                if(name.toLowerCase() == duplicateNameError) {
+                var name = nd.name.toLowerCase();
+                if(nameErrDuplicates[name] && name!=='') {
                     return 'There\'s another variable or constant with the name '+name+'.';
+                } else {
+                    nameErrDuplicates[name] = true
                 }
+                console.log("NameErr Map: ",nameErrDuplicates)
                 if(name=='') {
                     return '';
                 }

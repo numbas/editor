@@ -15,14 +15,22 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 # -- Project information -----------------------------------------------------
 
 project = 'Numbas'
-copyright = '2012-2021, Newcastle University'
+copyright = '2012-2024, Newcastle University'
 
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.intersphinx', 'sphinx.ext.todo', 'sphinx.ext.coverage', 'sphinx.ext.mathjax', 'sphinx.ext.ifconfig', 'sphinx.ext.viewcode', 'video']
+extensions = [
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.todo',
+    'sphinx.ext.coverage',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.ifconfig',
+    'sphinx.ext.viewcode',
+    'video'
+]
 
 
 def setup(app):
@@ -32,7 +40,9 @@ def setup(app):
 
 templates_path = ['_templates']
 
+# The short X.Y version
 version = '7.3'
+# The full version, including alpha/beta/rc tags
 release = '7.3'
 
 html_theme = 'sphinx_book_theme'

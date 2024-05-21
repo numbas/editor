@@ -73,10 +73,12 @@ Pattern restriction
         If the student's answer does not match the given pattern, their score is multiplied by this percentage.
 
     When to warn the student if their answer does not match the pattern
-        If :guilabel:`On submission` is selected, the student will only be told that their answer does not match the pattern after they submit their answer.
+        If :guilabel:`After submission` is selected, the student will only be told that their answer does not match the pattern after they submit their answer.
         
-        If :guilabel:`On input, and prevent submission` is selected, the student will be shown a warning next to the input box as soon as they enter an expression which does not match the pattern.
-        If they try to submit the answer, it will be marked as invalid.
+        If :guilabel:`While entering their answer` is selected, the student will be shown a warning next to the input box as soon as they enter an expression which does not match the pattern.
+
+        If :guilabel:`Prevent submission` is selected, the student will be prevented from submitting an answer which does not match the pattern.
+        They will also be shown a warning next to the input box as soon as they enter an expression which does not match the pattern.
 
 .. _mathematical-expression-variable-options:
 

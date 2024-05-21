@@ -136,8 +136,9 @@ part_types.models = [
                     message: ko.observable(''),
                     nameToCompare: ko.observable(''),
                     warningTime: Editor.optionObservable([
-                        {name: 'submission', niceName: 'On submission'},
-                        {name: 'input', niceName: 'On input, and prevent submission'}
+                        {name: 'submission', niceName: 'After submitting'},
+                        {name: 'input', niceName: 'While entering their answer'},
+                        {name: 'prevent', niceName: 'Prevent submission'},
                     ])
                 },
                 checkVariableNames: ko.observable(false),

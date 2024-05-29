@@ -26389,8 +26389,8 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             <div class="matrix-input" data-bind="attr: {title: title}">
                 <!-- ko if: allowResize --><div class="matrix-size">
                     <fieldset><legend class="sr-only">${R('matrix input.size control legend')}</legend>
-                    <label class="num-rows">${R('matrix input.rows')}: <input type="number" data-bind="value: numRows, autosize: true, disable: disable, attr: {'min': minRows()==0 ? 1 : minRows(), 'max': maxRows()==0 ? '' : maxRows()}"/></label>
-                    <label class="num-columns">${R('matrix input.columns')}: <input type="number" min="1" data-bind="value: numColumns, autosize: true, disable: disable, attr: {'min': minColumns()==0 ? 1 : minColumns(), 'max': maxColumns()==0 ? '' : maxColumns()}"/></label>
+                    <label class="num-rows">${R('matrix input.rows')}: <input type="number" data-bind="event: events, value: numRows, autosize: true, disable: disable, attr: {'min': minRows()==0 ? 1 : minRows(), 'max': maxRows()==0 ? '' : maxRows()}"/></label>
+                    <label class="num-columns">${R('matrix input.columns')}: <input type="number" min="1" data-bind="event: events, value: numColumns, autosize: true, disable: disable, attr: {'min': minColumns()==0 ? 1 : minColumns(), 'max': maxColumns()==0 ? '' : maxColumns()}"/></label>
                     </fieldset>
                 </div><!-- /ko -->
                 <div class="matrix-wrapper">
@@ -27641,7 +27641,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         var mustMatchNode = xml.selectSingleNode('answer/mustmatchpattern');
         if(mustMatchNode) {
             //partial credit for failing not-allowed test
-            tryGetAttribute(settings,xml,mustMatchNode,['pattern','partialCredit','nameToCompare'],['mustMatchPatternString','mustMatchPC','nameToCompare']);
+            tryGetAttribute(settings,xml,mustMatchNode,['pattern', 'partialCredit', 'nameToCompare', 'warningTime'],['mustMatchPatternString','mustMatchPC','nameToCompare', 'mustMatchWarningTime']);
             var messageNode = mustMatchNode.selectSingleNode('message');
             if(messageNode) {
                 var mustMatchMessage = Numbas.xml.transform(Numbas.xml.templates.question,messageNode);
@@ -27670,7 +27670,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         tryLoad(data.minlength, ['length', 'partialCredit', 'message'], settings, ['minLength', 'minLengthPC', 'minLengthMessage']);
         tryLoad(data.musthave, ['strings', 'showStrings', 'partialCredit', 'message'], settings, ['mustHave', 'mustHaveShowStrings', 'mustHavePC', 'mustHaveMessage']);
         tryLoad(data.notallowed, ['strings', 'showStrings', 'partialCredit', 'message'], settings, ['notAllowed', 'notAllowedShowStrings', 'notAllowedPC', 'notAllowedMessage']);
-        tryLoad(data.mustmatchpattern, ['pattern', 'partialCredit', 'message', 'nameToCompare'], settings, ['mustMatchPatternString', 'mustMatchPC', 'mustMatchMessage', 'nameToCompare']);
+        tryLoad(data.mustmatchpattern, ['pattern', 'partialCredit', 'message', 'nameToCompare', 'warningTime'], settings, ['mustMatchPatternString', 'mustMatchPC', 'mustMatchMessage', 'nameToCompare', 'mustMatchWarningTime']);
         settings.mustMatchPC /= 100;
         tryLoad(data, ['checkVariableNames', 'singleLetterVariables', 'allowUnknownFunctions', 'implicitFunctionComposition', 'showPreview','caseSensitive'], settings);
         var valuegenerators = tryGet(data,'valuegenerators');
@@ -27742,6 +27742,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
      * @property {number} mustMatchPC - Partial credit to award if the student's answer does not match the pattern.
      * @property {string} mustMatchMessage - Message to add to the marking feedback if the student's answer does not match the pattern.
      * @property {string} nameToCompare - The name of a captured subexpression from the pattern match to compare with the corresponding captured part from the correct answer. If empty, the whole expressions are compared.
+     * @property {string} mustMatchWarningTime - When to warn the student that their answer doesn't match the pattern. `input`: immediately, as they enter the answer. `submission`: only once they have submitted their answer.
      * @property {boolean} checkVariableNames - Check that the student has used the same variable names as the correct answer?
      * @property {boolean} singleLetterVariables - Force single letter variable names in the answer? Multi-letter variable names will be considered as implicit multiplication.
      * @property {boolean} allowUnknownFunctions - Allow the use of unknown functions in the answer? If false, application of unknown functions will be considered as multiplication instead.
@@ -27776,7 +27777,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         notAllowedShowStrings: false,
         mustMatchPattern: '',
         mustMatchPC: 0,
-        mustMatchMessage: R('part.jme.must-match.failed'),
+        mustMatchMessage: '',
         nameToCompare: '',
         checkVariableNames: false,
         singleLetterVariables: false,

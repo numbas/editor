@@ -426,6 +426,20 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
         ;
     },
 
+    /**
+     * Copy a tree, but keep the original token objects.
+     *
+     * @param {Numbas.jme.tree} tree
+     * @returns {Numbas.jme.tree}
+     */
+    copy_tree: function(tree) {
+        var o = {tok: tree.tok};
+        if(tree.args) {
+            o.args = tree.args.map(jme.copy_tree);
+        }
+        return o;
+    },
+
     /** Wrapper around {@link Numbas.jme.Parser#compile}.
      *
      * @param {JME} expr
@@ -533,8 +547,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
      * @param {boolean} [unwrapExpressions=false] - Unwrap TExpression tokens?
      * @returns {Numbas.jme.tree}
      */
-    substituteTree: function(tree,scope,allowUnbound,unwrapExpressions)
-    {
+    substituteTree: function(tree,scope,allowUnbound,unwrapExpressions) {
         if(!tree) {
             return null;
         }
@@ -3970,7 +3983,8 @@ TLambda.prototype = {
                     }
                 }
                 lambda.names.forEach((name,i) => assign_names(name, castargs[i]));
-                return nscope.evaluate(lambda.expr);
+
+                return nscope.evaluate(jme.copy_tree(lambda.expr));
             }
         });
     }
@@ -14903,9 +14917,19 @@ var createPartFromJSON = Numbas.createPartFromJSON = function(index, data, path,
         throw(new Numbas.Error('part.missing type attribute',{part:util.nicePartName(path)}));
     }
     var part = createPart(index, data.type, path, question, parentPart, store, scope);
-    part.loadFromJSON(data);
-    part.finaliseLoad();
-    part.signals.trigger('finaliseLoad');
+    try {
+        part.loadFromJSON(data);
+        part.finaliseLoad();
+        part.signals.trigger('finaliseLoad');
+        if(Numbas.display && part.question && part.question.display) {
+            part.initDisplay();
+        }
+    } catch(e) {
+        if(e.originalMessage=='part.error') {
+            throw(e);
+        }
+        part.error(e.message,{},e);
+    }
     return part;
 }
 /** Create a new question part.
@@ -26389,8 +26413,8 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             <div class="matrix-input" data-bind="attr: {title: title}">
                 <!-- ko if: allowResize --><div class="matrix-size">
                     <fieldset><legend class="sr-only">${R('matrix input.size control legend')}</legend>
-                    <label class="num-rows">${R('matrix input.rows')}: <input type="number" data-bind="event: events, value: numRows, autosize: true, disable: disable, attr: {'min': minRows()==0 ? 1 : minRows(), 'max': maxRows()==0 ? '' : maxRows()}"/></label>
-                    <label class="num-columns">${R('matrix input.columns')}: <input type="number" min="1" data-bind="event: events, value: numColumns, autosize: true, disable: disable, attr: {'min': minColumns()==0 ? 1 : minColumns(), 'max': maxColumns()==0 ? '' : maxColumns()}"/></label>
+                    <label class="num-rows">${R('matrix input.rows')}: <input type="number" data-bind="value: numRows, autosize: true, disable: disable, attr: {'min': minRows()==0 ? 1 : minRows(), 'max': maxRows()==0 ? '' : maxRows()}"/></label>
+                    <label class="num-columns">${R('matrix input.columns')}: <input type="number" min="1" data-bind="value: numColumns, autosize: true, disable: disable, attr: {'min': minColumns()==0 ? 1 : minColumns(), 'max': maxColumns()==0 ? '' : maxColumns()}"/></label>
                     </fieldset>
                 </div><!-- /ko -->
                 <div class="matrix-wrapper">
@@ -27780,6 +27804,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         mustMatchMessage: '',
         nameToCompare: '',
         checkVariableNames: false,
+        mustMatchWarningTime: 'submission',
         singleLetterVariables: false,
         allowUnknownFunctions: true,
         implicitFunctionComposition: false,

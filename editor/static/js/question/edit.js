@@ -1179,6 +1179,7 @@ $(document).ready(function() {
             Numbas.jme.variables.makeRulesets(rulesetTodo,results.scope);
 
             this.questionScope(results.scope);
+            this.should_remake_instance = true;
         },
 
         // get everything ready to compute variables - make functions, and work out dependency graph

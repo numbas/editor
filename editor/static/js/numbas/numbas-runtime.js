@@ -426,6 +426,20 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
         ;
     },
 
+    /**
+     * Copy a tree, but keep the original token objects.
+     *
+     * @param {Numbas.jme.tree} tree
+     * @returns {Numbas.jme.tree}
+     */
+    copy_tree: function(tree) {
+        var o = {tok: tree.tok};
+        if(tree.args) {
+            o.args = tree.args.map(jme.copy_tree);
+        }
+        return o;
+    },
+
     /** Wrapper around {@link Numbas.jme.Parser#compile}.
      *
      * @param {JME} expr
@@ -533,8 +547,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
      * @param {boolean} [unwrapExpressions=false] - Unwrap TExpression tokens?
      * @returns {Numbas.jme.tree}
      */
-    substituteTree: function(tree,scope,allowUnbound,unwrapExpressions)
-    {
+    substituteTree: function(tree,scope,allowUnbound,unwrapExpressions) {
         if(!tree) {
             return null;
         }
@@ -3970,7 +3983,8 @@ TLambda.prototype = {
                     }
                 }
                 lambda.names.forEach((name,i) => assign_names(name, castargs[i]));
-                return nscope.evaluate(lambda.expr);
+
+                return nscope.evaluate(jme.copy_tree(lambda.expr));
             }
         });
     }
@@ -14903,9 +14917,19 @@ var createPartFromJSON = Numbas.createPartFromJSON = function(index, data, path,
         throw(new Numbas.Error('part.missing type attribute',{part:util.nicePartName(path)}));
     }
     var part = createPart(index, data.type, path, question, parentPart, store, scope);
-    part.loadFromJSON(data);
-    part.finaliseLoad();
-    part.signals.trigger('finaliseLoad');
+    try {
+        part.loadFromJSON(data);
+        part.finaliseLoad();
+        part.signals.trigger('finaliseLoad');
+        if(Numbas.display && part.question && part.question.display) {
+            part.initDisplay();
+        }
+    } catch(e) {
+        if(e.originalMessage=='part.error') {
+            throw(e);
+        }
+        part.error(e.message,{},e);
+    }
     return part;
 }
 /** Create a new question part.
@@ -27641,7 +27665,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         var mustMatchNode = xml.selectSingleNode('answer/mustmatchpattern');
         if(mustMatchNode) {
             //partial credit for failing not-allowed test
-            tryGetAttribute(settings,xml,mustMatchNode,['pattern','partialCredit','nameToCompare'],['mustMatchPatternString','mustMatchPC','nameToCompare']);
+            tryGetAttribute(settings,xml,mustMatchNode,['pattern', 'partialCredit', 'nameToCompare', 'warningTime'],['mustMatchPatternString','mustMatchPC','nameToCompare', 'mustMatchWarningTime']);
             var messageNode = mustMatchNode.selectSingleNode('message');
             if(messageNode) {
                 var mustMatchMessage = Numbas.xml.transform(Numbas.xml.templates.question,messageNode);
@@ -27670,7 +27694,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         tryLoad(data.minlength, ['length', 'partialCredit', 'message'], settings, ['minLength', 'minLengthPC', 'minLengthMessage']);
         tryLoad(data.musthave, ['strings', 'showStrings', 'partialCredit', 'message'], settings, ['mustHave', 'mustHaveShowStrings', 'mustHavePC', 'mustHaveMessage']);
         tryLoad(data.notallowed, ['strings', 'showStrings', 'partialCredit', 'message'], settings, ['notAllowed', 'notAllowedShowStrings', 'notAllowedPC', 'notAllowedMessage']);
-        tryLoad(data.mustmatchpattern, ['pattern', 'partialCredit', 'message', 'nameToCompare'], settings, ['mustMatchPatternString', 'mustMatchPC', 'mustMatchMessage', 'nameToCompare']);
+        tryLoad(data.mustmatchpattern, ['pattern', 'partialCredit', 'message', 'nameToCompare', 'warningTime'], settings, ['mustMatchPatternString', 'mustMatchPC', 'mustMatchMessage', 'nameToCompare', 'mustMatchWarningTime']);
         settings.mustMatchPC /= 100;
         tryLoad(data, ['checkVariableNames', 'singleLetterVariables', 'allowUnknownFunctions', 'implicitFunctionComposition', 'showPreview','caseSensitive'], settings);
         var valuegenerators = tryGet(data,'valuegenerators');
@@ -27742,6 +27766,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
      * @property {number} mustMatchPC - Partial credit to award if the student's answer does not match the pattern.
      * @property {string} mustMatchMessage - Message to add to the marking feedback if the student's answer does not match the pattern.
      * @property {string} nameToCompare - The name of a captured subexpression from the pattern match to compare with the corresponding captured part from the correct answer. If empty, the whole expressions are compared.
+     * @property {string} mustMatchWarningTime - When to warn the student that their answer doesn't match the pattern. `input`: immediately, as they enter the answer. `submission`: only once they have submitted their answer.
      * @property {boolean} checkVariableNames - Check that the student has used the same variable names as the correct answer?
      * @property {boolean} singleLetterVariables - Force single letter variable names in the answer? Multi-letter variable names will be considered as implicit multiplication.
      * @property {boolean} allowUnknownFunctions - Allow the use of unknown functions in the answer? If false, application of unknown functions will be considered as multiplication instead.
@@ -27776,9 +27801,10 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         notAllowedShowStrings: false,
         mustMatchPattern: '',
         mustMatchPC: 0,
-        mustMatchMessage: R('part.jme.must-match.failed'),
+        mustMatchMessage: '',
         nameToCompare: '',
         checkVariableNames: false,
+        mustMatchWarningTime: 'submission',
         singleLetterVariables: false,
         allowUnknownFunctions: true,
         implicitFunctionComposition: false,

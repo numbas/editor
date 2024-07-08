@@ -771,20 +771,29 @@ $(document).ready(function() {
 
             //  Finally, mark duplicate names
             names.sort(Numbas.util.sortBy('name'));
+            var groupArray = [];
             function handle_group(group) {
-                group.forEach(function(n) {
-                    n.v.duplicateNameError(group.length > 1 ? n.name : null);
+                group.forEach(function (n) {
+                    n.v.duplicateNameError(null);
                 });
+                groupArray.push(group);
             }
 
             var start = 0;
-            names.forEach(function(n,i) {
-                if(n.name!=names[start].name) {
-                    handle_group(names.slice(start,i));
+            names.forEach(function (n, i) {
+                if (n.name != names[start].name) {
+                    handle_group(names.slice(start, i));
                     start = i;
                 }
             });
             handle_group(names.slice(start));
+            // Triggers duplicateNameError observable for groups with duplicates
+            groupArray.forEach(function (group) {
+                var groupVariable = group[0];
+                if (group.length > 1 && groupVariable.name != "") {
+                    groupVariable.v.duplicateNameError(groupVariable.name);
+                }
+            })
         },this).extend({rateLimit: 2000});
 
         /** Create an instance of this question as a Numbas.Question object.
@@ -1964,10 +1973,10 @@ $(document).ready(function() {
 
         var nameError = ko.pureComputed(function() {
             var duplicateNameError = v.duplicateNameError();
-            var name_errors = names().map(function(nd) {
+            var name_errors = names().map(function (nd) {
                 var name = nd.name;
-                if(name.toLowerCase() == duplicateNameError) {
-                    return 'There\'s another variable or constant with the name '+name+'.';
+                if (name.toLowerCase() == duplicateNameError) {
+                    return 'There\'s another variable or constant with the name ' + name + '.';
                 }
                 if(name=='') {
                     return '';

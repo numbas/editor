@@ -11,7 +11,7 @@ django-reversion==5.0.2
 django-tables2==2.3.1
 django-taggit==3.0.0
 django-uuslug==1.2.0
-git+https://github.com/numbas/django-thumbs@5e9dc77852e53fc831275a91e42b2997cec394ed#egg=django-thumbs
+git+https://github.com/numbas/django-thumbs@1cc56a7efab78c51cee6323b761e835d480a9cf1#egg=django-thumbs
 packaging==24.0
 python-slugify==4.0.1
 six==1.16.0

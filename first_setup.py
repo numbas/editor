@@ -8,9 +8,19 @@ import sys
 import urllib.parse
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path, PurePath
-from pkg_resources import packaging
 
 PYTHON_EXEC_PATH = sys.executable
+
+def import_hint(package):
+    print(f"""Couldn't import the Python package '{package}'. Have you installed it, and is the virtual environment active?
+Try running:
+    pip install -r requirements.txt""", file=sys.stderr)
+    sys.exit(1)
+
+try:
+    import packaging.version
+except ImportError:
+    import_hint('packaging')
 
 MIN_PYTHON_VERSION = packaging.version.parse("3.8")
 
@@ -19,7 +29,7 @@ try:
     import django.conf
     from django.template.loader import render_to_string
 except ImportError:
-    print("Couldn't import the Python package Django. Have you installed it, and is the virtual environment active?", file=sys.stderr)
+    import_hint('Django')
     sys.exit(1)
 
 

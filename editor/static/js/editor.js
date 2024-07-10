@@ -233,7 +233,7 @@ $(document).ready(function() {
         }
     }
 
-    Editor.numbasVersion = 'exam_results_page_options';
+    Editor.numbasVersion = 'finer_feedback_settings';
 
     Editor.parseExam = function(source) {
         var content = /\/\/(.*?)\n(.*)/.exec(source)[2]

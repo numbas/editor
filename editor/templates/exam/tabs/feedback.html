@@ -9,20 +9,21 @@
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         {% with form_label_class='col-sm-3' form_control_class='col-sm-6' form_offset_class='col-sm-offset-3' %}
 
-        <fieldset>
-            <legend>When to show feedback</legend>
+            {% booleanproperty 'enterreviewmodeimmediately' 'Enter review mode immediately on ending the exam?' help_url='exam/reference.html#term-Enter-feedback-mode-immediately-on-ending-the-exam' %}
+
             <table class="table feedback-settings-table">
                 <thead>
                     <tr>
                         <th></th>
                         <th scope="col" id="radio-always">Always</th>
+                        <th scope="col" data-bind="visible: !enterreviewmodeimmediately()" id="radio-inreview">In submitted mode</th>
                         <th scope="col" id="radio-inreview">Only in review mode</th>
                         <th scope="col" id="radio-never">Never</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <th scope="row">Show answer state {% helplink 'exam/reference.html#term-Show-answer-state' %}</th>
+                        <th scope="row">Show answer correctness {% helplink 'exam/reference.html#term-Show-answer-state' %}</th>
                         <!-- ko foreach: feedback_timing_choices -->
                         <td><input type="radio" name="showanswerstate" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.showanswerstate"></td>
                         <!-- /ko -->
@@ -45,37 +46,24 @@
                         <td><input type="radio" name="showpartfeedbackmessages" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.showpartfeedbackmessages"></td>
                         <!-- /ko -->
                     </tr>
-                </tbody>
-            </table>
-        </fieldset>
-
-        <fieldset>
-            <legend>When to reveal answers</legend>
-            <table class="table feedback-settings-table">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th scope="col" id="radio-oncompletion">After completion</th>
-                        <th scope="col" id="radio-inreview">Only in review mode</th>
-                        <th scope="col" id="radio-never">Never</th>
-                    </tr>
-                </thead>
-                <tbody>
                     <tr>
                         <th scope="row">Show expected answers {% helplink 'exam/reference.html#term-Show-expected-answers' %}</th>
+                        <td data-bind="visible: !enterreviewmodeimmediately()"></td>
+                        <td></td>
                         <!-- ko foreach: reveal_choices -->
                         <td><input type="radio" name="revealexpectedanswers" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.revealexpectedanswers"></td>
                         <!-- /ko -->
                     </tr>
                     <tr>
                         <th scope="row">Show question advice {% helplink 'exam/reference.html#term-Show-question-advice' %}</th>
+                        <td data-bind="visible: !enterreviewmodeimmediately()"></td>
+                        <td></td>
                         <!-- ko foreach: reveal_choices -->
                         <td><input type="radio" name="revealadvice" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.revealadvice"></td>
                         <!-- /ko -->
                     </tr>
                 </tbody>
             </table>
-        </legend>
         {% endwith %}
     </form>
 

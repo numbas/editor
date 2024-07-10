@@ -137,14 +137,42 @@ $(document).ready(function() {
         this.timeout = ko.observable(null);
         this.timedwarning = ko.observable(null);
 
-        var feedback_timing_choices = this.feedback_timing_choices = ['always', 'inreview', 'never'];
+        var feedback_timing_choices = this.feedback_timing_choices = ko.pureComputed(function() {
+            if(this.enterreviewmodeimmediately()) {
+                return ['always', 'inreview', 'never'];
+            } else {
+                return ['always', 'oncompletion', 'inreview', 'never'];
+            }
+        },this);
 
-        this.showactualmark = Editor.choiceObservable(this.feedback_timing_choices);
-        this.showtotalmark = Editor.choiceObservable(this.feedback_timing_choices);
-        this.showanswerstate = Editor.choiceObservable(this.feedback_timing_choices);
-        this.showpartfeedbackmessages = Editor.choiceObservable(this.feedback_timing_choices);
+        this.enterreviewmodeimmediately = ko.observable(true);
 
-        this.reveal_choices = ['oncompletion', 'inreview', 'never'];
+        /** Create an observable for one of the feedback settings that might have "oncompletion" as one of the choices.
+         *  If `enterreviewmodeimmediately` is true, then "oncompletion" is not available, so a computed observable returns "inreview" in that case.
+         */
+        function feedback_timing_observable() {
+            var obs = Editor.choiceObservable(e.feedback_timing_choices);
+            return ko.computed({
+                read: function() {
+                    var v = obs();
+                    if(v=='oncompletion' && e.enterreviewmodeimmediately()) {
+                        return 'inreview';
+                    } else {
+                        return v;
+                    }
+                },
+                write: function(v) {
+                    return obs(v);
+                }
+            });
+        }
+
+        this.showactualmark = feedback_timing_observable();
+        this.showtotalmark = feedback_timing_observable();
+        this.showanswerstate = feedback_timing_observable();
+        this.showpartfeedbackmessages = feedback_timing_observable();
+
+        this.reveal_choices = ['inreview', 'never'];
 
         this.revealexpectedanswers = Editor.choiceObservable(this.reveal_choices);
         this.revealadvice = Editor.choiceObservable(this.reveal_choices);
@@ -460,6 +488,7 @@ $(document).ready(function() {
                     timedwarning: this.timedwarning.toJSON()
                 },
                 feedback: {
+                    enterreviewmodeimmediately: this.enterreviewmodeimmediately(),
                     showactualmark: this.showactualmark(),
                     showtotalmark: this.showtotalmark(),
                     showanswerstate: this.showanswerstate(),

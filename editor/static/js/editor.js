@@ -312,7 +312,7 @@ $(document).ready(function() {
     Editor.choiceObservable = function(choices) {
         var obs = ko.observable(choices[0]);
         obs.choices = choices;
-        return obs;question.getPart)(
+        return obs;
     }
 
 

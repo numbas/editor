@@ -684,6 +684,7 @@ class ZipView(CompileObject, generic.DetailView):
             response['Content-Disposition'] = 'attachment; filename={}.zip'.format(self.editoritem.filename)
             response['Content-Length'] = os.path.getsize(fsLocation)
             response['Cache-Control'] = 'max-age=0,no-cache,no-store'
+            response['Access-Control-Allow-Origin'] = '*'
             return response
 
 class SourceView(MustHaveAccessMixin,generic.DetailView):

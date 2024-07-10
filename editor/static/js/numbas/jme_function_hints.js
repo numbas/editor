@@ -350,6 +350,17 @@ var jme_function_hints =
         "doc": "simplification"
     },
     {
+        "name": "->",
+        "description": "<code>(x -> x+1)(2)</code> \u2192 <code>3</code>",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "names -> expression"
+        ],
+        "doc": "jme-reference"
+    },
+    {
         "name": "+",
         "description": "Addition.",
         "keywords": [
@@ -2554,7 +2565,7 @@ var jme_function_hints =
     },
     {
         "name": "map",
-        "description": "Evaluate <code>expression</code> for each item in list, range, vector or matrix <code>d</code>, replacing variable <code>name</code> with the element from <code>d</code> each time.",
+        "description": "Apply a transformation to each item in a list, range, vector or matrix.",
         "keywords": [
             "transform",
             "functional",
@@ -2562,6 +2573,7 @@ var jme_function_hints =
             "map"
         ],
         "calling_patterns": [
+            "map(anonymous_function, d)",
             "map(expression,name[s],d)"
         ],
         "doc": "jme-reference"
@@ -2582,7 +2594,7 @@ var jme_function_hints =
     },
     {
         "name": "filter",
-        "description": "Filter each item in list or range <code>d</code>, replacing variable <code>name</code> with the element from <code>d</code> each time, returning only the elements for which <code>expression</code> evaluates to <code>true</code>.",
+        "description": "Filter each item in list or range <code>d</code>.",
         "keywords": [
             "only",
             "require",
@@ -2592,6 +2604,7 @@ var jme_function_hints =
             "loop"
         ],
         "calling_patterns": [
+            "filter(anonymous_function, d)",
             "filter(expression,name,d)"
         ],
         "doc": "jme-reference"
@@ -2607,6 +2620,7 @@ var jme_function_hints =
             "loop"
         ],
         "calling_patterns": [
+            "foldl(anonymous_function, first_value, d)",
             "foldl(expression,accumulator_name, item_name, first_value, d)"
         ],
         "doc": "jme-reference"
@@ -2620,7 +2634,8 @@ var jme_function_hints =
             "loop"
         ],
         "calling_patterns": [
-            "iterate(expression,name,initial,times)"
+            "iterate(anonymous_function, initial, times)",
+            "iterate(expression, name, initial, times)"
         ],
         "doc": "jme-reference"
     },
@@ -2636,13 +2651,14 @@ var jme_function_hints =
             "satisfy"
         ],
         "calling_patterns": [
+            "iterate_until(iteration_function, initial, condition_function, max_iterations)",
             "iterate_until(expression,name,initial,condition,max_iterations)"
         ],
         "doc": "jme-reference"
     },
     {
         "name": "take",
-        "description": "Take the first <code>n</code> elements from list or range <code>d</code>, replacing variable <code>name</code> with the element from <code>d</code> each time, returning only the elements for which <code>expression</code> evaluates to <code>true</code>.",
+        "description": "Take the first <code>n</code> elements from list or range <code>d</code> which satisfy a condition.",
         "keywords": [
             "first",
             "loop",
@@ -2652,7 +2668,19 @@ var jme_function_hints =
             "only"
         ],
         "calling_patterns": [
-            "take(n,expression,name,d)"
+            "take(n, condition_function, d)",
+            "take(n, expression, name, d)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "separate",
+        "description": "Sort each of the values in <code>list</code> into one of two lists, depending on whether they satisfy the condition.\nValues which satisfy the condition go into the first list; values which don't satisfy it go in the second list.",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "separate(list, x \u2192 :data:`boolean`)"
         ],
         "doc": "jme-reference"
     },
@@ -3312,6 +3340,18 @@ var jme_function_hints =
         ],
         "calling_patterns": [
             "max_height(width,element)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "escape_html",
+        "description": "Rewrite the given string, replacing characters that might be HTML code with the corresponding HTML entity escape codes, so the resulting string can be safely displayed as plain text.",
+        "keywords": [
+            "escape",
+            "safe"
+        ],
+        "calling_patterns": [
+            "escape_html(text)"
         ],
         "doc": "jme-reference"
     },

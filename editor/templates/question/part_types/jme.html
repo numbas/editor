@@ -91,6 +91,16 @@
             <div data-bind="fadeVisible: mustmatchpattern.nameToCompare()==''">
                 {% percentproperty 'mustmatchpattern.partialCredit' 'Partial credit for not matching pattern' %}
             </div>
+
+            <div class="form-group">
+                <label class="{{form_label_class}} control-label">
+                    When to warn the student if their answer does not match the pattern {% helplink 'question/parts/mathematical-expression.html#term-When-to-warn-the-student-if-their-answer-does-not-match-the-pattern' %}
+                </label>
+                <div class="{{form_control_class}}">
+                    <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: mustmatchpattern.warningTime.options, value: mustmatchpattern.warningTime, optionsText: 'niceName'"></select>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label class="{{form_label_class}} control-label">
                     Warning message

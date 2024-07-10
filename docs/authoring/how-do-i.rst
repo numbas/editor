@@ -391,6 +391,21 @@ The "Spreadsheet" custom part type provided by the spreadsheets extension lets y
 
 See `this example question <https://numbas.mathcentre.ac.uk/question/150943/fill-in-a-table-of-values/>`__ which asks the student to fill in a table of values for a quadratic function.
 
+Use data entered by the student when marking later parts
+--------------------------------------------------------
+
+This pattern is commonly used when assessing a physical experiment carried out by the student, where you'd like to test how they gather and interpret data.
+
+There are two methods, each with pros and cons.
+
+First, you could use :ref`adaptive marking <adaptive-marking>` to replace question variables with values entered by the student in an initial "data entry" part.
+This works well when you don't have many variables or parts, but because you need to set up the replacements for each part which uses the student's data, it isn't great for longer questions.
+See `this example question <https://numbas.mathcentre.ac.uk/question/155688/adaptive-marking-use-data-provided-by-the-student-in-later-parts/>`__ which asks the student to measure a cuboid box and then calculate its volume.
+
+The other option is to use :ref:`explore mode <explore-mode>`, and replace question variables when you move on from the data entry part.
+You only need to set up the variable replacements once.
+See `this example question <https://numbas.mathcentre.ac.uk/question/155690/explore-mode-using-data-provided-by-the-student/>`__ which asks the student to measure a cuboid box and then calculate its volume.
+
 *******************
 Variable generation
 *******************

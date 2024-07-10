@@ -106,6 +106,34 @@ Each argument is a JME expression.
     * ``f(x)``
     * ``g(a,b)``
 
+
+.. _lambdas:
+
+Anonymous functions
+-------------------
+
+An anonymous function consists of a sequence of named arguments, in parentheses if necessary, followed by the symbol ``->``, and then an expression in terms of the arguments.
+
+It can be used like a named function, or passed as an argument on its own to some functions.
+
+You can match elements of lists passed to an anonymous function with names by putting the names inside square brackets.
+
+.. jme:function:: names -> expression
+    :op: ->
+
+    **Examples**:
+        * 
+            ``(x -> x+1)(2)`` → ``3``
+        
+            ``x -> x + 1`` defines an anonymous function which adds one to its argument.
+        * ``() -> 2`` defines an anonymous function which always returns ``2``.
+        * 
+            ``((x,y) -> sqrt(x^2 + y^2))(3, 4)`` → ``5``
+
+            ``(x,y) -> sqrt(x^2 + y^2)`` defines an anonymous function which returns the hypotenuse of a right-angled triangle with sides ``x`` and ``y``.
+        * ``[a, b] -> a + b`` defines an anonymous function which takes a single list argument, and adds the first two entries.
+        * ``([a,b] -> a + b)([1,2])`` → ``3``
+
 Operators
 ---------
 
@@ -449,6 +477,12 @@ Some extensions add new data types.
     An infix binary operation, or a pre-/post-fix unary operation.
 
     **Examples**: ``x+y``, ``n!``, ``a and b``
+
+.. data:: lambda
+
+    An :ref:`anonymous function <lambdas>`.
+
+    **Examples**: ``x -> 2x``, ``(x,y) -> x+y``.
 
 .. data:: html
 
@@ -2891,23 +2925,29 @@ Lists
         * ``some([false,false,false])`` → ``false``
         * ``some([])`` → ``false``
 
-.. jme:function:: map(expression,name[s],d)
+.. jme:function:: map(anonymous_function, d)
+                map(expression,name[s],d)
     :keywords: transform, functional, loop, map
 
-    Evaluate ``expression`` for each item in list, range, vector or matrix ``d``, replacing variable ``name`` with the element from ``d`` each time.
+    Apply a transformation to each item in a list, range, vector or matrix.
+
+    You can either give an :ref:`anonymous function <lambdas>` (the neater way), or give an expression followed by a name to refer to the item being transformed.
 
     You can also give a list of names if each element of ``d`` is a list of values.
     The Nth element of the list will be mapped to the Nth name.
 
     **Definitions**:
-        * anything, :data:`name` or :data:`list of name`, anything → :data:`list`
+        * :data:`lambda`, :data:`list` or :data:`range` or :data:`vector` or :data:`matrix` → :data:`list` or :data:`vector` or :data:`matrix`
+        * anything, :data:`name` or :data:`list of name`, :data:`list` or :data:`range` or :data:`vector` or :data:`matrix` → :data:`list` or :data:`vector` or :data:`matrix`
 
     **Examples**:
+        * ``map(x -> x+1, 1..3)`` → ``[2,3,4]``
         * ``map(x+1,x,1..3)`` → ``[2,3,4]``
-        * ``map(capitalise(s),s,["jim","bob"])`` → ``["Jim","Bob"]``
-        * ``map(sqrt(x^2+y^2),[x,y],[ [3,4], [5,12] ])`` → ``[5,13]``
-        * ``map(x+1,x,id(2))`` → ``matrix([2,1],[1,2])``
-        * ``map(sqrt(x),x,vector(1,4,9))`` → ``vector(1,2,3)``
+        * ``map(s -> capitalise(s), ["jim","bob"])`` → ``["Jim","Bob"]``
+        * ``map([x,y] -> sqrt(x^2+y^2), [ [3,4], [5,12] ])`` → ``[5,13]``
+        * ``map(sqrt(x^2+y^2), [x,y], [ [3,4], [5,12] ])`` → ``[5,13]``
+        * ``map(x -> x+1, id(2))`` → ``matrix([2,1],[1,2])``
+        * ``map(x -> sqrt(x), vector(1,4,9))`` → ``vector(1,2,3)``
 
 .. jme:function:: expression for: name of: list where: condition
     :keywords: transform, map, generator, comprehension
@@ -2941,83 +2981,114 @@ Lists
         * ``[a,b,c] for: a of: 1..20 for: b of: 1..20 for: c of: 1..20 where: a<b<c and a^2+b^2 = c^2`` → ``[ [ 3, 4, 5 ], [ 5, 12, 13 ], [ 6, 8, 10 ], [ 8, 15, 17 ], [ 9, 12, 15 ], [ 12, 16, 20 ] ]`` (find Pythagorean triples with side lengths up to 20)
         * ``[a,b,c] for: [a,b,c] of: product(1..20, 3) where: a<b<c and a^2+b^2 = c^2`` → ``[ [ 3, 4, 5 ], [ 5, 12, 13 ], [ 6, 8, 10 ], [ 8, 15, 17 ], [ 9, 12, 15 ], [ 12, 16, 20 ] ]`` (the same as above, but written more concisely)
 
-.. jme:function:: filter(expression,name,d)
+.. jme:function:: filter(anonymous_function, d)
+                filter(expression,name,d)
     :keywords: only, require, constraint, test, functional, loop
 
-    Filter each item in list or range ``d``, replacing variable ``name`` with the element from ``d`` each time, returning only the elements for which ``expression`` evaluates to ``true``.
+    Filter each item in list or range ``d``.
+
+    You can either give an :ref:`anonymous function <lambdas>` (the neater way), or give an expression followed by a name to refer to the item being considered.
+    
+    The returned value is a list containing values for which the function or expression evaluated to ``true``.
 
     **Definitions**:
+        * :data:`lambda`, :data:`list` → :data:`list`
         * anything, :data:`name`, anything → :data:`list`
 
     **Example**:
-        * ``filter(x>5,x,[1,3,5,7,9])`` → ``[7,9]``
+        * ``filter(x -> x>5, [1,3,5,7,9])`` → ``[7,9]``
+        * ``filter(x>5, x, [1,3,5,7,9])`` → ``[7,9]``
 
-.. jme:function:: foldl(expression,accumulator_name, item_name, first_value, d)
+.. jme:function:: foldl(anonymous_function, first_value, d)
+            foldl(expression,accumulator_name, item_name, first_value, d)
     :keywords: accumulate, fold, functional, iterate, loop
 
     Accumulate a value by iterating over a collection.
     This can be used as an abstraction of routines such as "sum of a list of numbers", or "maximum value in a list".
 
-    Evaluate ``expression`` for each item in the list, range, vector or matrix ``d``, accumulating a single value which is returned.
+    You can either give an :ref:`anonymous function <lambdas>` (the neater way), or give an expression followed by names to refer to the accumulated value and the item from the collection.
+
+    For each item in the list, range, vector or matrix ``d`` the function or expression is evaluated along with the accumulated value so far, ending up with a single value which is returned.
 
     At each iteration, the variable ``item_name`` is replaced with the corresponding value from ``d``.
     The variable ``accumulator_name`` is replaced with ``first_value`` for the first iteration, and the result of ``expression`` from the previous iteration subsequently.
 
     **Definitions**:
+        * :data:`lambda`, anything, :data:list` → unspecified
         * anything, :data:`name`, :data:`name`, anything, anything → unspecified
 
     **Examples**:
+        * ``foldl((total, x) -> total + x, 0, [1,2,3])`` → ``6``
         * ``foldl(total + x, total, x, 0, [1,2,3])`` → ``6``
-        * ``foldl(if(len(x)>len(longest),x,longest), longest, x, "", ["banana","pineapple","plum"])`` → ``"pineapple"``
+        * ``foldl((longest, x) -> if(len(x)>len(longest),x,longest), "", ["banana","pineapple","plum"])`` → ``"pineapple"``
 
-.. jme:function:: iterate(expression,name,initial,times)
+.. jme:function:: iterate(anonymous_function, initial, times)
+                iterate(expression, name, initial, times)
     :keywords: repeat, accumulate, loop
 
     Iterate an expression on the given initial value the given number of times, returning a list containing the values produced at each step.
 
-    You can also give a list of names.
-    The Nth element of the value will be mapped to the Nth name.
-
+    You can either give an :ref:`anonymous function <lambdas>` (the neater way), or give an expression followed by a name to refer to the current value.
+    
     **Definitions**:
         * anything, :data:`name` or :data:`list of name`, anything, :data:`number` → :data:`list`
 
     **Example**:
+        * ``iterate(x -> x+1, 0, 3)`` → ``[0,1,2,3]``
         * ``iterate(x+1, x, 0, 3)`` → ``[0,1,2,3]``
-        * ``iterate([b,a+b], [a,b], [1,1], 3)`` → ``[ [1,1], [1,2], [2,3], [3,5] ]``
-        * ``iterate(l[1..len(l)]+[l[0]], l, ["a","b","c"], 3)`` → ``[ ["a","b","c"], ["b","c","a"], ["c","a","b"], ["a","b","c"] ]``
+        * ``iterate([a,b] -> [b,a+b], [1,1], 3)`` → ``[ [1,1], [1,2], [2,3], [3,5] ]``
+        * ``iterate(l -> l[1..len(l)]+[l[0]], ["a","b","c"], 3)`` → ``[ ["a","b","c"], ["b","c","a"], ["c","a","b"], ["a","b","c"] ]``
 
-.. jme:function:: iterate_until(expression,name,initial,condition,max_iterations)
+.. jme:function:: iterate_until(iteration_function, initial, condition_function, max_iterations)
+               iterate_until(expression,name,initial,condition,max_iterations)
     :keywords: repeat, accumulate, loop, until, condition, satisfy
 
     Iterate an expression on the given initial value until the condition is satisfied, returning a list containing the values produced at each step.
 
-    You can also give a list of names.
-    The Nth element of the value will be mapped to the Nth name.
+    You can either give :ref:`anonymous functions <lambdas>` for the iteration function and condition, or give expressions and a name to use for the current value.
 
     ``max_iterations`` is an optional parameter specifying the maximum number of iterations that may be performed.
     If not given, the default value of 100 is used.
     This parameter prevents the function from running indefinitely, when the condition is never met.
 
     **Definitions**:
+        * :data:`lambda`, anything, :data:`lambda`, :data:`number` → :data:`list`
         * anything, :data:`name` or :data:`list of name`, anything, :data:`boolean`, :data:`number` → :data:`list`
 
     **Example**:
+        * ``iterate_until(x -> if(mod(x,2)=0,x/2,3x+1), 5, x -> x=1)`` → ``[ 5, 16, 8, 4, 2, 1 ]``
         * ``iterate_until(if(mod(x,2)=0,x/2,3x+1), x, 5, x=1)`` → ``[ 5, 16, 8, 4, 2, 1 ]``
-        * ``iterate_until([b,mod(a,b)], [a,b], [37,32], b=0)`` → ``[ [ 37, 32 ], [ 32, 5 ], [ 5, 2 ], [ 2, 1 ], [ 1, 0 ] ]``
+        * ``iterate_until([a,b] -> [b,mod(a,b)], [37,32], [a,b] -> b=0)`` → ``[ [ 37, 32 ], [ 32, 5 ], [ 5, 2 ], [ 2, 1 ], [ 1, 0 ] ]``
 
-.. jme:function:: take(n,expression,name,d)
+.. jme:function:: take(n, condition_function, d)
+            take(n, expression, name, d)
     :keywords: first, loop, filter, restrict, elements, only
 
-    Take the first ``n`` elements from list or range ``d``, replacing variable ``name`` with the element from ``d`` each time, returning only the elements for which ``expression`` evaluates to ``true``.
+    Take the first ``n`` elements from list or range ``d`` which satisfy a condition.
+
+    You can either give an :ref:`anonymous function <lambdas>` or an expression representing a condition and a name used to refer to the item being considered.
 
     This operation is lazy - once ``n`` elements satisfying the expression have been found, execution stops.
     You can use this to filter a few elements from a large list, where the condition might take a long time to calculate.
 
     **Definitions**:
-        * :data:`number`, anything, :data:`name`, anything → :data:`list`
+        * :data:`number`, :data:`lambda`, :data:`list` → :data:`list`
+        * :data:`number`, anything, :data:`name`, :data:`list` → :data:`list`
 
     **Example**:
+        * ``take(3, x -> gcd(x,6)=1, 10..30)`` → ``[11,13,17]``
         * ``take(3,gcd(x,6)=1,x,10..30)`` → ``[11,13,17]``
+
+.. jme:function:: separate(list, x → :data:`boolean`)
+
+    Sort each of the values in ``list`` into one of two lists, depending on whether they satisfy the condition.
+    Values which satisfy the condition go into the first list; values which don't satisfy it go in the second list.
+
+    **Definitions**:
+        * :data:`list`, :data:`lambda` → :data:`list`
+
+    **Example**:
+        * ``separate(1..10, x -> 3|x)`` → ``[ [3, 6, 9], [1, 2, 4, 5, 7, 8, 10] ]``
 
 .. jme:function:: flatten(lists)
     :keywords: concatenate, join, lists
@@ -3736,6 +3807,17 @@ HTML
 
     **Example**:
         ``max_height(400,html("<p>Text</p>"))`` → ``html("<p style=\"max-height: 400em;\">a</p>")``
+
+.. jme:function:: escape_html(text)
+    :keywords: escape, safe
+    
+    Rewrite the given string, replacing characters that might be HTML code with the corresponding HTML entity escape codes, so the resulting string can be safely displayed as plain text.
+
+    **Definitions**:
+        * :data:`string` → :data:`string`
+
+    **Example**:
+        * ``escape_html("<p>Text</p>")`` → ``"&lt;p&gt;Text&lt;/p&gt;"``
 
 .. _jme-fns-json:
 

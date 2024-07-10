@@ -49,7 +49,7 @@ class CreateView(CanEditMixin, generic.CreateView):
                 ItemQueueChecklistItem.objects.create(queue=self.object, label=label, position=i)
         statuses = [label.strip() for label in self.request.POST.getlist('checklist')]
         statuses = [label for label in statuses if label!='']
-        self.object.statuses.set(*statuses)
+        self.object.statuses.set(statuses)
         return response
 
     def get_success_url(self):

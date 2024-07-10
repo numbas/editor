@@ -1179,6 +1179,7 @@ $(document).ready(function() {
             Numbas.jme.variables.makeRulesets(rulesetTodo,results.scope);
 
             this.questionScope(results.scope);
+            this.should_remake_instance = true;
         },
 
         // get everything ready to compute variables - make functions, and work out dependency graph
@@ -2015,6 +2016,9 @@ $(document).ready(function() {
 
         var treeToJME = Numbas.jme.display.treeToJME;
         var wrapValue = Numbas.jme.wrapValue;
+        function wrapExpression(expr) {
+            return new Numbas.jme.types.TExpression(Numbas.jme.compile(expr));
+        }
         this.builtin_templateTypes = [
             {
                 id:  'anything',
@@ -2070,21 +2074,10 @@ $(document).ready(function() {
                     this.value.step(Numbas.jme.evaluate(m.c,Numbas.jme.builtinScope).value);
                 },
                 jme_definition() {
-                    var min = parseFloat(this.value.min());
-                    var max = parseFloat(this.value.max());
-                    var step = parseFloat(this.value.step());
-                    if(isNaN(min)) {
-                        throw('Minimum value is not a number');
-                    } else if(isNaN(max)) {
-                        throw('Maximum value is not a number');
-                    } else if(isNaN(step)) {
-                        throw("Step value is not a number");
-                    }
-
                     var tree = Numbas.jme.compile('a..b#c');
-                    tree.args[0].args[0] = {tok: wrapValue(parseFloat(this.value.min()))};
-                    tree.args[0].args[1] = {tok: wrapValue(parseFloat(this.value.max()))};
-                    tree.args[1] = {tok: wrapValue(parseFloat(this.value.step()))};
+                    tree.args[0].args[0] = {tok: wrapExpression(this.value.min())};
+                    tree.args[0].args[1] = {tok: wrapExpression(this.value.max())};
+                    tree.args[1] = {tok: wrapExpression(this.value.step())};
                     return treeToJME(tree);
                 }
             },
@@ -2105,21 +2098,10 @@ $(document).ready(function() {
                     this.value.step(Numbas.jme.evaluate(m.c,Numbas.jme.builtinScope).value);
                 },
                 jme_definition() {
-                    var min = parseFloat(this.value.min());
-                    var max = parseFloat(this.value.max());
-                    var step = parseFloat(this.value.step());
-                    if(isNaN(min)) {
-                        throw('Minimum value is not a number');
-                    } else if(isNaN(max)) {
-                        throw('Maximum value is not a number');
-                    } else if(isNaN(step)) {
-                        throw("Step value is not a number");
-                    }
-
                     var tree = Numbas.jme.compile('random(a..b#c)');
-                    tree.args[0].args[0].args[0] = {tok: wrapValue(parseFloat(this.value.min()))};
-                    tree.args[0].args[0].args[1] = {tok: wrapValue(parseFloat(this.value.max()))};
-                    tree.args[0].args[1] = {tok: wrapValue(parseFloat(this.value.step()))};
+                    tree.args[0].args[0].args[0] = {tok: wrapExpression(this.value.min())};
+                    tree.args[0].args[0].args[1] = {tok: wrapExpression(this.value.max())};
+                    tree.args[0].args[1] = {tok: wrapExpression(this.value.step())};
                     return treeToJME(tree);
                 }
             },
@@ -4044,13 +4026,21 @@ $(document).ready(function() {
                 await promise;
                 mt.waiting_for_pre_submit(false);
                 try {
-                    var alternatives_result = part.markAlternatives(part.getScope(), undefined, '');
-                    var res = alternatives_result.result.script_result;
+                    var res = part.script_result;
                     if(!res) {
                         var out = {script: part.markingScript, error: 'The marking algorithm did not return a result.'};
                     } else {
-                        var alternative_used = alternatives_result.best_alternative ? alternatives_result.best_alternative.path : null;
-                        var out = {script: part.markingScript, result: res, marking_result: part.marking_result, message_displays: make_message_displays(part.markingFeedback.slice()), marks: part.marks, credit: part.credit, score: part.score, alternative_used: alternative_used};
+                        var alternative_used = part.best_alternative ? part.best_alternative.path : null;
+                        var out = {
+                            script: part.markingScript,
+                            result: res,
+                            marking_result: part.marking_result,
+                            message_displays: make_message_displays(part.markingFeedback.slice()),
+                            marks: part.marks,
+                            credit: part.credit,
+                            score: part.score,
+                            alternative_used: alternative_used
+                        };
                         if(res.state_errors.mark) {
                             out.error = 'Error when computing the <code>mark</code> note: '+res.state_errors.mark.message;
                         } else if(!res.state_valid.mark) {

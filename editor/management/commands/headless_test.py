@@ -1,6 +1,5 @@
 from collections import defaultdict
 from datetime import datetime
-from distutils.util import strtobool
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
@@ -18,7 +17,7 @@ from urllib.parse import urlunparse
 def yes_no(question,default=False):
     response = input('{} [{}] '.format(question,'Y/n' if default else 'y/N'))
     try:
-        return strtobool(response.lower())==1
+        return response.lower().strip() == 'y'
     except ValueError:
         return False
 

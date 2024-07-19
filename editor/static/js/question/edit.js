@@ -71,10 +71,11 @@ $(document).ready(function() {
         this.builtin_constants = [
             {name: 'e', description: 'Base of the natural logarithm'},
             {name: 'pi,π', description: 'Ratio of a circle\'s perimeter to its diameter'},
-            {name: 'i', description: '$\\sqrt{-1}$'}
+            {name: 'i', description: '$\\sqrt{-1}$'},
+            {name: 'j', description: '$\\sqrt{-1}$', enabled: false}
         ];
         this.builtin_constants.forEach(function(c) {
-            c.enabled = ko.observable(true);
+            c.enabled = ko.observable(c.enabled===undefined ? true : c.enabled);
         });
         this.constants = ko.observableArray([]);
         this.allConstants = ko.computed(function() {
@@ -469,7 +470,7 @@ $(document).ready(function() {
         
         this.baseScope = ko.pureComputed(function() {
             var jme = Numbas.jme;
-            var scope = this.baseScopeWithoutConstants();
+            var scope = new jme.Scope(this.baseScopeWithoutConstants());
 
             var constants = this.constants().filter(function(c) { return !c.error(); }).map(function(c) {
                 return {

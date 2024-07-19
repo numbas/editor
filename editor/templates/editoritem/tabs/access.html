@@ -103,7 +103,7 @@
             </tbody>
         </table>
         <div class="panel-body">
-            <label>Give access to</label>
+            <label for="search_author">Give access to</label>
             <input class="form-control" id="search_author" type="text" placeholder="Full name or username" size="30" data-bind="
                 textInput: userAccessSearch,
                 autocomplete: '{% url 'user_search' %}', 
@@ -129,17 +129,14 @@
             <div class="alert alert-warning">
                 <p><span class="glyphicon glyphicon-warning-sign"></span> You should <strong>not</strong> give these links to students. To make a test available to students, <a href="{{HELP_URL}}tutorials/deliver-to-students.html" target="_blank">see the documentation on delivering an exam to students</a>.</p>
             </div>
+            <dl class="share-links list-group">
+                <dt>View</dt>
+                <dd><pre class="share-link form-control">{{SITE_ROOT}}{% url 'share_'|add:item_type 'view' object.editoritem.share_uuid_view %}</pre></dd>
+                
+                <dt>Edit</dt>
+                <dd><pre class="share-link form-control">{{SITE_ROOT}}{% url 'share_'|add:item_type 'edit' object.editoritem.share_uuid_edit %}</pre></dd>
+            </dl>
         </div>
-        <ul class="share-links list-group">
-            <li class="list-group-item">
-                <label>View</label>
-                <input class="share-link form-control" readonly value="{{SITE_ROOT}}{% url 'share_'|add:item_type 'view' object.editoritem.share_uuid_view %}">
-            </li>
-            <li class="list-group-item">
-                <label>Edit</label>
-                <input class="share-link form-control" readonly value="{{SITE_ROOT}}{% url 'share_'|add:item_type 'edit' object.editoritem.share_uuid_edit %}">
-            </li>
-        </ul>
     </div>
 
     {% block access_tab_nav %}

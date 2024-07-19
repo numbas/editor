@@ -18,3 +18,7 @@ choice-maker .form-group label {
     background: #ebcccc;
     color: #222;
 }
+
+.extensions .checkbox {
+    display: inline;
+}

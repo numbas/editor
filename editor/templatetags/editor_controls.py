@@ -14,6 +14,8 @@ def text_input(context, property_name, *args, **kwargs):
         'zero_means': kwargs.get('zero_means'),
         'warning': kwargs.get('warning'),
         'placeholder': kwargs.get('placeholder'),
+        'id': kwargs.get('id', 'input-'+property_name),
+        'dynamic_id': kwargs.get('dynamic_id', False),
     })
     return context
 
@@ -34,6 +36,8 @@ def property_tag(context, property_name, label, *args, **kwargs):
         'form_control_class': context.get('form_control_class', 'col-sm-9'),
         'warning': kwargs.get('warning'),
         'placeholder': kwargs.get('placeholder'),
+        'id': kwargs.get('id', 'input-'+property_name),
+        'dynamic_id': kwargs.get('dynamic_id', False),
     })
     return context
 
@@ -45,6 +49,8 @@ def jme_input(context, property_name, *args, **kwargs):
         'rules': kwargs.get('rules'),
         'disable': kwargs.get('disable', False),
         'display_property': kwargs.get('display_property', property_name),
+        'id': kwargs.get('id', 'input-'+property_name),
+        'dynamic_id': kwargs.get('dynamic_id', False),
     })
     return context
 
@@ -61,6 +67,8 @@ def jmeproperty(context, property_name, label, *args, **kwargs):
         'display_property': kwargs.get('display_property',property_name),
         'form_label_class': context.get('form_label_class', 'col-sm-3'),
         'form_control_class': context.get('form_control_class', 'col-sm-9'),
+        'id': kwargs.get('id', 'input-'+property_name),
+        'dynamic_id': kwargs.get('dynamic_id', False),
     })
     return context
 
@@ -69,6 +77,8 @@ def percent_input(context, property_name, *args, **kwargs):
     context.update({
         'property': property_name,
         'disable': kwargs.get('disable', False),
+        'id': kwargs.get('id', 'input-'+property_name),
+        'dynamic_id': kwargs.get('dynamic_id', False),
     })
     return context
 
@@ -81,6 +91,8 @@ def percentproperty(context, property_name, label, *args, **kwargs):
         'disable': kwargs.get('disable', False),
         'form_label_class': context.get('form_label_class', 'col-sm-3'),
         'form_control_class': context.get('form_control_class', 'col-sm-9'),
+        'id': kwargs.get('id', 'input-'+property_name),
+        'dynamic_id': kwargs.get('dynamic_id', False),
     })
     return context
 
@@ -92,6 +104,8 @@ def select_input(context, property_name, *args, **kwargs):
         'options': kwargs.get('options'),
         'options_text': kwargs.get('options_text'),
         'allow_blank': kwargs.get('allow_blank', False),
+        'id': kwargs.get('id', 'input-'+property_name),
+        'dynamic_id': kwargs.get('dynamic_id', False),
     })
     return context
 
@@ -107,6 +121,8 @@ def selectproperty(context, property_name, label, *args, **kwargs):
         'disable': kwargs.get('disable', 'false'),
         'form_label_class': context.get('form_label_class', 'col-sm-3'),
         'form_control_class': context.get('form_control_class', 'col-sm-9'),
+        'id': kwargs.get('id', 'input-'+property_name),
+        'dynamic_id': kwargs.get('dynamic_id', False),
     })
     return context
 
@@ -115,6 +131,8 @@ def boolean_input(context, property_name, *args, **kwargs):
     context.update({
         'property': property_name,
         'disable': kwargs.get('disable', False),
+        'id': kwargs.get('id', 'input-'+property_name),
+        'dynamic_id': kwargs.get('dynamic_id', False),
     })
     return context
 
@@ -127,6 +145,8 @@ def booleanproperty(context, property_name, label, *args, **kwargs):
         'disable': kwargs.get('disable', False),
         'form_label_class': context.get('form_label_class', 'col-sm-3'),
         'form_control_class': context.get('form_control_class', 'col-sm-9'),
+        'id': kwargs.get('id', 'input-'+property_name),
+        'dynamic_id': kwargs.get('dynamic_id', False),
     })
     return context
 
@@ -139,5 +159,7 @@ def exam_event(context, property_name, name, *args, **kwargs):
         'disable': kwargs.get('disable', 'false'),
         'form_label_class': context.get('form_label_class', 'col-sm-3'),
         'form_control_class': context.get('form_control_class', 'col-sm-9'),
+        'action_id': 'input-'+property_name+'-action',
+        'message_id': 'input-'+property_name+'-message',
     })
     return context

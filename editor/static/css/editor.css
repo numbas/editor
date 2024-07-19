@@ -332,7 +332,7 @@ static-dynamic-setting .static-switch {
 
 }
 
-.label-block .checkbox input[type="checkbox"] {
+.form-group .checkbox input[type="checkbox"] {
     position: initial;
     margin-left: 0;
 }

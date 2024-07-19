@@ -1,13 +1,11 @@
 {% load helplink %}
 {% load editor_controls %}
 <div class="form-group">
-    <label class="label-block">
-        <div class="{{form_label_class}} control-label">
-            {{label}}
-            {% if help_url %}{% helplink help_url %}{% endif %}
-        </div>
-        <div class="{{form_control_class}}">
-            {% percent_input property disable=disable %}
-        </div>
+    <label {% if not dynamic_id %}for="{{id}}"{% endif %} class="{{form_label_class}} control-label" data-bind="attr: { {% if dynamic_id %}for: {{id}}{% endif %} }">
+        {{label}}
+        {% if help_url %}{% helplink help_url %}{% endif %}
     </label>
+    <div class="{{form_control_class}}">
+        {% percent_input property disable=disable id=id dynamic_id=dynamic_id %}
+    </div>
 </div>

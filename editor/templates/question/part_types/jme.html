@@ -30,11 +30,11 @@
         Define the range of points over which the student's answer will be compared with the correct answer, and the method used to compare them.
     </p>
     <div class="form-group">
-        <label class="{{form_label_class}} control-label">
+        <label for="input-checkingType" class="{{form_label_class}} control-label">
             Checking type {% helplink 'question/parts/mathematical-expression.html#term-Checking-type' %}
         </label>
         <div class="{{form_control_class}}">
-            <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: checkingTypes, value: checkingType, optionsText:'niceName'"></select>
+            <select id="input-checkingType" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: checkingTypes, value: checkingType, optionsText:'niceName'"></select>
         </div>
     </div>
     {% property 'checkingType().accuracy' 'Checking accuracy' min=0 help_url='question/parts/mathematical-expression.html#term-Checking-accuracy' %}
@@ -51,15 +51,13 @@
         </p>
         <div data-bind="foreach: valueGenerators">
             <div class="form-group">
-                <label class="label-block">
-                    <div class="{{form_label_class}} control-label">
-                        <span><code data-bind="text: name"></code></span>
-                    </div>
-                    <div class="{{form_control_class}} jme-property">
-                        {% jme_input 'value' %}
-                        <span class="help-block help-block-inline" data-bind="visible: inferredType">(this might be a <span data-bind="text: inferredType"></span>)</span>
-                    </div>
+                <label class="{{form_label_class}} control-label" data-bind="attr: {for: 'input-inferredType-'+$index()}">
+                    <span><code data-bind="text: name"></code></span>
                 </label>
+                <div class="{{form_control_class}} jme-property">
+                    {% jme_input 'value' id="'input-inferredType-'+$index()" dynamic_id=True %}
+                    <span class="help-block help-block-inline" data-bind="visible: inferredType">(this might be a <span data-bind="text: inferredType"></span>)</span>
+                </div>
             </div>
         </div>
     </div>
@@ -70,22 +68,22 @@
     <h4>Pattern restriction</h4>
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="form-group">
-            <label class="col-sm-3 control-label">
+            <label for="input-mustmatchpattern-pattern" class="col-sm-3 control-label">
                 Pattern student's answer must match
                 {% helplink 'question/parts/mathematical-expression.html#term-Pattern-student-s-answer-must-match' %}
             </label>
             <div class="col-sm-9">
-                <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: mustmatchpattern.pattern, codemirrorMode: 'jme'"></textarea>
-                <span data-bind="JME: mustmatchpattern.pattern, parser: Numbas.jme.rules.patternParser" class="jme-preview"></span>
+                <textarea id="input-mustmatchpattern-pattern" {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: mustmatchpattern.pattern, codemirrorMode: 'jme'"></textarea>
+                <output for="input-mustmatchpattern-pattern" data-bind="JME: mustmatchpattern.pattern, parser: Numbas.jme.rules.patternParser" class="jme-preview"></output>
             </div>
         </div>
         <div data-bind="fadeVisible: mustmatchpattern.pattern">
             <div class="form-group" data-bind="fadeVisible: mustmatchpattern.capturedNames().length>0">
-                <label class="{{form_label_class}} control-label">
+                <label for="input-mustmatchpattern-nameToCompare" class="{{form_label_class}} control-label">
                     Part of expression to mark {% helplink 'question/parts/mathematical-expression.html#term-Part-of-expression-to-mark' %}
                 </label>
                 <div class="{{form_control_class}}">
-                    <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: mustmatchpattern.capturedNameOptions, value: mustmatchpattern.nameToCompare, optionsValue: 'name', optionsText:'label'"></select>
+                    <select id="input-mustmatchpattern-nameToCompare" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: mustmatchpattern.capturedNameOptions, value: mustmatchpattern.nameToCompare, optionsValue: 'name', optionsText:'label'"></select>
                 </div>
             </div>
             <div data-bind="fadeVisible: mustmatchpattern.nameToCompare()==''">
@@ -93,16 +91,16 @@
             </div>
 
             <div class="form-group">
-                <label class="{{form_label_class}} control-label">
+                <label for="input-mustmatchpattern-warningTime" class="{{form_label_class}} control-label">
                     When to warn the student if their answer does not match the pattern {% helplink 'question/parts/mathematical-expression.html#term-When-to-warn-the-student-if-their-answer-does-not-match-the-pattern' %}
                 </label>
                 <div class="{{form_control_class}}">
-                    <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: mustmatchpattern.warningTime.options, value: mustmatchpattern.warningTime, optionsText: 'niceName'"></select>
+                    <select id="input-mustmatchpattern-warningTime" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: mustmatchpattern.warningTime.options, value: mustmatchpattern.warningTime, optionsText: 'niceName'"></select>
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="{{form_label_class}} control-label">
+                <label for="input-mustmatchpattern-message" class="{{form_label_class}} control-label">
                     Warning message
                 </label>
                 <div class="{{form_control_class}}">
@@ -131,10 +129,10 @@
         <div data-bind="fadeVisible: minlength.length()>0">
             {% percentproperty 'minlength.partialCredit' 'Partial credit for short answer' %}
             <div class="form-group">
-                <label class="{{form_label_class}} control-label">
+                <label for="input-minlength-message" class="{{form_label_class}} control-label">
                     Warning message
                 </label>
-                <div {% if not editable %}disabled{% endif %} class="{{form_control_class}}" data-bind="writemaths: maxlength.message, wmPara: false, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','jmepreview']"></div>
+                <div {% if not editable %}disabled{% endif %} class="{{form_control_class}}" data-bind="writemaths: minlength.message, wmPara: false, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','jmepreview']"></div>
             </div>
         </div>
     </form>
@@ -143,7 +141,7 @@
         <div data-bind="fadeVisible: maxlength.length()>0">
             {% percentproperty 'maxlength.partialCredit' 'Partial credit for long answer' %}
             <div class="form-group">
-                <label class="{{form_label_class}} control-label">
+                <label for="inut-maxlength-message" class="{{form_label_class}} control-label">
                     Warning message
                 </label>
                 <div {% if not editable %}disabled{% endif %} class="{{form_control_class}}" data-bind="writemaths: maxlength.message, wmPara: false, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','jmepreview']"></div>
@@ -153,18 +151,18 @@
 
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="form-group">
-            <label class="{{form_label_class}} control-label">
+            <label for="input-musthave-strings" class="{{form_label_class}} control-label">
                 Required strings {% helplink 'question/parts/mathematical-expression.html#term-Required-strings' %}
             </label>
             <div class="{{form_control_class}}">
-                <listbox params="items: musthave.strings{% if not editable %}, disabled: true{% endif %}"></listbox>
+                <listbox params="id: 'input-musthave-strings', items: musthave.strings{% if not editable %}, disabled: true{% endif %}"></listbox>
             </div>
         </div>
         <div data-bind="fadeVisible: musthave.strings().length>0">
             {% percentproperty 'musthave.partialCredit' 'Partial credit for not using all required strings' %}
             {% booleanproperty 'musthave.showStrings' 'Show required strings in warning?' %}
             <div class="form-group">
-                <label class="{{form_label_class}} control-label">
+                <label for="input-musthave-message" class="{{form_label_class}} control-label">
                     Warning message
                 </label>
                 <div class="{{form_control_class}}">
@@ -176,18 +174,18 @@
 
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="form-group">
-            <label class="{{form_label_class}} control-label">
+            <label for="input-notallowed-strings" class="{{form_label_class}} control-label">
                 Forbidden strings: {% helplink 'question/parts/mathematical-expression.html#term-Forbidden-strings' %}
             </label>
             <div class="{{form_control_class}}">
-                <listbox params="items: notallowed.strings{% if not editable %}, disabled: true{% endif %}"></listbox>
+                <listbox params="id: 'input-notallowed-strings', items: notallowed.strings{% if not editable %}, disabled: true{% endif %}"></listbox>
             </div>
         </div>
         <div data-bind="fadeVisible: notallowed.strings().length>0">
             {% percentproperty 'notallowed.partialCredit' 'Partial credit for using any forbidden string' %}
             {% booleanproperty 'notallowed.showStrings' 'Show forbidden strings in warning?' %}
             <div class="form-group">
-                <label class="{{form_label_class}} control-label">
+                <label for="input-notallowed-message" class="{{form_label_class}} control-label">
                     Warning message
                 </label>
                 <div class="{{form_control_class}}">

@@ -2119,6 +2119,7 @@ $(document).ready(function() {
             this.disabled = params.disabled;
             this.value = ko.observable('');
             this.items = params.items;
+            this.id = params.id;
             this.edit_item = function(item,e) {
                 var input = e.target.parentElement.nextElementSibling;
                 var i = $(e.target).index();
@@ -2168,7 +2169,7 @@ $(document).ready(function() {
             <ul class="list-inline" data-bind="foreach: items">\
                 <button type="button" class="btn btn-default btn-sm" data-bind="click: $parent.edit_item, text: $data, attr: {disabled: $parent.disabled}"></button>\
             </ul>\
-            <input type="text" class="form-control" data-bind="visible: !disabled, textInput: value, event: {blur: blur, keydown: keydown}">\
+            <input type="text" class="form-control" data-bind="visible: !disabled, textInput: value, event: {blur: blur, keydown: keydown}, attr: {id: id}">\
         '
     });
 

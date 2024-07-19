@@ -1,9 +1,10 @@
-<input {% if disable or not editable %}disabled{% endif%} class="form-control {% if monospace %}monospace{% endif %}" type="{{type}}" data-bind="
+<input {% if not dynamic_id %}id="{{id}}"{% endif %} {% if disable or not editable %}disabled{% endif%} class="form-control {% if monospace %}monospace{% endif %}" type="{{type}}" data-bind="
     textInput: {{property}}, 
     attr: {
         {% if min or min == 0 %}min: {{min}},{% endif %}
         {% if max or max == 0 %}max: {{max}},{% endif %}
         {% if placeholder %}placeholder: {{placeholder}},{% endif %}
+        {% if dynamic_id %}id: {{id}},{% endif %}
     },
     autosize: {max: 500, min: 30, padding: 10, value: {{property}} }
 "/>

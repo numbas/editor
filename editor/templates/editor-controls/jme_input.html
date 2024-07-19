@@ -1,5 +1,6 @@
-<input {% if disable or not editable %}disabled{% endif%} class="form-control monospace" type="text" data-bind="
+<input {% if not dynamic_id %}id="{{id}}"{% endif %} {% if disable or not editable %}disabled{% endif%} class="form-control monospace" type="text" data-bind="
     textInput: {{property}}, 
-    autosize: {max: 500, min: 30, padding: 10, value: {{property}} }
+    autosize: {max: 500, min: 30, padding: 10, value: {{property}} },
+    {% if dynamic_id %}attr: {id: {{id}}}{% endif %}
 "/>
-<span data-bind="JME: {{display_property}}{% if parser %}, parser: {{parser}}{% endif %}{% if rules %}, rules: {{rules}}{% endif %}" class="jme-preview"></span>
+<output {% if not dynamic_id %}for="{{id}}"{% endif %} data-bind="JME: {{display_property}}{% if parser %}, parser: {{parser}}{% endif %}{% if rules %}, rules: {{rules}}{% endif %}, attr: { {% if dynamic_id %}for: {{id}}{% endif %} }" class="jme-preview"></output>

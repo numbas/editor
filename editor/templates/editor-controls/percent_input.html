@@ -1,12 +1,14 @@
 <input
+    {% if not dynamic_id %}id="{{id}}"{% endif %}
     {% if not editable %}disabled{% endif%} 
     data-bind="
         value: {{property}}, 
-        inputValue: {{property}}
+        inputValue: {{property}},
+        {% if dynamic_id %}id: {{id}}{% endif %}
     "
     type="range"
     step="5"
     min="0"
     max="100"
 />
-<span class="percentproperty value" data-bind="text: ko.unwrap({{property}})+'%'"></span>
+<output {% if not dynamic_id %}for="{{id}}"{% endif %} class="percentproperty value" data-bind="text: ko.unwrap({{property}})+'%', attr: { {% if dynamic_id %}for: {{id}}{% endif %} }"></output>

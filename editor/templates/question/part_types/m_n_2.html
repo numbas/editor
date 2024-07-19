@@ -17,11 +17,11 @@
         {% property 'minAnswers' 'Minimum answers' max='maxAnswers' help_url='question/parts/multiple-choice.html#term-Minimum-answers' min=0 %}
         {% property 'maxAnswers' 'Maximum answers' min=minAnswers help_url='question/parts/multiple-choice.html#term-Maximum-answers' zero_means='no maximum' %}
         <div class="form-group" data-bind="fadeVisible: minAnswers()!=0 || maxAnswers()!=0">
-            <label class="{{form_label_class}} control-label">
+            <label for="input-warningType" class="{{form_label_class}} control-label">
                 What to do if wrong number of answers selected: {% helplink 'question/parts/multiple-choice.html#term-What-to-do-if-wrong-number-of-answers-selected' %}
             </label>
             <div class="{{form_control_class}}">
-                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: warningTypes, value: warningType, optionsText: 'niceName'"></select>
+                <select id="input-warningType" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: warningTypes, value: warningType, optionsText: 'niceName'"></select>
             </div>
         </div>
         {% booleanproperty 'customMarking' 'Custom marking matrix?' help_url='question/parts/multiple-choice.html#term-Custom-marking-matrix' disable='customChoices' %}
@@ -36,11 +36,11 @@
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='choices'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="form-group">
-            <label class="{{form_label_class}} control-label">
+            <label for="input-markingMethod" class="{{form_label_class}} control-label">
                 Marking method {% helplink 'question/parts/multiple-choice.html#term-Marking-method' %}
             </label>
             <div class="{{form_control_class}}">
-                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: markingMethods, value: markingMethod, optionsText: 'niceName'"></select>
+                <select id="input-markingMethod" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: markingMethods, value: markingMethod, optionsText: 'niceName'"></select>
                 <div class="help-block" data-bind="fadeVisible: markingMethod().name=='sum ticked cells'">
                     <p>For each choice, specify the number of marks to add or subtract when the student picks it.</p>
                 </div>

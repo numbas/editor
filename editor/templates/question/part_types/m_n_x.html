@@ -17,29 +17,29 @@
         {% property 'minAnswers' 'Minimum answers' max='maxAnswers' help_url='question/parts/multiple-choice.html#term-Minimum-answers' %}
         {% property 'maxAnswers' 'Maximum answers' min=minAnswers help_url='question/parts/multiple-choice.html#term-Maximum-answers' zero_means='no maximum' %}
         <div class="form-group" data-bind="fadeVisible: minAnswers()!=0 || maxAnswers()!=0">
-            <label class="{{form_label_class}} control-label">
+            <label for="input-warningType" class="{{form_label_class}} control-label">
                 What to do if wrong number of answers selected: {% helplink 'question/parts/multiple-choice.html#term-What-to-do-if-wrong-number-of-answers-selected' %}
             </label>
             <div class="{{form_control_class}}">
-                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: warningTypes, value: warningType, optionsText: 'niceName'"></select>
+                <select id="input-warningType" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: warningTypes, value: warningType, optionsText: 'niceName'"></select>
             </div>
         </div>
 
         <div class="form-group">
-            <label class="{{form_label_class}} control-label">
+            <label for="input-displayType" class="{{form_label_class}} control-label">
                 Selection type {% helplink 'question/parts/multiple-choice.html#term-Selection-type' %}
             </label>
             <div class="{{form_control_class}}">
-                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: displayTypes, value: displayType, optionsText: 'niceName'"></select>
+                <select id="input-displayType" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: displayTypes, value: displayType, optionsText: 'niceName'"></select>
             </div>
         </div>
 
         <div class="form-group">
-            <label class="{{form_label_class}} control-label">
+            <label for="input-layoutType" class="{{form_label_class}} control-label">
                 Layout {% helplink 'question/parts/multiple-choice.html#term-Layout' %}
             </label>
             <div class="{{form_control_class}}">
-                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: layoutTypes, value: layoutType, optionsText: 'niceName'"></select>
+                <select id="input-layoutType" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: layoutTypes, value: layoutType, optionsText: 'niceName'"></select>
             </div>
         </div>
 
@@ -102,11 +102,11 @@
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='matrix'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="form-group" data-bind="fadeVisible: displayType().name=='checkbox'">
-            <label class="{{form_label_class}} control-label">
+            <label for="input-markingMethod" class="{{form_label_class}} control-label">
                 Marking method {% helplink 'question/parts/multiple-choice.html#term-Marking-method' %}
             </label>
             <div class="{{form_control_class}}">
-                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: markingMethods, value: markingMethod, optionsText: 'niceName'"></select>
+                <select id="input-markingMethod" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: markingMethods, value: markingMethod, optionsText: 'niceName'"></select>
             </div>
         </div>
 

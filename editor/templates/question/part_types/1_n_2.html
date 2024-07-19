@@ -13,11 +13,11 @@
         <hr>
 
         <div class="form-group">
-            <label class="{{form_label_class}} control-label">
+            <label for="input-displayType" class="{{form_label_class}} control-label">
                 Selection type {% helplink 'question/parts/multiple-choice.html#term-Selection-type' %}
             </label>
             <div class="{{form_control_class}}">
-                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: displayTypes, value: displayType, optionsText: 'niceName'"></select>
+                <select id="input-displayType" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: displayTypes, value: displayType, optionsText: 'niceName'"></select>
             </div>
         </div>
 

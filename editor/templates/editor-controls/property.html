@@ -1,13 +1,11 @@
 {% load helplink %}
 {% load editor_controls %}
 <div class="form-group">
-    <label class="label-block">
-        <div class="{{form_label_class}} control-label">
-            {% if dynamic_label %}<span data-bind="text: {{label}}"></span>{% else %}{{label}}{% endif %}
-            {% if help_url %}{% helplink help_url %}{% endif %}
-        </div>
-        <div class="{{form_control_class}}" data-bind="css: { {% if warning %}'has-error': {{warning}}{% endif %}}">
-            {% text_input property monospace=monospace type=type disable=disable min=min max=max zero_means=zero_means warning=warning placeholder=placeholder %}
-        </div>
+    <label {% if not dynamic_id %}for="{{id}}"{% endif %} class="{{form_label_class}} control-label" data-bind="attr: { {% if dynamic_id %}for: {{id}}{% endif %} }">
+        {% if dynamic_label %}<span data-bind="text: {{label}}"></span>{% else %}{{label}}{% endif %}
+        {% if help_url %}{% helplink help_url %}{% endif %}
     </label>
+    <div class="{{form_control_class}}" data-bind="css: { {% if warning %}'has-error': {{warning}}{% endif %}}">
+        {% text_input property monospace=monospace type=type disable=disable min=min max=max zero_means=zero_means warning=warning placeholder=placeholder id=id dynamic_id=dynamic_id %}
+    </div>
 </div>

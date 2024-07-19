@@ -11,13 +11,13 @@
             <div class="col-sm-8">
                 {% block settings_main %}
                 <div class="form-group name">
-                    <label>Name</label>
-                    <input id="name-input" {% if not editable %}disabled{% endif %} class="form-control input-lg" data-bind="textInput: name">
+                    <label for="input-name">Name</label>
+                    <input id="input-name" {% if not editable %}disabled{% endif %} class="form-control input-lg" data-bind="textInput: name">
                 </div>
 
                 <div class="form-group description">
-                    <label>Description</label>
-                    <div id="description-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
+                    <label for="input-description">Description</label>
+                    <div id="input-description" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
                     <div class="help-block">
                         <p>
                             {% helplink 'question/reference.html#term-Description' subject='the description field' %}
@@ -34,7 +34,7 @@
                 </div>
 
                 <div class="form-group tags">
-                    <label>Tags</label>
+                    <label for="input-tags">Tags</label>
                     <ul class="list-inline" data-bind="foreach: sorted_tags">
                         <li class="btn btn-default btn-sm">
                             <a target="_blank" data-bind="attr: {href: '/search/?tags='+encodeURIComponent($data), title:'Items with the tag \''+$data+'\''}, text: $data"></a>
@@ -42,7 +42,7 @@
                         </li>
                     </ul>
                     <form data-bind="submit: add_tag">
-                        <input type="text" class="form-control" data-bind="textInput: tag_input">
+                        <input id="input-tags" type="text" class="form-control" data-bind="textInput: tag_input">
                     </form>
                 </div>
 
@@ -80,7 +80,7 @@
                             {% if request.user == object.editoritem.author %}<a class="btn btn-warning btn-sm" href="{% url 'item_move_project' object.editoritem.pk %}">Move to another project</a>{% endif %}
                         </div>
                         <div class="form-group">
-                            <label><span class="glyphicon glyphicon-copyright-mark"></span> Licence</label>
+                            <label for="licence-select"><span class="glyphicon glyphicon-copyright-mark"></span> Licence</label>
                             <select id="licence-select" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.licences, value: licence, optionsText: 'short_name', optionsCaption: 'None specified'"></select>
                             <p class="help-block">
                                 <small data-bind="visible: licence, with: licence"><a target="_blank" data-bind="visible: url, attr:{href:url}">Licence information</a></small>

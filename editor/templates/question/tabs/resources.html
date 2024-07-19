@@ -24,9 +24,9 @@
             <div class="media-body">
                 <form class="form" data-bind="submit: Editor.noop">
                     {% with form_label_class="" form_control_class="" %}
-                        {% property "'resources/'+name()" "URL" disable=True %}
+                        {% property "'resources/'+name()" "URL" disable=True id="'input-resource-url-'+$index()" dynamic_id=True %}
                         <!-- ko if: filetype()=='img' -->
-                        {% property 'alt_text' 'Text alternative' placeholder="'Describe this image for someone who can\'t see it'" %}
+                        {% property 'alt_text' 'Text alternative' placeholder="'Describe this image for someone who can\'t see it'" id="'input-resource-alt_text-'+$index()" dynamic_id=True %}
                         <!-- /ko -->
                     {% endwith %}
                 </form>

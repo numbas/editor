@@ -5,11 +5,11 @@
     <div class="main-settings">
         {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-Marks' %}
         <div class="form-group">
-            <label class="{{form_label_class}} control-label">
+            <label for="input-matchMode" class="{{form_label_class}} control-label">
                 Match test {% helplink 'question/parts/match-text-pattern.html#term-Match-test' %}
             </label>
             <div class="{{form_control_class}}">
-                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: matchModes, value: matchMode, optionsText: 'niceName'"></select>
+                <select id="input-matchMode" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: matchModes, value: matchMode, optionsText: 'niceName'"></select>
             </div>
         </div>
         {% property 'answer' 'Answer pattern' monospace=True help_url='question/parts/match-text-pattern.html#term-Answer-pattern' %}

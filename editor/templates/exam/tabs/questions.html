@@ -99,7 +99,7 @@
                     <!-- ko if: $root.navigatemode().change_question_groups -->
                     <form class="form-inline" data-bind="submit: Editor.noop">
                         <div>
-                            <label>Group name: <input {% if not editable %}disabled{% endif %} class="form-control group-name" data-bind="textInput: name"></label>
+                            <label for="input-group-name">Group name:</label> <input id="input-group-name" {% if not editable %}disabled{% endif %} class="form-control group-name" data-bind="textInput: name">
                             <span class="controls pull-right">
                               {% if editable %}
                                 <button class="delete btn btn-link btn-lg" title="Remove this group of questions" data-bind="visible: $parent.question_groups().length>0, click: remove"><span class="glyphicon glyphicon-remove text-danger"></span></button>
@@ -160,7 +160,7 @@
                                                     <strong class="number" data-bind="text: number()===undefined ? '' : number()+'.'"></strong>
                                                 <!-- /ko -->
                                             </span>
-                                            <input class="form-control name" data-bind="textInput: displayName">
+                                            <input aria-label="Name" class="form-control name" data-bind="textInput: displayName">
                                         </div>
                                     <!-- /ko -->
                                 </span>
@@ -170,9 +170,9 @@
                             <!-- ko if: variable_overrides().length>0 -->
                             <table class="variable-overrides table">
                                 <thead>
-                                    <th>Variable</th>
-                                    <th>Value</th>
-                                    <th>Description</th>
+                                    <th scope="col">Variable</th>
+                                    <th scope="col">Value</th>
+                                    <th scope="col">Description</th>
                                 </thead>
                                 <tbody data-bind="foreach: variable_overrides">
                                     <tr>

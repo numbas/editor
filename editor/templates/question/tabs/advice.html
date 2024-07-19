@@ -4,9 +4,9 @@
 
 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='advice'}">
     <div class="form-group">
-        <label class="label-block">
+        <label for="input-advice" class="label-block">
             <span class="label-text">Advice</span>
-            <div id="advice-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: advice, preambleCSS: $root.preamble.css,, tinymce_plugins: ['jmevisible','jmepreview']"></div>
+            <div id="advice-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: advice, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','jmepreview']"></div>
         </label>
         <p class="help-block">
             {% helplink 'question/reference.html#advice' subject='the advice section' %}

@@ -170,13 +170,13 @@
                 <!-- Description -->
                 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='description'}">
                     <div class="form-group name">
-                        <label>Name</label>
-                        <input id="name-input" {% if not editable %}disabled{% endif %} class="form-control input-lg" data-bind="textInput: name">
+                        <label for="input-name">Name</label>
+                        <input id="input-name" {% if not editable %}disabled{% endif %} class="form-control input-lg" data-bind="textInput: name">
                     </div>
 
                     <div class="form-group description">
-                        <label>Description</label>
-                        <div id="description-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
+                        <label for="input-description">Description</label>
+                        <div id="input-description" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
                         {% if editable %}
                         <p class="help-block">
                             {% helplink 'custom-part-types/reference.html#term-Description' subject='the description field' %}
@@ -187,8 +187,8 @@
 
                     <div class="form-group">
                         {% if editable %}
-                            <label>URL of documentation</label>
-                            <input class="form-control" data-bind="textInput: help_url">
+                            <label for="input-help_url">URL of documentation</label>
+                            <input id="input-help_url" class="form-control" data-bind="textInput: help_url">
                             <p class="help-block">
                                 {% helplink 'custom-part-types/reference.html#term-URL-of-documentation' subject='the URL of documentation field' %}
                                 Provide a link to any more documentation about your custom part type.
@@ -252,23 +252,23 @@
                                 </div>
                                 <div class="panel-body">
                                     <form class="form-horizontal" data-bind="submit: Editor.noop">
-                                        {% property 'name' 'Name' monospace=True warning='nameError' %}
-                                        {% property 'label' 'Label' warning='!label() ? \'A label is required\' : \'\'' %}
-                                        {% property 'help_url' 'Help URL' monospace=True %}
+                                        {% property 'name' 'Name' monospace=True warning='nameError' id="'input-name-'+$index()" dynamic_id=True %}
+                                        {% property 'label' 'Label' warning='!label() ? \'A label is required\' : \'\'' id="'input-label-'+$index()" dynamic_id=True %}
+                                        {% property 'help_url' 'Help URL' monospace=True id="'input-help_url-'+$index()" dynamic_id=True  %}
                                         <!-- ko with: input_type -->
 
                                         <!-- ko if: $parent.input_type().name == 'string' -->
-                                        {% property 'model.default_value' 'Default value' %}
-                                        {% booleanproperty 'model.subvars' 'Substitute variables into value?' %}
+                                        {% property 'model.default_value' 'Default value' id="'input-default_value-'+$index()" dynamic_id=True %}
+                                        {% booleanproperty 'model.subvars' 'Substitute variables into value?' id="'input-subvars-'+$index()" dynamic_id=True  %}
                                         <!-- /ko -->
 
                                         <!-- ko if: $parent.input_type().name == 'mathematical_expression' -->
-                                        {% jmeproperty 'model.default_value' 'Default value' %}
-                                        {% booleanproperty 'model.subvars' 'Substitute variables into value?' %}
+                                        {% jmeproperty 'model.default_value' 'Default value' id="'input-default_value-'+$index()" dynamic_id=True %}
+                                        {% booleanproperty 'model.subvars' 'Substitute variables into value?' id="'input-subvars-'+$index()" dynamic_id=True %}
                                         <!-- /ko -->
 
                                         <!-- ko if: $parent.input_type().name == 'checkbox' -->
-                                        {% booleanproperty 'model.default_value' 'Default value' %}
+                                        {% booleanproperty 'model.default_value' 'Default value' id="'input-default_value-'+$index()" dynamic_id=True %}
                                         <!-- /ko -->
 
                                         <!-- ko if: $parent.input_type().name == 'dropdown' -->
@@ -283,7 +283,7 @@
                                             </div>
                                         </div>
                                         <!-- ko if: model.choice_maker.valid_choices().length>0 -->
-                                        {% selectproperty 'model.default_value' 'Default value' options_text='label' options='model.choice_maker.valid_choices' %}
+                                        {% selectproperty 'model.default_value' 'Default value' options_text='label' options='model.choice_maker.valid_choices' id="'input-default_value-'+$index()" dynamic_id=True %}
                                         <!-- /ko -->
                                         <!-- /ko -->
 
@@ -337,11 +337,11 @@
                                                 <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: model.default_value, codemirrorMode: 'jme'"></textarea>
                                             </div>
                                         </div>
-                                        {% booleanproperty 'model.evaluate' 'Evaluate?' %}
+                                        {% booleanproperty 'model.evaluate' 'Evaluate?' id="'input-evaluate-'+$index()" dynamic_id=True %}
                                         <!-- /ko -->
 
                                         <!-- ko if: $parent.input_type().name == 'percent' -->
-                                        {% percentproperty 'model.default_value' 'Default value' %}
+                                        {% percentproperty 'model.default_value' 'Default value' id="'input-default_value-'+$index()" dynamic_id=True %}
                                         <!-- /ko -->
 
                                         <!-- ko if: $parent.input_type().name == 'html' -->
@@ -355,7 +355,7 @@
                                                 <div {% if not editable %}disabled{% endif %} data-bind="writemaths: model.default_value"></div>
                                             </div>
                                         </div>
-                                        {% booleanproperty 'model.subvars' 'Substitute variables into value?' %}
+                                        {% booleanproperty 'model.subvars' 'Substitute variables into value?' id="'input-subvars-'+$index()" dynamic_id=True %}
                                         <!-- /ko -->
 
                                         <!-- ko if: $parent.input_type().name == 'list_of_strings' -->
@@ -418,12 +418,12 @@
                         {% selectproperty 'input_widget' 'Answer input method' options_text='niceName' options='input_widgets' help_url='custom-part-types/reference.html#answer-input-methods' %}
 
                         <div class="form-group">
-                            <label class="{{form_label_class}} control-label">
+                            <label for="input-input_options-correctAnswer" class="{{form_label_class}} control-label">
                                 Expected answer
                                 {% helplink 'custom-part-types/reference.html#term-Expected-answer' subject='the expected answer field' %}
                             </label>
                             <div class="{{form_control_class}}">
-                                <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: input_options.correctAnswer, codemirrorMode: 'jme'"></textarea>
+                                <textarea id="input-input_options-correctAnswer" {% if not editable %}disabled{% endif %} data-bind="codemirror: input_options.correctAnswer, codemirrorMode: 'jme'"></textarea>
                                 <undefined-variable-warning params="expr: input_options.correctAnswer, vars: ['settings']"></undefined-variable-warning>
                                 {% if editable %}
                                 <p class="help-block">
@@ -434,13 +434,13 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="{{form_label_class}} control-label">
+                            <label for="input-input_options-hint" class="{{form_label_class}} control-label">
                                 Input hint
                                 {% helplink 'custom-part-types/reference.html#term-Input-hint' subject='the input hint field' %}
                             </label>
                             <div class="{{form_control_class}}">
-                                <static-dynamic-setting params="option: input_options.hint, type_hint: 'string'{% if not editable %}, disable: true{% endif %}">
-                                    {% text_input 'static_value' %}
+                                <static-dynamic-setting params="option: input_options.hint, type_hint: 'string'{% if not editable %}, disable: true{% endif %}, id: 'input-input_options-hint'">
+                                    {% text_input 'static_value' id="input-input_options-hint" dynamic_id=False %}
                                 </static-dynamic-setting>
                                 {% if editable %}
                                 <p class="help-block">
@@ -535,14 +535,14 @@
                             <div class="col-sm-12 col-md-8 col-lg-9 note-definition" data-bind="visible: marking_notes().length, with: current_marking_note">
                                 <form data-bind="submit: Editor.noop">
                                     <div class="form-group">
-                                        <label>Name</label>
-                                        <input {% if not editable %}disabled{% endif %} type="text" placeholder="Name" class="form-control name monospace" data-bind="textInput: _name, disable: required"/>
+                                        <label for="input-marking_note-name">Name</label>
+                                        <input id="input-marking_note-name" {% if not editable %}disabled{% endif %} type="text" placeholder="Name" class="form-control name monospace" data-bind="textInput: _name, disable: required"/>
                                         <p class="help-block" data-bind="visible: required">This note is required.</p>
                                         <span class="name-error text-danger" data-bind="text: nameError, visible: nameError"></span>
                                     </div>
                                     <div class="form-group">
-                                        <label>Definition</label>
-                                        <textarea {% if not editable %}disabled{% endif %} class="definition" data-bind="codemirror: definition"></textarea>
+                                        <label for="input-marking_note-definition">Definition</label>
+                                        <textarea id="input-marking_note-definition" {% if not editable %}disabled{% endif %} class="definition" data-bind="codemirror: definition"></textarea>
                                         <undefined-variable-warning params="expr: definition, vars: $parent.marking_defined_names, show_syntax_errors: false"></undefined-variable-warning>
                                         <div class="alert alert-danger" data-bind="visible: definitionError" aria-live="polite">
                                             <p data-bind="html: definitionError"></p>
@@ -552,7 +552,7 @@
                                         </p>
                                     </div>
                                     <div class="form-group">
-                                        <label>Description</label>
+                                        <label for="input-marking_note-description">Description</label>
                                         <div data-bind="visible: !required(), writemaths: description"></div>
                                         <div data-bind="visible: required, html: description"></div>
                                     </div>
@@ -688,8 +688,8 @@
                             </tbody>
                         </table>
                         <div class="panel-body">
-                            <label>Give access to</label>
-                            <input class="form-control" id="search_author" type="text" placeholder="Full name or username" size="30" data-bind="
+                            <label for="input-search_author">Give access to</label>
+                            <input id="input-search_author" class="form-control" id="search_author" type="text" placeholder="Full name or username" size="30" data-bind="
                                 value: userAccessSearch,
                                 autocomplete: '{% url 'user_search' %}', 
                                 autocompleteCallback: function(user) { return {label: user.name, value: user.name} },

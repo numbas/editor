@@ -6,11 +6,11 @@
         {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-Marks' %}
 
         <div class="form-group">
-            <label class="{{form_label_class}} control-label">
+            <label for="input-correctAnswer" class="{{form_label_class}} control-label">
                 Correct answer
             </label>
             <div class="{{form_control_class}}">
-                <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: correctAnswer, codemirrorMode: 'jme'"></textarea>
+                <textarea id="input-correctAnswer" {% if not editable %}disabled{% endif %} data-bind="codemirror: correctAnswer, codemirrorMode: 'jme'"></textarea>
             </div>
         </div>
     </div>
@@ -38,11 +38,11 @@
 
     <hr>
     <div class="form-group">
-        <label class="{{form_label_class}} control-label">
+        <label for="input-precisionType" class="{{form_label_class}} control-label">
             Precision restriction {% helplink 'question/parts/matrixentry.html#term-Precision-restriction' %}
         </label>
         <div class="{{form_control_class}}">
-            <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: precisionTypes, value: precisionType, optionsText: 'niceName'"></select>
+            <select id="input-precisionType" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: precisionTypes, value: precisionType, optionsText: 'niceName'"></select>
         </div>
     </div>
     <div data-bind="fadeVisible: precisionType().name!='none'">
@@ -50,7 +50,7 @@
         {% booleanproperty 'strictPrecision' 'Require trailing zeros?' help_url='question/parts/matrixentry.html#term-Require-trailing-zeros' %}
         {% percentproperty 'precisionPartialCredit' 'Partial credit for wrong precision' %}
         <div class="form-group">
-            <label class="{{form_label_class}} control-label">
+            <label for="input-precisionMessage" class="{{form_label_class}} control-label">
                 Message if wrong precision
             </label>
             <div {% if not editable %}disabled{% endif %} class="{{form_control_class}}" data-bind="writemaths: precisionMessage, wmPara: false, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','jmepreview']"></div>
@@ -65,11 +65,11 @@
     <hr>
 
     <div class="form-group">
-        <label class="{{form_label_class}} control-label">
+        <label for="input-prefilledCells" class="{{form_label_class}} control-label">
             Pre-filled cells {% helplink 'question/parts/matrixentry.html#term-Pre-filled-cells' %}
         </label>
         <div class="{{form_control_class}}">
-            <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: prefilledCells, codemirrorMode: 'jme'"></textarea>
+            <textarea id="input-prefilledCells" {% if not editable %}disabled{% endif %} data-bind="codemirror: prefilledCells, codemirrorMode: 'jme'"></textarea>
         </div>
     </div>
 

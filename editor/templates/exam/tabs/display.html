@@ -5,27 +5,23 @@
 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='display'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="form-group">
-            <label class="label-block">
-                <div class="col-sm-3 control-label">
-                    Interface theme 
-                    {% helplink 'exam/reference.html#term-Interface-theme' %}
-                </div>
-                <div class="col-sm-6">
-                    <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.themes, value: theme, optionsText: 'name'"></select>
-                    <div class="help-block upload-theme"><a href="{% url 'theme_new' %}">Upload a new theme</a></div>
-                </div>
+            <label for="input-theme" class="col-sm-3 control-label">
+                Interface theme 
+                {% helplink 'exam/reference.html#term-Interface-theme' %}
             </label>
+            <div class="col-sm-6">
+                <select id="input-theme" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.themes, value: theme, optionsText: 'name'"></select>
+                <div class="help-block upload-theme"><a href="{% url 'theme_new' %}">Upload a new theme</a></div>
+            </div>
         </div>
 
         <div class="form-group">
-            <label class="label-block">
-                <div class="col-sm-3 control-label">
-                    Interface language {% helplink 'exam/reference.html#term-Interface-language' %}
-                </div>
-                <div class="col-sm-6">
-                    <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.locales, value: locale, optionsValue: 'code', optionsText: 'name'"></select>
-                </div>
+            <label for="input-locale" class="col-sm-3 control-label">
+                Interface language {% helplink 'exam/reference.html#term-Interface-language' %}
             </label>
+            <div class="col-sm-6">
+                <select id="input-locale" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.locales, value: locale, optionsValue: 'code', optionsText: 'name'"></select>
+            </div>
         </div>
 
         {% booleanproperty 'allowPrinting' 'Allow students to print question content?' help_url='exam/reference.html#term-Allow-students-to-print-question-content' %}

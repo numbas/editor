@@ -15,22 +15,20 @@
     <h4>Advanced settings</h4>
     <hr>
     <div class="form-group">
-        <label class="label-block">
-            <div class="{{form_label_class}} control-label">
-                Display answer {% helplink 'question/parts/numberentry.html#term-Display-answer' %}
-            </div>
-            <div class="{{form_control_class}}">
-                {% text_input 'displayAnswer' monospace=True %}
-                <div class="help-block" data-bind="visible: ko.unwrap(displayAnswer)==''">(The midpoint of the minimum and maximum accepted values)</div>
-            </div>
+        <label for="input-displayAnswer" class="{{form_label_class}} control-label">
+            Display answer {% helplink 'question/parts/numberentry.html#term-Display-answer' %}
         </label>
+        <div class="{{form_control_class}}">
+            {% text_input 'displayAnswer' monospace=True id="input-displayAnswer" %}
+            <div class="help-block" data-bind="visible: ko.unwrap(displayAnswer)==''">(The midpoint of the minimum and maximum accepted values)</div>
+        </div>
     </div>
     <div class="form-group">
-        <label class="{{form_label_class}} control-label">
+        <label for="input-precisionType" class="{{form_label_class}} control-label">
             Precision restriction {% helplink 'question/parts/numberentry.html#term-Precision-restriction' %}
         </label>
         <div class="{{form_control_class}}">
-            <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: precisionTypes, value: precisionType, optionsText: 'niceName'"></select>
+            <select id="input-precisionType" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: precisionTypes, value: precisionType, optionsText: 'niceName'"></select>
         </div>
     </div>
     <div data-bind="fadeVisible: fractionPossible">
@@ -54,7 +52,7 @@
         {% booleanproperty 'showPrecisionHint' 'Show precision restriction hint?' help_url='question/parts/numberentry.html#term-Show-precision-restriction-hint' %}
         {% percentproperty 'precisionPartialCredit' 'Partial credit for wrong precision' %}
         <div class="form-group">
-            <label class="{{form_label_class}} control-label">
+            <label for="input-precisionMessage" class="{{form_label_class}} control-label">
                 Message if wrong precision
             </label>
             <div {% if not editable %}disabled{% endif %} class="{{form_control_class}}" data-bind="writemaths: precisionMessage, wmPara: false, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','jmepreview']"></div>

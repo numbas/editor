@@ -58,7 +58,7 @@
                                 <td class="type" data-bind="click: $parent.makeCurrentVariable, text: type"></td>
                                 <td class="value-cell" data-bind="click: $parent.makeCurrentVariable">
                                     <div class="value-wrapper">
-                                        <div class="value jme-value tex2jax_ignore" data-bind="jmevalue: value, error: $parent.anyError"></div>
+                                        <div class="value jme-value tex2jax_ignore" data-bind="jmevalue: value, error: $parent.anyError, scope: $root.questionScope"></div>
                                     </div>
                                 </td>
                                 <td>
@@ -276,14 +276,14 @@
                 <div class="value-preview well well-sm" data-bind="visible: !anyError()">
                     <h3>Generated value: <code class="monospace type" data-bind="text: type"></code></h3>
                     <!-- ko if: names().length==1 -->
-                    <div class="value jme-value" data-bind="jmevalue: value, error: anyError, abbreviate: false"></div>
+                    <div class="value jme-value" data-bind="jmevalue: value, error: anyError, abbreviate: false, scope: $root.questionScope"></div>
                     <!-- /ko -->
 
                     <!-- ko if: names().length > 1 -->
                     <dl>
                         <!-- ko foreach: names -->
                         <dt><span data-bind="text: name || 'Unnamed'"></span>: <code class="monospace type" data-bind="text: type"></code></dt>
-                        <dd class="value jme-value" data-bind="jmevalue: value, abbreviate: false"></dd>
+                        <dd class="value jme-value" data-bind="jmevalue: value, abbreviate: false, scope: $root.questionScope"></dd>
                         <!-- /ko -->
                     </dl>
                     <!-- /ko -->

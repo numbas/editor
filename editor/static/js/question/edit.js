@@ -346,7 +346,7 @@ $(document).ready(function() {
         }
         this.mainTabber.currentTab(this.mainTabber.tabs()[0]);
 
-        this.baseScopeWithoutConstants= ko.pureComputed(function() {
+        this.baseScopeWithoutConstants = ko.pureComputed(function() {
             var jme = Numbas.jme;
             var scope = new jme.Scope(jme.builtinScope);
             var extensions = this.extensions().filter(function(e){return e.used_or_required() && e.loaded()});
@@ -481,15 +481,14 @@ $(document).ready(function() {
             });
             var defined_constants = Numbas.jme.variables.makeConstants(constants,scope);
 
+            var enabled_builtin_constants = {};
             this.builtin_constants.forEach(function(c) {
-                if(!c.enabled()) {
-                    c.name.split(',').forEach(function(name) {
-                        if(defined_constants.indexOf(jme.normaliseName(name,scope))==-1) {
-                            scope.deleteConstant(name);
-                        }
-                    });
-                }
+                var enabled = c.enabled();
+                c.name.split(',').forEach(function(name) {
+                    enabled_builtin_constants[name] = enabled;
+                });
             });
+            Numbas.jme.variables.makeConstants(Numbas.jme.builtin_constants, scope, enabled_builtin_constants);
 
             document.body.classList.add('jme-scope');
             $(document.body).data('jme-scope',scope);

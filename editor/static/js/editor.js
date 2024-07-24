@@ -1846,8 +1846,8 @@ $(document).ready(function() {
         }
     }
 
-    var displayJMEValue = Editor.displayJMEValue = function(v, abbreviate) {
-        var code = Numbas.jme.display.treeToJME({tok:v});
+    var displayJMEValue = Editor.displayJMEValue = function(v, abbreviate, scope) {
+        var code = Numbas.jme.display.treeToJME({tok:v}, undefined, scope);
         var description;
         switch(v.type) {
             case 'nothing':
@@ -1946,6 +1946,7 @@ $(document).ready(function() {
             var allBindings = allBindingsAccessor();
             var error = ko.unwrap(allBindings.error);
             var abbreviate = ko.unwrap(allBindings.abbreviate) !== false;
+            var scope = ko.unwrap(allBindings.scope);
             var display = '';
             var type = '';
             if(error) {
@@ -1953,7 +1954,7 @@ $(document).ready(function() {
                 type = 'error';
             } else if(value) {
                 try {
-                    display = displayJMEValue(value, abbreviate);
+                    display = displayJMEValue(value, abbreviate, scope);
                     type = value.type;
                 } catch(e) {
                     display = {description: e.message};

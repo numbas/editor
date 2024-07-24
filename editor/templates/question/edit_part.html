@@ -248,7 +248,7 @@
                                     {% endif %}
                                 </td>
                                 <td class="name monospace" data-bind="click: function(){$root.goToVariable(name)}, text: name ? name : 'Unnamed'"></td>
-                                <td class="value jme-value" data-bind="jmevalue: value"></td>
+                                <td class="value jme-value" data-bind="jmevalue: value, scope: $root.questionScope"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -266,7 +266,7 @@
                         <tbody data-bind="foreach: marking_parameters">
                             <tr class="variable">
                                 <td class="name monospace" data-bind="text: name ? name : 'Unnamed'"></td>
-                                <td class="value jme-value" data-bind="jmevalue: value, abbreviate: false"></td>
+                                <td class="value jme-value" data-bind="jmevalue: value, abbreviate: false, scope: $root.questionScope"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -283,7 +283,7 @@
                         <tbody data-bind="foreach: part_settings">
                             <tr class="variable">
                                 <td class="name monospace" data-bind="text: name ? name : 'Unnamed'"></td>
-                                <td class="value jme-value" data-bind="jmevalue: value, abbreviate: false"></td>
+                                <td class="value jme-value" data-bind="jmevalue: value, abbreviate: false, scope: $root.questionScope"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -343,7 +343,7 @@
                                         <span class="name monospace" data-bind="text: name, attr: {title: description}"></span> 
                                     </td>
                                     <td class="only-when-shown">
-                                        <div class="value jme-value" data-bind="jmevalue: value, error: error, abbreviate: false"></div>
+                                        <div class="value jme-value" data-bind="jmevalue: value, error: error, abbreviate: false, scope: $root.questionScope"></div>
                                     </td>
                                     <td class="only-when-shown">
                                         <ul class="list-unstyled" data-bind="foreach: message_displays">
@@ -429,7 +429,7 @@
                                         <tbody data-bind="foreach: variables">
                                             <tr class="variable">
                                                 <td class="name monospace" data-bind="click: function(){$root.goToVariable(name)}, text: name ? name : 'Unnamed'"></td>
-                                                <td class="value jme-value" data-bind="jmevalue: value"></td>
+                                                <td class="value jme-value" data-bind="jmevalue: value, scope: $root.questionScope"></td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -482,7 +482,7 @@
                                                         </td>
                                                         <th>Current:</th>
                                                         <td>
-                                                            <span class="value jme-value" data-bind="jmevalue: value, error: error"></span>
+                                                            <span class="value jme-value" data-bind="jmevalue: value, error: error, scope: $root.questionScope"></span>
                                                         </td>
                                                         <td>
                                                             <dl>
@@ -514,7 +514,7 @@
                                                     <tr class="note" data-bind="css: {danger: missing() || !valid()}">
                                                         <th>Expected:</th>
                                                         <td>
-                                                            <span class="value jme-value" data-bind="jmevalue: expected.computedValue"></span>
+                                                            <span class="value jme-value" data-bind="jmevalue: expected.computedValue, scope: $root.questionScope"></span>
                                                         </td>
                                                         <td>
                                                             <dl>

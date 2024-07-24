@@ -472,15 +472,6 @@ $(document).ready(function() {
             var jme = Numbas.jme;
             var scope = new jme.Scope(this.baseScopeWithoutConstants());
 
-            var constants = this.constants().filter(function(c) { return !c.error(); }).map(function(c) {
-                return {
-                    name: c.name(),
-                    value: c.value(),
-                    tex: c.tex()
-                }
-            });
-            var defined_constants = Numbas.jme.variables.makeConstants(constants,scope);
-
             var enabled_builtin_constants = {};
             this.builtin_constants.forEach(function(c) {
                 var enabled = c.enabled();
@@ -489,6 +480,15 @@ $(document).ready(function() {
                 });
             });
             Numbas.jme.variables.makeConstants(Numbas.jme.builtin_constants, scope, enabled_builtin_constants);
+
+            var constants = this.constants().filter(function(c) { return !c.error(); }).map(function(c) {
+                return {
+                    name: c.name(),
+                    value: c.value(),
+                    tex: c.tex()
+                }
+            });
+            var defined_constants = Numbas.jme.variables.makeConstants(constants,scope);
 
             document.body.classList.add('jme-scope');
             $(document.body).data('jme-scope',scope);
@@ -772,8 +772,9 @@ $(document).ready(function() {
             //  Finally, mark duplicate names
             names.sort(Numbas.util.sortBy('name'));
             function handle_group(group) {
+                var kept_group = group.filter(function(n) { return !n.v.added_because_missing });
                 group.forEach(function(n) {
-                    n.v.duplicateNameError(group.length > 1 ? n.name : null);
+                    n.v.duplicateNameError(kept_group.length > 1 ? n.name : null);
                 });
             }
 

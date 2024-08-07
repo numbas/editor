@@ -3557,6 +3557,7 @@ Randomisation
         * ``random(1..5)``
         * ``random([1,2,4])``
         * ``random(1,2,3)``
+        * ``random(0..1#0.01)``
 
 .. jme:function:: weighted_random(x)
     :keywords: random

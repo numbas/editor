@@ -406,6 +406,20 @@ The other option is to use :ref:`explore mode <explore-mode>`, and replace quest
 You only need to set up the variable replacements once.
 See `this example question <https://numbas.mathcentre.ac.uk/question/155690/explore-mode-using-data-provided-by-the-student/>`__ which asks the student to measure a cuboid box and then calculate its volume.
 
+
+Mark gap-fill answers as a set
+------------------------------
+
+You might want the student to give several distinct examples from a set of valid answers.
+If the student repeats an answer, they should only get credit for the first use.
+
+You can use a :ref:`gap-fill <gap-fill>` part with a :ref:`custom marking algorithm <part-marking-algorithm>` to show input boxes for each answer, and then convert the list of interpreted answers to a set and award credit proportional to the size of the intersection of this set with the set of acceptable answers.
+
+Each gap's own marking algorithm determines what feedback icon is shown for that gap.
+In most cases where the marking for a gap-fill part depends on all of the gaps together, it doesn't make sense to show a feedback icon next to an individual gap; in these cases, you should turn off :term:`Show score feedback icon?` on each of the gaps.
+
+See `this example question <https://numbas.mathcentre.ac.uk/question/160739/mark-gap-fill-answers-as-a-set/>`__ which asks the student to give three different letters of the alphabet.
+
 *******************
 Variable generation
 *******************

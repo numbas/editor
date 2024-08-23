@@ -50,7 +50,7 @@
 
 }
 
-#main-content a.reference {
+#main-content a.reference:not(.nav-link) {
     text-decoration: underline;
 }
 
@@ -62,6 +62,11 @@
 }
 .toc-h4 {
  font-size: 1rem;
+}
+
+.toc-backref {
+    --pst-color-link: var(--pst-color-text-base);
+    text-decoration: none;
 }
 
 .rst-content .topic-title {

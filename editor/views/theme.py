@@ -104,7 +104,7 @@ class EditView(ThemeViewMixin,editable_package.EditView):
             filename = initial['filename']
 
             path = Path(DEFAULT_THEME_ROOT / filename)
-            initial['source'] = self.load_source(path)
+            initial['source'] = self.load_source(path, package_path=Path(DEFAULT_THEME_ROOT))
 
         return initial
 

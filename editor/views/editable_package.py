@@ -113,8 +113,11 @@ class EditView(SinglePackageFileMixin, ShowPackageFilesMixin, CanViewMixin, gene
             return forbidden_response(self.request,"This package is not editable.")
         return super().dispatch(request,*args,**kwargs)
 
-    def load_source(self,path):
-        if not path.resolve().is_relative_to(self.package.extracted_path):
+    def load_source(self, path, package_path=None):
+        if package_path is None:
+            package_path = Path(self.package.extracted_path)
+
+        if not path.resolve().is_relative_to(package_path):
             raise PermissionDenied(f"This file is not in the package's directory.")
 
         if path.is_dir():

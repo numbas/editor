@@ -140,7 +140,7 @@ For this question the answer is exactly :math:`49`, so put that in both fields.
 
 Now press :guilabel:`Run` again to try out the question.
 
-If you put ``49`` in the entry box and press :guilabel:`Submit answer`, the answer is marked correct; any other number is marked incorrect.
+If you put ``49`` in the entry box and press :guilabel:`Save answer`, the answer is marked correct; any other number is marked incorrect.
 
 .. figure:: screenshots/write-question/test-run.png
    :alt: A preview of the question. The answer '49' has been entered and the message "Your answer is correct" is underneath.

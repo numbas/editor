@@ -8,6 +8,7 @@
         {% selectproperty 'navigatemode' 'Question navigation mode' options='navigateModeOptions' options_text='niceName' help_url='exam/reference.html#term-Question-navigation-mode' %}
         {% booleanproperty 'showfrontpage' 'Show front page?' help_url='exam/reference.html#term-Show-front-page' %}
         {% property 'startpassword' 'Password to begin the exam' help_url='exam/reference.html#term-Password-to-begin-the-exam' %}
+        {% booleanproperty 'autoSubmit' 'Automatically submit answers?' help_url='exam/reference.html#term-Automatically-submit-answers' %}
         <div data-bind="fadeVisible: navigatemode().name=='sequence'">
             {% booleanproperty 'reverse' 'Allow move to previous question?' help_url='exam/reference.html#term-Allow-move-to-previous-question' %}
             {% booleanproperty 'browse' 'Allow to jump to any question?' help_url='exam/reference.html#term-Allow-jump-to-any-question' %}

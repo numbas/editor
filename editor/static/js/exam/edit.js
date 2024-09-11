@@ -136,6 +136,7 @@ $(document).ready(function() {
         this.preventleave = ko.observable(true);
         this.typeendtoleave = ko.observable(false);
         this.startpassword = ko.observable('');
+        this.autoSubmit = ko.observable(true);
         this.allowAttemptDownload = ko.observable(false);
         this.downloadEncryptionKey = ko.observable('');
 
@@ -450,6 +451,7 @@ $(document).ready(function() {
                     preventleave: this.preventleave(),
                     typeendtoleave: this.typeendtoleave(),
                     startpassword: this.startpassword(),
+                    autoSubmit: this.autoSubmit(),
                     allowAttemptDownload: this.allowAttemptDownload(),
                     downloadEncryptionKey: this.downloadEncryptionKey()
                 },
@@ -500,7 +502,7 @@ $(document).ready(function() {
             this.duration((content.duration||0)/60);
 
             if('navigation' in content) {
-                tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','preventleave','typeendtoleave','startpassword','allowAttemptDownload','downloadEncryptionKey','allowsteps'],this);
+                tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','preventleave','typeendtoleave','startpassword','autoSubmit', 'allowAttemptDownload','downloadEncryptionKey','allowsteps'],this);
                 var showresultspage = Editor.tryGetAttribute(content.navigation, 'showresultspage');
                 if(showresultspage) {
                     this.showresultspage(this.showResultsPageOptions.find(function(o){return o.name==showresultspage}));

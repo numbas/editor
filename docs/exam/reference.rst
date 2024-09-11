@@ -182,6 +182,13 @@ The navigation settings control how the student can move through the exam.
     Password to begin the exam
         If not blank, the student must enter the given password before they can begin the exam.
 
+    Automatically submit answers?
+        If ticked, then the student's answer to a part will be submitted and marked as soon as they move focus away from that part.
+
+        If not ticked, then the student must click the :guilabel:`Save answer` button to save their answer and have it marked.
+
+        Custom part types which don't have a focusable answer input element, such as those whose only interaction is with an interactive diagram, should ensure that they submit the student's answer after interaction has finished.
+
     Allow move to previous question?
         If ticked, then the user is allowed to move back to a question after leaving it.
 

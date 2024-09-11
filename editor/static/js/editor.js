@@ -233,7 +233,7 @@ $(document).ready(function() {
         }
     }
 
-    Editor.numbasVersion = 'exam_results_page_options';
+    Editor.numbasVersion = 'finer_feedback_settings';
 
     Editor.parseExam = function(source) {
         var content = /\/\/(.*?)\n(.*)/.exec(source)[2]
@@ -308,6 +308,12 @@ $(document).ready(function() {
             }
         });
     };
+
+    Editor.choiceObservable = function(choices) {
+        var obs = ko.observable(choices[0]);
+        obs.choices = choices;
+        return obs;
+    }
 
 
     // A task to make a string observable non-empty, e.g. give something a name.

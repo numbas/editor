@@ -106,15 +106,14 @@ $(document).ready(function() {
             new Editor.Tab('questions','Questions','file',{in_use: ko.computed(function() { return this.questions().length>0; },this)}),
             new Editor.Tab('diagnostic', 'Diagnostic', 'object-align-horizontal', {visible: ko.computed(function() { return this.navigatemode().name=='diagnostic'; },this)}),
             new Editor.Tab('display','Display','picture',{in_use: ko.computed(function() { return this.theme() && this.theme().path!='default'; },this)}),
-            new Editor.Tab('navigation','Navigation','tasks'),
-            new Editor.Tab('timing','Timing','time'),
+            new Editor.Tab('navigation', 'Navigation','tasks'),
             new Editor.Tab('feedback','Feedback','comment'),
             new Editor.Tab('settings','Settings','cog'),
             new Editor.Tab('network','Other versions','link',{in_use:item_json.other_versions_exist}),
             new Editor.Tab('history','Editing history','time',{in_use:item_json.editing_history_used})
         ]);
         if(item_json.editable) {
-            this.mainTabber.tabs.splice(6,0,new Editor.Tab('access','Access','lock'));
+            this.mainTabber.tabs.splice(8,0,new Editor.Tab('access','Access','lock'));
         }
         this.mainTabber.currentTab(this.mainTabber.tabs()[0]);
 
@@ -122,12 +121,6 @@ $(document).ready(function() {
         this.allowPause = ko.observable(true);
         this.percentPass = ko.observable(0);
         this.showfrontpage = ko.observable(true);
-        this.showResultsPageOptions = [
-            {name: 'oncompletion', niceName: 'On completion'},
-            {name: 'review', niceName: 'When entering in review mode'},
-            {name: 'never', niceName: 'Never'}
-        ];
-        this.showresultspage = ko.observable(this.showResultsPageOptions[0]);
 
         this.allowregen = ko.observable(true);
         this.reverse = ko.observable(true);
@@ -145,17 +138,53 @@ $(document).ready(function() {
         this.timeout = ko.observable(null);
         this.timedwarning = ko.observable(null);
 
-        this.showactualmark = ko.observable(true);
-        this.showtotalmark = ko.observable(true);
-        this.showanswerstate = ko.observable(true);
+        var feedback_timing_choices = this.feedback_timing_choices = ko.pureComputed(function() {
+            if(this.enterreviewmodeimmediately()) {
+                return ['always', 'inreview', 'never'];
+            } else {
+                return ['always', 'oncompletion', 'inreview', 'never'];
+            }
+        },this);
+
+        this.enterreviewmodeimmediately = ko.observable(true);
+
+        /** Create an observable for one of the feedback settings that might have "oncompletion" as one of the choices.
+         *  If `enterreviewmodeimmediately` is true, then "oncompletion" is not available, so a computed observable returns "inreview" in that case.
+         */
+        function feedback_timing_observable() {
+            var obs = Editor.choiceObservable(e.feedback_timing_choices);
+            return ko.computed({
+                read: function() {
+                    var v = obs();
+                    if(v=='oncompletion' && e.enterreviewmodeimmediately()) {
+                        return 'inreview';
+                    } else {
+                        return v;
+                    }
+                },
+                write: function(v) {
+                    return obs(v);
+                }
+            });
+        }
+
+        this.showactualmark = feedback_timing_observable();
+        this.showtotalmark = feedback_timing_observable();
+        this.showanswerstate = feedback_timing_observable();
+        this.showpartfeedbackmessages = feedback_timing_observable();
+
+        this.reveal_choices = ['inreview', 'never'];
+
+        this.revealexpectedanswers = Editor.choiceObservable(this.reveal_choices);
+        this.revealadvice = Editor.choiceObservable(this.reveal_choices);
+
         this.allowrevealanswer = ko.observable(true);
         this.advicethreshold = ko.observable(0);
         this.showstudentname = ko.observable(true);
 
-        this.reviewshowscore = ko.observable(true);
-        this.reviewshowfeedback = ko.observable(true);
-        this.reviewshowexpectedanswer = ko.observable(true);
-        this.reviewshowadvice = ko.observable(true);
+        this.activateReviewModeOptions = ['oncompletion', 'onreenter', 'never'];
+        this.activatereviewmode = Editor.choiceObservable(this.activateReviewModeOptions);
+
         this.resultsprintquestions = ko.observable(true);
         this.resultsprintadvice = ko.observable(true);
 
@@ -429,6 +458,7 @@ $(document).ready(function() {
 
         //returns a JSON-y object representing the exam
         toJSON: function() {
+
             return {
                 name: this.name(),
                 metadata: this.metadata(),
@@ -445,7 +475,6 @@ $(document).ready(function() {
                     browse: this.browse(),
                     allowsteps: this.allowsteps(),
                     showfrontpage: this.showfrontpage(),
-                    showresultspage: this.showresultspage().name,
                     navigatemode: this.navigatemode().name,
                     onleave: this.onleave.toJSON(),
                     preventleave: this.preventleave(),
@@ -461,17 +490,18 @@ $(document).ready(function() {
                     timedwarning: this.timedwarning.toJSON()
                 },
                 feedback: {
+                    enterreviewmodeimmediately: this.enterreviewmodeimmediately(),
                     showactualmark: this.showactualmark(),
                     showtotalmark: this.showtotalmark(),
                     showanswerstate: this.showanswerstate(),
+                    showpartfeedbackmessages: this.showpartfeedbackmessages(),
+                    revealexpectedanswers: this.revealexpectedanswers(),
+                    revealadvice: this.revealadvice(),
+                    activatereviewmode: this.activatereviewmode(),
                     allowrevealanswer: this.allowrevealanswer(),
                     advicethreshold: this.advicethreshold(),
                     intro: this.intro(),
                     end_message: this.end_message(),
-                    reviewshowscore: this.reviewshowscore(),
-                    reviewshowfeedback: this.reviewshowfeedback(),
-                    reviewshowexpectedanswer: this.reviewshowexpectedanswer(),
-                    reviewshowadvice: this.reviewshowadvice(),
                     results_options : {
                         printquestions : this.resultsprintquestions(),
                         printadvice : this.resultsprintadvice(),
@@ -503,10 +533,6 @@ $(document).ready(function() {
 
             if('navigation' in content) {
                 tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','preventleave','typeendtoleave','startpassword','autoSubmit', 'allowAttemptDownload','downloadEncryptionKey','allowsteps'],this);
-                var showresultspage = Editor.tryGetAttribute(content.navigation, 'showresultspage');
-                if(showresultspage) {
-                    this.showresultspage(this.showResultsPageOptions.find(function(o){return o.name==showresultspage}));
-                }
                 if(content.navigation.navigatemode=='adaptive') {
                     content.navigation.navigatemode = 'diagnostic';
                 }
@@ -524,7 +550,7 @@ $(document).ready(function() {
             }
 
             if('feedback' in content) {
-                tryLoad(content.feedback,['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold','intro','end_message','reviewshowscore','reviewshowfeedback','reviewshowexpectedanswer','reviewshowadvice'],this);
+                tryLoad(content.feedback,['showactualmark','showtotalmark','showanswerstate','showpartfeedbackmessages','revealexpectedanswers','revealadvice','activatereviewmode','allowrevealanswer','advicethreshold','intro','end_message'],this);
                 if ('results_options' in content.feedback){
                     tryLoad(content.feedback.results_options,['printquestions','printadvice'],this, ['resultsprintquestions', 'resultsprintadvice']);
                 }

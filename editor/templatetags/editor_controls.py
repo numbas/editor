@@ -163,3 +163,12 @@ def exam_event(context, property_name, name, *args, **kwargs):
         'message_id': 'input-'+property_name+'-message',
     })
     return context
+
+@register.inclusion_tag('editor-controls/radioproperty.html', takes_context=True)
+def radioproperty(context, name, value):
+    print(name, value)
+    context.update({
+        'name': name,
+        'value': value,
+    })
+    return context

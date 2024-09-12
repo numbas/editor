@@ -13,8 +13,6 @@
 
             {% property 'startpassword' 'Password to begin the exam' help_url='exam/reference.html#term-Password-to-begin-the-exam' %}
 
-            {% booleanproperty 'autoSubmit' 'Automatically submit answers?' help_url='exam/reference.html#term-Automatically-submit-answers' %}
-
             <div class="form-group">
                 <label class="{{form_label_class}} control-label">
                     Introduction
@@ -38,6 +36,8 @@
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
 
+            {% booleanproperty 'autoSubmit' 'Automatically submit answers?' help_url='exam/reference.html#term-Automatically-submit-answers' %}
+
             {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='exam/reference.html#term-Confirm-before-leaving-the-exam-while-it-s-running' %}
 
             <fieldset>
@@ -59,7 +59,6 @@
                 <div data-bind="fadeVisible: navigatemode().name=='sequence' || navigatemode().name=='diagnostic'">
                     {% exam_event 'onleave' 'On leaving a question' help_url='exam/reference.html#term-On-leaving-a-question' %}
                 </div>
-
             </fieldset>
 
             <fieldset>
@@ -89,15 +88,11 @@
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
 
-            {% selectproperty 'activatereviewmode' 'Activate review mode when' options='activateReviewModeOptions' options_text='niceName' help_url='exam/reference.html#term-Activate-review-mode-when' %}
-
             {% booleanproperty 'resultsprintquestions' 'Show questions in printed results summary?' help_url='exam/reference.html#term-Show-questions-in-printed-results-summary' %}
 
             <div data-bind="fadeVisible: resultsprintquestions">
                 {% booleanproperty 'resultsprintadvice' 'Show advice in printed results summary?' help_url='exam/reference.html#term-Show-advice-in-printed-results-summary' %}
             </div>
-
-            {% percentproperty 'percentPass' 'Pass threshold' help_url='exam/reference.html#term-Pass-threshold' %}
 
             <div class="form-group">
                 <label class="{{form_label_class}} control-label">
@@ -112,34 +107,16 @@
                 </div>
             </div>
 
-            <h4>
-                Feedback messages
-                {% helplink 'exam/reference.html#term-Feedback-messages' subject='feedback messages' %}
-            </h4>
-            <ul class="feedback-messages list-unstyled list-group" data-bind="foreach: feedbackMessages">
-                <li class="feedback-message list-group-item clearfix">
-                    <div class="form-group">
-                        <label class="{{form_label_class}} control-label">
-                            If the student's score is at least
-                        </label>
-                        <div class="{{form_control_class}} form-inline">
-                            <input type="range" data-bind="inputValue: threshold" step="1" min="0" max="100"> <span class="percentproperty value" data-bind="text: ko.unwrap(threshold)+'%'"></span>
-                        </div>
+            <fieldset>
+                <legend>Offline analysis</legend>
+
+                <form class="form-horizontal" data-bind="submit: Editor.noop">
+                    {% booleanproperty 'allowAttemptDownload' 'Allow the student to download their attempt data?' help_url='exam/reference.html#term-Allow-the-student-to-download-their-attempt-data' %}
+                    <div data-bind="fadeVisible: allowAttemptDownload">
+                        {% property 'downloadEncryptionKey' 'Key for encrypting student data downloads' help_url='exam/reference.html#term-Key-for-encrypting-student-data-downloads' %}
                     </div>
-                    <div class="form-group">
-                        <label class="{{form_label_class}} control-label">
-                            Show this message
-                        </label>
-                        <div class="{{form_control_class}}">
-                            <div {% if not editable %}disabled{% endif %} data-bind="writemaths: message"></div>
-                        </div>
-                    </div>
-                    <div class="{{form_control_class}} {{form_offset_class}}">
-                        {% if editable %}<button type="button" type="button" class="delete btn btn-sm btn-danger" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this feedback message</button>{% endif %}
-                    </div>
-                </li>
-            </ul>
-            {% if editable %}<button type="button" class="btn btn-primary" data-bind="click: addFeedbackMessage"><span class="glyphicon glyphicon-plus"></span> Add a feedback message</button>{% endif %}
+                </form>
+            </fieldset>
 
             {% endwith %}
         </form>

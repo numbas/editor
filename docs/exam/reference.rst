@@ -160,6 +160,10 @@ Display
         If a student tries to print during an exam, they will see nothing.
         If they try to print a completed exam, they will only see the results summary screen.
 
+    Show student's name?
+        If ticked, the student's name is shown on the results page after the exam has finished.
+        The student's name is only available when running the exam through a VLE - exams run standalone do not know the student's name.
+
 Navigation
 ==========
 
@@ -223,7 +227,7 @@ During the exam
         What to do when the student changes question, or tries to end the exam. 
         You can either warn the student and make them confirm that they'd like to leave, or prevent them from leaving the question entirely until they've answered it.
 
-    Require written confirmation before leaving the exam?
+    Require written confirmation before ending the exam?
         If ticked, then on clicking :guilabel:`End Exam` student will be asked to write the word 'end' in the :guilabel:`Confirm` dialog, before they are allowed to leave the exam.
 
     Exam duration
@@ -242,6 +246,8 @@ During the exam
 
 After the exam ends
 -------------------
+
+.. glossary::
 
     Show questions in printed results summary?
         If ticked, then the content of questions will be shown when printing an exam in review mode.
@@ -268,25 +274,61 @@ After the exam ends
 
         You won't be asked for this password, but it should be unique to you and kept secret so that students can't decrypt their attempt data files.
 
-.. glossary::
 .. _exam-feedback:
 
 Feedback
 ========
 
+The :guilabel:`Feedback` tab contains a table determining when certain kinds of feedback are shown to the student.
+
+There are four timing options:
+
 .. glossary::
-    Show current score?
-        If ticked, the student will be shown their score for each question and part immediately after submitting their answers.
 
-    Show maximum score?
-        If ticked, the student will be shown the maximum attainable score for each question and part.
+    Always
+        This feedback is always shown to the student.
 
-    Show answer state?
-        If ticked, then when the student submits an answer an icon will be displayed to let the student know if their answer was marked correct, partially correct or incorrect, and feedback messages will be displayed underneath.
+    In submitted mode
+        This feedback is only shown to the student once the exam has ended.
+        It is also shown when the student re-enters the exam in review mode.
 
-    Show student's name?
-        If ticked, the student's name is shown on the results page after the exam has finished.
-        The student's name is only available when running the exam through a VLE - exams run standalone do not know the student's name.
+    Only in review mode
+        If :term:`Enter review mode immediately on ending the exam?` is not ticked, then this feedback is only shown once the student re-enters the exam in review mode.
+        If it is ticked, then this feedback is also shown as soon as the exam ends.
+
+    Never
+        This feedback is never shown to the student.
+
+Here are the kinds of feedback that can be controlled:
+
+.. glossary::
+
+    Show answer correctness
+        After the student enters an answer, an icon will be displayed to let the student know if their answer was marked correct, partially correct or incorrect.
+
+    Show the student's score
+        The student will be shown their score for each question and part.
+
+    Show the maximum score
+        The student will be shown the maximum attainable score for each question and part.
+
+    Show part feedback messages
+        After the student enters an answer, they will be shown any feedback messages for each part.
+
+    Show expected answers
+        The student will be shown the expected answer for each part.
+
+    Show question advice
+        The student will be shown the :term:`Advice` section for each question.
+
+These are the other settings in the :guilabel:`Feedback` tab:
+
+.. glossary::
+
+    Enter review mode immediately on ending the exam?
+        If ticked, then as soon as the exam ends, it will enter review mode.
+        If not ticked, then once the exam ends it will enter "submitted mode".
+        The "review mode" feedback settings will only be applied when the student re-enters the exam in review mode.
 
     Pass threshold
         Define a pass/fail threshold for the student's total score, as a percentage of the available marks.
@@ -299,31 +341,6 @@ Feedback
         The message with the largest threshold less than or equal to the student's score is displayed.
 
         You could use these messages to suggest topics for the student to revise, direct them to support resources, or detail the consequences of failing the test.
-
-.. _review-mode-options:
-
-Review mode
------------
-
-The following settings apply to review mode: when a student has finished the exam, and goes back to review their attempt.
-
-.. glossary::
-    Show score in review mode?
-        If ticked, then in review mode (after the exam has finished) the student will be shown their score for each part, each question and the whole exam.
-        If not ticked, the student will not be shown their score, or icons related to the score, in review mode.
-        Ticking this does not override the :term:`Show score feedback icon?` setting for individual parts.
-
-    Show part feedback messages in review mode?
-        If ticked, then in review mode the student will be shown feedback messages for each part.
-
-    Show expected answers in review mode?
-        If ticked, then in review mode the expected answer for each part will be shown next to the student's answer input.
-        Ticking this does not override the :term:`Show correct answer on reveal?` setting for individual parts.
-
-    Show question advice in review mode?
-        If ticked, then the advice section will be displayed under each question in review mode.
-        If not ticked, the advice will never be shown.
-
 
 Events
 ======

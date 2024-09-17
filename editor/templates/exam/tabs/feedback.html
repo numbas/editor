@@ -8,7 +8,7 @@
 
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         {% with form_label_class='col-sm-3' form_control_class='col-sm-6' form_offset_class='col-sm-offset-3' %}
-            {% booleanproperty 'enterreviewmodeimmediately' 'Enter review mode immediately on ending the exam?' help_url='exam/reference.html#term-Enter-feedback-mode-immediately-on-ending-the-exam' %}
+            {% booleanproperty 'enterreviewmodeimmediately' 'Enter review mode immediately on ending the exam?' help_url='exam/reference.html#term-Enter-review-mode-immediately-on-ending-the-exam' %}
 
             <table class="table feedback-settings-table">
                 <thead>
@@ -22,7 +22,7 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <th scope="row">Show answer correctness {% helplink 'exam/reference.html#term-Show-answer-state' %}</th>
+                        <th scope="row">Show answer correctness {% helplink 'exam/reference.html#term-Show-answer-correctness' %}</th>
                         <!-- ko foreach: feedback_timing_choices -->
                         <td><input type="radio" name="showanswerstate" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.showanswerstate"></td>
                         <!-- /ko -->

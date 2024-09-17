@@ -159,6 +159,7 @@ The following notes must be defined in a diagnostic algorithm.
 They are evaluated at different times during the exam.
 
 .. data:: state
+    :noindex:
 
     Produces the initial value of the ``state`` object.
 

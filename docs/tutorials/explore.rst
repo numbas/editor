@@ -36,7 +36,7 @@ You can help to improve the quality of the public database by providing feedback
 If you spot a problem with an item, click the :guilabel:`Status` button at the top-right of the page, and select an appropriate feedback stamp.
 If you've got time, give some more information about what's wrong by clicking the :guilabel:`Editing history` tab and writing a comment.
 
-.. figure:: explore/feedback-stamp.png
+.. figure:: screenshots/feedback-stamp.png
     :alt: Screenshot of the question editor, with the feedback dropdown visible.
 
     Giving feedback on a question.

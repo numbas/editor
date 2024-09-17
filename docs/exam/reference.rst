@@ -68,7 +68,7 @@ Admin controls
             Add this exam to a :ref:`queue <item_queues>`.
 
         Analyse attempt data
-            This action is only available when :term:`Allow students to download their attempt data?` is turned on.
+            This action is only available when :term:`Allow the student to download their attempt data?` is turned on.
 
             See :ref:`offline-analysis`.
 
@@ -127,7 +127,7 @@ Once you've added some questions to your exam, you can drag and drop questions i
     Adding questions to an exam and rearranging them.
 
 You can give a question a custom name, which will be shown to the student.
-In the "Sequential" :ref:`question navigation mode`, questions with custom names are not numbered and do not affect the numbering of other questions in the exam.
+In the "Sequential" :term:`question navigation mode`, questions with custom names are not numbered and do not affect the numbering of other questions in the exam.
 
 Click the pencil icon labelled :guilabel:`Edit this question` to edit an individual question.
 
@@ -319,7 +319,7 @@ Here are the kinds of feedback that can be controlled:
         The student will be shown the expected answer for each part.
 
     Show question advice
-        The student will be shown the :term:`Advice` section for each question.
+        The student will be shown the :ref:`Advice` section for each question.
 
 These are the other settings in the :guilabel:`Feedback` tab:
 

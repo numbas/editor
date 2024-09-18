@@ -107,9 +107,11 @@ You can dismiss this explanation by pressing the :kbd:`Escape` key or by moving 
 
 After the answers to a question have been revealed, there is often a box showing the expected answer after each input.
 
-After the prompt text and input controls is a button labelled :guilabel:`Submit part`.
+After the prompt text and input controls is a button labelled :guilabel:`Save answer`.
 Clicking this button causes your answer to be marked.
-You may be shown some immediate feedback after the :guilabel:`Submit part` button, and your score for the part.
+Once your answer has been marked, the label for the button changes to :guilabel:`Answer saved`.
+Most exams will also automatically submit your answer after you move away from a part that you have entered an answer for.
+You may be shown some immediate feedback after the :guilabel:`Save answer` button, and your score for the part.
 
 You may submit answers as many times as you like.
 

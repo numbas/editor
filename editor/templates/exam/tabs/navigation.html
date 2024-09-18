@@ -3,31 +3,124 @@
 {% load editor_controls %}
 
 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='navigation'}">
-    <form class="form-horizontal" data-bind="submit: Editor.noop">
-        {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
-        {% selectproperty 'navigatemode' 'Question navigation mode' options='navigateModeOptions' options_text='niceName' help_url='exam/reference.html#term-Question-navigation-mode' %}
-        {% booleanproperty 'showfrontpage' 'Show front page?' help_url='exam/reference.html#term-Show-front-page' %}
-        {% property 'startpassword' 'Password to begin the exam' help_url='exam/reference.html#term-Password-to-begin-the-exam' %}
-        <div data-bind="fadeVisible: navigatemode().name=='sequence'">
-            {% booleanproperty 'reverse' 'Allow move to previous question?' help_url='exam/reference.html#term-Allow-move-to-previous-question' %}
-            {% booleanproperty 'browse' 'Allow to jump to any question?' help_url='exam/reference.html#term-Allow-jump-to-any-question' %}
-        </div>
-        {% booleanproperty 'allowsteps' 'Enable steps?' help_url='exam/reference.html#term-Enable-steps' %}
-        {% booleanproperty 'allowregen' 'Allow user to regenerate questions?' help_url='exam/reference.html#term-Allow-user-to-regenerate-questions' %}
-        {% selectproperty 'showresultspage' 'Reveal answers to all questions' options='showResultsPageOptions' options_text='niceName' help_url='exam/reference.html#term-Reveal-answers-to-all-questions' %}
-        {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='exam/reference.html#term-Confirm-before-leaving-the-exam-while-it-s-running' %}
-        {% booleanproperty 'typeendtoleave' 'Require written confirmation before leaving the exam?' help_url='exam/reference.html#term-Require-written-confirmation-before-leaving-the-exam' %}
-        <div data-bind="fadeVisible: navigatemode().name=='sequence' || navigatemode().name=='diagnostic'">
-            {% exam_event 'onleave' 'On leaving a question' help_url='exam/reference.html#term-On-leaving-a-question' %}
-        </div>
-        {% endwith %}
+    <fieldset>
+        <legend>Before the exam starts</legend>
 
-        <h4>Offline analysis</h4>
-        {% booleanproperty 'allowAttemptDownload' 'Allow the student to download their attempt data?' help_url='exam/reference.html#term-Allow-the-student-to-download-their-attempt-data' %}
-        <div data-bind="fadeVisible: allowAttemptDownload">
-            {% property 'downloadEncryptionKey' 'Key for encrypting student data downloads' help_url='exam/reference.html#term-Key-for-encrypting-student-data-downloads' %}
-        </div>
-    </form>
+        <form class="form-horizontal" data-bind="submit: Editor.noop">
+            {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
+
+            {% booleanproperty 'showfrontpage' 'Show front page?' help_url='exam/reference.html#term-Show-front-page' %}
+
+            {% property 'startpassword' 'Password to begin the exam' help_url='exam/reference.html#term-Password-to-begin-the-exam' %}
+
+            <div class="form-group">
+                <label class="{{form_label_class}} control-label">
+                    Introduction
+                    {% helplink 'exam/reference.html#term-Introduction' subject='the exam introduction' %}
+                </label>
+                <div class="{{form_control_class}}">
+                    <div {% if not editable %}disabled{% endif %} data-bind="writemaths: intro"></div>
+                    <p class="help-block">
+                        Give any information applying to the whole exam, which the student will see before they begin.
+                    </p>
+                </div>
+            </div>
+
+            {% endwith %}
+        </form>
+    </fieldset>
+
+    <fieldset>
+        <legend>During the exam</legend>
+
+        <form class="form-horizontal" data-bind="submit: Editor.noop">
+            {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
+
+            {% booleanproperty 'autoSubmit' 'Automatically submit answers?' help_url='exam/reference.html#term-Automatically-submit-answers' %}
+
+            {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='exam/reference.html#term-Confirm-before-leaving-the-exam-while-it-s-running' %}
+
+            <fieldset>
+                <legend>Moving between questions</legend>
+
+                {% selectproperty 'navigatemode' 'Question navigation mode' options='navigateModeOptions' options_text='niceName' help_url='exam/reference.html#term-Question-navigation-mode' %}
+
+                <div data-bind="fadeVisible: navigatemode().name=='sequence'">
+                    {% booleanproperty 'reverse' 'Allow move to previous question?' help_url='exam/reference.html#term-Allow-move-to-previous-question' %}
+                    {% booleanproperty 'browse' 'Allow to jump to any question?' help_url='exam/reference.html#term-Allow-jump-to-any-question' %}
+                </div>
+
+                {% booleanproperty 'allowsteps' 'Enable steps?' help_url='exam/reference.html#term-Enable-steps' %}
+
+                {% booleanproperty 'allowregen' 'Allow the student to regenerate questions?' help_url='exam/reference.html#term-Allow-the-student-to-regenerate-questions' %}
+
+                {% booleanproperty 'allowrevealanswer' 'Allow revealing answers to a single question?' help_url='exam/reference.html#term-Allow-revealing-answers-to-a-single-question' %}
+
+                <div data-bind="fadeVisible: navigatemode().name=='sequence' || navigatemode().name=='diagnostic'">
+                    {% exam_event 'onleave' 'On leaving a question' help_url='exam/reference.html#term-On-leaving-a-question' %}
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Ending the exam</legend>
+
+                {% booleanproperty 'typeendtoleave' 'Require written confirmation before ending the exam?' help_url='exam/reference.html#term-Require-written-confirmation-before-ending-the-exam' %}
+            </fieldset>
+
+            <fieldset>
+                <legend>Timing</legend>
+
+                {% property 'duration' 'Exam duration (minutes)' min=0 help_url='exam/reference.html#term-Exam-duration' %}
+
+                {% booleanproperty 'allowPause' 'Allow pausing?' help_url='exam/reference.html#term-Allow-pausing' %}
+
+                {% exam_event 'timeout' 'On timeout' help_url='exam/reference.html#term-On-timeout-event' %}
+
+                {% exam_event 'timedwarning' '5 minutes before timeout' help_url='exam/reference.html#term-5-minutes-before-timeout-event' %}
+            </fieldset>
+
+            {% endwith %}
+        </form>
+    </fieldset>
+
+    <fieldset>
+        <legend>After the exam ends</legend>
+        <form class="form-horizontal" data-bind="submit: Editor.noop">
+            {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
+
+            {% booleanproperty 'resultsprintquestions' 'Show questions in printed results summary?' help_url='exam/reference.html#term-Show-questions-in-printed-results-summary' %}
+
+            <div data-bind="fadeVisible: resultsprintquestions">
+                {% booleanproperty 'resultsprintadvice' 'Show advice in printed results summary?' help_url='exam/reference.html#term-Show-advice-in-printed-results-summary' %}
+            </div>
+
+            <div class="form-group">
+                <label class="{{form_label_class}} control-label">
+                    End message
+                    {% helplink 'exam/reference.html#term-End-message' subject='the exam end message' %}
+                </label>
+                <div class="{{form_control_class}}">
+                    <div {% if not editable %}disabled{% endif %} data-bind="writemaths: end_message"></div>
+                    <p class="help-block">
+                        This will be shown to the student once the exam is finished.
+                    </p>
+                </div>
+            </div>
+
+            <fieldset>
+                <legend>Offline analysis</legend>
+
+                <form class="form-horizontal" data-bind="submit: Editor.noop">
+                    {% booleanproperty 'allowAttemptDownload' 'Allow the student to download their attempt data?' help_url='exam/reference.html#term-Allow-the-student-to-download-their-attempt-data' %}
+                    <div data-bind="fadeVisible: allowAttemptDownload">
+                        {% property 'downloadEncryptionKey' 'Key for encrypting student data downloads' help_url='exam/reference.html#term-Key-for-encrypting-student-data-downloads' %}
+                    </div>
+                </form>
+            </fieldset>
+
+            {% endwith %}
+        </form>
+    </fieldset>
 
     {% if editable %}
     <editor-pager params="editor: $root, previousTab: 'display', nextTab: 'timing', task_group: 'navigation'"></editor-pager>

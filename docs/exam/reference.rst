@@ -68,7 +68,7 @@ Admin controls
             Add this exam to a :ref:`queue <item_queues>`.
 
         Analyse attempt data
-            This action is only available when :term:`Allow students to download their attempt data?` is turned on.
+            This action is only available when :term:`Allow the student to download their attempt data?` is turned on.
 
             See :ref:`offline-analysis`.
 
@@ -127,7 +127,7 @@ Once you've added some questions to your exam, you can drag and drop questions i
     Adding questions to an exam and rearranging them.
 
 You can give a question a custom name, which will be shown to the student.
-In the "Sequential" :ref:`question navigation mode`, questions with custom names are not numbered and do not affect the numbering of other questions in the exam.
+In the "Sequential" :term:`question navigation mode`, questions with custom names are not numbered and do not affect the numbering of other questions in the exam.
 
 Click the pencil icon labelled :guilabel:`Edit this question` to edit an individual question.
 
@@ -160,12 +160,43 @@ Display
         If a student tries to print during an exam, they will see nothing.
         If they try to print a completed exam, they will only see the results summary screen.
 
+    Show student's name?
+        If ticked, the student's name is shown on the results page after the exam has finished.
+        The student's name is only available when running the exam through a VLE - exams run standalone do not know the student's name.
+
 Navigation
 ==========
 
 The navigation settings control how the student can move through the exam.
 
+Before the exam starts
+----------------------
+
 .. glossary::
+    Show front page?
+        If ticked, then an intro screen is shown to the student before the exam starts, 
+
+    Password to begin the exam
+        If not blank, the student must enter the given password before they can begin the exam.
+
+    Introduction
+        This text is shown to the student on the front page, before the exam starts. 
+        You could use it to outline the rules of the exam, or just summarise the subjects covered.
+
+During the exam
+---------------
+
+.. glossary::
+    Automatically submit answers?
+        If ticked, then the student's answer to a part will be submitted and marked as soon as they move focus away from that part.
+
+        If not ticked, then the student must click the :guilabel:`Save answer` button to save their answer and have it marked.
+
+        Custom part types which don't have a focusable answer input element, such as those whose only interaction is with an interactive diagram, should ensure that they submit the student's answer after interaction has finished.
+
+    Confirm before leaving the exam while it's running?
+        If ticked, the student will be asked to confirm that they really want to leave if they try to close the exam while it's running, for example by pressing the browser's back button or closing the tab the exam is running in.
+
     Question navigation mode
          If "Sequential" is chosen, then the student is shown the questions in a numbered list.
          When the exam begins, the student is immediately shown the first question.
@@ -176,12 +207,6 @@ The navigation settings control how the student can move through the exam.
          There are no :guilabel:`End exam` or :guilabel:`Pause` buttons - this mode is intended for purely formative use.
          When the exam begins, the student is shown the menu.
 
-    Show front page?
-        If ticked, then an intro screen is shown to the student before the exam starts, 
-
-    Password to begin the exam
-        If not blank, the student must enter the given password before they can begin the exam.
-
     Allow move to previous question?
         If ticked, then the user is allowed to move back to a question after leaving it.
 
@@ -191,47 +216,20 @@ The navigation settings control how the student can move through the exam.
     Enable steps?
         If unticked, then part steps will not be offered to the student, regardless of whether any have been defined in the exam's questions.
 
-    Allow user to regenerate questions?
+    Allow the student to regenerate questions?
         If ticked, then the :guilabel:`Try another question like this one` button is displayed at the bottom of each question, allowing the student to re-randomise the question and have another attempt at it.
 
-    Reveal answers to all questions
-        Control when the student may see the results page, after ending the exam.
-        
-        If :guilabel:`On completion` is chosen, the results page will be shown immediately after the student ends the exam, and when they re-enter in review mode.
-
-        If :guilabel:`When entering in review mode` is chosen, on ending the exam the student will just be shown a screen directing them to exit. When they re-enter the exam in review mode, they will be shown the results page.
-
-        If :guilabel:`Never` is chosen, the student will never be shown the results page, even when entering in review mode.
-
-        When an instructor opens a student's attempt, they are always shown the results page. (This feature only works in the Numbas LTI provider, not in a generic SCORM player)
-
-    Confirm before leaving the exam while it's running?
-        If ticked, the student will be asked to confirm that they really want to leave if they try to close the exam while it's running, for example by pressing the browser's back button or closing the tab the exam is running in.
-
-    Require written confirmation before leaving the exam
-        If ticked, then on clicking :guilabel:`End Exam` student will be asked to write the word 'end' in the :guilabel:`Confirm` dialog, before they are allowed to leave the exam.
+    Allow revealing answers to a single question?
+        If ticked, then the :guilabel:`Reveal answer` button is enabled on each question. 
+        If the student chooses to reveal the answer to a question, they are shown the correct answer but lose all their marks and can not re-attempt the question.
 
     On leaving a question
         What to do when the student changes question, or tries to end the exam. 
         You can either warn the student and make them confirm that they'd like to leave, or prevent them from leaving the question entirely until they've answered it.
 
-    Allow the student to download their attempt data?
-        If ticked, the student will be shown a button :guilabel:`Download your attempt data` once they have ended the exam.
-        
-        The data file that they are given contains an encrypted copy of all data to do with their attempt.
-        The encryption uses the password specified in :term:`Key for encrypting student data downloads`.
+    Require written confirmation before ending the exam?
+        If ticked, then on clicking :guilabel:`End Exam` student will be asked to write the word 'end' in the :guilabel:`Confirm` dialog, before they are allowed to leave the exam.
 
-        Use the :ref:`offline analysis <offline-analysis>` tools to decrypt and analyse these attempt data files.
-
-    Key for encrypting student data downloads
-        The password that should be used to encrypt student attempt data files if using offline attempt analysis.
-
-        You won't be asked for this password, but it should be unique to you and kept secret so that students can't decrypt their attempt data files.
-
-Timing
-======
-
-.. glossary::
     Exam duration
         The length of time students are allowed to attempt the exam. 
         If set to zero, then there is no time limit.
@@ -246,72 +244,10 @@ Timing
     5 minutes before timeout (event)
         If set to :guilabel:`Warn`, the given message is displayed five minutes before the student runs out of time.
 
-.. _exam-feedback:
-
-Feedback
-========
+After the exam ends
+-------------------
 
 .. glossary::
-    Show current score?
-        If ticked, the student will be shown their score for each question and part immediately after submitting their answers.
-
-    Show maximum score?
-        If ticked, the student will be shown the maximum attainable score for each question and part.
-
-    Show answer state?
-        If ticked, then when the student submits an answer an icon will be displayed to let the student know if their answer was marked correct, partially correct or incorrect, and feedback messages will be displayed underneath.
-
-    Allow reveal answer?
-        If ticked, then the :guilabel:`Reveal answer` button is enabled on each question. 
-        If the student chooses to reveal the answer to a question, they are shown the correct answer but lose all their marks and can not re-attempt the question.
-
-    Show student's name?
-        If ticked, the student's name is shown on the results page after the exam has finished.
-        The student's name is only available when running the exam through a VLE - exams run standalone do not know the student's name.
-
-    Pass threshold
-        Define a pass/fail threshold for the student's total score, as a percentage of the available marks.
-        The pass/fail message will be displayed when the student ends the exam. 
-        If this is set to zero, then no message is displayed.
-
-    Introduction
-        This text is shown to the student on the front page, before the exam starts. 
-        You could use it to outline the rules of the exam, or just summarise the subjects covered.
-
-    End message
-        This text is shown to the student on the results page, after the exam has finished.
-        You could use it to tell the student what to do next, if there are offline components to the assessment.
-
-    Feedback messages
-        You can write a list of messages, paired with threshold percentages, to show to the student at the end of the exam.
-        The student's score is calculated as a percentage, rounded to the nearest 1%, and compared with the thresholds for each message.
-        The message with the largest threshold less than or equal to the student's score is displayed.
-
-        You could use these messages to suggest topics for the student to revise, direct them to support resources, or detail the consequences of failing the test.
-
-.. _review-mode-options:
-
-Review mode
------------
-
-The following settings apply to review mode: when a student has finished the exam, and goes back to review their attempt.
-
-.. glossary::
-    Show score in review mode?
-        If ticked, then in review mode (after the exam has finished) the student will be shown their score for each part, each question and the whole exam.
-        If not ticked, the student will not be shown their score, or icons related to the score, in review mode.
-        Ticking this does not override the :term:`Show score feedback icon?` setting for individual parts.
-
-    Show part feedback messages in review mode?
-        If ticked, then in review mode the student will be shown feedback messages for each part.
-
-    Show expected answers in review mode?
-        If ticked, then in review mode the expected answer for each part will be shown next to the student's answer input.
-        Ticking this does not override the :term:`Show correct answer on reveal?` setting for individual parts.
-
-    Show question advice in review mode?
-        If ticked, then the advice section will be displayed under each question in review mode.
-        If not ticked, the advice will never be shown.
 
     Show questions in printed results summary?
         If ticked, then the content of questions will be shown when printing an exam in review mode.
@@ -321,6 +257,90 @@ The following settings apply to review mode: when a student has finished the exa
         If ticked, then the advice section will be displayed under each question when printing an exam in review mode.
         If not ticked, then only the question statement and parts will be shown, only if :term:`Show questions in printed results summary?` is ticked.
 
+    End message
+        This text is shown to the student on the results page, after the exam has finished.
+        You could use it to tell the student what to do next, if there are offline components to the assessment.
+
+    Allow the student to download their attempt data?
+        If ticked, the student will be shown a button :guilabel:`Download your attempt data` once they have ended the exam.
+        
+        The data file that they are given contains an encrypted copy of all data to do with their attempt.
+        The encryption uses the password specified in :term:`Key for encrypting student data downloads`.
+
+        Use the :ref:`offline analysis <offline-analysis>` tools to decrypt and analyse these attempt data files.
+
+    Key for encrypting student data downloads
+        The password that should be used to encrypt student attempt data files if using offline attempt analysis.
+
+        You won't be asked for this password, but it should be unique to you and kept secret so that students can't decrypt their attempt data files.
+
+.. _exam-feedback:
+
+Feedback
+========
+
+The :guilabel:`Feedback` tab contains a table determining when certain kinds of feedback are shown to the student.
+
+There are four timing options:
+
+.. glossary::
+
+    Always
+        This feedback is always shown to the student.
+
+    In submitted mode
+        This feedback is only shown to the student once the exam has ended.
+        It is also shown when the student re-enters the exam in review mode.
+
+    Only in review mode
+        If :term:`Enter review mode immediately on ending the exam?` is not ticked, then this feedback is only shown once the student re-enters the exam in review mode.
+        If it is ticked, then this feedback is also shown as soon as the exam ends.
+
+    Never
+        This feedback is never shown to the student.
+
+Here are the kinds of feedback that can be controlled:
+
+.. glossary::
+
+    Show answer correctness
+        After the student enters an answer, an icon will be displayed to let the student know if their answer was marked correct, partially correct or incorrect.
+
+    Show the student's score
+        The student will be shown their score for each question and part.
+
+    Show the maximum score
+        The student will be shown the maximum attainable score for each question and part.
+
+    Show part feedback messages
+        After the student enters an answer, they will be shown any feedback messages for each part.
+
+    Show expected answers
+        The student will be shown the expected answer for each part.
+
+    Show question advice
+        The student will be shown the :ref:`Advice` section for each question.
+
+These are the other settings in the :guilabel:`Feedback` tab:
+
+.. glossary::
+
+    Enter review mode immediately on ending the exam?
+        If ticked, then as soon as the exam ends, it will enter review mode.
+        If not ticked, then once the exam ends it will enter "submitted mode".
+        The "review mode" feedback settings will only be applied when the student re-enters the exam in review mode.
+
+    Pass threshold
+        Define a pass/fail threshold for the student's total score, as a percentage of the available marks.
+        The pass/fail message will be displayed when the student ends the exam. 
+        If this is set to zero, then no message is displayed.
+
+    Feedback messages
+        You can write a list of messages, paired with threshold percentages, to show to the student at the end of the exam.
+        The student's score is calculated as a percentage, rounded to the nearest 1%, and compared with the thresholds for each message.
+        The message with the largest threshold less than or equal to the student's score is displayed.
+
+        You could use these messages to suggest topics for the student to revise, direct them to support resources, or detail the consequences of failing the test.
 
 Events
 ======

@@ -24,25 +24,25 @@
                     <tr>
                         <th scope="row">Show answer correctness {% helplink 'exam/reference.html#term-Show-answer-correctness' %}</th>
                         <!-- ko foreach: feedback_timing_choices -->
-                        <td><input type="radio" name="showanswerstate" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.showanswerstate"></td>
+                        <td><input type="radio" name="showanswerstatewhen" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.showanswerstatewhen"></td>
                         <!-- /ko -->
                     </tr>
                     <tr>
                         <th scope="row">Show the student's score {% helplink 'exam/reference.html#term-Show-the-student-s-score' %}</th>
                         <!-- ko foreach: feedback_timing_choices -->
-                        <td><input type="radio" name="showactualmark" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.showactualmark"></td>
+                        <td><input type="radio" name="showactualmarkwhen" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.showactualmarkwhen"></td>
                         <!-- /ko -->
                     </tr>
                     <tr>
                         <th scope="row">Show the maximum score {% helplink 'exam/reference.html#term-Show-the-maximum-score' %}</th>
                         <!-- ko foreach: feedback_timing_choices -->
-                        <td><input type="radio" name="showtotalmark" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.showtotalmark"></td>
+                        <td><input type="radio" name="showtotalmarkwhen" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.showtotalmarkwhen"></td>
                         <!-- /ko -->
                     </tr>
                     <tr>
                         <th scope="row">Show part feedback messages {% helplink 'exam/reference.html#term-Show-part-feedback-messages' %}</th>
                         <!-- ko foreach: feedback_timing_choices -->
-                        <td><input type="radio" name="showpartfeedbackmessages" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.showpartfeedbackmessages"></td>
+                        <td><input type="radio" name="showpartfeedbackmessageswhen" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.showpartfeedbackmessageswhen"></td>
                         <!-- /ko -->
                     </tr>
                     <tr>
@@ -50,7 +50,7 @@
                         <td data-bind="visible: !enterreviewmodeimmediately()"></td>
                         <td></td>
                         <!-- ko foreach: reveal_choices -->
-                        <td><input type="radio" name="revealexpectedanswers" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.revealexpectedanswers"></td>
+                        <td><input type="radio" name="showexpectedanswerswhen" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.showexpectedanswerswhen"></td>
                         <!-- /ko -->
                     </tr>
                     <tr>
@@ -58,7 +58,7 @@
                         <td data-bind="visible: !enterreviewmodeimmediately()"></td>
                         <td></td>
                         <!-- ko foreach: reveal_choices -->
-                        <td><input type="radio" name="revealadvice" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.revealadvice"></td>
+                        <td><input type="radio" name="showadvicewhen" data-bind="attr: {'aria-labelledby': 'radio-'+$data, value: $data}, checked: $parent.showadvicewhen"></td>
                         <!-- /ko -->
                     </tr>
                 </tbody>

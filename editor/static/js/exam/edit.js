@@ -152,7 +152,7 @@ $(document).ready(function() {
          *  If `enterreviewmodeimmediately` is true, then "oncompletion" is not available, so a computed observable returns "inreview" in that case.
          */
         function feedback_timing_observable() {
-            var obs = Editor.choiceObservable(e.feedback_timing_choices);
+            var obs = Editor.choiceObservable(e.feedback_timing_choices());
             return ko.computed({
                 read: function() {
                     var v = obs();
@@ -168,15 +168,15 @@ $(document).ready(function() {
             });
         }
 
-        this.showactualmark = feedback_timing_observable();
-        this.showtotalmark = feedback_timing_observable();
-        this.showanswerstate = feedback_timing_observable();
-        this.showpartfeedbackmessages = feedback_timing_observable();
+        this.showactualmarkwhen = feedback_timing_observable();
+        this.showtotalmarkwhen = feedback_timing_observable();
+        this.showanswerstatewhen = feedback_timing_observable();
+        this.showpartfeedbackmessageswhen = feedback_timing_observable();
 
         this.reveal_choices = ['inreview', 'never'];
 
-        this.revealexpectedanswers = Editor.choiceObservable(this.reveal_choices);
-        this.revealadvice = Editor.choiceObservable(this.reveal_choices);
+        this.showexpectedanswerswhen = Editor.choiceObservable(this.reveal_choices);
+        this.showadvicewhen = Editor.choiceObservable(this.reveal_choices);
 
         this.allowrevealanswer = ko.observable(true);
         this.advicethreshold = ko.observable(0);
@@ -482,7 +482,10 @@ $(document).ready(function() {
                     startpassword: this.startpassword(),
                     autoSubmit: this.autoSubmit(),
                     allowAttemptDownload: this.allowAttemptDownload(),
-                    downloadEncryptionKey: this.downloadEncryptionKey()
+                    downloadEncryptionKey: this.downloadEncryptionKey(),
+
+                    // deprecated setting included for compatibility with old versions of the LTI provider, to show roughly equivalent settings in the dashboard even though they don't know about the new settings
+                    showresultspage: this.enterreviewmodeimmediately() ? 'oncompletion' : this.showactualmarkwhen() == 'never' ? 'never' : 'review',
                 },
                 timing: {
                     allowPause: this.allowPause(),
@@ -491,12 +494,12 @@ $(document).ready(function() {
                 },
                 feedback: {
                     enterreviewmodeimmediately: this.enterreviewmodeimmediately(),
-                    showactualmark: this.showactualmark(),
-                    showtotalmark: this.showtotalmark(),
-                    showanswerstate: this.showanswerstate(),
-                    showpartfeedbackmessages: this.showpartfeedbackmessages(),
-                    revealexpectedanswers: this.revealexpectedanswers(),
-                    revealadvice: this.revealadvice(),
+                    showactualmarkwhen: this.showactualmarkwhen(),
+                    showtotalmarkwhen: this.showtotalmarkwhen(),
+                    showanswerstatewhen: this.showanswerstatewhen(),
+                    showpartfeedbackmessageswhen: this.showpartfeedbackmessageswhen(),
+                    showexpectedanswerswhen: this.showexpectedanswerswhen(),
+                    showadvicewhen: this.showadvicewhen(),
                     activatereviewmode: this.activatereviewmode(),
                     allowrevealanswer: this.allowrevealanswer(),
                     advicethreshold: this.advicethreshold(),
@@ -506,7 +509,17 @@ $(document).ready(function() {
                         printquestions : this.resultsprintquestions(),
                         printadvice : this.resultsprintadvice(),
                     },
-                    feedbackmessages: this.feedbackMessages().map(function(f){return f.toJSON()})
+                    feedbackmessages: this.feedbackMessages().map(function(f){return f.toJSON()}),
+
+                    // deprecated settings included for compatibility with old versions of the LTI provider, to show roughly equivalent settings in the dashboard even though they don't know about the new settings
+                    reviewshowexpectedanswer: this.showexpectedanswerswhen() != 'never',
+                    showanswerstate: this.showpartfeedbackmessageswhen() == 'always',
+                    reviewshowfeedback: this.showpartfeedbackmessageswhen() != 'never',
+                    showactualmark: this.showactualmarkwhen() == 'always',
+                    showtotalmark: this.showtotalmarkwhen() == 'always',
+                    reviewshowscore: this.showactualmarkwhen() != 'never',
+                    reviewshowfeedback: this.showactualmarkwhen() != 'never',
+                    reviewshowadvice: this.showadvicewhen() != 'never'
                 },
                 diagnostic: {
                     knowledge_graph: this.diagnostic.knowledge_graph.toJSON(),
@@ -550,7 +563,23 @@ $(document).ready(function() {
             }
 
             if('feedback' in content) {
-                tryLoad(content.feedback,['showactualmark','showtotalmark','showanswerstate','showpartfeedbackmessages','revealexpectedanswers','revealadvice','activatereviewmode','allowrevealanswer','advicethreshold','intro','end_message'],this);
+                tryLoad(
+                    content.feedback,
+                    [
+                        'showactualmarkwhen',
+                        'showtotalmarkwhen',
+                        'showanswerstatewhen',
+                        'showpartfeedbackmessageswhen',
+                        'showexpectedanswerswhen',
+                        'showadvicewhen',
+                        'activatereviewmode',
+                        'allowrevealanswer',
+                        'advicethreshold',
+                        'intro',
+                        'end_message'
+                    ],
+                    this
+                );
                 if ('results_options' in content.feedback){
                     tryLoad(content.feedback.results_options,['printquestions','printadvice'],this, ['resultsprintquestions', 'resultsprintadvice']);
                 }

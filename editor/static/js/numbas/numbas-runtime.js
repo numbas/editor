@@ -16153,13 +16153,7 @@ if(res) { \
         };
 
         this.question && this.question.updateScore();
-        if(this.answered)
-        {
-            if(!(this.parentPart && this.parentPart.type=='gapfill') && this.settings.showFeedbackIcon && this.marks!=0) {
-                this.markingComment(
-                    R('part.marking.total score',{count:this.score})
-                );
-            }
+        if(this.answered) {
             if(this.display) {
                 this.display.showScore(this.answered);
             }
@@ -16617,14 +16611,11 @@ if(res) { \
                     action.message = '';
                 }
                 if(change!=0) {
-                    if(util.isNonemptyHTML(action.message)) {
-                        action.message += '\n\n';
-                    }
                     var marks = Math.abs(change);
                     if(change>0) {
-                        action.message += R('feedback.you were awarded',{count:marks});
+                        action.credit_message = R('feedback.you were awarded',{count:marks});
                     } else if(change<0) {
-                        action.message += R('feedback.taken away',{count:marks});
+                        action.credit_message = R('feedback.taken away',{count:marks});
                     }
                 }
             }
@@ -26439,8 +26430,8 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             <div class="matrix-input" data-bind="attr: {title: title}">
                 <!-- ko if: allowResize --><div class="matrix-size">
                     <fieldset><legend class="sr-only">${R('matrix input.size control legend')}</legend>
-                    <label class="num-rows">${R('matrix input.rows')}: <input type="number" data-bind="value: numRows, autosize: true, disable: disable, attr: {'min': minRows()==0 ? 1 : minRows(), 'max': maxRows()==0 ? '' : maxRows()}"/></label>
-                    <label class="num-columns">${R('matrix input.columns')}: <input type="number" min="1" data-bind="value: numColumns, autosize: true, disable: disable, attr: {'min': minColumns()==0 ? 1 : minColumns(), 'max': maxColumns()==0 ? '' : maxColumns()}"/></label>
+                    <label class="num-rows">${R('matrix input.rows')}: <input type="number" data-bind="event: events, value: numRows, autosize: true, disable: disable, attr: {'min': minRows()==0 ? 1 : minRows(), 'max': maxRows()==0 ? '' : maxRows()}"/></label>
+                    <label class="num-columns">${R('matrix input.columns')}: <input type="number" min="1" data-bind="event: events, value: numColumns, autosize: true, disable: disable, attr: {'min': minColumns()==0 ? 1 : minColumns(), 'max': maxColumns()==0 ? '' : maxColumns()}"/></label>
                     </fieldset>
                 </div><!-- /ko -->
                 <div class="matrix-wrapper">

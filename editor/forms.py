@@ -640,6 +640,8 @@ def validate_custom_part_type_json_file(f):
 class UploadCustomPartTypeForm(forms.ModelForm):
     file = forms.FileField(required=True, validators=[validate_custom_part_type_json_file])
 
+    unique_short_name = True
+
     kwarg_keys = ['name', 'short_name', 'description', 'input_widget', 'input_options', 'can_be_gap', 'can_be_step', 'marking_script', 'marking_notes', 'settings', 'help_url', 'ready_to_use']
 
     class Meta:
@@ -664,11 +666,13 @@ class UploadCustomPartTypeForm(forms.ModelForm):
         for key in self.kwarg_keys:
             if key in data:
                 kwargs[key] = data[key]
-        n = 0
-        o_short_name = kwargs['short_name']
-        while CustomPartType.objects.filter(short_name=kwargs['short_name']).exists():
-            n += 1
-            kwargs['short_name'] = o_short_name+'-'+str(n)
+
+        if self.unique_short_name:
+            n = 0
+            o_short_name = kwargs['short_name']
+            while CustomPartType.objects.filter(short_name=kwargs['short_name']).exists():
+                n += 1
+                kwargs['short_name'] = o_short_name+'-'+str(n)
 
         return (kwargs, extensions)
 
@@ -681,6 +685,7 @@ class UploadCustomPartTypeForm(forms.ModelForm):
         return cpt
 
 class ReuploadCustomPartTypeForm(UploadCustomPartTypeForm):
+    unique_short_name = False
     class Meta:
         model = CustomPartType
         fields = []

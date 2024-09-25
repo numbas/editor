@@ -179,11 +179,7 @@ $(document).ready(function() {
         this.showadvicewhen = Editor.choiceObservable(this.reveal_choices);
 
         this.allowrevealanswer = ko.observable(true);
-        this.advicethreshold = ko.observable(0);
         this.showstudentname = ko.observable(true);
-
-        this.activateReviewModeOptions = ['oncompletion', 'onreenter', 'never'];
-        this.activatereviewmode = Editor.choiceObservable(this.activateReviewModeOptions);
 
         this.resultsprintquestions = ko.observable(true);
         this.resultsprintadvice = ko.observable(true);
@@ -500,9 +496,7 @@ $(document).ready(function() {
                     showpartfeedbackmessageswhen: this.showpartfeedbackmessageswhen(),
                     showexpectedanswerswhen: this.showexpectedanswerswhen(),
                     showadvicewhen: this.showadvicewhen(),
-                    activatereviewmode: this.activatereviewmode(),
                     allowrevealanswer: this.allowrevealanswer(),
-                    advicethreshold: this.advicethreshold(),
                     intro: this.intro(),
                     end_message: this.end_message(),
                     results_options : {
@@ -572,9 +566,7 @@ $(document).ready(function() {
                         'showpartfeedbackmessageswhen',
                         'showexpectedanswerswhen',
                         'showadvicewhen',
-                        'activatereviewmode',
                         'allowrevealanswer',
-                        'advicethreshold',
                         'intro',
                         'end_message'
                     ],

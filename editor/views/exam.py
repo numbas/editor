@@ -25,7 +25,7 @@ import editor.views.editoritem
 import editor.views.generic
 from editor.views.errors import forbidden
 
-from numbasobject import NumbasObject
+from examparser.numbasobject import NumbasObject
 
 class PreviewView(editor.views.editoritem.PreviewView):
     """Compile an exam as a preview."""

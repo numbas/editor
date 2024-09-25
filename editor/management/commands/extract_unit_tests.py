@@ -2,7 +2,7 @@ import json
 
 from django.core.management.base import BaseCommand, CommandError
 from editor.models import NewQuestion, Project, NewExam, NUMBAS_FILE_VERSION
-from numbasobject import NumbasObject
+from examparser.numbasobject import NumbasObject
 
 class Command(BaseCommand):
     help = 'Extract unit tests from one or more questions'

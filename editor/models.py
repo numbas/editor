@@ -46,7 +46,7 @@ from notifications.models import Notification
 import taggit.models
 from taggit.managers import TaggableManager
 
-import numbasobject
+from examparser import numbasobject
 
 from .notify_watching import notify_watching
 from .jsonfield import JSONField

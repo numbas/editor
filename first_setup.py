@@ -459,6 +459,12 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         return self.get_not_found()
 
+    def send_response(self, status_code, body, content_type='text/html'):
+        super().send_response(status_code)
+        self.send_header('Content-Type', content_type)
+        self.end_headers()
+        self.wfile.write(body.encode('utf-8'))
+
     def get_index(self):
         message = render_to_string(
             'index.html',
@@ -466,9 +472,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 'command': Command(server=self.server),
             }
         )
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(message.encode('utf-8'))
+        self.send_response(200, message)
 
     def get_setup_status(self):
         if self.server.run_result is not None:
@@ -478,9 +482,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         else:
             status = 'not-running'
 
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(status.encode('utf-8'))
+        self.send_response(200, status, content_type='text/plain')
 
     def get_finished_response(self):
         if self.server.run_result is None:
@@ -492,9 +494,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 'command': Command(server=self.server, dev=self.server.run_result['dev']),
             }
         )
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(message.encode('utf-8'))
+        self.send_response(200, message)
 
     def get_static(self):
         file = root_dir / 'static' / PurePath(self.path).relative_to('/static')
@@ -508,8 +508,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(f.read())
 
     def get_not_found(self):
-        self.send_response(404)
-        self.end_headers()
+        self.send_response(404, 'Not found')
 
     def do_POST(self):
         body = self.rfile.read(int(self.headers.get('Content-Length'))).decode('utf-8')
@@ -525,17 +524,14 @@ class RequestHandler(BaseHTTPRequestHandler):
         try:
             command.handle()
 
-            self.send_response(200)
-            self.end_headers()
             message = render_to_string(
                 'setup_waiting.html',
                 {
                     'command': command,
                 }
             )
+            return self.send_response(200, message)
         except ValidationError as error:
-            self.send_response(400)
-            self.end_headers()
             message = render_to_string(
                 'index.html',
                 {
@@ -543,8 +539,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     'form_error': error,
                 }
             )
-
-        self.wfile.write(message.encode('utf-8'))
+            self.send_response(400, message)
 
     def log_request(self, code = '-', size = '-'):
         pass

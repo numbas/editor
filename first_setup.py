@@ -459,7 +459,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         return self.get_not_found()
 
-    def send_response(self, status_code, body, content_type='text/html'):
+    def send_response(self, status_code, body='', content_type='text/html'):
         super().send_response(status_code)
         self.send_header('Content-Type', content_type)
         self.end_headers()
@@ -502,7 +502,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         if not file.exists():
             return self.get_not_found()
 
-        self.send_response(200)
+        self.send_response(200, content_type='')
         self.end_headers()
         with open(file, 'rb') as f:
             self.wfile.write(f.read())

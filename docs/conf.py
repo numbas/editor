@@ -41,9 +41,9 @@ def setup(app):
 templates_path = ['_templates']
 
 # The short X.Y version
-version = '7.3'
+version = '8.0'
 # The full version, including alpha/beta/rc tags
-release = '7.3'
+release = '8.0'
 
 html_theme = 'sphinx_book_theme'
 

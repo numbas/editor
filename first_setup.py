@@ -373,6 +373,10 @@ class Command:
             template = self.sqlite_template if 'sqlite' in rvalues['DB_ENGINE'] else self.other_db_template
             return template.format(**rvalues)
 
+        def set_allowed_hosts(_m, rvalues):
+            domains = re.split(r'[,\s]+', rvalues['DOMAIN'])
+            return f'ALLOWED_HOSTS = {repr(domains)}'
+
         settings_subs = [
             (r"^DEBUG = (True)", 'DEBUG'),
             (r"'NUMBAS_PATH': '(.*?)',", 'NUMBAS_PATH'),
@@ -386,6 +390,7 @@ class Command:
             (r"^SECRET_KEY = '(.*?)'", 'SECRET_KEY'),
             (r"^ALLOW_REGISTRATION = (True|False)", 'ALLOW_REGISTRATION'),
             (r"^DEFAULT_FROM_EMAIL = '(.*?)'", 'DEFAULT_FROM_EMAIL'),
+            (r"^ALLOWED_HOSTS = (\[.*?\])", set_allowed_hosts),
         ]
         self.sub_file(Path('numbas', 'settings.py'), settings_subs)
 

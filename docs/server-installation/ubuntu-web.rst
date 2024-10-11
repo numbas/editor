@@ -18,9 +18,9 @@ Essential package installation
 
 #.  Install required packages using the ``apt`` packaging system::
 
-    apt install nginx git-core mysql-server \
-    mysql-common python3 acl libmysqlclient-dev python3-dev \
-    supervisor python3-pip python3-virtualenv pkg-config
+        apt install nginx git-core mysql-server \
+        mysql-common python3 acl libmysqlclient-dev python3-dev \
+        supervisor python3-pip python3-virtualenv pkg-config
 
 Virtualenv
 ----------
@@ -71,12 +71,7 @@ Create directories and set permissions
 #.  Create the following directories outside the web root, so they're
     not accessible to the public::
   
-        mkdir /srv/numbas
-        mkdir /srv/numbas/compiler
-        mkdir /srv/numbas/editor
-        mkdir /srv/numbas/media
-        mkdir /srv/numbas/previews
-        mkdir /srv/numbas/static
+        mkdir /srv/numbas{,/compiler,/editor,/media,/previews,/static}
 
 #.  Set the correct ownership and permissions::
     
@@ -109,6 +104,7 @@ Configuration
 
 #.  Run the "first setup" script::
     
+        cd /srv/numbas/editor
         python first_setup.py
 
     This will configure the editor based on your answers to a few
@@ -122,11 +118,10 @@ Configuration
 
 #.  Create the supervisor, gunicorn and nginx config files and enable the site.
 
-    -  Copy the WSGI file::
+    -  Make a directory for log files::
 
-        mkdir /var/log/gunicorn
-        chown www-data:www-data /var/log/gunicorn
-        cd /srv/numbas/editor
+        mkdir /var/log/numbas_editor
+        chown www-data:www-data /var/log/numbas_editor
 
     -  Edit ``/srv/numbas/editor/web/gunicorn.conf.py`` with these contents::
 
@@ -135,9 +130,9 @@ Configuration
         # Number of worker processes to run. Increase when there is more traffic.
         workers = 1
         # Access log - records incoming HTTP requests
-        accesslog = "/var/log/gunicorn/numbas_editor_access.log"
+        accesslog = "/var/log/numbas_editor/numbas_editor_access.log"
         # Error log - records Gunicorn server goings-on
-        errorlog = "/var/log/gunicorn/numbas_editor_error.log"
+        errorlog = "/var/log/numbas_editor/numbas_editor_error.log"
         # Whether to send Django output to the error log 
         capture_output = True
         # How verbose the Gunicorn error logs should be 

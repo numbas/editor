@@ -357,7 +357,7 @@ class Command:
         self.sub_settings()
 
         if not self.values['DEBUG']:
-            self.sub_file(Path('web', 'django.wsgi'), [ (r"sys.path.append\('(.*?)'\)", 'PWD') ])
+            self.sub_file(Path('web', 'wsgi.py'), [ (r"sys.path.append\('(.*?)'\)", 'PWD') ])
 
         index_subs = [
             (r"Welcome to (the Numbas editor)", 'SITE_TITLE'),

@@ -18,3 +18,4 @@ six==1.16.0
 mistune==2.0.3
 emoji==0.6.0
 pycryptodome==3.14.1
+setuptools==70.0.0

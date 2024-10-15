@@ -560,6 +560,7 @@ $(document).ready(function() {
                 tryLoad(
                     content.feedback,
                     [
+                        'enterreviewmodeimmediately',
                         'showactualmarkwhen',
                         'showtotalmarkwhen',
                         'showanswerstatewhen',

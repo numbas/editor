@@ -103,7 +103,7 @@ class UpdateView(SettingsPageMixin, generic.UpdateView):
     def save_statuses(self):
         statuses = self.request.POST.getlist('status')
         statuses = [s for s in statuses if s.strip()]
-        self.object.statuses.set(*statuses,clear=True)
+        self.object.statuses.set(statuses,clear=True)
 
     def get_success_url(self):
         return reverse('queue_view', args=(self.object.pk,))
@@ -259,7 +259,7 @@ class ReviewEntryView(CanViewMixin, EntryMixin, generic.DetailView):
 
         status = self.request.POST.get('status')
         if status:
-            entry.statuses.set(status,clear=True)
+            entry.statuses.set([status],clear=True)
         else:
             entry.statuses.clear()
 

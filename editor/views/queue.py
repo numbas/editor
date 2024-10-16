@@ -7,6 +7,7 @@ from django.views import generic
 
 from editor import forms
 from editor.models import EditorItem, ItemQueue, Project, ItemQueueChecklistItem, ItemQueueEntry, ItemQueueChecklistTick, IndividualAccess
+from editor.notify_watching import notify_watching
 from editor.tables import ItemQueueEntryTable
 import editor.views.generic
 from editor.views.generic import CanViewMixin, CanEditMixin, CanDeleteMixin, SettingsPageMixin, RestrictAccessMixin
@@ -265,6 +266,8 @@ class ReviewEntryView(CanViewMixin, EntryMixin, generic.DetailView):
 
         entry.save()
 
+        notify_watching(self.request.user, target=entry, verb='reviewed', action_object=entry)
+
         return redirect(self.get_success_url())
 
     def get_success_url(self):
@@ -293,6 +296,9 @@ class EntryAssignUserView(CanEditMixin, EntryMixin, generic.UpdateView):
         entry = self.get_object()
         entry.assigned_user = request.user
         entry.save()
+
+        notify_watching(self.request.user, target=entry, verb='will review', action_object=entry)
+
         return redirect(self.get_success_url())
 
     def get_success_url(self):

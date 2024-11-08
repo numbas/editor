@@ -492,6 +492,12 @@ Some extensions add new data types.
 
     See functions related to :ref:`jme-fns-html`.
 
+    .. warning::
+        
+        Interactive HTML nodes can not be safely copied, so each HTML value should only be used once in a question.
+        You can mark an HTML node as non-interactive by adding the attribute ``data-interactive="false"`` to it.
+        Elements created using the built-in HTML functions are automatically marked as non-interactive.
+
 .. data:: expression
 
     A JME sub-expression.

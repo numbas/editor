@@ -251,8 +251,8 @@
                                 </li>
                             </ul>
                         </div>
-                        <div class="html-type-warning value-error alert alert-danger" data-bind="visible: isHTML">
-                            <p>This variable is an HTML node. HTML nodes can not be relied upon to work correctly when resuming a session - for example, attached event callbacks will be lost, and mathematical notation will likely also break.</p>
+                        <div class="html-type-warning value-error alert alert-danger" data-bind="visible: isInteractiveHTML">
+                            <p>This variable is an interactive HTML node. Interactive HTML nodes can not be relied upon to work correctly when resuming a session - for example, attached event callbacks will be lost, and mathematical notation will likely also break.</p>
                             <p>If this causes problems, try to create HTML nodes where you use them in content areas, instead of storing them in variables.</p>
                         </div>
                     </div>

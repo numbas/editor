@@ -2431,12 +2431,12 @@ $(document).ready(function() {
             return val.type;
         },this);
 
-        this.isHTML = ko.pureComputed(function() {
+        this.isInteractiveHTML = ko.pureComputed(function() {
             var val = this.value();
             if(!val || this.error()) {
                 return false;
             }
-            return Numbas.jme.isType(val,'html');
+            return Numbas.jme.isType(val,'html') && val.isInteractive();
         },this);
 
         this.thisLocked = ko.observable(false);

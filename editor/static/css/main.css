@@ -2,6 +2,10 @@ a {
     color: hsl(204, 50.2%, 39.9%);
 }
 
+td, th {
+    padding: 0.2em;
+}
+
 .nav-pills > li.active > a, .nav-pills > li.active > a:focus, .nav-pills > li.active > a:hover {
     background-color: hsl(204, 50.2%, 39.9%);
 }

@@ -2685,6 +2685,17 @@ var jme_function_hints =
         "doc": "jme-reference"
     },
     {
+        "name": "groups_of",
+        "description": "Split a long list into smaller lists of the given size.\nIf the number of items in the list isn't a mutliple of the required size, then the final group will have fewer items in it.",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "groups_of(list, size)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
         "name": "flatten",
         "description": "\"Flatten\" a list of lists, returning a single list containing the concatenation of all the entries in <code>lists</code>.",
         "keywords": [
@@ -3291,7 +3302,7 @@ var jme_function_hints =
     },
     {
         "name": "table",
-        "description": "Create an HTML with cell contents defined by <code>data</code>, which should be a list of lists of data, and column headers defined by the list of strings <code>headers</code>.",
+        "description": "Create an HTML with cell contents defined by <code>data</code>, which should be a list of lists of data.\nYou can optionally give a list of column headers, or lists of both row and column headers.",
         "keywords": [
             "grid",
             "data",
@@ -3299,7 +3310,8 @@ var jme_function_hints =
         ],
         "calling_patterns": [
             "table(data)",
-            "table(data,headers)"
+            "table(data, headers)",
+            "table(data, column_headers, row_headers)"
         ],
         "doc": "jme-reference"
     },

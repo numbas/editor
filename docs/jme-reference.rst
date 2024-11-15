@@ -3096,6 +3096,18 @@ Lists
     **Example**:
         * ``separate(1..10, x -> 3|x)`` → ``[ [3, 6, 9], [1, 2, 4, 5, 7, 8, 10] ]``
 
+.. jme:function:: groups_of(list, size)
+
+    Split a long list into smaller lists of the given size.
+    If the number of items in the list isn't a mutliple of the required size, then the final group will have fewer items in it.
+
+    **Definitions**:
+        * :data:`number`, :data:`list` → :data:`list`
+
+    **Example**:
+        * ``groups_of(0..5, 2)`` → ``[ [0,1], [2,3], [4,5] ]``
+        * ``groups_of(["A", "B", "C", "D", "E"], 3)`` → ``[ ["A", "B", "C"], ["D", "E"] ]``
+
 .. jme:function:: flatten(lists)
     :keywords: concatenate, join, lists
 
@@ -3752,18 +3764,21 @@ HTML
         * ``isnonemptyhtml("<p></p>")`` → ``false``
 
 .. jme:function:: table(data)
-                  table(data,headers)
+                  table(data, headers)
+                  table(data, column_headers, row_headers)
     :keywords: grid, data, html
     :noexamples:
 
-    Create an HTML with cell contents defined by ``data``, which should be a list of lists of data, and column headers defined by the list of strings ``headers``.
+    Create an HTML with cell contents defined by ``data``, which should be a list of lists of data.
+    You can optionally give a list of column headers, or lists of both row and column headers.
 
     **Definitions**:
         * :data:`list`, :data:`list` of :data:`list` → :data:`html`
         * :data:`list` → :data:`html`
 
     **Examples**:
-        * ``table([[0,1],[1,0]], ["Column A","Column B"])``
+        * ``table([[0,1],[1,0]], ["Column A", "Column B"], ["Row 1", "Row 2"])``
+        * ``table([[0,1],[1,0]], ["Column A", "Column B"])``
         * ``table([[0,1],[1,0]])``
 
 .. jme:function:: image(url,[width],[height])

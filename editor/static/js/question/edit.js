@@ -2436,7 +2436,13 @@ $(document).ready(function() {
             if(!val || this.error()) {
                 return false;
             }
-            return Numbas.jme.isType(val,'html') && val.isInteractive();
+            if(!Numbas.jme.isType(val,'html')) {
+                return false;
+            }
+
+            val = Numbas.jme.castToType(val, 'html');
+
+            return val.isInteractive();
         },this);
 
         this.thisLocked = ko.observable(false);

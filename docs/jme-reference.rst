@@ -3503,6 +3503,24 @@ Dictionaries
     **Example**:
         * ``items(["a": 1, "b": 2, "c": 1])`` → ``[ ["a",1], ["b",2], ["c",1] ]``
 
+.. jme:function:: merge(dict1, dict2, ..., dictN)
+    :keywords: dictionary, union, update
+
+    Given any number of dictionaries, merge them all into one.
+
+    Later dictionaries take precedence over earlier ones.
+
+    **Definitions**:
+        * multiple :data:`dict` → :data:`dict`
+        * list of :data:`dict` → :data:`dict`
+
+    **Example**:
+        * ``merge(["a": 1, "b": 1], ["b": 2, "c": 2])`` → ``["a": 1, "b": 2, "c": 2]``
+        * ``merge(["a": 1], ["b": 2], ["c": 3])`` → ``["a": 1, "b": 2, "c": 3]``
+        * ``merge([ ["a": 1], ["b": 2] ])`` → ``["a": 1, "b": 2]``
+        * ``merge()`` → ``dict()``
+        * ``merge([])`` → ``dict()``
+
 .. _jme-fns-sets:
 
 Sets
@@ -4344,3 +4362,17 @@ Inspecting the evaluation scope
 
     **Definitions**:
         * :data:`dict`, anything → unspecified
+
+Debugging tools
+---------------
+
+.. jme:function:: debug_log(x, label)
+    :keywords: debug, log
+    :noexamples:
+
+    Log the value of ``x`` to the browser's console, prefixed with the given ``label``, and return ``x``.
+
+    The logged value is unwrapped to a plain JavaScript value, which is easier to read but might not fully reflect more specialised JME data types.
+
+    **Definitions**:
+        * anything, :data:`string` → unspecified

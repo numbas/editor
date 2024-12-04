@@ -1,4 +1,4 @@
-// Compiled using  runtime/scripts/numbas.js  runtime/scripts/jme.js  runtime/scripts/jme-builtins.js  runtime/scripts/jme-display.js  runtime/scripts/jme-rules.js  runtime/scripts/jme-variables.js  runtime/scripts/jme-calculus.js  runtime/scripts/localisation.js  runtime/scripts/part.js  runtime/scripts/question.js  runtime/scripts/schedule.js  runtime/scripts/diagnostic.js  runtime/scripts/marking.js  runtime/scripts/math.js  runtime/scripts/util.js  runtime/scripts/i18next/i18next.js  runtime/scripts/json.js  runtime/scripts/decimal/decimal.js  runtime/scripts/evaluate-settings.js  runtime/scripts/unicode-mappings.js  runtime/scripts/parsel/parsel.js  themes/default/files/scripts/answer-widgets.js  runtime/scripts/parts/custom_part_type.js  runtime/scripts/parts/extension.js  runtime/scripts/parts/gapfill.js  runtime/scripts/parts/information.js  runtime/scripts/parts/jme.js  runtime/scripts/parts/matrixentry.js  runtime/scripts/parts/multipleresponse.js  runtime/scripts/parts/numberentry.js  runtime/scripts/parts/patternmatch.js
+// Compiled using  runtime/scripts/numbas.js  runtime/scripts/jme.js  runtime/scripts/jme-builtins.js  runtime/scripts/jme-display.js  runtime/scripts/jme-rules.js  runtime/scripts/jme-variables.js  runtime/scripts/jme-calculus.js  runtime/scripts/localisation.js  runtime/scripts/part.js  runtime/scripts/question.js  runtime/scripts/schedule.js  runtime/scripts/diagnostic.js  runtime/scripts/marking.js  runtime/scripts/math.js  runtime/scripts/util.js  runtime/scripts/csv.js  runtime/scripts/i18next/i18next.js  runtime/scripts/json.js  runtime/scripts/decimal/decimal.js  runtime/scripts/evaluate-settings.js  runtime/scripts/unicode-mappings.js  runtime/scripts/parsel/parsel.js  themes/default/files/scripts/answer-widgets.js  runtime/scripts/parts/custom_part_type.js  runtime/scripts/parts/extension.js  runtime/scripts/parts/gapfill.js  runtime/scripts/parts/information.js  runtime/scripts/parts/jme.js  runtime/scripts/parts/matrixentry.js  runtime/scripts/parts/multipleresponse.js  runtime/scripts/parts/numberentry.js  runtime/scripts/parts/patternmatch.js
 // From the Numbas compiler directory
 /*
 Copyright 2011-14 Newcastle University
@@ -3024,7 +3024,12 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
             } else {
                 var nlambda = new types.TLambda();
                 nlambda.names = tok.names;
-                nlambda.set_expr(jme.substituteTree(tok.expr, scope, true, false));
+                nlambda.make_signature();
+                var nscope = new Numbas.jme.Scope([scope]);
+                nlambda.all_names.forEach(function(name) {
+                    nscope.deleteVariable(name);
+                });
+                nlambda.set_expr(jme.substituteTree(tok.expr, nscope, true, false));
                 return nlambda;
             }
 
@@ -3948,13 +3953,7 @@ TLambda.prototype = {
         this.names = names;
     },
 
-    /** Set the body of this function. The argument names must already have been set.
-     *
-     * @param {Numbas.jme.tree} expr
-     */
-    set_expr: function(expr) {
-        const lambda = this;
-        this.expr = expr;
+    make_signature: function(expr) {
         var all_names = [];
 
         /** Make the signature for the given argument.
@@ -3978,6 +3977,19 @@ TLambda.prototype = {
         const signature = this.names.map(make_signature);
 
         this.all_names = all_names;
+
+        return signature;
+    },
+
+    /** Set the body of this function. The argument names must already have been set.
+     *
+     * @param {Numbas.jme.tree} expr
+     */
+    set_expr: function(expr) {
+        const lambda = this;
+        this.expr = expr;
+
+        const signature = this.make_signature();
 
         this.fn = new jme.funcObj('', signature, '?', null, {
             evaluate: function(args, scope) {
@@ -4625,7 +4637,14 @@ var findvars = jme.findvars = function(tree,boundvars,scope) {
             return [];
         }
     } else {
-        return jme.findvars_args(tree.args, boundvars, scope);
+        var argvars = jme.findvars_args(tree.args, boundvars, scope);
+        if(tree.tok.type == 'function') {
+            const fn_name = jme.normaliseName(tree.tok.name, scope);
+            if(boundvars.indexOf(fn_name)==-1 && scope.getFunction(fn_name).length == 0) {
+                argvars.push(fn_name);
+            }
+        }
+        return argvars;
     }
 }
 
@@ -6102,18 +6121,29 @@ newBuiltin('+',[TList,'?'],TList, null, {
         return new TList(value);
     }
 });
-newBuiltin('+',[TDict,TDict],TDict, null,{
+
+const fn_dict_update = {
     evaluate: function(args,scope) {
         var nvalue = {};
-        Object.keys(args[0].value).forEach(function(x) {
-            nvalue[x] = args[0].value[x];
-        })
-        Object.keys(args[1].value).forEach(function(x) {
-            nvalue[x] = args[1].value[x];
-        })
+
+        if(args.length == 1 && args[0].type == 'list') {
+            args = args[0].value;
+        }
+
+        args.forEach(arg => {
+            Object.keys(arg.value).forEach(function(x) {
+                nvalue[x] = arg.value[x];
+            });
+        });
+
         return new TDict(nvalue);
     }
-});
+}
+newBuiltin('+',[TDict,TDict],TDict, null, fn_dict_update);
+
+newBuiltin('merge',['*dict'],TDict, null, fn_dict_update);
+newBuiltin('merge',['list of dict'],TDict, null, fn_dict_update);
+
 var fconc = function(a,b) { return a+b; }
 newBuiltin('+', [TString,'?'], TString, fconc);
 newBuiltin('+', ['?',TString], TString, fconc);
@@ -8871,6 +8901,13 @@ newBuiltin('numerical_compare',[TExpression,TExpression],TBool,null,{
         return new TBool(jme.compare(a,b,{},scope));
     }
 });
+
+newBuiltin('debug_log', ['?','?'], '?', null, {
+    evaluate: function(args, scope) {
+        console.log('DEBUG ' + args[1].value + ':', Numbas.jme.unwrapValue(args[0]));
+        return args[0];
+    }
+}, {unwrapValues: false});
 
 newBuiltin('scope_case_sensitive', ['?',TBool], '?', null, {
     evaluate: function(args,scope) {
@@ -14320,8 +14357,9 @@ jme.variables.note_script_constructor = function(construct_scope, process_result
      */
     function Script(source, base, scope) {
         this.source = source;
+        scope = construct_scope(scope || Numbas.jme.builtinScope);
         try {
-            var notes = source.split(/\n(\s*\n)+/);
+            var notes = source.replace(/^\/\/.*$/gm,'').split(/\n(?:\s*\n)+(?!\s)/);
             var ntodo = {};
             var todo = {};
             notes.forEach(function(note) {
@@ -18196,27 +18234,55 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                         np.instance.resume();
                     });
                 }
+
+                const part_submit_promises = {};
+                q.allParts().forEach(function(p) {
+                    var obj = {};
+                    obj.promise = new Promise(function(resolve, reject) {
+                        obj.resolve = resolve;
+                    });
+                    part_submit_promises[p.path] = obj;
+                });
                 /** Submit a given part, setting its `resume` property so it doesn't save to storage.
                  *
                  * @param {Numbas.parts.Part} part
                  */
+                const promises_to_wait_for = [];
+                q.promises_to_wait_for = promises_to_wait_for;
                 function submit_part(part) {
+                    const {promise, resolve} = part_submit_promises[part.path];
+                    promises_to_wait_for.push(promise);
                     part.resuming = true;
-                    if(part.answered) {
-                        part.submit();
-                    }
-                    if(part.resume_stagedAnswer!==undefined) {
-                        part.stagedAnswer = part.resume_stagedAnswer;
-                    }
-                    part.resuming = false;
+
+                    const replacement_promises = part.settings.errorCarriedForwardReplacements.map(vr => part_submit_promises[vr.part].promise);
+                    Promise.all(replacement_promises).then(function() {
+                        if(part.answered) {
+                            part.submit();
+                        }
+                        if(part.resume_stagedAnswer!==undefined) {
+                            part.stagedAnswer = part.resume_stagedAnswer;
+                        }
+                        part.resuming = false;
+                        if(part.waiting_for_pre_submit) {
+                            part.waiting_for_pre_submit.then(function() {
+                                resolve();
+                            });
+                        } else {
+                            resolve();
+                        }
+                    });
                 }
+
                 q.signals.on('ready',function() {
                     q.parts.forEach(function(part) {
                         part.steps.forEach(submit_part);
                         submit_part(part);
                     });
+
+                    Promise.all(promises_to_wait_for).then(function() {
+                        q.signals.trigger('partsResumed');
+                    });
                 });
-                q.signals.trigger('partsResumed');
             });
             q.signals.on('partsResumed',function() {
                 q.adviceDisplayed = qobj.adviceDisplayed;
@@ -25323,6 +25389,146 @@ if (!Date.prototype.toISOString) {
   }());
 }
 
+});
+
+/*
+Copyright 2022-2023 Newcastle University
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+/** @file Functions related to the download and interpretation of student results, and interaction with the results page, usually for outside-LTI contexts. */
+Numbas.queueScript('csv', ['jme'], function () {
+
+
+    /** Functions related to the download and interpretation of student results, and interaction with the results page, usually for outside-LTI contexts.
+     *
+     * @namespace Numbas.csv */
+    var csv = Numbas.csv = /** @lends Numbas.csv */ {
+        // items should be accessible through Numbas.csv.function, so either write them inside this as key:function pairs, or if necessary as:
+        //var ensure_decimal = math.ensure_decimal = function(n) { ? We need them to be like this to ensure they're accessible from elsewhere, maybe.
+
+        /** Ensures a string will not cause issues within a csv due to commas, quotes, etc. 
+         * 
+         * @param {string} cell 
+         * @returns {string}
+         */
+        escape_cell: function (cell) {
+            cell = cell + '';
+            if (cell.match(/[,"'\n\r]/)) {
+                cell = '"' + cell.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"'; //note: this does \\" from an escaped \", not \\\", so there's no way to tell the difference between a string which had \" and one which had "
+            }
+            return cell;
+        },
+
+        /** Breaks a constructed csv into cells
+         * 
+         * @param {string} csv 
+         * @returns {Array.<Array.<string>>}
+         */
+        split_csv_into_cells: function(csv) {
+            //crude, please update or replace - vanilla_csv is good if used universally.
+            let current_char;
+            let escaped = false;
+            let quoted = false;
+            let rows = [];
+            let current_row = [];
+            let current_cell = '';
+            for (let i = 0; i<csv.length;i++) {
+                current_char = csv.charAt(i);
+                if (escaped){
+                    current_cell += current_char;
+                    escaped = false;
+                    continue;
+                }
+                else if (current_char.match(/[\\]/)){
+                    escaped = true;
+                }
+                else if (current_char.match(/["]/)){
+                    quoted = !quoted
+                }
+                else if (current_char.match(/[,]/)){
+                    if (quoted){
+                        current_cell += current_char;
+                    }
+                    else {
+                        current_row.push(current_cell);
+                        current_cell = '';
+                    }
+                } 
+                else if (current_char.match(/[\n\r]/)){
+                    if (quoted){
+                        current_cell += current_char;
+                    }
+                    else {
+                        current_row.push(current_cell);
+                        current_cell = '';
+                        rows.push(current_row);
+                        current_row = [];
+                    }
+                } 
+                else {
+                    current_cell += current_char;
+                }
+            }
+            //same as if match new line, because end of file!
+            current_row.push(current_cell);
+            rows.push(current_row);
+
+            return rows;
+        },
+
+        /** Escapes each cell of a list of strings such that each will not cause issues within a csv
+         * 
+         * @param {Array.<string>} cells 
+         * @returns {string} 
+         */
+        make_row: function (cells) {
+            return cells.map(csv.escape_cell).join(',');
+        },
+
+        /** Escapes each cell of a two-dimensional array of strings such that each will not cause issues within a csv
+         * 
+         * @param {Array.<Array.<string>>} rows 
+         * @returns {string} 
+         */
+        from_array: function (rows) {
+            return rows.map(csv.make_row).join('\n');
+        },
+
+
+        /**
+         * 
+         * @param {string} file 
+         */
+        create_and_download_file: function (file) {
+            //pulled from https://stackoverflow.com/questions/8310657/how-to-create-a-dynamic-file-link-for-download-in-javascript
+            let mime_type = 'text/plain';
+            var blob = new Blob([file], { type: mime_type });
+            var dlink = document.createElement('a');
+            document.body.appendChild(dlink); //may be necessary for firefox/some browsers
+            dlink.download = "results.csv";
+            dlink.href = window.URL.createObjectURL(blob);
+            dlink.onclick = function (e) {
+                var that = this;
+                setTimeout(function () {
+                    window.URL.revokeObjectURL(that.href);
+                }, 1500);
+            };
+
+            dlink.click()
+            dlink.remove()
+
+        }
+
+
+    }
 });
 
 Numbas.queueScript('i18next',[],function(module) {

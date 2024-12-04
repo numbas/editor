@@ -3061,6 +3061,19 @@ var jme_function_hints =
         "doc": "jme-reference"
     },
     {
+        "name": "merge",
+        "description": "Given any number of dictionaries, merge them all into one.",
+        "keywords": [
+            "dictionary",
+            "union",
+            "update"
+        ],
+        "calling_patterns": [
+            "merge(dict1, dict2, ..., dictN)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
         "name": "set",
         "description": "Create a set with the given elements.\nEither pass the elements as individual arguments, or as a list.",
         "keywords": [
@@ -3732,6 +3745,18 @@ var jme_function_hints =
         ],
         "calling_patterns": [
             "unset(names, expression)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "debug_log",
+        "description": "Log the value of <code>x</code> to the browser's console, prefixed with the given <code>label</code>, and return <code>x</code>.",
+        "keywords": [
+            "debug",
+            "log"
+        ],
+        "calling_patterns": [
+            "debug_log(x, label)"
         ],
         "doc": "jme-reference"
     },

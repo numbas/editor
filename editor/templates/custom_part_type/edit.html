@@ -424,7 +424,7 @@
                             </label>
                             <div class="{{form_control_class}}">
                                 <textarea id="input-input_options-correctAnswer" {% if not editable %}disabled{% endif %} data-bind="codemirror: input_options.correctAnswer, codemirrorMode: 'jme'"></textarea>
-                                <undefined-variable-warning params="expr: input_options.correctAnswer, vars: ['settings']"></undefined-variable-warning>
+                                <undefined-variable-warning params="expr: input_options.correctAnswer, vars: ['settings'], scope: $root.marking_scope"></undefined-variable-warning>
                                 {% if editable %}
                                 <p class="help-block">
                                     An expression which evaluates to the expected answer to the part. You can refer to any of the part's settings.
@@ -543,7 +543,7 @@
                                     <div class="form-group">
                                         <label for="input-marking_note-definition">Definition</label>
                                         <textarea id="input-marking_note-definition" {% if not editable %}disabled{% endif %} class="definition" data-bind="codemirror: definition"></textarea>
-                                        <undefined-variable-warning params="expr: definition, vars: $parent.marking_defined_names, show_syntax_errors: false"></undefined-variable-warning>
+                                        <undefined-variable-warning params="expr: definition, vars: $parent.marking_defined_names, show_syntax_errors: false, scope: $root.marking_scope"></undefined-variable-warning>
                                         <div class="alert alert-danger" data-bind="visible: definitionError" aria-live="polite">
                                             <p data-bind="html: definitionError"></p>
                                         </div>

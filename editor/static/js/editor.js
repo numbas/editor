@@ -2008,6 +2008,7 @@ $(document).ready(function() {
         viewModel: function(params) {
             this.expr = params.expr;
             this.vars = params.vars || [];
+            this.scope = params.scope || Numbas.jme.builtinScope;
             this.show_syntax_errors = params.show_syntax_errors===undefined ? true : params.show_syntax_errors;
             this.error = ko.pureComputed(function() {
                 var expr = ko.unwrap(this.expr);
@@ -2017,7 +2018,7 @@ $(document).ready(function() {
                     return this.show_syntax_errors ? e.message : '';
                 }
                 try {
-                    var vars = Numbas.jme.findvars(tree);
+                    var vars = Numbas.jme.findvars(tree, [], scope);
                 } catch(e) {
                     return '';
                 }

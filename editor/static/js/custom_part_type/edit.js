@@ -423,6 +423,8 @@ $(document).ready(function() {
     var CustomPartType = Editor.custom_part_type.CustomPartType = function(data, save_url, set_access_url) {
         var pt = this;
 
+        this.marking_scope = new Numbas.marking.StatefulScope([Numbas.jme.builtinScope]);
+
         this.save_url = save_url;
         this.set_access_url = set_access_url;
 
@@ -1101,7 +1103,7 @@ $(document).ready(function() {
             if(this.definitionError() || !this.definition_tree()) {
                 return [];
             }
-            var vars = Numbas.jme.findvars(this.definition_tree());
+            var vars = Numbas.jme.findvars(this.definition_tree(), [], pt.marking_scope);
             var note_names = pt.marking_notes().map(function(n) { return n.name().toLowerCase() });
             return vars
                 .filter(function(name) { return !marking_reserved_names.contains(name.toLowerCase()) })

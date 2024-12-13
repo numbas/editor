@@ -2536,10 +2536,13 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
      *
      * @param {string} name
      */
-    deleteVariable: function(name) {
+    deleteVariable: function(name, options) {
+        options = options || {};
         name = jme.normaliseName(name, this);
         this.deleted.variables[name] = true;
-        this.deleted.constants[name] = true;
+        if(options.delete_constant !== false) {
+            this.deleted.constants[name] = true;
+        }
     },
     /** Mark the given function name as deleted from the scope.
      *
@@ -2879,7 +2882,7 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
         var s = new Scope([this]);
         if(defs.variables) {
             defs.variables.forEach(function(v) {
-                s.deleteVariable(v);
+                s.deleteVariable(v, {delete_constant: false});
             });
         }
         if(defs.functions) {
@@ -28233,6 +28236,9 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         var tree = jme.display.subvars(settings.correctAnswerString, scope);
         if(!tree && this.marks>0) {
             this.error('part.jme.answer missing');
+        }
+        if(this.question) {
+            scope = scope.unset(this.question.local_definitions);
         }
         var expr = jme.display.treeToJME(tree,{plaindecimal: true},scope);
         settings.correctVariables = jme.findvars(jme.compile(expr),[],scope);

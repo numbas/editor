@@ -3211,6 +3211,19 @@ var jme_function_hints =
         "doc": "jme-reference"
     },
     {
+        "name": "seedrandom",
+        "description": "Set the seed for the random number generator to the given value before evaluating the given expression.\nThe previous state of the random number generator is restored after evaluating the expression.",
+        "keywords": [
+            "seed",
+            "fixed",
+            "derandomize"
+        ],
+        "calling_patterns": [
+            "seedrandom(seed, expression)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
         "name": "award",
         "description": "Return <code>a</code> if <code>b</code> is <code>true</code>, else return <code>0</code>.",
         "keywords": [

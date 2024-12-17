@@ -3668,6 +3668,19 @@ Randomisation
     **Examples**:
         * ``random_integer_partition(6,3)`` :no-test:`→` ``[1, 3, 2]`` (other values can be produced)
 
+.. jme:function:: seedrandom(seed, expression)
+    :keywords: seed, fixed, derandomize
+
+    Set the seed for the random number generator to the given value before evaluating the given expression.
+    The previous state of the random number generator is restored after evaluating the expression.
+
+    **Definitions**:
+        * anything, anything → anything
+
+    **Examples**:
+        * ``seedrandom(0, random(1..1000))`` → ``39``
+        * ``seedrandom("Numbas", random(1..1000))`` → ``997``
+
 .. _jme-fns-control-flow:
 
 Control flow

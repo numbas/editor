@@ -3674,6 +3674,10 @@ Randomisation
     Set the seed for the random number generator to the given value before evaluating the given expression.
     The previous state of the random number generator is restored after evaluating the expression.
 
+    A randomised expression evaluated with the same seed will always produce the same value.
+
+    You can use :ref:`exam-variables` with this function to ensure that you get the same "random" values in different questions in the same exam.
+
     **Definitions**:
         * anything, anything → anything
 

@@ -372,6 +372,25 @@ This tab provides tools to test your variables for desired properties, so you ca
         If the system exceeds this number in a compiled exam, the entire exam will fail, so try to avoid it!
 
 
+.. _exam-variables:
+
+Exam variables
+--------------
+
+There are a couple of variables defined at the exam level, whose values are available to every question in the exam.
+
+You can use these to coordinate values between separate questions, perhaps using the :jme:func:`seedrandom` function.
+
+.. jme:variable:: initial_seed
+
+    The initial "seed" :data:`string` value for the random number generator.
+    A randomised expression evaluated with the same seed will always produce the same value.
+
+.. jme:variable:: student_id
+
+    A :data:`string` identifier for the student, which might be provided by the VLE.
+    If this is not given or the exam is run in standalone mode, its value is the empty string.
+
 .. _advice:
 
 Advice

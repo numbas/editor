@@ -533,6 +533,19 @@ $(document).ready(function() {
             }
         },this);
 
+        const random_int_string = () => new Numbas.jme.types.TString(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)+'');
+
+        this.exam_variables = Object.entries({
+            'initial_seed': random_int_string,
+            'student_id': random_int_string,
+        }).map(([name, value_generator]) => {
+            const v = new Variable(q);
+            v.is_exam_variable = true;
+            v.name(name);
+            v.value = value_generator;
+            return v;
+        });
+
         this.baseVariableGroup = new VariableGroup(this,{name:'Ungrouped variables'});
         this.baseVariableGroup.fixed = true;
         this.allVariableGroups = ko.pureComputed(function() {
@@ -655,7 +668,6 @@ $(document).ready(function() {
             this.loaded();
         }
 
-
         ko.computed(function() {
             var undefined_variables = [];
             var all_references = new Set();
@@ -757,7 +769,7 @@ $(document).ready(function() {
                 v.remove();
             });
 
-            var names = [];
+            var names = q.exam_variables.map(v => {return {v, name: Numbas.jme.normaliseName(v.name())}});
             this.variables().forEach(function(v) {
                 v.names().forEach(function(name) {
                     names.push({v:v, name:Numbas.jme.normaliseName(name.name)});
@@ -984,12 +996,13 @@ $(document).ready(function() {
 
         getVariable: function(name) {
             name = Numbas.jme.normaliseName(name);
-            var variables = this.variables();
+            var variables = this.variables().concat(this.exam_variables);
             for(var i = 0; i<variables.length;i++) {
                 if(variables[i].names().find(function(x) { return Numbas.jme.normaliseName(x.name)==name; })) {
                     return variables[i];
                 }
             }
+
         },
 
         getVariableGroup: function(name) {
@@ -1189,9 +1202,15 @@ $(document).ready(function() {
 
             var scope = new jme.Scope([this.baseScope()]);
 
+            this.exam_variables.forEach(function(v) {
+                scope.setVariable(v.name(), v.value());
+            });
+
+            var exam_variable_names = this.exam_variables.map(v => v.name());
+
             //make structure of variables to evaluate
-            var todo = {}
-            this.variables().map(function(v) {
+            var todo = {};
+            this.variables().forEach(function(v) {
                 var name = v.name().toLowerCase();
                 if(!v.name()) {
                     return;
@@ -1216,7 +1235,7 @@ $(document).ready(function() {
                     if(!tree) {
                         throw(new Numbas.Error('jme.variables.empty definition',{name:name}));
                     }
-                    var vars = jme.findvars(tree,[],scope);
+                    var vars = jme.findvars(tree,exam_variable_names,scope);
                     v.error('');
                 }
                 catch(e) {

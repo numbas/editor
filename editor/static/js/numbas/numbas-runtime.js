@@ -6389,7 +6389,10 @@ newBuiltin('image',[TString, '[number]', '[number]'],THTML,null, {
         }
         var subber = new jme.variables.DOMcontentsubber(scope);
         var element = subber.subvars(img);
-        element.setAttribute('data-interactive', 'false');
+
+        // The subber replaces SVG images with <object> tags which have an event listener for when the content loads, so they must be considered interactive.
+        element.setAttribute('data-interactive', element.tagName.toLowerCase() == 'object');
+
         return new THTML(element);
     }
 });
@@ -14518,7 +14521,6 @@ DOMcontentsubber.prototype = {
             return element;
         } else if(tagName=='img') {
             if(element.getAttribute('src').match(/.svg$/i)) {
-                element.parentElement
                 var object = element.ownerDocument.createElement('object');
                 for(var i=0;i<element.attributes.length;i++) {
                     var attr = element.attributes[i];
@@ -28726,6 +28728,13 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
             ['minColumns','maxColumns','minRows','maxRows'].map(eval_setting);
         }
 
+        settings.tolerance = Math.max(settings.tolerance,0.00000000001);
+        if(settings.precisionType != 'none') {
+            settings.allowFractions = false;
+        }
+
+        this.getCorrectAnswer(scope);
+
         var prefilled_fractions = settings.allowFractions && settings.correctAnswerFractions;
         if(settings.prefilledCellsString) {
             var prefilledCells = jme.castToType(scope.evaluate(jme.subvars(settings.prefilledCellsString+'',scope)), 'list');
@@ -28756,7 +28765,7 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
                                 return frac.toString();
                             } else {
                                 cell = jme.castToType(cell,'number');
-                                return math.niceRealNumber(cell.value,scope);
+                                return math.niceRealNumber(cell.value, {precisionType: settings.precisionType, precision: settings.precision, style: settings.correctAnswerStyle});
                             }
                         }
                         p.error('part.matrix.invalid type in prefilled',{type: cell.type});
@@ -28765,10 +28774,6 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
             }
         }
 
-        settings.tolerance = Math.max(settings.tolerance,0.00000000001);
-        if(settings.precisionType!='none') {
-            settings.allowFractions = false;
-        }
         this.studentAnswer = [];
         for(var i=0;i<this.settings.numRows;i++) {
             var row = [];
@@ -28777,7 +28782,6 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
             }
             this.studentAnswer.push(row);
         }
-        this.getCorrectAnswer(scope);
         if(!settings.allowResize && (settings.correctAnswer.rows!=settings.numRows || settings.correctAnswer.columns != settings.numColumns)) {
             var correctSize = settings.correctAnswer.rows+'×'+settings.correctAnswer.columns;
             var answerSize = settings.numRows+'×'+settings.numColumns;

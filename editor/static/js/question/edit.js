@@ -357,25 +357,36 @@ $(document).ready(function() {
                 }
             }
 
-            this.functions().map(function(f) {
-                try {
-                    var fn = {
-                        name: f.name().toLowerCase(),
-                        definition: f.definition(),
-                        language: f.language().name,
-                        outtype: f.type(),
-                        parameters: f.parameters().map(function(p) {
-                            if(!p.name()) {
-                                throw(new Error('A parameter is unnamed.'));
-                            }
-                            return {
-                                name: p.name(),
-                                type: p.signature(),
-                            }
-                        })
-                    };
+            var scope_with_stub_functions = new jme.Scope(scope);
 
-                    var cfn = jme.variables.makeFunction(fn,scope);
+            var function_defs = this.functions().map(function(f) {
+                var def = {
+                    name: f.name().toLowerCase(),
+                    definition: f.definition(),
+                    language: f.language().name,
+                    outtype: f.type(),
+                    parameters: f.parameters().map(function(p) {
+                        if(!p.name()) {
+                            throw(new Error('A parameter is unnamed.'));
+                        }
+                        return {
+                            name: p.name(),
+                            type: p.signature(),
+                        }
+                    })
+                };
+
+                var cfn = jme.variables.makeFunction(def,scope_with_stub_functions);
+                scope_with_stub_functions.addFunction(cfn);
+
+                return def;
+            });
+
+            this.functions().map(function(f,i) {
+                try {
+                    var fn = function_defs[i];
+
+                    var cfn = jme.variables.makeFunction(fn,scope_with_stub_functions);
                     var oevaluate = cfn.evaluate;
                     cfn.evaluate = function(args,scope) {
                         function warning(message) {

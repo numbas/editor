@@ -13768,14 +13768,14 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         fn.tree = jme.compile(fn.definition,scope,true);
         const nscope = new jme.Scope([scope]);
         nscope.addFunction(fn);
-        var external_vars = jme.findvars(fn.tree,fn.paramNames.map(function(v) { return jme.normaliseName(v,scope) }),nscope);
         jme.findvarsOps[fn.name] = function(tree,boundvars,scope) {
-            var vars = external_vars.slice();
+            var vars = jme.findvars(fn.tree,fn.paramNames.map(function(v) { return jme.normaliseName(v,scope) }),nscope);
             for(var i=0;i<tree.args.length;i++) {
                 vars = vars.merge(jme.findvars(tree.args[i],boundvars,scope));
             }
             return vars;
         }
+
         return function(args,scope) {
             var oscope = scope;
             scope = new jme.Scope(scope);
@@ -13858,8 +13858,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         fn.name = jme.normaliseName(def.name,scope);
         fn.language = def.language;
         try {
-            switch(fn.language)
-            {
+            switch(fn.language) {
             case 'jme':
                 fn.evaluate = jme.variables.makeJMEFunction(fn,scope);
                 break;
@@ -13885,14 +13884,18 @@ jme.variables = /** @lends Numbas.jme.variables */ {
     makeFunctions: function(tmpFunctions,scope,withEnv)
     {
         scope = new jme.Scope(scope);
-        var functions = scope.functions;
-        var tmpFunctions2 = [];
-        for(var i=0;i<tmpFunctions.length;i++)
-        {
-            var cfn = jme.variables.makeFunction(tmpFunctions[i],scope,withEnv);
+
+        var names = tmpFunctions.map(fn => jme.normaliseName(fn.name, scope));
+
+        tmpFunctions.forEach(function(def) {
+            var cfn = jme.variables.makeFunction(def,scope,withEnv);
+            if(jme.findvarsOps[def.name] && jme.findvarsOps[def.name].external_vars) {
+                jme.findvarsOps[def.name].external_vars = jme.findvarsOps[def.name].external_vars.filter(name => names.indexOf(name)==-1);
+            }
             scope.addFunction(cfn);
-        }
-        return functions;
+        });
+
+        return scope.functions;
     },
     /** Evaluate a variable, evaluating all its dependencies first.
      *

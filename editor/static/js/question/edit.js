@@ -357,36 +357,42 @@ $(document).ready(function() {
                 }
             }
 
-            var scope_with_stub_functions = new jme.Scope(scope);
+            var functions = this.functions();
 
-            var function_defs = this.functions().map(function(f) {
-                var def = {
-                    name: f.name().toLowerCase(),
-                    definition: f.definition(),
-                    language: f.language().name,
-                    outtype: f.type(),
-                    parameters: f.parameters().map(function(p) {
-                        if(!p.name()) {
-                            throw(new Error('A parameter is unnamed.'));
-                        }
-                        return {
-                            name: p.name(),
-                            type: p.signature(),
-                        }
-                    })
-                };
-
-                var cfn = jme.variables.makeFunction(def,scope_with_stub_functions);
-                scope_with_stub_functions.addFunction(cfn);
-
-                return def;
+            var function_defs = functions.map(function(f) {
+                try {
+                    var def = {
+                        name: f.name().toLowerCase(),
+                        definition: f.definition(),
+                        language: f.language().name,
+                        outtype: f.type(),
+                        parameters: f.parameters().map(function(p) {
+                            if(!p.name()) {
+                                throw(new Error('A parameter is unnamed.'));
+                            }
+                            return {
+                                name: p.name(),
+                                type: p.signature(),
+                            }
+                        })
+                    };
+                    return def;
+                } catch(e) {
+                    f.error(e.message);
+                }
             });
 
-            this.functions().map(function(f,i) {
-                try {
-                    var fn = function_defs[i];
+            if(functions.some(f => f.error())) {
+                return scope;
+            }
 
-                    var cfn = jme.variables.makeFunction(fn,scope_with_stub_functions);
+            var made_functions = jme.variables.makeFunctions(function_defs, scope);
+
+            functions.map(function(f) {
+                try {
+                    const name = jme.normaliseName(f.name(), scope);
+                    var cfn = made_functions[name][0];
+
                     var oevaluate = cfn.evaluate;
                     cfn.evaluate = function(args,scope) {
                         function warning(message) {
@@ -469,6 +475,7 @@ $(document).ready(function() {
                     scope.addFunction(cfn);
                 }
                 catch(e) {
+                    console.error(e);
                     f.error(e.message);
                 }
 

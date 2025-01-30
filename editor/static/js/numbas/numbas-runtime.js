@@ -14058,12 +14058,24 @@ jme.variables = /** @lends Numbas.jme.variables */ {
      * @returns {Numbas.jme.Scope}
      */
     remakeVariables: function(todo,changed_variables,scope,computeFn,targets) {
-        var scope = new Numbas.jme.Scope([scope, {variables: changed_variables}]);
+        var variables = {};
+        Object.entries(changed_variables).forEach(([name,value]) => {
+            var names = jme.variables.splitVariableNames(name);
+            if(names.length==1) {
+                variables[name] = value;
+            } else {
+                value = jme.castToType(value, 'list');
+                names.forEach(function(n,i) {
+                    variables[n] = value.value[i];
+                });
+            }
+        });
+        var scope = new Numbas.jme.Scope([scope, {variables: variables}]);
         var replaced = Object.keys(changed_variables);
         // find dependent variables which need to be recomputed
         var dependents_todo = jme.variables.variableDependants(todo,replaced,scope);
         for(var name in dependents_todo) {
-            if(name in changed_variables) {
+            if(name in variables) {
                 delete dependents_todo[name];
             } else {
                 var names = jme.variables.splitVariableNames(name);
@@ -14177,6 +14189,9 @@ jme.variables = /** @lends Numbas.jme.variables */ {
      * @returns {object} - A copy of the todo list, only including the dependants of the given variables.
      */
     variableDependants: function(todo,ancestors,scope) {
+
+        ancestors = ancestors.flatMap(name => jme.variables.splitVariableNames(name));
+
         // a dictionary mapping variable names to lists of names of variables they depend on
         var dependants = {};
         /** Find the names of the variables this variable depends on.
@@ -14185,6 +14200,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
          * @param {Array.<string>} path - The chain of variables that have led to the one being considered, used to detect circular references.
          * @returns {Array.<string>} - The names of the variables this one depends on.
          */
+        var multis = {};
         function findDependants(name,path) {
             path = path || [];
             // stop at circular references
@@ -14195,6 +14211,12 @@ jme.variables = /** @lends Numbas.jme.variables */ {
             if(name in dependants) {
                 return dependants[name];
             }
+            if(name in multis) {
+                return dependants[multis[name]];
+            }
+            
+            var names = jme.variables.splitVariableNames(name);
+
             // for each variable used in this variable, find its dependants
             var d = [];
             if(name in todo) {
@@ -14211,7 +14233,12 @@ jme.variables = /** @lends Numbas.jme.variables */ {
                     o.push(name2);
                 }
             });
+
             dependants[name] = o;
+            names.forEach(function(n) {
+                multis[n] = name;
+            });
+
             return o;
         }
         for(var name in todo) {

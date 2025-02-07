@@ -14,7 +14,7 @@ class NumbasSlugConverter:
         return value
 
     def to_url(self, value):
-        return value
+        return value[:50]
 
 register_converter(NumbasSlugConverter, 'numbasslug')
 

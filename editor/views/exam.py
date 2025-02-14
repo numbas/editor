@@ -1,8 +1,11 @@
 import json
 import traceback
 import operator
+import zipfile
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files import File
+from django.core.files.storage import default_storage
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import User
@@ -17,7 +20,7 @@ from django.views import generic
 import reversion
 
 from editor.forms import ExamForm, NewExamForm, UploadExamForm
-from editor.models import NewExam, NewQuestion, EditorItem
+from editor.models import NewExam, NewQuestion, EditorItem, Resource
 import editor.models
 from editor.models import Theme, Extension, Contributor
 from editor.views import request_is_ajax
@@ -83,68 +86,65 @@ class UploadView(editor.views.editoritem.CreateView):
     def form_valid(self, form):
         exam_file = form.cleaned_data.get('file')
 
-        content = exam_file.read().decode('utf-8')
-        project = form.cleaned_data.get('project')
+        is_zipfile = zipfile.is_zipfile(exam_file)
 
-        ei = EditorItem(content=content, author=self.request.user, project=project)
+        if is_zipfile:
+            with zipfile.ZipFile(exam_file) as z:
+                with z.open('source.exam') as zf:
+                    content = zf.read().decode('utf-8')
+        else:
+            content = exam_file.read().decode('utf-8')
+
+        project = self.project = form.cleaned_data.get('project')
+
+        self.exam_object = NumbasObject(source=content)
+        question_groups = self.exam_object.data.get('question_groups',[])
+
+        self.resources =  {}
+        if is_zipfile:
+            with zipfile.ZipFile(exam_file) as z:
+                for filename,path in self.exam_object.data.get('resources',[]):
+                    zippath = 'resources/'+filename
+                    short_filename = filename
+
+                    if short_filename.startswith('question-resources/'):
+                        short_filename = short_filename[len('question-resources/'):]
+
+                    with z.open(zippath) as zf:
+                        resource = Resource.objects.create(
+                            filename=short_filename,
+                            owner = self.request.user,
+                            file=File(zf)
+                        )
+                        self.resources[filename] = resource
+
+        if exam_file.name.startswith('question-') and len(question_groups) == 1 and len(question_groups[0]['questions'])==1:
+            q = self.exam_object.data['question_groups'][0]['questions'][0]
+            qo = self.make_question(q)
+            return HttpResponseRedirect(qo.get_absolute_url())
+
+        ei = self.ei = EditorItem(content=content, author=self.request.user, project=project)
         ei.locale = project.default_locale
 
         ei.save()
         ei.set_licence(project.default_licence)
         obj = ei.get_parsed_content()
 
-        def add_contributors(item,contributor_data):
-            root = self.request.build_absolute_uri('/')
-            for c in contributor_data:
-                if c['profile_url'][:len(root)]==root:
-                    rest = c['profile_url'][len(root):]
-                    try:
-                        match = resolve(rest)
-                        if match.url_name != 'view_profile':
-                            raise Resolver404()
-                        pk = match.kwargs['pk']
-                        user = User.objects.get(pk=pk)
-                        Contributor.objects.create(item=item,user=user)
-                    except (Resolver404,User.DoesNotExist):
-                        Contributor.objects.create(item=item,name=c['name'],profile_url=c['profile_url'])
-                else:
-                    Contributor.objects.create(item=item,name=c['name'],profile_url=c['profile_url'])
-
         contributors = obj.data.get('contributors',[])
-        add_contributors(ei,contributors)
+        self.add_contributors(ei,contributors)
 
         exam = NewExam()
         exam.editoritem = ei
         exam.save()
 
-        exam_object = NumbasObject(source=content)
-
         groups = []
-        for group in exam_object.data.get('question_groups',[]):
+        for group in question_groups:
             qs = []
             for q in group.get('questions',[]):
-                question_object = NumbasObject(data=q, version=exam_object.version)
+                qo = self.make_question(q)
 
-                qei = EditorItem(
-                    content=str(question_object),
-                    author=ei.author
-                )
-                qei.set_licence(ei.licence)
-                qei.project = ei.project
-                qei.save()
-
-                qei.tags.set([t.strip() for t in q.get('tags',[])])
-
-                qo = NewQuestion()
-                qo.editoritem = qei
-                qo.save()
-
-                extensions = Extension.objects.filter(location__in=exam_object.data.get('extensions',[]))
-                qo.extensions.add(*extensions)
                 qs.append(qo.pk)
 
-                contributors = q.get('contributors',[])
-                add_contributors(qei,contributors)
 
             groups.append(qs)
         exam.set_question_groups(groups)
@@ -152,6 +152,51 @@ class UploadView(editor.views.editoritem.CreateView):
         self.exam = exam
 
         return HttpResponseRedirect(self.get_success_url())
+
+    def add_contributors(self,item,contributor_data):
+        root = self.request.build_absolute_uri('/')
+        for c in contributor_data:
+            if c['profile_url'][:len(root)] == root:
+                rest = c['profile_url'][len(root):]
+                try:
+                    match = resolve(rest)
+                    if match.url_name != 'view_profile':
+                        raise Resolver404()
+                    pk = match.kwargs['pk']
+                    user = User.objects.get(pk=pk)
+                    Contributor.objects.create(item=item,user=user)
+                except (Resolver404,User.DoesNotExist):
+                    Contributor.objects.create(item=item,name=c['name'],profile_url=c['profile_url'])
+            else:
+                Contributor.objects.create(item=item,name=c['name'],profile_url=c['profile_url'])
+
+    def make_question(self, q):
+        question_object = NumbasObject(data=q, version=self.exam_object.version)
+
+        qei = EditorItem(
+            content=str(question_object),
+            author=self.request.user
+        )
+        qei.set_licence(self.project.default_licence)
+        qei.project = self.project
+        qei.save()
+
+        qei.tags.set([t.strip() for t in q.get('tags',[])])
+
+        qo = NewQuestion()
+        qo.editoritem = qei
+        qo.save()
+
+        extensions = Extension.objects.filter(location__in=q.get('extensions',[]))
+        qo.extensions.set(extensions)
+
+        resources = [self.resources[filename] for filename in q.get('resources') if filename in self.resources]
+        qo.resources.set(resources)
+
+        contributors = q.get('contributors',[])
+        self.add_contributors(qei,contributors)
+
+        return qo
 
     def not_exam_file(self):
         messages.add_message(self.request, messages.ERROR, render_to_string('notexamfile.html'))

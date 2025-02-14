@@ -910,6 +910,7 @@ class Resource(models.Model):
     owner = models.ForeignKey(User, related_name='resources', on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True)
     file = models.FileField(upload_to='question-resources/', max_length=255) 
+    filename = models.CharField(max_length=255)
     alt_text = models.TextField(blank=True)
 
     def __str__(self):
@@ -917,7 +918,7 @@ class Resource(models.Model):
 
     @property
     def resource_url(self):
-        return 'resources/%s' % self.file.name
+        return 'resources/question-resources/%s' % self.filename
 
     @property
     def filetype(self):
@@ -937,7 +938,7 @@ class Resource(models.Model):
     def as_json(self):
         return {
             'url': self.resource_url,
-            'name': self.file.name,
+            'name': self.filename,
             'pk': self.pk,
             'alt_text': self.alt_text,
         }
@@ -1763,13 +1764,14 @@ class NewQuestion(models.Model):
 
     @property
     def resource_paths(self):
-        return [(r.file.name, r.file.path) for r in self.resources.all()]
+        return [('question-resources/' + r.filename, r.file.path) for r in self.resources.all()]
 
     def as_numbasobject(self,request):
         self.editoritem.get_parsed_content()
         contributor_data = [c.as_json(request) for c in self.editoritem.contributors.all()]
         question_data = self.editoritem.parsed_content.data
         question_data['contributors'] = contributor_data
+        question_data['resources'] = [name for name,path in self.resource_paths]
         extensions = list(self.extensions.all())
         for cpt in self.custom_part_types.all():
             extensions += list(cpt.extensions.all())
@@ -1874,7 +1876,7 @@ class NewExam(models.Model):
 
     @property
     def resource_paths(self):
-        return [(r.file.name, r.file.path) for r in self.resources.all()]
+        return [('question-resources/' + r.filename, r.file.path) for r in self.resources.all()]
 
     @property
     def theme_path(self):
@@ -1887,24 +1889,31 @@ class NewExam(models.Model):
         obj = numbasobject.NumbasObject(self.editoritem.content)
         data = obj.data
         question_groups = self.question_groups
+
+        data['name'] = self.editoritem.name
         data['contributors'] = [c.as_json(request) for c in self.editoritem.contributors.all()]
         data['extensions'] = [e.location for e in self.extensions]
         data['custom_part_types'] = [p.as_json() for p in self.custom_part_types]
-        data['name'] = self.editoritem.name
+        data['resources'] = self.resource_paths
+
         if 'question_groups' not in data:
             data['question_groups'] = self.question_groups_dict()
+
+        def question_object(q):
+            data = q.editoritem.as_numbasobject(request).data
+            del data['question_groups']
+            data.update(q.editoritem.parsed_content.data)
+            data['resources'] = [name for name,path in q.resource_paths]
+            return data
+
         for i, g in enumerate(data['question_groups']):
             if i < len(question_groups):
                 questions = question_groups[i]
             else:
                 questions = []
-            def question_object(q):
-                data = q.editoritem.as_numbasobject(request).data
-                del data['question_groups']
-                data.update(q.editoritem.parsed_content.data)
-                return data
+
             g['questions'] = [question_object(q) for q in questions]
-        data['resources'] = self.resource_paths
+
         
         return obj
 

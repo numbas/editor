@@ -123,6 +123,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         for i,rd in enumerate(self.resources):
             data['form-{}-id'.format(i)] = rd['pk']
             data['form-{}-alt_text'.format(i)] = rd['alt_text']
+            data['form-{}-filename'.format(i)] = rd['filename']
         self.resources_form = ResourcesAltTextForm(data=data)
 
         if question_form.is_valid() and self.resources_form.is_valid():

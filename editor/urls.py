@@ -166,7 +166,7 @@ urlpatterns = [
     path('question/<int:pk>/<numbasslug:slug>/restore-point',
         login_required(question.SetRestorePointView.as_view()), name='set_restore_point_on_question'),
 
-    path('question/<int:pk>/<numbasslug:slug>/resources/<path:resource>',
+    path('question/<int:pk>/<numbasslug:slug>/resources/question-resources/<path:resource>',
         resource.view_resource, name='view_resource'),
                        
     path('question/<int:pk>/<numbasslug:slug>/copy/', login_required(question.CopyView.as_view()), name='question_copy',),

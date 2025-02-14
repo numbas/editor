@@ -18,13 +18,20 @@
                     <div class="bar" data-bind="style: {width: progress()+'%'}"></div>
                 </div>
                 <div data-bind="visible: progress()==1">
-                    <a data-bind="attr: {href: url}" target="_blank"><img class="thumbnail" data-bind="if: filetype()=='img', attr: {src: url, title: name, alt: alt_text}"/></a>
+                    <a data-bind="attr: {href: name}" target="_blank"><img class="thumbnail" data-bind="if: filetype()=='img', attr: {src: url, title: name, alt: alt_text}"/></a>
                 </div>
             </div>
             <div class="media-body">
                 <form class="form" data-bind="submit: Editor.noop">
                     {% with form_label_class="" form_control_class="" %}
-                        {% property "'resources/'+name()" "URL" disable=True id="'input-resource-url-'+$index()" dynamic_id=True %}
+                        <div class="form-group">
+                            <label class="control-label" data-bind="attr: { for: 'input-resource-url-'+$index() }">URL</label>
+                            <div class="filename-input">
+                                <code>resources/question-resources/</code>
+                                {% text_input 'filename' monospace=True type='text' %}
+                                <button type="button" data-bind="click: copy_url" title="Copy this resource's URL to the clipboard">📋</button>
+                            </div>
+                        </div>
                         <!-- ko if: filetype()=='img' -->
                         {% property 'alt_text' 'Text alternative' placeholder="'Describe this image for someone who can\'t see it'" id="'input-resource-alt_text-'+$index()" dynamic_id=True %}
                         <!-- /ko -->

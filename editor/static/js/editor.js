@@ -4,6 +4,27 @@ if(!window.Editor)
 
 $(document).ready(function() {
 
+    function copy_text_to_clipboard(text) {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+
+        ta.style = 'position: fixed; top: 0; left: 0;';
+
+        document.body.appendChild(ta);
+
+        var active = document.activeElement;
+        ta.focus();
+        ta.select();
+
+        document.execCommand('copy');
+
+        document.body.removeChild(ta);
+
+        if(active) {
+            active.focus();
+        }
+    }
+
     var wrap_subvar = Editor.wrap_subvar = function(expr) {
         var sbits = Numbas.util.splitbrackets(expr,'{','}');
         var out = '';
@@ -2392,7 +2413,19 @@ $(document).ready(function() {
     var Resource = Editor.Resource = function(data) {
         this.progress = ko.observable(0);
         this.url = ko.observable('');
-        this.name = ko.observable('');
+        this.filename = ko.observable('');
+        var prefix = 'resources/question-resources/';
+        this.name = ko.computed({
+            read: function() {
+                return prefix+this.filename();
+            },
+            write: function(v) {
+                if(v.startsWith(prefix)) {
+                    v = v.slice(prefix.length);
+                }
+                return this.filename(v);
+            }
+        }, this);
         this.pk = ko.observable(0);
         this.alt_text = ko.observable('');
 
@@ -2409,10 +2442,20 @@ $(document).ready(function() {
             this.alt_text(data.alt_text);
             this.deleteURL = data.delete_url;
         },
+
+        toJSON: function() {
+            return {
+                pk: this.pk(),
+                name: this.filename()
+            }
+        },
+
         filePatterns: {
             'html': /\.html?$/i,
-            'img': /\.(png|jpg|gif|bmp|jpeg|webp|tiff|tif|raw|svg)$/i
+            'img': /\.(png|jpg|gif|bmp|jpeg|webp|tiff|tif|raw|svg)$/i,
+            'video': /\.(mp4|m4v)$/i,
         },
+
         filetype: function() {
             var name = this.name();
             for(var type in this.filePatterns) {
@@ -2420,9 +2463,14 @@ $(document).ready(function() {
                     return type;
             }
         },
+
+        copy_url: function() {
+            copy_text_to_clipboard(this.name());
+        },
+
         can_embed: function() {
             var type = this.filetype();
-            return type=='img' || type=='html';
+            return type=='img' || type=='html' || type=='video';
         }
     };
 

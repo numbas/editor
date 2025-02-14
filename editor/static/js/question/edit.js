@@ -288,7 +288,8 @@ $(document).ready(function() {
                 if(res.progress()==1) {
                     out.push({
                         pk: res.pk(),
-                        alt_text: res.alt_text()
+                        alt_text: res.alt_text(),
+                        filename: res.filename(),
                     });
                 }
             }
@@ -1520,7 +1521,7 @@ $(document).ready(function() {
                 objectives: this.objectives().map(function(o){return o.toJSON();}),
                 penalties: this.penalties().map(function(p){return p.toJSON();}),
                 objectiveVisibility: this.objectiveVisibility().id,
-                penaltyVisibility: this.penaltyVisibility().id
+                penaltyVisibility: this.penaltyVisibility().id,
             }
         },
 

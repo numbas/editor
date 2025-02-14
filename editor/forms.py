@@ -222,7 +222,7 @@ class NewQuestionForm(forms.ModelForm):
             'project': BootstrapSelect,
         }
 
-ResourcesAltTextForm = modelformset_factory(Resource, fields=('alt_text',))
+ResourcesAltTextForm = modelformset_factory(Resource, fields=('alt_text', 'filename'))
 
 class ExamForm(EditorItemForm):
     class Meta:
@@ -254,7 +254,13 @@ class NewExamForm(forms.ModelForm):
 
 def validate_exam_file(f):
     try:
-        content = f.read().decode('utf-8')
+        if zipfile.is_zipfile(f):
+            with zipfile.ZipFile(f) as z:
+                with z.open('source.exam') as zf:
+                    content = zf.read().decode('utf-8')
+        else:
+            content = f.read().decode('utf-8')
+
         editor.models.validate_content(content)
         f.seek(0)
     except (UnicodeDecodeError, forms.ValidationError):

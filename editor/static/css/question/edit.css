@@ -1,4 +1,5 @@
 .parts > .part + .part.root {
+
     margin-top: 1em;
 }
 
@@ -415,4 +416,10 @@ table.variable-list .value-cell .value-wrapper {
 
 .part > h3 {
     margin-top: 0;
+}
+
+.filename-input {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
 }

@@ -16,6 +16,10 @@ class Exporter:
         self.zipfile = zipfile
 
 
+    def get_root(self):
+        return zipfile.Path(self.zipfile,'')
+
+
     def write_json(self, path, content):
         with path.open('w') as f:
             f.write(json.dumps(content, indent=4))
@@ -54,7 +58,7 @@ class Exporter:
         }
 
 
-    def stamp_json(stamp):
+    def stamp_json(self, stamp):
         return {
             'user': self.user_json(stamp.user),
             'status': stamp.status,
@@ -258,10 +262,37 @@ class Exporter:
 
         return data
 
-    def export_project(self, project):
-        zf = self.zipfile
 
-        root = zipfile.Path(zf,'')
+    def userprofile_json(self, userprofile):
+        return {
+            'user': self.user_json(userprofile.user),
+            'language': userprofile.language,
+            'bio': userprofile.bio,
+            'question_basket': [self.absolute_url(q) for q in userprofile.question_basket.all()],
+            'personal_project': self.absolute_url(userprofile.personal_project),
+            'wrap_lines': userprofile.wrap_lines,
+            'mathjax_url': userprofile.mathjax_url,
+
+            'never_email': userprofile.never_email,
+
+            'recent_questions': [self.absolute_url(q) for q in userprofile.recent_questions()],
+
+            'projects': [
+                {
+                    'url': self.absolute_url(p),
+                    'is_owner': p.owner == userprofile.user,
+                }
+                for p in userprofile.projects()
+            ],
+
+            'available_queues': [self.get_absolute_url(q) for q in userprofile.available_queues()],
+        }
+
+
+
+class ProjectExporter(Exporter):
+    def export(self, project):
+        root = self.get_root()
 
         self.write_json(root / 'project.json', self.project_json(project))
 
@@ -279,7 +310,7 @@ class Exporter:
         def handle_item(item, path):
             item_path = path / f'{item.item_type}-{item.pk}-{item.slug}'
             with (item_path / 'source.exam').open('w') as f:
-                numbasobj = item.as_numbasobject(request)
+                numbasobj = item.as_numbasobject(self.request)
                 f.write(str(numbasobj))
             self.write_json(item_path / 'metadata.json', self.item_json(item))
             
@@ -290,33 +321,67 @@ class Exporter:
             handle_item(item, root)
 
         for resource in Resource.objects.filter(questions__editoritem__project=project).distinct():
-            with (zipfile.Path(zf, 'resources') / resource.file.name).open('wb') as f:
+            with (root / 'resources' / resource.file.name).open('wb') as f:
                 f.write(resource.file.file.read())
 
 
-    def userprofile_json(self, userprofile):
-        return {
-            'user': self.user_json(userprofile.user),
-        }
-
-    def export_user(self, user):
-        root = zipfile.Path(zf,'')
+class UserExporter(Exporter):
+    def export(self, user):
+        root = self.get_root()
 
         self.write_json(root / 'profile.json', self.userprofile_json(user.userprofile))
 
-class ProjectExportView(ProjectContextMixin, CanViewMixin, generic.DetailView):
-    model = Project
+        try:
+            avatar_path = Path(user.userprofile.avatar.path)
+            with (root / 'avatar').with_suffix(avatar_path.suffix).open('wb') as f:
+                with avatar_path.open('rb') as af:
+                    f.write(af.read())
+        except ValueError:
+            pass
 
+
+class ExportView(CanViewMixin, generic.DetailView):
     http_method_names = ['get', 'post', 'options']
 
+    def get_filename(self):
+        raise NotImplementedError
+
+    def get_exporter_cls(self):
+        if hasattr(self, 'exporter_cls'):
+            return self.exporter_cls
+        else:
+            raise NotImplementedError
+
     def dispatch(self, request, *args, **kwargs):
-        project = self.get_object()
-        response = ZipResponse(project.name)
+        obj = self.get_object()
+
+        response = ZipResponse(self.get_filename())
+
         zf = response.zipfile
+        
+        exporter_cls = self.get_exporter_cls()
 
-        exporter = Exporter(request, zf)
+        exporter = exporter_cls(request, zf)
 
-        exporter.export_project(project)
+        exporter.export(obj)
+
         zf.close()
 
         return response
+
+class ProjectExportView(ProjectContextMixin, ExportView):
+    model = Project
+    exporter_cls = ProjectExporter
+
+    def get_filename(self):
+        return self.get_object().name
+
+class UserProfileExportView(ExportView):
+    model = User
+    exporter_cls = ProjectExporter
+
+    def get_object(self):
+        return self.request.user
+
+    def get_filename(self):
+        return self.request.user.username

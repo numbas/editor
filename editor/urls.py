@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from .views import project, folder, editoritem, exam, question, HomeView, \
     GlobalStatsView, ExploreView, TermsOfUseView, PrivacyPolicyView, TopSearchView, \
     theme, extension, generic, notification, resource, basket, timeline, \
-    custom_part_type, queue, site_broadcast
+    custom_part_type, queue, site_broadcast, export
 
 class NumbasSlugConverter:
     regex = r'[\w-]+'
@@ -67,6 +67,8 @@ urlpatterns = [
     path('project/<int:pk>/comment',
         login_required(project.CommentView.as_view()), name='comment_on_project'),
 
+    path('project/<int:pk>/export.zip',
+         login_required(export.ProjectExportView.as_view()), name='export_project'),
 
     path('folder/move', folder.MoveFolderView.as_view(), name='folder_move'),
     path('folder/move_project', folder.MoveProjectView.as_view(), name='folder_move_project'),

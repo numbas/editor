@@ -511,6 +511,7 @@ class CompileObject(MustHaveAccessMixin):
             '-l'+locale,
             '--mathjax-url',self.get_mathjax_url(),
             '--accessibility-statement-url', self.get_accessibility_statement_url(),
+            '--resource-root', str((Path(settings.MEDIA_ROOT) / 'question-resources').resolve()),
         ] + switches
 
         if settings.DEBUG:

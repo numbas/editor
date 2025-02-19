@@ -9,7 +9,9 @@ from django.template.loader import get_template
 from django.template import RequestContext
 from django.template.response import TemplateResponse
 import reversion
+from zipfile import ZipFile
 
+from editor.slugify import slugify
 from editor.models import NewStampOfApproval, Comment, RestorePoint, EditorItem, IndividualAccess
 
 from accounts.util import user_json
@@ -273,3 +275,17 @@ class ProjectQuerysetMixin(object):
         form = super(ProjectQuerysetMixin, self).get_form()
         form.fields['project'].queryset = self.request.user.userprofile.projects().order_by('name').distinct()
         return form
+
+class ZipResponse(http.HttpResponse):
+    """
+        A response containing a .zip file.
+
+        You must call ``response.zipfile.close`` before returning the response.
+    """
+    def __init__(self, filename):
+        super().__init__(content_type='application/zip')
+        filename = slugify(filename)+'.zip'
+        self['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
+
+        self.zipfile = ZipFile(self, 'w')
+        self.zipfile.filename = filename

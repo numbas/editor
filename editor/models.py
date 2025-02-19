@@ -1764,7 +1764,8 @@ class NewQuestion(models.Model):
 
     @property
     def resource_paths(self):
-        return [('question-resources/' + r.filename, r.file.path) for r in self.resources.all()]
+        media_root = Path(settings.MEDIA_ROOT).resolve() / 'question-resources'
+        return [('question-resources/' + r.filename, str(Path(r.file.path).relative_to(media_root))) for r in self.resources.all()]
 
     def as_numbasobject(self,request):
         self.editoritem.get_parsed_content()

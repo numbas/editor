@@ -8,7 +8,7 @@ from django.shortcuts import redirect
 
 from editor.models import Extension
 from editor import forms
-from editor.views.generic import AuthorRequiredMixin, CanViewMixin
+from editor.views.generic import AuthorRequiredMixin, CanViewMixin, ZipResponse
 from editor.views import editable_package
 
 class ExtensionViewMixin:
@@ -93,11 +93,14 @@ class DownloadView(CanViewMixin, generic.DetailView):
 
     def get(self, request, *args, **kwargs):
         extension = self.get_object()
-        response = http.HttpResponse(content_type='application/zip')
-        response['Content-Disposition'] = 'attachment; filename="{}.zip"'.format(extension.location)
-        zf = ZipFile(response,'w')
+
+        response = ZipResponse(extension.location)
+
         for fname in extension.filenames():
-            zf.write(os.path.join(extension.extracted_path,fname), fname)
+            response.zipfile.write(os.path.join(extension.extracted_path,fname), fname)
+
+        response.zipfile.close()
+
         return response
 
 class DeleteView(AuthorRequiredMixin, generic.DeleteView):

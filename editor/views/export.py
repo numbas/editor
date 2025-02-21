@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.conf import settings
 from django.urls import reverse
 from django.views import generic
@@ -9,6 +10,18 @@ import zipfile
 
 import editor.models
 from editor.models import Project, Resource, EditorItem, User
+
+class ExportJSONEncoder(json.JSONEncoder):
+
+    type_encoders = {
+        datetime: lambda t: t.isoformat(),
+    }
+
+    def default(self, o):
+        try:
+            return self.type_encoders[type(o)](o)
+        except KeyError:
+            return super().default(o)
 
 class Exporter:
     def __init__(self, request, zipfile):
@@ -22,7 +35,7 @@ class Exporter:
 
     def write_json(self, path, content):
         with path.open('w') as f:
-            f.write(json.dumps(content, indent=4))
+            f.write(ExportJSONEncoder(indent=4).encode(content))
 
 
     def make_absolute(self, url):
@@ -52,23 +65,30 @@ class Exporter:
 
     def user_json(self, user):
         return {
-            'pk': user.pk,
+            'id': user.pk,
             'name': user.get_full_name(),
+            'is_active': user.is_active,
+            'is_staff': user.is_staff,
+            'is_superuser': user.is_superuser,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
             'url': self.absolute_reverse('view_profile', args=(user.pk,))
         }
 
 
     def stamp_json(self, stamp):
         return {
+            'id': stamp.pk,
             'user': self.user_json(stamp.user),
             'status': stamp.status,
             'status_display': stamp.get_status_display(),
-            'date': self.datetime_json(stamp.date),
+            'date': stamp.date,
         }
 
 
     def taxonomy_node_json(self, node):
         return {
+            'id': node.pk,
             'name': node.name,
             'taxonomy': node.taxonomy.name,
             'code': node.code,
@@ -77,7 +97,8 @@ class Exporter:
 
     def timeline_item_json(self, ti):
         data = {
-            'date': self.datetime_json(ti.date)
+            'id': ti.pk,
+            'date': ti.date
         }
 
         obj = ti.object
@@ -98,7 +119,7 @@ class Exporter:
                 'destination': self.absolute_url(obj.destination),
                 'open': obj.open,
                 'accepted': obj.accepted,
-                'created': self.datetime_json(obj.created),
+                'created': obj.created,
                 'comment': obj.comment,
             })
 
@@ -109,7 +130,7 @@ class Exporter:
                 'title': obj.title,
                 'text': obj.text,
                 'sticky': obj.sticky,
-                'show_until': self.datetime_json(obj.show_until),
+                'show_until': obj.show_until,
             })
 
         elif isinstance(obj, editor.models.NewStampOfApproval):
@@ -153,8 +174,9 @@ class Exporter:
 
     def resource_json(self, resource):
         return {
+            'id': resource.pk,
             'owner': self.user_json(resource.owner),
-            'date_created': self.datetime_json(resource.date_created),
+            'date_created': resource.date_created,
             'file': resource.file.name,
             'filename': resource.filename,
             'alt_text': resource.alt_text,
@@ -162,6 +184,7 @@ class Exporter:
 
     def exam_question_json(self, eq):
         return {
+            'id': eq.pk,
             'question': self.absolute_url(eq.question),
             'qn_order': eq.qn_order,
             'group': eq.group,
@@ -172,6 +195,7 @@ class Exporter:
 
     def item_json(self, item):
         data = {
+            'id': item.pk,
             'url': self.absolute_url(item),
             'name': item.name,
             'slug': item.slug,
@@ -179,13 +203,13 @@ class Exporter:
             'author': self.user_json(item.author),
             'contributors': [self.user_json(c.user) if c.user is not None else {'name': c.name, 'url': c.profile_url} for c in item.contributors.all()],
             'licence': item.licence.as_json() if item.licence else None,
-            'created': self.datetime_json(item.created),
-            'last_modified': self.datetime_json(item.created),
+            'created': item.created,
+            'last_modified': item.created,
             'copy_of': self.absolute_url(item.copy_of) if item.copy_of else None,
             'tags': self.tags_json(item.tags),
             'current_stamp': self.stamp_json(item.current_stamp) if item.current_stamp else None,
             'published': item.published,
-            'published_date': self.datetime_json(item.published_date) if item.published_date else None,
+            'published_date': item.published_date,
             'ability_levels': [al.name for al in item.ability_levels.all()],
             'taxonomy_nodes': [self.taxonomy_node_json(node) for node in item.taxonomy_nodes.all()],
             'timeline': self.timeline_json(item.timeline),
@@ -216,6 +240,7 @@ class Exporter:
 
     def item_queue_entry_json(self, entry):
         return {
+            'id': entry.pk,
             'statuses': self.tags_json(entry.statuses),
             'assigned_user': self.user_json(entry.assigned_user) if entry.assigned_user else None,
             'item': self.absolute_url(entry.item),
@@ -228,12 +253,14 @@ class Exporter:
 
     def item_queue_checklist_item_json(self, c):
         return {
+            'id': c.pk,
             'position': c.position,
             'label': c.label,
         }
 
     def item_queue_json(self, queue):
         return {
+            'id': queue.pk,
             'owner': self.user_json(queue.owner),
             'name': queue.name,
             'description': queue.description,
@@ -250,6 +277,7 @@ class Exporter:
     def project_json(self, project):
         data = {
             'name': project.name,
+            'id': project.pk,
             'owner': self.user_json(project.owner),
             'url': self.absolute_url(project),
             'members': [self.user_json(u) for u in project.members()],
@@ -263,9 +291,37 @@ class Exporter:
         return data
 
 
-    def userprofile_json(self, userprofile):
+    def individual_access_json(self, access):
         return {
-            'user': self.user_json(userprofile.user),
+            'id': access.pk,
+            'object_type': access.object_content_type.name,
+            'object': self.get_absolute_url(access.object),
+            'access': access.access,
+        }
+
+
+    def project_invitation_json(self, invitation):
+        return {
+            'id': invitation.pk,
+            'email': invitation.email,
+            'access': invitation.access,
+            'project': self.get_absolute_url(invitation.project),
+            'applied': invitation.applied,
+        }
+    
+
+    def userprofile_json(self, userprofile):
+        user = userprofile.user
+        user_data = self.user_json(user)
+
+        user_data.update({
+            'email': user.email,
+            'last_login': user.last_login,
+            'date_joined': user.last_login,
+        })
+
+        return {
+            'user': user_data,
             'language': userprofile.language,
             'bio': userprofile.bio,
             'question_basket': [self.absolute_url(q) for q in userprofile.question_basket.all()],
@@ -285,17 +341,57 @@ class Exporter:
                 for p in userprofile.projects()
             ],
 
+            'accesses': [self.individual_access_json(access) for access in user.individual_accesses.all()],
+
             'available_queues': [self.get_absolute_url(q) for q in userprofile.available_queues()],
+
+            'project_invitations': [self.project_invitation_json(invitation) for invitation in user.project_invitations.all()],
+
+            'last_viewed_items': [
+                {
+                    'item': self.get_absolute_url(v.item),
+                    'date': v.date
+                }
+                for v in userprofile.last_viewed_items()
+            ],
+
+
         }
 
+
+    def extension_json(self, extension):
+        return {
+            'id': extension.pk,
+            'url': self.absolute_url(extension),
+            'name': extension.name,
+            'location': extension.location,
+            'documentation': extension.url,
+            'public': extension.public,
+            'slug': extension.slug,
+            'author': self.user_json(extension.author),
+            'last_modified': extension.last_modified,
+            'editable': extension.editable,
+            'runs_headless': extension.runs_headless,
+            'access': [
+                {
+                    'user': self.user_json(access.user),
+                    'access': access.access,
+                }
+                for access in extension.access.all()
+            ],
+        }
 
 
 class ProjectExporter(Exporter):
     def export(self, project):
-        root = self.get_root()
+        self.export_metadata()
+        self.export_folders()
+        self.export_resources()
 
-        self.write_json(root / 'project.json', self.project_json(project))
+    def export_metadata(self):
+        self.write_json(self.get_root() / 'project.json', self.project_json(project))
 
+    def export_folders(self):
         def handle_folder(node, path):
             folder = node['folder']
 
@@ -313,6 +409,8 @@ class ProjectExporter(Exporter):
                 numbasobj = item.as_numbasobject(self.request)
                 f.write(str(numbasobj))
             self.write_json(item_path / 'metadata.json', self.item_json(item))
+
+        root = self.get_root()
             
         for folder in project.folder_hierarchy():
             handle_folder(folder,root)
@@ -320,6 +418,8 @@ class ProjectExporter(Exporter):
         for item in EditorItem.objects.filter(project=project, folder=None):
             handle_item(item, root)
 
+    def export_resources(self):
+        root = self.get_root()
         for resource in Resource.objects.filter(questions__editoritem__project=project).distinct():
             with (root / 'resources' / resource.file.name).open('wb') as f:
                 f.write(resource.file.file.read())
@@ -327,9 +427,14 @@ class ProjectExporter(Exporter):
 
 class UserExporter(Exporter):
     def export(self, user):
-        root = self.get_root()
+        self.user = user
+        self.export_metadata()
+        self.export_extensions()
 
-        self.write_json(root / 'profile.json', self.userprofile_json(user.userprofile))
+    def export_metadata(self):
+        userprofile = self.user.userprofile
+
+        self.write_json(self.get_root() / 'profile.json', self.userprofile_json(userprofile))
 
         try:
             avatar_path = Path(user.userprofile.avatar.path)
@@ -338,6 +443,18 @@ class UserExporter(Exporter):
                     f.write(af.read())
         except ValueError:
             pass
+
+    def export_extensions(self):
+        user = self.user
+
+        path = self.get_root() / 'extensions'
+        for extension in user.own_extensions.all():
+            epath = path / extension.location
+
+            self.write_json(epath / 'extension.json', self.extension_json(extension))
+
+            for fname in extension.filenames():
+                (epath / fname).write(Path(extension.extracted_path) / fname)
 
 
 class ExportView(CanViewMixin, generic.DetailView):

@@ -4,7 +4,7 @@ from django.views.generic import TemplateView
 
 from django.contrib.auth.decorators import login_required
 
-from accounts.views import ActivationView, RegistrationView, RegistrationCompleteView, UserUpdateView, ChangePasswordView, UserProfileView, AllExamsView, AllQuestionsView, UserSearchView, WellKnownChangePasswordView
+from accounts.views import ActivationView, RegistrationView, RegistrationCompleteView, UserUpdateView, ChangePasswordView, UserProfileView, AllExamsView, AllQuestionsView, UserSearchView, WellKnownChangePasswordView, BackupView
 import accounts.views
 
 from numbas import settings
@@ -34,6 +34,9 @@ urlpatterns = [
     path('profile/edit',
         login_required(UserUpdateView.as_view()),
         name='edit_profile'),
+    path('profile/backup.zip',
+        login_required(BackupView.as_view()),
+        name='user_backup'),
     path('profile/backup/all-exams',
         login_required(AllExamsView.as_view()),
         name='all_exams_download'),

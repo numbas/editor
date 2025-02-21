@@ -21,7 +21,7 @@ from django.template.loader import get_template
 from django.contrib.sites.shortcuts import get_current_site
 from editor.models import NewQuestion, NewExam, Theme, Extension
 import editor.models
-from editor.views import editoritem
+from editor.views import editoritem, export
 from registration import signals
 import registration.views
 
@@ -188,6 +188,9 @@ class ZipView(DetailView):
         response['Content-Length'] = len(rf)
         response['Cache-Control'] = 'max-age=0,no-cache,no-store'
         return response
+
+class BackupView(export.UserProfileExportView):
+    pass
 
 class AllExamsView(ZipView):
     def get_zip(self, request, *args, **kwargs):

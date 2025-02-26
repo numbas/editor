@@ -259,6 +259,7 @@ def validate_exam_file(f):
                 with z.open('source.exam') as zf:
                     content = zf.read().decode('utf-8')
         else:
+            f.seek(0)
             content = f.read().decode('utf-8')
 
         editor.models.validate_content(content)

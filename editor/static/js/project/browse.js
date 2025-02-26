@@ -25,13 +25,19 @@ function get_selection() {
 
 function move_to(target_pk,selection) {
     selection.folders = selection.folders.filter(function(pk) { return pk!=target_pk; });
-    var data = {
-        csrfmiddlewaretoken: getCSRFtoken(),
-        project: project_pk,
-        parent: target_pk,
-        folders: selection.folders,
-        items: selection.items
+    var fd = new FormData();
+    fd.set('csrfmiddlewaretoken',getCSRFtoken());
+    fd.set('project', project_pk);
+    if(target_pk > 0) {
+        fd.set('parent', target_pk);
     }
+    for(let folder of selection.folders) {
+        fd.append('folders', folder);
+    }
+    for(let item of selection.items) {
+        fd.append('items', item);
+    }
+
     var folder_rows = selection.folders.map(function(folder_pk) {
         return document.querySelector('#contents .folder[data-folder="'+folder_pk+'"]');
     });
@@ -42,45 +48,62 @@ function move_to(target_pk,selection) {
     all_rows.forEach(function(row) {
         row.classList.add('moving');
     })
-    $.post({
-        url: Editor.url_prefix + 'folder/move',
-        data: data,
-        traditional: true
+    fetch(
+        Editor.url_prefix + 'folder/move',
+        {
+            method: 'POST',
+            body: fd,
+            headers: {
+                'Accept': 'application/json'
+            },
+        }
+    )
+    .then(r => {
+        if(!r.ok) {
+            throw(new Error(r.statusText));
+        }
+        return r;
     })
-        .then(function(r) {
-            var moving_rows = document.querySelectorAll('#contents .moving');
-            for(var i=0;i<moving_rows.length;i++) {
-                moving_rows[i].classList.remove('moving');
+    .then(r => r.json())
+    .then(function(r) {
+        var moving_rows = document.querySelectorAll('#contents .moving');
+        for(var i=0;i<moving_rows.length;i++) {
+            moving_rows[i].classList.remove('moving');
+        }
+        var folder_rows = r.folders_moved.map(function(folder_pk) {
+            return document.querySelector('#contents .folder[data-folder="'+folder_pk+'"]');
+        });
+        var item_rows = r.items_moved.map(function(item_pk) {
+            return document.querySelector('#contents .item[data-item="'+item_pk+'"]');
+        });
+        var all_rows = folder_rows.concat(item_rows).filter(function(row) { return row });
+        all_rows.forEach(function(row) {
+            if(row.parentElement) {
+                row.parentElement.removeChild(row)
             }
-            var folder_rows = r.folders_moved.map(function(folder_pk) {
-                return document.querySelector('#contents .folder[data-folder="'+folder_pk+'"]');
-            });
-            var item_rows = r.items_moved.map(function(item_pk) {
-                return document.querySelector('#contents .item[data-item="'+item_pk+'"]');
-            });
-            var all_rows = folder_rows.concat(item_rows).filter(function(row) { return row });
-            all_rows.forEach(function(row) {
-                if(row.parentElement) {
-                    row.parentElement.removeChild(row)
-                }
-            });
-            noty({
-                text: r.message,
-                layout: 'topCenter',
-            });
-            num_items -= r.items_moved.length;
-            document.getElementById('num-items').textContent = num_items+' item'+(num_items==1 ? '' : 's');
-            if(num_items<=0) {
-                document.getElementById('contents-container').classList.add('empty');
-            }
-            update_selection();
-        })
-        .fail(function(r) {
-            all_rows.forEach(function(row) {
-                row.classList.remove('moving');
-            });
-        })
-    ;
+        });
+        noty({
+            text: r.message,
+            layout: 'topCenter',
+        });
+        num_items -= r.items_moved.length;
+        document.getElementById('num-items').textContent = num_items+' item'+(num_items==1 ? '' : 's');
+        if(num_items<=0) {
+            document.getElementById('contents-container').classList.add('empty');
+        }
+        update_selection();
+    })
+    .catch(function(err) {
+        console.log(arguments);
+        noty({
+            text: err,
+            layout: 'topCenter',
+            type: 'error'
+        });
+        all_rows.forEach(function(row) {
+            row.classList.remove('moving');
+        });
+    });
 }
 
 function make_dragger(row) {

@@ -15,7 +15,7 @@ from random import shuffle, randint
 import re
 
 def request_is_ajax(request):
-    return request.headers.get('x-requested-with') == 'XMLHttpRequest'
+    return request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('accept','')
 
 class HomeView(TemplateView):
     template_name = 'index.html'

@@ -93,6 +93,7 @@ class UploadView(editor.views.editoritem.CreateView):
                 with z.open('source.exam') as zf:
                     content = zf.read().decode('utf-8')
         else:
+            exam_file.seek(0)
             content = exam_file.read().decode('utf-8')
 
         project = self.project = form.cleaned_data.get('project')
@@ -190,7 +191,7 @@ class UploadView(editor.views.editoritem.CreateView):
         extensions = Extension.objects.filter(location__in=q.get('extensions',[]))
         qo.extensions.set(extensions)
 
-        resources = [self.resources[filename] for filename in q.get('resources') if filename in self.resources]
+        resources = [self.resources[filename] for filename in q.get('resources',[]) if filename in self.resources]
         qo.resources.set(resources)
 
         contributors = q.get('contributors',[])

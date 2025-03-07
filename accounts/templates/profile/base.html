@@ -30,6 +30,7 @@
                 <li class="{% if profile_page == "custom_part_types" %}active{% endif %}"><a href="{% url 'profile_custom_part_types' object.pk %}"><span class="glyphicon glyphicon-ok"></span> Part types</a></li>
                 {% if view_user == request.user %}
                 <li role="separator" class="nav-divider"></li>
+                <li class="{% if profile_page == "exports" %}active{% endif %}"><a href="{% url 'profile_data_exports' object.pk %}"><span class="glyphicon glyphicon-download"></span> Data exports</a></li>
                 <li><a class="text-danger" href="{% url 'user_deactivate' %}"><span class="glyphicon glyphicon-remove"></span> Deactivate your account</a></li>
                 <li><a class="text-danger" href="{% url 'user_reassign_content' %}"><span class="glyphicon glyphicon-share"></span> Reassign your content</a></li>
                 {% endif %}

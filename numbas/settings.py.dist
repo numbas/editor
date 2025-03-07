@@ -221,3 +221,11 @@ LOCKDOWN_APP = {
     # This is built into the lockdown app, so shouldn't change unless you have your own version.
     'salt': '45ab2cf2e139c01f8447d17dc653d585',
 }
+
+# Settings for the Huey task runner
+HUEY = {
+    'huey_class': 'huey.SqliteHuey',  # Huey implementation to use.
+    'filename': 'tasks.sqlite3',
+    'immediate': False,
+    'utc': True,  # Use UTC for all times internally.
+}

@@ -2162,3 +2162,35 @@ class ItemQueueChecklistTick(models.Model):
     item = models.ForeignKey(ItemQueueChecklistItem, on_delete=models.CASCADE, related_name='ticks')
     date = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name='queue_entry_ticks')
+
+
+
+DATA_EXPORT_STATUSES = [
+    ('inprogress', 'In progress'),
+    ('complete', 'Complete'),
+    ('error', 'Error'),
+]
+
+class DataExport(models.Model):
+    name = models.CharField(max_length=100)
+
+    object_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    object = GenericForeignKey('object_content_type', 'object_id')
+
+    outfile = models.FileField(upload_to='exports/', verbose_name='Output file')
+    status = models.CharField(max_length=10, default='inprogress', choices=DATA_EXPORT_STATUSES)
+    creation_time = models.DateTimeField(auto_now_add=True, verbose_name='Time this report was created')
+    created_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name='data_exports')
+
+    class Meta:
+        verbose_name = 'Data export'
+        verbose_name_plural = 'Data exports'
+        ordering = ('-creation_time',)
+
+
+    def expiry_date(self):
+        return self.creation_time + timedelta(days=settings.REPORT_FILE_EXPIRY_DAYS)
+
+    def __str__(self):
+        return f'"{self.object}", exported on {self.creation_time}'

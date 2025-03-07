@@ -1,0 +1,46 @@
+{% extends "profile/base.html" %}
+{% load sanitizer %}
+{% load can_edit %}
+
+{% block profile_header %}Your data exports{% endblock %}
+
+{% block title %}Data exports - {{block.super}}{% endblock %}
+
+{% block profile_content %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Object</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for de in request.user.data_exports.all %}
+        <tr>
+            <td>{{de.creation_time}}</td>
+            <td>{{de.name}}</td>
+            <td>
+                {% if de.object.get_absolute_url %}
+                    <a href="{{de.object.get_absolute_url}}">{{de.object}}</a>
+                {% else %}
+                    {{de.object}}
+                {% endif %}
+            </td>
+            <td>
+                {% if de.status == 'complete' %}
+                    <a href="{{de.outfile.url}}"><span class="glyphicon glyphicon-download"></span> Download</a>
+                {% elif de.status == 'inprogress' %}
+                    In progress: {% if de.outfile %}{{de.outfile.size|filesizeformat}}{% else %}0 bytes{% endif %}
+                {% elif de.status == 'error' %}
+                    Error
+                {% else %}
+                    {{de.status}}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock profile_content %}

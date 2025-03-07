@@ -300,3 +300,8 @@ def unsubscribe_emails(request):
     up.save()
     
     return render(request, 'unsubscribed-emails.html',{})
+
+
+class UserDataExportsView(UserProfileView):
+    template_name = 'profile/data_exports.html'
+    profile_page = 'exports'

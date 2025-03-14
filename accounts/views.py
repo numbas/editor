@@ -15,7 +15,7 @@ from django.core import signing
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.contrib import messages
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from editor.slugify import slugify
 from django.template.loader import get_template
 from django.contrib.sites.shortcuts import get_current_site
@@ -133,6 +133,7 @@ class UserProfileView(DetailView):
         context = super(UserProfileView, self).get_context_data(*args, **kwargs)
         context['is_me'] = self.request.user == self.object
         context['profile_page'] = self.profile_page
+
         return context
 
 class UserProjectsView(UserProfileView):
@@ -305,3 +306,14 @@ def unsubscribe_emails(request):
 class UserDataExportsView(UserProfileView):
     template_name = 'profile/data_exports.html'
     profile_page = 'exports'
+
+    def get(self, request, *args, **kwargs):
+        if self.request.accepts('application/json') and not self.request.accepts('text/html'):
+            template = get_template('profile/data_exports_table.html')
+            table = template.render({'request':request})
+            data = {
+                'exports': [de.as_json(request) for de in request.user.data_exports.all()],
+                'table': table,
+            }
+            return JsonResponse(data)
+        return super().get(request, *args, **kwargs)

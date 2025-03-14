@@ -2166,6 +2166,7 @@ class ItemQueueChecklistTick(models.Model):
 
 
 DATA_EXPORT_STATUSES = [
+    ('queued', 'Queued'),
     ('inprogress', 'In progress'),
     ('complete', 'Complete'),
     ('error', 'Error'),
@@ -2179,7 +2180,8 @@ class DataExport(models.Model):
     object = GenericForeignKey('object_content_type', 'object_id')
 
     outfile = models.FileField(upload_to='exports/', verbose_name='Output file')
-    status = models.CharField(max_length=10, default='inprogress', choices=DATA_EXPORT_STATUSES)
+    status = models.CharField(max_length=10, default='queued', choices=DATA_EXPORT_STATUSES)
+    error_message = models.TextField(blank=True,null=True)
     creation_time = models.DateTimeField(auto_now_add=True, verbose_name='Time this report was created')
     created_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name='data_exports')
 
@@ -2194,3 +2196,18 @@ class DataExport(models.Model):
 
     def __str__(self):
         return f'"{self.object}", exported on {self.creation_time}'
+
+    def as_json(self, request):
+        return  {
+            'pk': self.pk,
+            'name': self.name,
+            'object': {
+                'url': request.build_absolute_uri(self.object.get_absolute_url()) if hasattr(self.object, 'get_absolute_url') else None,
+                'name': str(self.object),
+            },
+            'size': self.outfile.size if self.outfile else 0,
+            'status': self.status,
+            'status_display': self.get_status_display(),
+            'creation_time': self.creation_time.isoformat(),
+            'created_by': self.created_by.pk,
+        }

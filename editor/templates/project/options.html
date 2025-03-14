@@ -73,19 +73,28 @@
         </form>
     </div>
 </div>
-{% if request.user == project.owner and project != project.owner.userprofile.personal_project %}
 <div class="panel panel-danger">
     <div class="panel-heading">
         <h3 class="panel-title">Admin actions</h3>
     </div>
     <ul class="list-group">
         <li class="list-group-item">
+            <form action="{% url 'export_project' project.pk %}" method="POST">
+                {% csrf_token %}
+                <p>
+                    Export all content in this project.
+                    <button class="btn btn-warning pull-right"><span class="glyphicon glyphicon-cloud-download"></span> Export project data</button>
+                </p>
+            </form>
+        </li>
+        {% if request.user == project.owner and project != project.owner.userprofile.personal_project %}
+        <li class="list-group-item">
             <a class="btn btn-danger pull-right" href="{% url 'project_delete' project.pk %}">Delete this project</a>
             <p>Deleting this project will reassign each of its questions and exams to its author's personal workspace.</p>
             <p><strong>This can not be undone.</strong></p>
         </li>
+        {% endif %}
     </ul>
 </div>
-{% endif %}
 {% endblock settings_content %}
 

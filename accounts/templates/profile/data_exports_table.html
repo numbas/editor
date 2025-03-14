@@ -1,0 +1,38 @@
+<table class="table" id="data-exports">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Object</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for de in request.user.data_exports.all %}
+        <tr class="data-export" data-pk="{{de.pk}}">
+            <td>{{de.creation_time}}</td>
+            <td>{{de.name}}</td>
+            <td>
+                {% if de.object.get_absolute_url %}
+                    <a href="{{de.object.get_absolute_url}}">{{de.object}}</a>
+                {% else %}
+                    {{de.object}}
+                {% endif %}
+            </td>
+            <td>
+                {% if de.status == 'complete' %}
+                    <a href="{{de.outfile.url}}"><span class="glyphicon glyphicon-download"></span> Download</a>
+                {% elif de.status == 'inprogress' %}
+                    In progress: {% if de.outfile %}{{de.outfile.size|filesizeformat}}{% else %}0 bytes{% endif %}
+                {% elif de.status == 'error' %}
+                    Error
+                    <pre>{{de.error_message}}</pre>
+                {% else %}
+                    {{de.get_status_display}}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+

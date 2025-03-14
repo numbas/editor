@@ -1,6 +1,8 @@
+from django.contrib import messages
 from django.http import HttpResponseRedirect, JsonResponse
 from django.views import generic
 from django.urls import reverse
+from django.utils import timezone
 from pathlib import Path
 
 from .generic import CanViewMixin
@@ -43,7 +45,8 @@ class ExportView(CanViewMixin, generic.DetailView):
             object = self.get_object()
         )
 
-        filename = self.get_filename() + '.zip'
+        now = timezone.now()
+        filename = f'numbas-{self.get_filename()}-{now.strftime("%Y%m%d%H%M")}.zip'
 
         do_export(
             de,
@@ -52,6 +55,8 @@ class ExportView(CanViewMixin, generic.DetailView):
             self.get_exporter_kwargs(),
             {k:self.request.META[k] for k in ['SERVER_NAME', 'SERVER_PORT']}
         )
+
+        messages.info(request, '''Your export has begun. We'll tell you when it's ready.''')
 
         return HttpResponseRedirect(self.get_success_url())
 

@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.core.files.base import ContentFile
+from django.contrib import messages
 from django.http import HttpRequest
 from editor.models import Project
 from huey.contrib.djhuey import db_task, task
@@ -8,6 +10,9 @@ import zipfile
 @db_task()
 def do_export(de, filename, exporter_cls, exporter_kwargs, request_META):
     try:
+        de.status = 'inprogress'
+        de.save(update_fields=('status',))
+
         de.outfile.save(filename, ContentFile(''))
 
         request = HttpRequest()
@@ -27,4 +32,5 @@ def do_export(de, filename, exporter_cls, exporter_kwargs, request_META):
         import traceback
         traceback.print_exception(e)
         de.status = 'error'
-        de.save()
+        de.error_message = str(e)
+        de.save(update_fields=('status','error_message',))

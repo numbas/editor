@@ -376,6 +376,14 @@ $(document).ready(function() {
                             }
                         })
                     };
+
+                    try {
+                        Numbas.jme.variables.makeFunction(def, scope);
+                    } catch(e) {
+                        f.error(e.message);
+                        return;
+                    }
+
                     return def;
                 } catch(e) {
                     f.error(e.message);
@@ -386,7 +394,11 @@ $(document).ready(function() {
                 return scope;
             }
 
-            var made_functions = jme.variables.makeFunctions(function_defs, scope);
+            try {
+                var made_functions = jme.variables.makeFunctions(function_defs, scope);
+            } catch(e) {
+                return scope;
+            }
 
             functions.map(function(f) {
                 try {

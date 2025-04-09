@@ -54,7 +54,8 @@ class UserProfile(models.Model):
     personal_project = models.ForeignKey(Project, null=True, on_delete=models.SET_NULL,related_name='personal_project_of')
     avatar = ImageWithThumbsField(upload_to='avatars', sizes=((20, 20), (40, 40), (150, 150)), blank=True, null=True, max_length=255, verbose_name='Profile image')
     wrap_lines = models.BooleanField(default=False,verbose_name='Wrap long lines in the code editor?')
-    mathjax_url = models.CharField(max_length=300,default='',blank=True,verbose_name='Preferred URL to load MathJax from')
+    mathjax_3_url = models.CharField(max_length=300,default='',blank=True,verbose_name='Preferred URL to load MathJax 3 from')
+    mathjax_2_url = models.CharField(max_length=300,default='',blank=True,verbose_name='Preferred URL to load MathJax 2 from')
 
     email_about_stamps = models.BooleanField(default=True, verbose_name='Send emails about feedback on items you\'re watching?')
     email_about_comments = models.BooleanField(default=True, verbose_name='Send emails about comments on items you\'re watching?')
@@ -162,7 +163,8 @@ def deactivate_user(user, reassign_to_user = None):
     user.userprofile.bio = ''
     user.userprofile.question_basket.clear()
     user.userprofile.avatar = None
-    user.userprofile.mathjax_url = ''
+    user.userprofile.mathjax_2_url = ''
+    user.userprofile.mathjax_3_url = ''
     user.userprofile.save()
 
     user.userprofile.personal_project.name = "Deactivated user's workspace"

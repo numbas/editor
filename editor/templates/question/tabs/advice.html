@@ -2,7 +2,7 @@
 {% load helplink %}
 {% load editor_controls %}
 
-<section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='advice'}">
+<section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='advice'}, jmescope: questionScope">
     <div class="form-group">
         <label for="input-advice" class="label-block">
             <span class="label-text">Advice</span>

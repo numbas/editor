@@ -4581,8 +4581,9 @@ $(document).ready(function() {
 
     Numbas.queueScript('knockout',[], function() {});
 
-    var deps = ['jme-display','jme-variables','jme','editor-extras','marking','json', 'answer-widgets'];
+    var deps = ['jme-display','jme-variables','jme','editor-extras','marking','json', 'answer-widgets', 'display-util'];
     Numbas.queueScript('start-editor',deps,function() {
+        Numbas.display_util.set_jme_scope(document.body, Numbas.jme.builtinScope);
         try {
             viewModel = new Question(item_json.itemJSON);
         }

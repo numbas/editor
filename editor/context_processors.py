@@ -2,6 +2,12 @@
 from django.contrib.sites.models import Site
 from urllib.parse import urlunparse
 
+def get_mathjax_url(request):
+    if request.user.is_anonymous or request.user.userprofile.mathjax_3_url=='':
+        return settings.MATHJAX_3_URL
+    else:
+        return request.user.userprofile.mathjax_3_url
+
 def global_settings(request):
     return {
         'HELP_URL': settings.GLOBAL_SETTINGS['HELP_URL'],
@@ -9,7 +15,7 @@ def global_settings(request):
         'CAN_LOGOUT': settings.CAN_LOGOUT,
         'CAN_CHANGE_PASSWORD': settings.CAN_CHANGE_PASSWORD,
         'SITE_TITLE': settings.SITE_TITLE,
-        'MATHJAX_URL': settings.MATHJAX_URL,
+        'MATHJAX_URL': get_mathjax_url(request),
         'NUMBAS_LOCALES': settings.GLOBAL_SETTINGS['NUMBAS_LOCALES'],
         'URL_PREFIX': getattr(settings,'URL_PREFIX','/'),
         'CSS_VARIABLES': getattr(settings, 'CSS_VARIABLES',

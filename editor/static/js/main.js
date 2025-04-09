@@ -51,18 +51,18 @@ $.textMetrics = function(el,val) {
     return ret;
 }
 
-var MathJaxQueue;
-
 
 $(document).ready(function() {
     window.Knockout = ko;
     ko.onError = function(e) {
         console.log(e);
     }
-    MathJaxQueue = MathJax.Callback.Queue(MathJax.Hub.Register.StartupHook('End',{}));
     $.fn.mathjax = function() {
         $(this).each(function() {
-            MathJaxQueue.Push(['Typeset',MathJax.Hub,this]);
+            MathJax.startup.promise.then(async () => {
+                MathJax.typesetClear([this]);
+                await MathJax.typesetPromise([this]);
+            });
         });
     }
 

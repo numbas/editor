@@ -34,7 +34,7 @@ $(document).ready(function() {
         return out;
     }
 
-    function texJMEBit(expr,rules,parser,scope) {
+    Editor.texJMEBit = function(expr,rules,parser,scope) {
         rules = rules || 'basic';
         parser = parser || scope.parser || Numbas.jme.standardParser;
         scope = new Numbas.jme.Scope(scope || Numbas.jme.builtinScope);
@@ -56,11 +56,6 @@ $(document).ready(function() {
     var currentScope = null;
     var showSubstitutions = true;
 
-    MathJax.Hub.Register.MessageHook("End Math Input",function() {
-        currentScope = null;
-        showSubstitutions = true;
-    });
-
     function find_jme_scope(element) {
         var p = $(element).parents('.jme-scope').first();
         if(!p) {
@@ -74,95 +69,6 @@ $(document).ready(function() {
             showSubstitutions: p.data('jme-show-substitutions') || false
         };
     }
-
-    MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
-
-        var TEX = MathJax.InputJax.TeX;
-
-        TEX.prefilterHooks.Add(function(data) {
-            var d = find_jme_scope(data.script);
-            currentScope = d.scope;
-            showSubstitutions = d.showSubstitutions;
-        });
-
-        TEX.Definitions.Add({macros: {
-            'var': 'JMEvar', 
-            'simplify': 'JMEsimplify'
-        }});
-
-        function JMEvarsub(name) {
-            var settings_string = this.GetBrackets(name);
-            var settings = {};
-            if(settings_string!==undefined) {
-                settings_string.split(/\s*,\s*/g).forEach(function(v) {
-                    var setting = v.trim().toLowerCase();
-                    settings[setting] = true;
-                });
-            }
-            var expr = this.GetArgument(name);
-
-            var scope = currentScope;
-
-            try {
-                var v = Numbas.jme.evaluate(Numbas.jme.compile(expr,scope),scope);
-
-                var tex = Numbas.jme.display.texify({tok: v},settings,scope);
-            }catch(e) {
-                throw(new Numbas.Error('mathjax.math processing error',{message:e.message,expression:expr}));
-            }
-            var mml = TEX.Parse(tex,this.stack.env).mml();
-
-            this.Push(mml);
-        }
-        function JMEsimplifysub(name) {
-            var ruleset = this.GetBrackets(name);
-            if(ruleset === undefined) {
-                ruleset = 'all';
-            }
-            var expr = this.GetArgument(name);
-
-            var scope = currentScope;
-
-            var subbed_tree = Numbas.jme.display.subvars(expr, scope);
-
-            var tex = Numbas.jme.display.treeToLaTeX(subbed_tree, ruleset, scope);
-
-            var mml = TEX.Parse(tex,this.stack.env).mml();
-
-            this.Push(mml);
-        }
-
-        TEX.Parse.Augment({
-            JMEvar: function(name) {
-                if(currentScope && !showSubstitutions) {
-                    JMEvarsub.apply(this,[name]);
-                    return;
-                }
-                var rules = this.GetBrackets(name);
-                var expr = this.GetArgument(name);
-
-                var res = texJMEBit(expr,rules,null,currentScope);
-                expr = res.tex || res.message;
-                var tex = '\\class{jme-var}{\\left\\{'+expr+'\\right\\}}';
-                var mml = TEX.Parse(tex,this.stack.env).mml();
-                this.Push(mml);
-            },
-
-            JMEsimplify: function(name) {
-                if(currentScope && !showSubstitutions) {
-                    JMEsimplifysub.apply(this,[name]);
-                    return;
-                }
-                var rules = this.GetBrackets(name);
-                var expr = this.GetArgument(name);
-                var res = texJMEBit(expr,rules,null,currentScope);
-                expr = res.tex || res.message;
-                var tex = ' \\class{jme-simplify}{\\left\\{'+expr+'\\right\\}}'
-                var mml = TEX.Parse(tex,this.stack.env).mml();
-                this.Push(mml);
-            }
-        })
-    });
 
     var post_json = Editor.post_json = function(url, data, extra_options) {
         const options = {
@@ -1332,7 +1238,7 @@ $(document).ready(function() {
 
             CodeMirror.on(hints,'shown',function(completion) {
                 var completion = cm.state.completionActive;
-                MathJax.Hub.Queue(['Typeset',MathJax.Hub,completion.widget.hints]);
+                MathJax.typesetPromise([completion.widget.hints]);
             });
 
             return hints;
@@ -2282,7 +2188,7 @@ $(document).ready(function() {
             var parser = allBindings.parser || Numbas.jme.standardParser;
             var scope = find_jme_scope(element).scope || Numbas.jme.builtinScope;
             var rules = ko.unwrap(allBindings.rules);
-            var res = texJMEBit(value,rules,parser,scope);
+            var res = Editor.texJMEBit(value,rules,parser,scope);
             $(element).toggleClass('jme-error',res.error);
             if(res.error) {
                 $(element).html(res.message);
@@ -2561,6 +2467,13 @@ $(document).ready(function() {
             })
         ;
     });
+
+    ko.bindingHandlers.jmescope = {
+        update: function(element, valueAccessor) {
+            const scope = Knockout.unwrap(valueAccessor());
+            Numbas.display_util.set_jme_scope(element, scope);
+        }
+    };
 
     ko.bindingHandlers.fileupload = {
         init: function(element, valueAccessor, allBindingsAccessor) {

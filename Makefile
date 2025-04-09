@@ -15,7 +15,7 @@ SCRIPTS_DIR = runtime/scripts
 RUNTIME_SOURCES = numbas.js jme.js jme-builtins.js jme-display.js jme-rules.js jme-variables.js jme-calculus.js localisation.js part.js question.js schedule.js diagnostic.js marking.js math.js util.js csv.js i18next/i18next.js json.js decimal/decimal.js evaluate-settings.js unicode-mappings.js parsel/parsel.js seedrandom/seedrandom.js
 PART_SOURCES = $(patsubst $(NUMBAS_RUNTIME_PATH)/%, %, $(wildcard $(NUMBAS_RUNTIME_PATH)/$(SCRIPTS_DIR)/parts/*.js))
 THEME_DIR = themes/default/files/scripts
-THEME_SOURCES = answer-widgets.js
+THEME_SOURCES = answer-widgets.js display-util.js
 ALL_SOURCES = $(patsubst %, $(SCRIPTS_DIR)/%, $(RUNTIME_SOURCES)) $(patsubst %, $(THEME_DIR)/%, $(THEME_SOURCES)) $(PART_SOURCES)
 
 EXTENSIONS_DIR = $(NUMBAS_RUNTIME_PATH)/extensions

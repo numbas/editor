@@ -144,7 +144,8 @@ STATIC_ROOT = 'static/'
 SITE_TITLE = 'Numbas'
 SITE_ID = 1
 
-MATHJAX_URL = 'https://cdn.jsdelivr.net/npm/mathjax@2'
+MATHJAX_2_URL = 'https://cdn.jsdelivr.net/npm/mathjax@2'
+MATHJAX_3_URL = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5'
 
 MEDIA_ROOT = 'media/'
 MEDIA_URL = '/media/'

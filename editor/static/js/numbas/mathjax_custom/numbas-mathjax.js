@@ -40,11 +40,14 @@
                         tex = `\\class{jme-var}{\\left\\{${res.tex || res.message}\\right\\}}`;
                     }
 
-                    console.log(tex);
                     const mml = new MathJax._.input.tex.TexParser.default(tex, parser.stack.env, parser.configuration).mml();
 
                     parser.Push(mml);
                 } catch(e) {
+                    if(e.retry) {
+                        throw e;
+                    }
+
                     console.error(e);
                     throw(new Numbas.Error('mathjax.math processing error',{message:e.message,expression:expr}));
                 }
@@ -77,6 +80,10 @@
 
                     parser.Push(mml);
                 } catch(e) {
+                    if(e.retry) {
+                        throw e;
+                    }
+
                     console.error(e);
                     throw(new Numbas.Error('mathjax.math processing error',{message:e.message,expression:expr}));
                 }

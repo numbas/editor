@@ -1701,7 +1701,7 @@ $(document).ready(function() {
             this.set_tab_from_hash();
             ko.options.deferUpdates = true;
             ko.applyBindings(this);
-            $('.timeline').mathjax();
+            mathjax_typeset_element(document.querySelector('.timeline'));
             document.body.classList.add('loaded');
             this.init_save();
         },

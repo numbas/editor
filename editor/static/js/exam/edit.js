@@ -1259,7 +1259,7 @@ $(document).ready(function() {
                 document.body.className += ' loaded';
             }
             Editor.update_basket();
-            $('.timeline').mathjax();
+            mathjax_typeset_element(document.querySelector('.timeline'));
         }
         catch(e) {
             $('.page-loading').hide();

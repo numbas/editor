@@ -54,17 +54,21 @@ $.textMetrics = function(el,val) {
 
 $(document).ready(function() {
     window.Knockout = ko;
+
     ko.onError = function(e) {
         console.log(e);
     }
-    $.fn.mathjax = function() {
-        $(this).each(function() {
-            MathJax.startup.promise.then(async () => {
-                MathJax.typesetClear([this]);
-                await MathJax.typesetPromise([this]);
-            });
-        });
+
+    let mj_promise = MathJax.startup.promise;
+
+    function mathjax_typeset_element(element) {
+        mj_promise = mj_promise.then(async () => {
+            MathJax.typesetClear([element]);
+            await MathJax.typesetPromise([element]);
+        })
+        return mj_promise;
     }
+    window.mathjax_typeset_element = mathjax_typeset_element;
 
     ko.observable.fn.toggleable = function() {
         var o = this;
@@ -78,7 +82,7 @@ $(document).ready(function() {
         update: function(element) {
             $(element).dotdotdot({
                 watch:true, 
-                callback: function() { $(element).mathjax(); }
+                callback: function() { mathjax_typeset_element(element); }
             });
         }
     }
@@ -86,7 +90,7 @@ $(document).ready(function() {
     ko.bindingHandlers.mathjax = {
         update: function(element) {
             if(!window.noMathJax) {
-                $(element).mathjax();
+                mathjax_typeset_element(element);
             }
         }
     };
@@ -94,7 +98,8 @@ $(document).ready(function() {
     ko.bindingHandlers.mathjaxHTML = {
         update: function(element,valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor()) || '';
-            $(element).html(value).mathjax();
+            element.innerHTML = value;
+            mathjax_typeset_element(element);
         }
     };
 

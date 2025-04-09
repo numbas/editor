@@ -38,6 +38,7 @@ from django_tables2.config import RequestConfig
 
 from accounts.models import UserProfile, EditorItemViewed
 
+from editor.context_processors import get_mathjax_url
 from editor.tables import EditorItemTable, RecentlyPublishedTable
 from editor.models import EditorItem, Project, IndividualAccess, Licence, PullRequest, Taxonomy, Contributor, Folder
 import editor.lockdown_app
@@ -526,10 +527,7 @@ class CompileObject(MustHaveAccessMixin):
             return output_location
 
     def get_mathjax_url(self):
-        if self.request.user.is_anonymous or self.request.user.userprofile.mathjax_url=='':
-            return settings.MATHJAX_URL
-        else:
-            return self.request.user.userprofile.mathjax_url
+        return get_mathjax_url(self.request)
     
     def get_accessibility_statement_url(self):
         return settings.GLOBAL_SETTINGS['HELP_URL'] + 'accessibility/exam.html'

@@ -187,8 +187,6 @@ jQuery(function() {
             var previewElement = jQuery('<div class="wm_preview"/>');
             jQuery('body').append(previewElement);
 
-            var queue = MathJax.Callback.Queue(MathJax.Hub.Register.StartupHook("End",{}));
-
             var txt, sel, range;
             function positionPreview() {
                 var of = options.of ? options.of : options.iFrame ? iframe : textarea ? root : document;
@@ -249,18 +247,11 @@ jQuery(function() {
                 el.addClass('in-maths');
 
                 if(math!=$(this).data('writemaths-lastMath')) {
-                    var script = document.createElement('script');
-                    var type = 'math/tex';
-                    if (q.startDelimiter.slice(1).match(/\$\$/) || q.startDelimiter.match(/\\\[/)) {
-                        type += '; mode=display';
-                    }
-                    script.setAttribute('type',type);
-                    script.textContent = options.cleanMaths(math);
-                    previewElement.html(script);
+                    const tex = q.startDelimiter+options.cleanMaths(math)+(q.endDelimiter || q.startDelimiter);
+                    console.log(tex);
+                    previewElement.html(tex);
                     $(this).data('writemaths-lastMath',math);
-                    queue.Push(['Typeset',MathJax.Hub,previewElement[0]]);
-                    queue.Push(positionPreview);
-                    queue.Push(options.callback);
+                    MathJax.typesetPromise(previewElement).catch(e => console.error(e)).then(positionPreview).then(options.callback);
                 }
 
                 positionPreview();

@@ -9179,7 +9179,7 @@ jme.display = /** @lends Numbas.jme.display */ {
             }
             if(tree.args) {
                 var args = tree.args.map(replace_subvars);
-                return {tok: tree.tok, args: args};
+                return {tok: tree.tok, args: args, bracketed: tree.bracketed};
             }
             return tree;
         }
@@ -16043,6 +16043,7 @@ if(res) { \
         this.stagedAnswer = answer;
         this.setDirty(true);
         this.removeWarnings();
+        this.display && this.display.showWarnings();
 
         if(!dontStore) {
             if(!this.question || !this.question.exam || !this.question.exam.loading) {
@@ -17753,9 +17754,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         tryGetAttribute(q.variablesTest,q.xml,'variables',['condition','maxRuns'],[]);
         q.signals.trigger('variableDefinitionsLoaded');
         q.signals.on('variablesGenerated',function() {
-            var doc = Sarissa.getDomDocument();
-            doc.appendChild(q.originalXML.cloneNode(true));    //get a fresh copy of the original XML, to sub variables into
-            q.xml = doc.selectSingleNode('question');
+            q.xml = q.originalXML.cloneNode(true);    //get a fresh copy of the original XML, to sub variables into
             q.xml.setAttribute('number',q.number);
         });
         q.signals.on(['variablesGenerated', 'rulesetsMade'], function() {
@@ -19203,6 +19202,9 @@ Numbas.queueScript('diagnostic',['util','jme','localisation','jme-variables'], f
                     topic[x[0]] = x[1];
                 });
                 var group = dc.exam.question_groups.find(function(g) { return g.settings.name==topic_name; })
+                if(!group) {
+                    return;
+                }
                 topic.questions = [];
                 for(var i=0;i<group.numQuestions;i++) {
                     topic.questions.push({
@@ -28579,6 +28581,16 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         var settings = this.settings;
         var answerSimplification = Numbas.jme.collectRuleset(settings.answerSimplificationString,scope.allRulesets());
         var tree = jme.display.subvars(settings.correctAnswerString, scope);
+        tree = scope.expandJuxtapositions(
+            tree, 
+            {
+                singleLetterVariables: settings.singleLetterVariables,
+                noUnknownFunctions: !settings.allowUnknownFunctions,
+                implicitFunctionComposition: settings.implicitFunctionComposition,
+                normaliseSubscripts: true
+            }
+        );
+
         if(!tree && this.marks>0) {
             this.error('part.jme.answer missing');
         }

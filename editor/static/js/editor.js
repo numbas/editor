@@ -753,7 +753,9 @@ $(document).ready(function() {
         this.addStamp = function(status_code) {
             return function() {
                 $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCSRFtoken()}).success(function(response) {
-                    $('.timeline').prepend(response.html).mathjax();
+                    const timeline = document.querySelector('.timeline');
+                    $(timeline).prepend(response.html);
+                    mathjax_typeset_element(timeline);
                     ei.current_stamp(response.object_json);
                 });
                 noty({
@@ -1419,7 +1421,8 @@ $(document).ready(function() {
             var value = ko.unwrap(valueAccessor()) || '';
 
             if(element.hasAttribute('disabled')) {
-                $(element).html(value).mathjax();
+                $(element).html(value);
+                mathjax_typeset_element(element);
                 $(element).find('[data-bind]').each(function() {
                     this.removeAttribute('data-bind');
                 });
@@ -1700,7 +1703,8 @@ $(document).ready(function() {
 
             var well = element.querySelector('.well.not-editing > .content-area');
             if(well) {
-                $(well).html(value).mathjax();
+                $(well).html(value);
+                mathjax_typeset_element(well);
                 $(well).find('[data-bind]').each(function() {
                     this.removeAttribute('data-bind');
                 });
@@ -2194,10 +2198,12 @@ $(document).ready(function() {
                 $(element).html(res.message);
             } else {
                 var tex = res.tex;
-                if(tex.length>0)
-                    $(element).html('$'+tex+'$').mathjax();
-                else
+                if(tex.length>0) {
+                    element.innerHTML = '$'+tex+'$';
+                    mathjax_typeset_element(element);
+                } else {
                     $(element).html('');
+                }
             }
         }
     };
@@ -2213,7 +2219,7 @@ $(document).ready(function() {
             html = Numbas.jme.variables.DOMcontentsubvars(d,scope);
             element.innerHTML = '';
             element.appendChild(html);
-            $(element).mathjax();
+            mathjax_typeset_element(element);
         }
     }
 
@@ -2232,7 +2238,7 @@ $(document).ready(function() {
     ko.bindingHandlers.latex = {
         update: function(element,valueAccessor) {
             ko.bindingHandlers.html.update.apply(this,arguments);
-            $(element).mathjax();
+            mathjax_typeset_element(element);
         }
     }
 
@@ -2243,7 +2249,7 @@ $(document).ready(function() {
             script.setAttribute('type','math/tex');
             script.textContent = ko.unwrap(valueAccessor());
             element.appendChild(script);
-            $(element).mathjax();
+            mathjax_typeset_element(element);
         }
     }
 
@@ -2393,7 +2399,9 @@ $(document).ready(function() {
 
             var text = this.commentText();
             $.post(form.getAttribute('action'),{'text': text, csrfmiddlewaretoken: getCSRFtoken()}).success(function(response) {
-                $('.timeline').prepend(response.html).mathjax();
+                const timeline = document.querySelector('.timeline');
+                $(timeline).prepend(response.html);
+                mathjax_typeset_element(timeline);
             });
 
             this.commentText('');

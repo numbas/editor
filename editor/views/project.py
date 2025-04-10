@@ -17,17 +17,20 @@ from django_tables2.config import RequestConfig
 from editor.models import Project, ProjectInvitation, STAMP_STATUS_CHOICES, Folder, IndividualAccess, EditorItem
 import editor.forms
 import editor.views.editoritem
-from editor.views.generic import CanViewMixin, CanEditMixin, RestrictAccessMixin, SettingsPageMixin
+from editor.views.generic import CanViewMixin, CanEditMixin, RestrictAccessMixin, SettingsPageMixin, NoAccessError
 from editor.tables import ProjectTable, EditorItemTable, BrowseProjectTable
 
 class MustBeMemberMixin(RestrictAccessMixin):
-    def can_access(self, request):
-        return self.get_project().access.filter(user=request.user).exists()
+    def check_access(self, request):
+        if not self.get_project().access.filter(user=request.user).exists():
+            raise NoAccessError("You're not a member of this project.")
 
 class MustBeOwnerMixin(RestrictAccessMixin):
     no_access_template_name = 'project/must_be_owner.html'
-    def can_access(self, request):
-        return request.user == self.get_project().owner
+
+    def check_access(self, request):
+        if request.user != self.get_project().owner:
+            raise NoAccessError("You are not the owner of this project.")
 
 class ProjectAccessMixin(object):
     no_access_template_name = 'project/must_be_member.html'

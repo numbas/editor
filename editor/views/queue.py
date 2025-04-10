@@ -10,10 +10,10 @@ from editor.models import EditorItem, ItemQueue, Project, ItemQueueChecklistItem
 from editor.notify_watching import notify_watching
 from editor.tables import ItemQueueEntryTable
 import editor.views.generic
-from editor.views.generic import CanViewMixin, CanEditMixin, CanDeleteMixin, SettingsPageMixin, RestrictAccessMixin
+from editor.views.generic import CanViewMixin, CanEditMixin, CanDeleteMixin, SettingsPageMixin, RestrictAccessMixin, NoAccessError
 
 class MustBeOwnerMixin(RestrictAccessMixin):
-    def can_access(self, request):
+    def check_access(self, request):
         return request.user == self.get_object().owner
 
 class CreateView(CanEditMixin, generic.CreateView):
@@ -21,12 +21,19 @@ class CreateView(CanEditMixin, generic.CreateView):
     form_class = forms.CreateItemQueueForm
     template_name = 'queue/new.html'
 
-    def can_access(self, request):
+    no_access_template_name = 'project/must_be_member.html'
+
+    def get_object(self):
         if self.request.method == 'POST':
-            project = Project.objects.get(pk=int(self.request.POST.get('project')))
-            return project.can_be_edited_by(self.request.user)
+            pk = int(self.request.POST.get('project'))
         else:
-            return True
+            pk = int(self.request.GET.get('project'))
+        return Project.objects.get(pk=pk)
+
+    def check_access(self, request):
+        project = self.get_object()
+        if not project.can_be_edited_by(self.request.user):
+            raise NoAccessError("You can't edit this project.")
 
     def get_form_kwargs(self, *args, **kwargs):
         kwargs = super().get_form_kwargs(*args, **kwargs)

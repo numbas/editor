@@ -24,24 +24,31 @@ def forbidden_response(request,message=None):
         status=403
     )
 
+class NoAccessError(PermissionDenied):
+    pass
+
 class RestrictAccessMixin(object):
     def get_access_object(self):
         return self.get_object()
     
     def dispatch(self, request, *args, **kwargs):
-        if not self.can_access(request):
+        try:
+            self.check_access(request)
+        except (NoAccessError, NotImplementedError) as error:
             self.object = self.get_object()
-            return self.get_no_access_response()
+            return self.get_no_access_response(error)
         return super().dispatch(request, *args, **kwargs)
 
-    def get_no_access_response(self):
+    def get_no_access_response(self, error):
         try:
             templatename = self.get_no_access_template_name()
-            return render(self.request, templatename, self.get_context_data())
+            context = self.get_context_data()
+            context['access_error'] = error
+            return render(self.request, templatename, context)
         except NotImplementedError:
             raise PermissionDenied()
 
-    def can_access(self, request):
+    def check_access(self, request):
         raise NotImplementedError
 
     def get_no_access_template_name(self):
@@ -51,24 +58,29 @@ class RestrictAccessMixin(object):
             raise NotImplementedError
 
 class AuthorRequiredMixin(RestrictAccessMixin):
-    def can_access(self, request):
-        return self.get_access_object().author == request.user
+    def check_access(self, request):
+        if self.get_access_object().author != request.user:
+            raise NoAccessError(f"You are not this object's author.")
 
 class CanEditMixin(RestrictAccessMixin):
     edit_required_methods = ['GET','POST','UPDATE']
-    def can_access(self, request):
+
+    def check_access(self, request):
         obj = self.get_access_object()
-        return request.method not in self.edit_required_methods or obj.can_be_edited_by(request.user)
+        if request.method in self.edit_required_methods and not obj.can_be_edited_by(request.user):
+            raise NoAccessError("You can't edit this.")
 
 class CanViewMixin(RestrictAccessMixin):
-    def can_access(self, request):
+    def check_access(self, request):
         obj = self.get_access_object()
-        return obj.can_be_viewed_by(request.user)
+        if not obj.can_be_viewed_by(request.user):
+            raise NoAccessError("You can't view this.")
 
 class CanDeleteMixin(RestrictAccessMixin):
-    def can_access(self, request):
+    def check_access(self, request):
         obj = self.get_access_object()
-        return obj.can_be_deleted_by(request.user)
+        if not obj.can_be_deleted_by(request.user):
+            raise NoAccessError("You can't delete this.")
 
 class SettingsPageMixin(CanEditMixin):
     def get_context_data(self, **kwargs):

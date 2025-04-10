@@ -5,6 +5,6 @@
 
 {% block project_content %}
 <h2 class="text-warning"><span class="glyphicon glyphicon-warning-sign"></span> Forbidden</h2>
-<p>This project is visible only to its members.</p>
-<p>You're not a member of this project. If you think you should be, contact the project's owner, {% user_link project.owner %}.</p>
+<p>{{access_error}}</p>
+<p>If you think you should be able to view this page, contact the project's owner, {% user_link project.owner %}.</p>
 {% endblock project_content %}

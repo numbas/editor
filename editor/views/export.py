@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 from pathlib import Path
 
-from .generic import CanViewMixin
+from .generic import CanViewMixin, CanEditMixin
 from .project import ProjectContextMixin
 
 from editor.models import Project, User, DataExport
@@ -13,7 +13,7 @@ from editor.export import ProjectExporter, UserExporter
 from editor.tasks import do_export
 
 class ExportView(CanViewMixin, generic.DetailView):
-    http_method_names = ['get', 'post', 'options'] # TODO - only POST
+    http_method_names = ['post']
 
     def get_name(self):
         if hasattr(self, 'name'):
@@ -38,7 +38,7 @@ class ExportView(CanViewMixin, generic.DetailView):
     def get_success_url(self):
         return reverse('profile_data_exports', args=(self.request.user.pk,))
 
-    def dispatch(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         de = DataExport.objects.create(
             name = self.get_name(),
             created_by = self.request.user,
@@ -61,10 +61,13 @@ class ExportView(CanViewMixin, generic.DetailView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class ProjectExportView(ProjectContextMixin, ExportView):
+class ProjectExportView(ProjectContextMixin, CanEditMixin, ExportView):
     model = Project
     exporter_cls = ProjectExporter
     name = "Project"
+
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
 
     def get_filename(self):
         return 'project-'+self.get_object().name[:30]

@@ -1,12 +1,9 @@
 {% load sstatic %}
 {% load json_filter %}
-{% load analytical %}
 
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        {% analytical_head_top %}
-
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,12 +35,8 @@
             </style>
         {% endblock stylesheets %}
 
-        {% analytical_head_bottom %}
-
     </head>
     <body class="{% block body_classes %}{% endblock %}">
-        {% analytical_body_top %}
-
         <!-- main body -->
         {% block body %}
         
@@ -143,6 +136,5 @@
         {% endblock %}
 
 			  <div id="csrftoken">{% csrf_token %}</div>
-        {% analytical_body_bottom %}
     </body>
 </html>

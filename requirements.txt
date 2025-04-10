@@ -1,22 +1,21 @@
-Django==4.2.6
-Pillow==10.1.0
-Unidecode==1.0.23
+Django==5.2
+Pillow==11.1.0
+Unidecode==1.3.8
 bleach==6.2.0
-django-analytical==2.6.0
-git+https://github.com/shtalinberg/django-el-pagination.git@9f9c6963efb101cb0d4b5406a2ab0be51cfa586c#egg=django-el-pagination # 2022-08-23: waiting for a tagged release for django 4.0 compatibility
+django-el-pagination==4.1.2
 git+https://github.com/christianp/django-html_sanitizer.git@django4compat#egg=django-html_sanitizer # 2022-08-23: fork with django 4.0 compatibility; the project seems unmaintained
-django-notifications-hq==1.7.0
-django-registration-redux==2.11
-django-reversion==5.0.2
-django-tables2==2.3.1
-django-taggit==3.0.0
-django-uuslug==1.2.0
+git+https://github.com/openwisp/django-notifications@django-5.x#egg=django-notifications-hq # 2025-04-10: fork with django 5.0 compatibility
+django-registration-redux==2.13
+django-reversion==5.1.0
+django-tables2==2.7.5
+django-taggit==6.1.0
+django-uuslug==2.0.0
 git+https://github.com/numbas/django-thumbs@1cc56a7efab78c51cee6323b761e835d480a9cf1#egg=django-thumbs
-packaging==24.0
-python-slugify==4.0.1
-six==1.16.0
-mistune==2.0.3
-emoji==0.6.0
-pycryptodome==3.14.1
-setuptools==70.0.0
-huey==2.5.2
+packaging==24.2
+python-slugify==8.0.4
+six==1.17.0
+mistune==3.1.3
+emoji==2.14.1
+pycryptodome==3.22.0
+setuptools==78.1.0
+huey==2.5.3

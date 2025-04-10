@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'sanitizer',
     'notifications',
-    'analytical',
     'reversion',
     'registration',
     'django_tables2',

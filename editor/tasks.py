@@ -3,7 +3,9 @@ from django.core.files.base import ContentFile
 from django.contrib import messages
 from django.http import HttpRequest
 from editor.models import Project
+from editor.slugify import slugify
 from huey.contrib.djhuey import db_task, task
+import os
 import zipfile
 
 
@@ -12,6 +14,9 @@ def do_export(de, filename, exporter_cls, exporter_kwargs, request_META):
     try:
         de.status = 'inprogress'
         de.save(update_fields=('status',))
+    
+        name, ext = os.path.splitext(filename)
+        filename = slugify(name)+ext
 
         de.outfile.save(filename, ContentFile(''))
 

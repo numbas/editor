@@ -587,7 +587,7 @@ class UserExporter(Exporter):
         path = self.get_root() / 'custom_part_types'
 
         for cpt in user.own_custom_part_types.all():
-            self.write_json(path / f'{cpt.filename}.json', self.custom_part_type_json(cpt))
+            self.write_json(path / f'{cpt.short_name}.json', self.custom_part_type_json(cpt))
 
     def export_resources(self):
         user = self.object

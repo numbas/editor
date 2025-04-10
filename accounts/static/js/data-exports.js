@@ -7,8 +7,6 @@ async function update() {
     new_table.innerHTML = data.table;
     if(table.textContent.trim() != new_table.textContent.trim()) {
         table.outerHTML = data.table;
-        console.log(table.textContent.trim().length);
-        console.log(new_table.textContent.trim().length);
     }
 }
 update();

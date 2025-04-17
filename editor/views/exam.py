@@ -173,18 +173,11 @@ class DeleteView(generic.DeleteView):
     model = NewExam
     template_name = 'exam/delete.html'
     
-    def delete(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        return self.try_delete()
-
-    def form_valid(self, form):
-        return self.try_delete()
-
     def do_delete(self):
         self.object.editoritem.delete()
         return http.HttpResponseRedirect(self.get_success_url())
 
-    def try_delete(self):
+    def form_valid(self, form):
         if self.object.editoritem.can_be_deleted_by(self.request.user):
             return self.do_delete()
         elif self.request.user.is_superuser:

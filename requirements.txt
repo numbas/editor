@@ -1,7 +1,7 @@
 Django==4.2.6
 Pillow==10.1.0
 Unidecode==1.0.23
-bleach==3.3.0
+bleach==6.2.0
 django-analytical==2.6.0
 git+https://github.com/shtalinberg/django-el-pagination.git@9f9c6963efb101cb0d4b5406a2ab0be51cfa586c#egg=django-el-pagination # 2022-08-23: waiting for a tagged release for django 4.0 compatibility
 git+https://github.com/christianp/django-html_sanitizer.git@django4compat#egg=django-html_sanitizer # 2022-08-23: fork with django 4.0 compatibility; the project seems unmaintained

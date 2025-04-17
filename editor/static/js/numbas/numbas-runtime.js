@@ -4498,7 +4498,7 @@ var checkingFunctions = jme.checkingFunctions =
         if(math.isComplexDecimal(r1) || math.isComplexDecimal(r2)) {
             r1 = math.ensure_decimal(r1);
             r2 = math.ensure_decimal(r2);
-            return r1.minus(r2).absoluteValue().re.lessThan(r2.re.times(tolerance));
+            return r1.minus(r2).absoluteValue().re.lessThan(r2.re.times(tolerance).absoluteValue());
         }
 
         if(r1===Infinity || r1===-Infinity)
@@ -13601,10 +13601,10 @@ var simplificationRules = jme.rules.simplificationRules = {
         ['(`! `+- $n);x * (real:$n/real:$n`?);n','asg','n*x']
     ],
     sqrtProduct: [
-        ['sqrt(?;x)*sqrt(?;y)','','sqrt(x*y)']
+        ['sqrt(?;x)*sqrt(?;y)','agc','sqrt(x*y)']
     ],
     sqrtDivision: [
-        ['sqrt(?;x)/sqrt(?;y)','','sqrt(x/y)']
+        ['sqrt(?;x)/sqrt(?;y)','agc','sqrt(x/y)']
     ],
     sqrtSquare: [
         ['sqrt(?;x^2)','','x'],

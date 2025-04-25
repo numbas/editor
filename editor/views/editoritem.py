@@ -480,7 +480,8 @@ class CompileObject(MustHaveAccessMixin):
         for extracted_path in extension_paths:
             if not extracted_path.exists():
                 raise ExtensionNotFoundCompileError("Extension not found at {}. Is MEDIA_ROOT configured correctly? It should be the absolute path to your editor media directory.".format(extracted_path))
-        self.numbasobject.data['extensions'] = [str(p) for p in extension_paths]
+        self.numbasobject.data['extensions'] = [e.location for e in extensions]
+        self.extension_paths = [str(p) for p in extension_paths]
 
     def output_location(self):
         return Path(settings.GLOBAL_SETTINGS['PREVIEW_PATH']) / self.get_locale() / self.location
@@ -509,6 +510,7 @@ class CompileObject(MustHaveAccessMixin):
             '-o'+str(output_location),
             '-t'+str(theme_path),
             '-l'+locale,
+            '--extension-paths',json.dumps(self.extension_paths),
             '--mathjax-url',self.get_mathjax_url(),
             '--accessibility-statement-url', self.get_accessibility_statement_url(),
         ] + switches
@@ -709,6 +711,7 @@ class SourceView(MustHaveAccessMixin,generic.DetailView):
         response = http.HttpResponse(str(source), 'text/plain')
         response['Content-Disposition'] = 'attachment; filename={}.exam'.format(ei.filename)
         response['Cache-Control'] = 'max-age=0,no-cache,no-store'
+        response['Access-Control-Allow-Origin'] = '*'
         return response
 
     def get_source(self):

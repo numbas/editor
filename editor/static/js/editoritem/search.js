@@ -6,9 +6,7 @@ $(document).ready(function() {
      *  - Christian Lawson-Perfect
      */
 
-    Editor.user_search_autocomplete($('input[name="author"]'));
-    ['open','close','select','change','create','search'].forEach(function(p){
-    });
+    Editor.user_search_autocomplete(document.querySelectorAll('input[name="author"]'));
 
     var ability_level_checkboxes = $('#ability_levels .checkbox');
 

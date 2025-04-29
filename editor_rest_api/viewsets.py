@@ -54,6 +54,11 @@ class AvailableExamsViewSet(viewsets.ReadOnlyModelViewSet):
             projects = projects.filter(pk__in=[int(pk) for pk in project_pks])
         queryset = queryset.filter(editoritem__project__in=projects).filter(editoritem__in=EditorItem.objects.filter(EditorItem.filter_can_be_viewed_by(self.request.user)))
         return queryset
+
+    def dispatch(self, *args, **kwargs):
+        response = super().dispatch(*args, **kwargs)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
     
 class ResourceViewSet(RetrieveOnlyViewset):
     serializer_class = serializers.ResourceSerializer

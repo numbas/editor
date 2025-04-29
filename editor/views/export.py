@@ -83,3 +83,6 @@ class UserProfileExportView(ExportView):
 
     def get_filename(self):
         return 'user-'+self.request.user.username[:30]
+
+    def check_access(self, request):
+        return True

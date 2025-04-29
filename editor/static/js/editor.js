@@ -1,8 +1,17 @@
-var prettyData,tryLoad,slugify;
+var tryLoad,slugify;
 if(!window.Editor)
     window.Editor = {};
 
 $(document).ready(function() {
+
+    function CSRFFormData(entries) {
+        const f = new FormData();
+        f.set('csrfmiddlewaretoken', getCSRFtoken());
+        for(let [k,v] of Object.entries(entries || {})) {
+            f.set(k,v);
+        }
+        return f;
+    }
 
     function copy_text_to_clipboard(text) {
         var ta = document.createElement("textarea");
@@ -269,64 +278,6 @@ $(document).ready(function() {
         };
     }
 
-
-    Editor.searchBinding = function(search,url,makeQuery) {
-        search.results.error = ko.observable('');
-        search.searching = ko.observable(false);
-
-        if('page' in search.results) {
-            search.results.pages = ko.pureComputed(function() {
-                var results = this.all();
-                var pages = [];
-                for(var i=0;i<results.length;i+=10) {
-                    pages.push(results.slice(i,i+10));
-                }
-
-                return pages;
-            },search.results);
-
-            search.results.pageText = ko.pureComputed(function() {
-                return this.page()+'/'+this.pages().length;
-            },search.results);
-        }
-
-        search.submit = function() {
-            var data = makeQuery();
-            if(!data) {
-                search.results.raw([]);
-                search.lastID = null;
-                return;
-            }
-
-            data.id = search.lastID = Math.random()+'';
-            if(search.restorePage)
-                data.page = search.restorePage;
-            else
-                data.page = 1;
-
-            search.results.error('');
-            search.searching(true);
-
-            $.getJSON(url,data)
-                .success(function(response) {
-                    if(response.id != search.lastID)
-                        return;
-                    search.results.raw(response.object_list);
-                    if('page' in search.results)
-                        search.results.page(parseInt(response.page) || 1);
-                })
-                .error(function() {
-                    search.results.raw([]);
-                    search.results.error('Error fetching results: '+arguments[2]);
-                })
-                .complete(function() {
-                    search.searching(false);
-                });
-            ;
-
-        };
-        search.submit();
-    }
 
     Editor.mappedObservableArray = function(map) {
         var obj = {list: ko.observableArray([])};
@@ -752,12 +703,14 @@ $(document).ready(function() {
 
         this.addStamp = function(status_code) {
             return function() {
-                $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCSRFtoken()}).success(function(response) {
-                    const timeline = document.querySelector('.timeline');
-                    $(timeline).prepend(response.html);
-                    mathjax_typeset_element(timeline);
-                    ei.current_stamp(response.object_json);
-                });
+                fetch('stamp', {method: 'POST', body: CSRFFormData({'status': status_code})})
+                    .then(response => response.json()).then(response => {
+                        const timeline = document.querySelector('.timeline');
+                        timeline.innerHTML = response.html + timeline.innerHTML;
+                        mathjax_typeset_element(timeline);
+                        ei.current_stamp(response.object_json);
+                    })
+                ;
                 noty({
                     text: 'Thanks for your feedback!',
                     type: 'success',
@@ -939,37 +892,6 @@ $(document).ready(function() {
         this.delete_url = data.delete_url;
     }
 
-    // version saved to the database, ie a reversion.models.Version instance
-    Editor.Version = function(data) {
-        this.date_created = data.date_created;
-        this.user = data.user;
-        this.version_pk = data.version_pk;
-        this.revision_pk = data.revision_pk;
-        this.comment = ko.observable(data.comment);
-        this.editable = data.editable;
-        this.update_url = data.update_url;
-
-        this.editingComment = ko.observable(false);
-        this.editComment = function(v,e) { 
-            if(this.editable) {
-                this.editingComment(true); 
-            }
-        };
-
-        this.firstGo = true;
-        if(this.editable) {
-            ko.computed(function() {
-                var comment = this.comment();
-                if(this.firstGo) {
-                    this.firstGo = false;
-                    return;
-                }
-                $.post(this.update_url,{csrfmiddlewaretoken: getCSRFtoken(), comment: comment});
-            },this);
-        }
-    } 
-
-
     /** Make a block of CSS declarations more specific by prepending the given selector to every rule
      * @param {string} css
      * @param {string} selector
@@ -1057,67 +979,6 @@ $(document).ready(function() {
     }
 
 
-
-    //represent a JSON-esque object in the Numbas .exam format
-    prettyData = function(data){
-        switch(typeof(data))
-        {
-        case 'number':
-            return data+'';
-        case 'string':
-            //this tries to use as little extra syntax as possible. Quotes or triple-quotes are only used if necessary.
-            if(data.toLowerCase()=='infinity')
-                return '"infinity"';
-            else if(data.contains('"') || data.contains("'"))
-                return '"""'+data+'"""';
-            else if(data.search(/[:\n,\{\}\[\] ]|\/\//)>=0)
-                return '"'+data+'"';
-            else if(!data.trim())
-                return '""';
-            else
-                return data;
-        case 'boolean':
-            return data ? 'true' : 'false';
-        case 'object':
-            if($.isArray(data))    //data is an array
-            {
-                if(!data.length)
-                    return '[]';    //empty array
-
-                data = data.map(prettyData);    //pretty-print each of the elements
-
-                //decide if the array can be rendered on a single line
-                //if any element contains a linebreak, render array over several lines
-                var multiline=false;
-                for(var i=0;i<data.length;i++)
-                {
-                    if(data[i].contains('\n'))
-                        multiline = true;
-                }
-                if(multiline)
-                {
-                    return '[\n'+data.join('\n')+'\n]';
-                }
-                else
-                {
-                    return '[ '+data.join(', ')+' ]';
-                }
-            }
-            else    //data is an object
-            {
-                if(!Object.keys(data).filter(function(x){return x}).length)
-                    return '{}';
-                var o='{\n';
-                for(var x in data)
-                {
-                    if(x)
-                        o += x+': '+prettyData(data[x])+'\n';
-                }
-                o+='}';
-                return o;
-            }
-        }
-    };
 
     Editor.jme_autocompleters = [
         function(cm,options) {
@@ -1737,10 +1598,6 @@ $(document).ready(function() {
         }
     };
 
-    $.fn.unselectable = function() {
-        $(this).on('mousedown',function(e){ e.preventDefault(); });
-    };
-
     ko.bindingHandlers.debug = {
         update: function(element,valueAccessor) {
             var value = valueAccessor();
@@ -2172,7 +2029,7 @@ $(document).ready(function() {
                 data: null,
                 sortable: ''
             };
-            obj = $.extend(obj,valueAccessor());
+            obj = Object.assign(obj,valueAccessor());
             $(element)
                 .draggable({
                     handle: '.handle',
@@ -2397,11 +2254,12 @@ $(document).ready(function() {
                 return;
             }
 
-            var text = this.commentText();
-            $.post(form.getAttribute('action'),{'text': text, csrfmiddlewaretoken: getCSRFtoken()}).success(function(response) {
+            fetch(form.getAttribute('action'), {method: 'POST', body: CSRFFormData({text: this.commentText()})}).then(async response => {
+                const {html} = await response.json();
                 const timeline = document.querySelector('.timeline');
-                $(timeline).prepend(response.html);
+                timeline.innerHTML = html + timeline.innerHTML;
                 mathjax_typeset_element(timeline);
+
             });
 
             this.commentText('');
@@ -2421,16 +2279,23 @@ $(document).ready(function() {
         var element = this;
         e.preventDefault();
         e.stopPropagation();
-        $.post(element.getAttribute('href'),{csrfmiddlewaretoken: getCSRFtoken()})
-            .success(function(data) {
-                $(element).parents('.timeline-item').first().slideUp(150,function(){$(this).remove()});
+        fetch(element.getAttribute('href'), {method: 'POST', body: CSRFFormData()}) 
+            .then(async response => {
+                if(!response.ok) {
+                    throw(new Error(response.statusText));
+                }
+                let p = element;
+                while(!p.classList.contains('timeline-item')) {
+                    p = p.parentElement;
+                    if(!p) {
+                        return;
+                    }
+                }
+                p.parentElement.removeChild(p);
             })
-            .error(function(response,type,message) {
-                if(message=='')
-                    message = 'Server did not respond.';
-
+            .catch(err => {
                 noty({
-                    text: 'Error hiding timeline item:\n\n'+message,
+                    text: `Error hiding timeline item: ${err}`,
                     layout: "topLeft",
                     type: "error",
                     textAlign: "center",
@@ -2449,19 +2314,29 @@ $(document).ready(function() {
         var element = this;
         e.preventDefault();
         e.stopPropagation();
-        $.post(element.getAttribute('href'),{csrfmiddlewaretoken: getCSRFtoken()})
-            .success(function(data) {
-                $(element).parents('.timeline-item').first().slideUp(150,function(){$(this).remove()});
-                if(window.viewModel && data.current_stamp!==undefined) {
-                    viewModel.current_stamp(data.current_stamp);
+        fetch(element.getAttribute('href'), {method: 'POST', body: CSRFFormData()})
+            .then(response => {
+                if(!response.ok) {
+                    throw(new Error(response.statusText));
                 }
-            })
-            .error(function(response,type,message) {
-                if(message=='')
-                    message = 'Server did not respond.';
+                let p = element;
+                while(!p.classList.contains('timeline-item')) {
+                    p = p.parentElement;
+                    if(!p) {
+                        return;
+                    }
+                }
+                p.parentElement.removeChild(p);
 
+                response.json().then(data => {
+                    if(window.viewModel && data.current_stamp!==undefined) {
+                        viewModel.current_stamp(data.current_stamp);
+                    }
+                }).catch(() => {});
+            })
+            .catch(err => {
                 noty({
-                    text: 'Error deleting timeline item:\n\n'+message,
+                    text: `Error deleting timeline item: ${err}`,
                     layout: "topLeft",
                     type: "error",
                     textAlign: "center",
@@ -2534,34 +2409,34 @@ $(document).ready(function() {
         }
     }
 
-    $('#notifications').on('click','.mark-all-as-read',function(e) {
+    document.getElementById('notifications').addEventListener('click', ({target}) => {
+        if(!target.classList.contains('mark-all-as-read')) {
+            return;
+        }
+
         update_notifications({html:'', num_unread: 0});
 
         e.stopPropagation();
         e.preventDefault();
 
-        var url = $(this).attr('href');
-        $.post(url,{csrfmiddlewaretoken: getCSRFtoken()}).success(function(response) {
-            update_notifications(response);
-        });
-        return false;
+        var url = target.getAttribute('href');
+        fetch(url, {method: 'POST', body: CSRFFormData()}).then(response => response.json()).then(update_notifications);
     });
 
     var last_notification = null;
 
-    function fetch_notifications() {
+    async function fetch_notifications() {
         if(!document.hasFocus()) {
             return;
         }
         if(!is_logged_in) {
             return;
         }
-        $.get(Editor.url_prefix+'notifications/unread_json/').success(function(response) {
-            if(response.last_notification != last_notification) {
-                last_notification = response.last_notification;
-                update_notifications(response);
-            }
-        });
+        const response = await (await fetch(Editor.url_prefix+'notifications/unread_json/')).json();
+        if(response.last_notification != last_notification) {
+            last_notification = response.last_notification;
+            update_notifications(response);
+        }
     }
 
     setInterval(fetch_notifications,15000);
@@ -2594,72 +2469,70 @@ $(document).ready(function() {
     update_basket();
 
     Editor.add_question_to_basket = function(id) {
-        $.post(Editor.url_prefix+'question_basket/add/',{csrfmiddlewaretoken: getCSRFtoken(), id: id})
-            .success(function(response) {
-                $('#question_basket .dropdown-menu').html(response);
+        fetch(Editor.url_prefix+'question_basket/add/',{method: 'POST', body: CSRFFormData({id: id})})
+            .then(response => response.text()).then(response => {
+                document.querySelector('#question_basket .dropdown-menu').innerHTML = response;
                 update_basket();
             })
         ;
     }
     Editor.remove_question_from_basket = function(id) {
-        $.post(Editor.url_prefix+'question_basket/remove/',{csrfmiddlewaretoken: getCSRFtoken(), id: id})
-            .success(function(response) {
-                $('#question_basket .dropdown-menu').html(response);
+        fetch(Editor.url_prefix+'question_basket/remove/',{method: 'POST', body: CSRFFormData({id: id})})
+            .then(response => response.text()).then(response => {
+                document.querySelector('#question_basket .dropdown-menu').innerHTML = response;
                 update_basket();
             })
         ;
     }
     Editor.empty_basket = function() {
-        $.post(Editor.url_prefix+'question_basket/empty/',{csrfmiddlewaretoken: getCSRFtoken()})
-            .success(function(response) {
-                $('#question_basket .dropdown-menu').html(response);
+        fetch(Editor.url_prefix+'question_basket/empty/',{method: 'POST', body: CSRFFormData({id: id})})
+            .then(response => response.text()).then(response => {
+                document.querySelector('#question_basket .dropdown-menu').innerHTML = response;
                 update_basket();
             })
         ;
     }
-    $('#question_basket').on('click','.empty-basket',function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        Editor.empty_basket();
-    });
-    $('#question_basket').on('click','.question .btn-remove',function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        Editor.remove_question_from_basket($(this).attr('data-id'));
-        $(this).parent('.question').remove();
-    });
-    $('#question_basket').on('click','.question .remove',function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        Editor.remove_question_from_basket($(this).attr('data-id'));
-        $(this).parent('.question').remove();
-    });
-    $('body').on('click','.add-to-basket',function(e) {
-        e.preventDefault();
-        e.stopPropagation();
 
-        var id = parseInt($(this).attr('data-question-id'));
-        if(questions_in_basket().indexOf(id)>=0) {
-            Editor.remove_question_from_basket(id);
-        } else {
-            Editor.add_question_to_basket(id);
+    const question_basket = document.getElementById('question_basket');
+
+    question_basket.querySelector('.empty-basket').addEventListener('click', e => {
+        e.preventDefault();
+
+        Editor.empty_basket();
+    })
+
+    question_basket.addEventListener('click', e => {
+        if(e.target.classList.contains('btn-remove')) {
+            e.preventDefault();
+            Editor.remove_question_from_basket(e.target.dataset.id);
+            return;
         }
     });
 
-    $('body').on('click','.add-to-queue',function(e) {
-        e.preventDefault();
-        e.stopPropagation();
+    document.body.addEventListener('click', e => {
+        if(e.target.classList.contains('add-to-basket')) {
+            e.preventDefault();
 
-        var id = parseInt($(this).attr('data-item-id'));
-        var name = $(this).attr('data-item-name');
-        $('#add-to-queue-modal .item-name').text(name);
-        $('#add-to-queue-modal .queues a.pick').each(function() {
-            if(!this.getAttribute('data-original-href')) {
-                this.setAttribute('data-original-href', this.getAttribute('href'));
+            const id = parseInt(e.target.dataset.questionId);
+            if(questions_in_basket().indexOf(id) >= 0) {
+                Editor.remove_question_from_basket(id);
+            } else {
+                Editor.add_question_to_basket(id);
             }
-            this.setAttribute('href',this.getAttribute('data-original-href')+'?item='+id);
-        });
-        $('#add-to-queue-modal').modal('show');
+        } else if(e.target.classList.contains('add-to-queue')) {
+            e.preventDefault();
+            
+            const id = e.target.dataset.itemId;
+            const name = e.target.dataset.itemName;
+            document.querySelector('#add-to-queue-modal .item-name').textContent = name;
+            for(let a of document.querySelectorAll('#add-to-queue-modal .queues a.pick')) {
+                if(!a.dataset.originalHref) {
+                    a.setAttribute('data-original-href', a.getAttribute('href'));
+                }
+                a.setAttribute('href', a.getAttribute('data-original-href')+'?item='+id);
+            }
+            $('#add-to-queue-modal').modal('show');
+        }
     });
 
     Editor.autocomplete_source = function(obj,from,to) {
@@ -2674,32 +2547,34 @@ $(document).ready(function() {
         }
     }
 
-    Editor.user_search_autocomplete = function(element,options,jquery_options) {
-        options = $.extend({url: '/accounts/search'}, options || {});
+    Editor.user_search_autocomplete = function(elements,options,jquery_options) {
+        options = Object.assign({url: '/accounts/search'}, options);
         var url = options.url;
         source = function(req,callback) {
-            element.addClass('loading');
-            $.getJSON(url,{q:req.term})
-                .success(function(data) {
+            this.element.addClass('loading');
+            const url = new URL(options.url, location);
+            url.searchParams.set('q', req.term);
+            fetch(url, {headers: {'accept': 'application/json'}})
+                .then(response => response.json()).then(data => {
                     var things = [];
                     var things = data.map(function(d) {
                         return {label: d.autocomplete_entry, value: d.name, id: d.id, profile: d.profile}
                     });
                     callback(things);
-                })
-                .complete(function() {
-                    $(element).removeClass('loading');
+                    this.element.removeClass('loading');
                 })
             ;
         }
         function set_user(e,ui) {
+            console.log('set_user');
             var id = ui.item.id;
-            element.parents('form').find('[name="selected_user"]').val(id);
+            $(this).parents('form').find('[name="selected_user"]').val(id);
         }
-        element.autocomplete($.extend({source: source, select: set_user, html: true},jquery_options));
+
+        $(elements).autocomplete(Object.assign({source: source, select: set_user, html: true},jquery_options));
     }
 
-    Editor.user_search_autocomplete($('#top-search-bar'),{url:'/top-search'},{select: function(e,ui) {
+    Editor.user_search_autocomplete([document.getElementById('top-search-bar')],{url:'/top-search/'},{select: function(e,ui) {
         window.location.href = ui.item.profile;
     }});
 
@@ -2714,7 +2589,7 @@ $(document).ready(function() {
             theme_advanced_resize_horizontal: false,
             plugins: ['link','fullscreen','autoresize','anchor','code','codesample','colorpicker','directionality','fullscreen','hr','link','paste','searchreplace','table','textcolor','textpattern']
         }
-        options = $.extend(options,extra_options);
+        options = Object.assign(options,extra_options);
 
         return tinymce.init(options);
     }
@@ -2731,7 +2606,7 @@ $(document).ready(function() {
                 ]
             },
         }
-        options = $.extend(options,extra_options);
+        options = Object.assign(options,extra_options);
 
         $(element).summernote(options);
         var ed = $(element).data('summernote');
@@ -2752,7 +2627,7 @@ $(document).ready(function() {
             indentUnit: 2,
             lineWrapping: Editor.wrapLines
         }
-        options = $.extend(options, extra_options);
+        options = Object.assign(options, extra_options);
         return CodeMirror.fromTextArea(element,options);
     }
 

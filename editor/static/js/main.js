@@ -1,3 +1,4 @@
+(function() {
 //nice short 'string contains' function
 if(!String.prototype.contains)
 {
@@ -8,47 +9,39 @@ if(!Array.prototype.contains)
     Array.prototype.contains = function(it) { return this.indexOf(it) != -1; };
 }
 
-//get size of contents of an input
-//from http://stackoverflow.com/questions/118241/calculate-text-width-with-javascript
-$.textMetrics = function(el,val) {
-    var h = 0, w = 0;
+var measurer;
+var measureText_cache = {};
+/** Measure the rendered size of text in an input element.
+ *
+ * @param {Element} element - An element whose style will be used. 
+ * @param {string} str - The text to measure.
+ * @returns {DOMRect}
+ */
+window.measureText = function(element, str) {
+    var styles = window.getComputedStyle(element);
 
-    var div = document.createElement('div');
-    document.body.appendChild(div);
-    $(div).css({
-        position: 'absolute',
-        left: -1000,
-        top: -1000,
-        display: 'none'
-    });
-
-    val = val || $(el).val();
-    var replacements = {
-        '&nbsp': / /g,
-        '&lt;': /</g,
-        '&gt;': />/g
+    if(!measurer) {
+        measurer = document.createElement('div');
+        measurer.style['position'] = 'absolute';
+        measurer.style['left'] = '-10000';
+        measurer.style['top'] = '-10000';
+        measurer.style['visibility'] = 'hidden';
     }
-    for(var rep in replacements) {
-        val = val.replace(replacements[rep],rep);
+
+    var keys = ['font-size','font-style', 'font-weight', 'font-family', 'line-height', 'text-transform', 'letter-spacing'];
+    var id = element.value+';'+keys.map(function(key) { return styles[key]; }).join(';');
+    if(measureText_cache[id]) {
+        return measureText_cache[id];
     }
-    $(div).html(val);
-    var styles = ['font-size','font-style', 'font-weight', 'font-family','line-height', 'text-transform', 'letter-spacing'];
-    $(styles).each(function() {
-        var s = this.toString();
-        $(div).css(s, $(el).css(s));
+    keys.forEach(function(key) {
+        measurer.style[key] = styles[key];
     });
-
-    h = $(div).outerHeight();
-    w = $(div).outerWidth();
-
-    $(div).remove();
-
-    var ret = {
-     height: h,
-     width: w
-    };
-
-    return ret;
+    measurer.textContent = str;
+    document.body.appendChild(measurer);
+    var box = measurer.getBoundingClientRect();
+    measureText_cache[id] = box;
+    document.body.removeChild(measurer);
+    return box;
 }
 
 
@@ -78,15 +71,6 @@ $(document).ready(function() {
         return o;
     }
 
-    ko.bindingHandlers.dotdotdot = {
-        update: function(element) {
-            $(element).dotdotdot({
-                watch:true, 
-                callback: function() { mathjax_typeset_element(element); }
-            });
-        }
-    }
-
     ko.bindingHandlers.mathjax = {
         update: function(element) {
             if(!window.noMathJax) {
@@ -97,7 +81,7 @@ $(document).ready(function() {
 
     ko.bindingHandlers.mathjaxHTML = {
         update: function(element,valueAccessor) {
-            var value = ko.utils.unwrapObservable(valueAccessor()) || '';
+            var value = ko.unwrap(valueAccessor()) || '';
             element.innerHTML = value;
             mathjax_typeset_element(element);
         }
@@ -105,7 +89,7 @@ $(document).ready(function() {
 
     ko.bindingHandlers.addClass = {
         update: function(element,valueAccessor) {
-            var value = ko.utils.unwrapObservable(valueAccessor());
+            var value = ko.unwrap(valueAccessor());
             var oldClass;
             if(oldClass = ko.utils.domData.get(element,'class')) {
                 $(element).removeClass(oldClass);
@@ -123,7 +107,7 @@ $(document).ready(function() {
             }
             var delay = allBindings.delay || 0;
 
-            var source = ko.utils.unwrapObservable(valueAccessor());
+            var source = ko.unwrap(valueAccessor());
 
             if(typeof source == 'string') {
                 var dataDict = {};
@@ -172,44 +156,46 @@ $(document).ready(function() {
     //automatically resize a text input to fit its contents
     ko.bindingHandlers.autosize = {
         update: function(element,valueAccessor) {
-            var settings = { max: null, min: 60, padding: 30 };
+            var settings = { max: null, min: 60, padding: 30, useValue: true };
             var str = '';
             var placeholder = element.getAttribute('placeholder') || '';
 
-            function resizeF() {
-                var w = Math.max($.textMetrics(element,str).width, $.textMetrics(element,placeholder).width) + settings.padding;
-                w = Math.max(w,settings.min||0);
-                if(settings.max!=null) {
-                    w = Math.min(w,settings.max);
+            function resizeF(str) {
+                var w = Math.max(measureText(element, str).width, measureText(element, placeholder).width);
+                w = Math.max(w, settings.min || 0);
+                if(settings.max !== null) {
+                    w = Math.min(w, settings.max);
                 }
-                $(element).width(w+'px');
+                const style = getComputedStyle(element);
+                w = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) + w;
+                element.style['width'] = w+'px';
                 element.style['max-width'] = '100%';
-            }
+            };
 
-            var value = ko.utils.unwrapObservable(valueAccessor());
+            var value = ko.unwrap(valueAccessor());
             if(value !== true) {
                 var str = value+'';
                 if(typeof value == 'object') {
-                    settings = $.extend(settings,value);
-                    value = ko.utils.unwrapObservable(settings.value);
+                    settings = Object.assign(settings,value);
+                    value = ko.unwrap(settings.value);
                     str = settings.useValue ? value : '';
                 }
-                resizeF();
+                resizeF(str);
             } else {
                 ['keypress','keydown','keyup','change'].forEach(evt => {
                     element.addEventListener(evt, resizeF);
                 });
-                resizeF();
+                resizeF(element.value);
             }
         }
     }
 
     ko.bindingHandlers.editableHTML = {
         init: function(element, valueAccessor,allBindingsAccessor) {
-            var initialValue = ko.utils.unwrapObservable(valueAccessor());
+            var initialValue = ko.unwrap(valueAccessor());
             $(element).attr('contenteditable',true);
             allBindingsAccessor = allBindingsAccessor();
-            var placeholder = ko.utils.unwrapObservable(allBindingsAccessor.placeholder) || '';
+            var placeholder = ko.unwrap(allBindingsAccessor.placeholder) || '';
             $(element).attr('placeholder',placeholder);
             $(element).html(initialValue);
             $(element).on('keyup input', function(e) {
@@ -221,7 +207,7 @@ $(document).ready(function() {
 
 })
 
-function getCookie(name) {
+window.getCookie = function(name) {
     var cookieValue = null;
     if (document.cookie && document.cookie != '') {
         var cookies = document.cookie.split(';');
@@ -237,7 +223,7 @@ function getCookie(name) {
     return cookieValue;
 }
 
-function getCSRFtoken() {
+window.getCSRFtoken = function() {
     var inp = document.querySelector('input[name="csrfmiddlewaretoken"]');
     if(inp) {
         return inp.value;
@@ -245,6 +231,7 @@ function getCSRFtoken() {
         return getCookie('csrftoken');
     }
 }
+})();
 
 /*
  * jQuery UI Autocomplete HTML Extension
@@ -266,23 +253,23 @@ function filter( array, term ) {
     });
 }
 
-$.extend( proto, {
-    _initSource: function() {
-        if ( this.options.html && $.isArray(this.options.source) ) {
-            this.source = function( request, response ) {
-                response( filter( this.options.source, request.term ) );
-            };
-        } else {
-            initSource.call( this );
-        }
-    },
+    $.extend( proto, {
+        _initSource: function() {
+            if ( this.options.html && $.isArray(this.options.source) ) {
+                this.source = function( request, response ) {
+                    response( filter( this.options.source, request.term ) );
+                };
+            } else {
+                initSource.call( this );
+            }
+        },
 
-    _renderItem: function( ul, item) {
-        return $( "<li></li>" )
-            .data( "item.autocomplete", item )
-            .append( $( "<a></a>" )[ this.options.html ? "html" : "text" ]( item.label ) )
-            .appendTo( ul );
-    }
-});
+        _renderItem: function( ul, item) {
+            return $( "<li></li>" )
+                .data( "item.autocomplete", item )
+                .append( $( "<a></a>" )[ this.options.html ? "html" : "text" ]( item.label ) )
+                .appendTo( ul );
+        }
+    });
 
 })( jQuery );

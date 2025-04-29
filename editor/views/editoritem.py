@@ -710,6 +710,7 @@ class SourceView(MustHaveAccessMixin,generic.DetailView):
         response = http.HttpResponse(str(source), 'text/plain')
         response['Content-Disposition'] = 'attachment; filename={}.exam'.format(ei.filename)
         response['Cache-Control'] = 'max-age=0,no-cache,no-store'
+        response['Access-Control-Allow-Origin'] = '*'
         return response
 
     def get_source(self):

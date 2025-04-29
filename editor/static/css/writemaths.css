@@ -1,11 +1,18 @@
 .wm_preview {
 	z-index: 1;
-	position: absolute;
+	position: sticky;
+    top: 0;
+    height: 0;
 	display: none;
+    justify-content: center;
+}
+.wm_preview.shown {
+    display: grid;
+}
+.wm_preview > .container {
 	border: 1px solid;
 	padding: 0.2em;
 	width: auto;
-	margin: 0 auto;
+	margin: 0 auto !important;
 	background: white;
-	display: none;
 }

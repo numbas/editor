@@ -143,3 +143,8 @@ Run:
 Open http://localhost:8000 in your web browser.
 
 The editor should now be usable: try creating a question and running it.
+
+To run background tasks such as data exports, you will also need to run the Huey task runner:
+
+.. code-block:: console
+   $ python manage.py run_huey

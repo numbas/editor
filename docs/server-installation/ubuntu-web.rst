@@ -150,6 +150,16 @@ Configuration
         environment=DJANGO_SETTINGS_MODULE=numbas.settings
         numprocs=1
 
+        [program:numbas_editor_huey]
+        command=/opt/numbas_python/bin/python /srv/numbas/editor/manage.py run_huey
+        directory=/srv/numbas/editor/
+        user=www-data
+        autostart=true
+        autorestart=true
+        stopasgroup=true
+        environment=DJANGO_SETTINGS_MODULE=numbas.settings
+        numprocs=1
+
     -  Overwrite ``/etc/nginx/sites-enabled/default`` with these contents::
 
         server {

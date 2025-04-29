@@ -1603,7 +1603,7 @@ $(document).ready(function() {
                         },
 
                         init_instance_callback: function(ed) { 
-                            $(element).writemaths({iFrame: true, position: 'center top', previewPosition: 'center bottom'}); 
+                            writemaths(element);
                             function onMCEChange() {
                                 valueAccessor(ed.getContent());
                             }

@@ -10,8 +10,6 @@
     <script src="{% sstatic 'tiny_mce/jquery.tinymce.min.js' %}" type="text/javascript"></script>
     <script src="{% sstatic 'tiny_mce/tinymce.min.js' %}" type="text/javascript"></script>
 
-    <script src="{% sstatic 'summernote/summernote.min.js' %}"></script>
-
     <script src="{% sstatic 'codemirror/lib/codemirror.js' %}" type="text/javascript"></script>
     <script src="{% sstatic 'codemirror/mode/css/css.js' %}" type="text/javascript"></script>
     <script src="{% sstatic 'codemirror/mode/xml/xml.js' %}" type="text/javascript"></script>
@@ -49,8 +47,6 @@
 
 {% block stylesheets %}
     {{block.super}}
-
-    <link href="{% sstatic 'summernote/summernote.css' %}" rel="stylesheet">
 
     <link rel="stylesheet" href="{% sstatic 'codemirror/lib/codemirror.css' %}"/>
     <link rel="stylesheet" href="{% sstatic 'codemirror/addon/dialog/dialog.css' %}"/>

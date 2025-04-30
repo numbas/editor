@@ -1217,84 +1217,15 @@ $(document).ready(function() {
         },
         update: function(element,valueAccessor,allBindingsAccessor) {
             var mc = ko.utils.domData.get(element,'codemirror');
-            var value = ko.utils.unwrapObservable(valueAccessor());
+            var value = ko.unwrap(valueAccessor());
             if(value!=mc.getValue()) {
                 mc.setValue(value || '');
             }
             var allBindings = allBindingsAccessor();
-            var mode = ko.utils.unwrapObservable(allBindings.codemirrorMode) || 'javascript';
+            var mode = ko.unwrap(allBindings.codemirrorMode) || 'javascript';
             mc.setOption('mode',mode);
         }
     }
-
-    ko.bindingHandlers.light_wysiwyg = {
-        init: function(element,valueAccessor,allBindingsAccessor) {
-            valueAccessor = valueAccessor();
-            allBindingsAccessor = allBindingsAccessor();
-
-            if(element.hasAttribute('disabled')) {
-                try {
-                    element.classList.add('well');
-                    element.classList.add('content-area');
-                } catch(e) {
-                    element.className += ' well content-area';
-                }
-                return;
-            }
-
-            function onChange(html) {
-                valueAccessor(html);
-            }
-
-            function onFocus() {
-                $(element).data('summernote-focus',true);
-            }
-
-            function onBlue() {
-                $(element).data('summernote-focus',false);
-            }
-
-            $(element).summernote({
-                airMode: true,
-                disableDragAndDrop: true,
-                popover: {
-                    air: [
-                        ['style', ['bold', 'italic', 'underline', 'clear']],
-                        ['para', ['ul', 'ol', 'paragraph']],
-                        ['insert', ['link']]
-                    ]
-                },
-                callbacks: {
-                    onChange: onChange,
-                    onFocus: onFocus,
-                    onBlur: onBlue
-                }
-            } );
-
-            var ed = $(element).data('summernote');
-            ed.layoutInfo.editor[0].classList.add('form-control');
-            $(element).summernote('code',ko.unwrap(valueAccessor));
-            ed.layoutInfo.editor[0].addEventListener('click',function() {
-                $(element).summernote('focus');
-            });
-        },
-        update: function(element, valueAccessor) {
-            var value = ko.unwrap(valueAccessor()) || '';
-
-            if(element.hasAttribute('disabled')) {
-                $(element).html(value);
-                mathjax_typeset_element(element);
-                $(element).find('[data-bind]').each(function() {
-                    this.removeAttribute('data-bind');
-                });
-                return;
-            }
-
-            if(!$(element).data('summernote-focus')) {
-                $(element).summernote('code',value);
-            }
-        }
-    };
 
     function name_for_gap(n,gaps) {
         if(gaps && gaps[n] && gaps[n].name()) {
@@ -2592,29 +2523,6 @@ $(document).ready(function() {
         options = Object.assign(options,extra_options);
 
         return tinymce.init(options);
-    }
-
-    Editor.light_wysiwyg = function(element, extra_options) {
-        var options = {
-            airMode: true,
-            disableDragAndDrop: true,
-            popover: {
-                air: [
-                    ['style', ['bold', 'italic', 'underline', 'clear']],
-                    ['para', ['ul', 'ol', 'paragraph']],
-                    ['insert', ['link']]
-                ]
-            },
-        }
-        options = Object.assign(options,extra_options);
-
-        $(element).summernote(options);
-        var ed = $(element).data('summernote');
-        ed.layoutInfo.editor[0].classList.add('form-control');
-        ed.layoutInfo.editor[0].addEventListener('click',function() {
-            $(element).summernote('focus');
-        });
-        return ed;
     }
 
     Editor.codemirror = function(element, extra_options) {

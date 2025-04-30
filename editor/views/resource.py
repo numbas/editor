@@ -11,7 +11,12 @@ def upload_resource(request, **kwargs):
         return http.HttpResponseNotAllowed(['POST'])
 
     file = request.FILES['files[]']
-    r = Resource.objects.create(owner=request.user, file=file)
+    r = Resource.objects.create(owner=request.user, file=file, filename=file.name)
+
+    question_pk = request.POST.get('question')
+    if question_pk is not None:
+        q = NewQuestion.objects.get(pk=question_pk)
+        q.resources.add(r)
 
     return http.HttpResponse(json.dumps(r.as_json()), content_type='application/json')
 

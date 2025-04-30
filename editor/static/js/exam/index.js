@@ -43,7 +43,10 @@ $(document).ready(function() {
                     window.location.reload();
                 })
                 .error(function(response) {
-                    noty({text: 'Error deleting exam:\n\n'+response.responseText, layout: 'center', type: 'error'});
+                    noty({
+                        text: 'Error deleting exam:<br>'+response.responseText, 
+                        type: 'error'
+                    });
                 })
             ;
         }

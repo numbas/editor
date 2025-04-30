@@ -425,3 +425,34 @@ body.fill-viewport .page-header h1 {
 .label-block > .label-text ~ * {
     font-weight: normal;
 }
+
+.noty_message {
+    margin-top: 1em;
+    padding: 1em;
+    border-radius: 0.3em;
+}
+
+.noty_message[data-type="alert"] {
+    background-color: #fcf8e3;
+    border-color: #faebcc;
+    color: #8a6d3b;
+}
+.noty_message[data-type="error"] {
+    background-color: #f2dede;
+    border-color: #ebccd1;
+    color: #a94442;
+}
+.noty_message[data-type="success"] {
+    background-color: #dff0d8;
+    border-color: #d6e9c6;
+    color: #3c763d;
+}
+.noty_message[data-type="info"] {
+    background-color: #d9edf7;
+    border-color: #BCE8F1;
+    color: #31708f;
+}
+
+.file-receiver.dropping-file {
+    filter: contrast(70%) brightness(70%);
+}

@@ -588,14 +588,7 @@ $(document).ready(function() {
                         if(access_rights[i].id == data.id) {
                             noty({
                                 text: "That user is already in the access list.",
-                                layout: "center",
-                                speed: 100,
                                 type: 'error',
-                                timeout: 2000,
-                                closable: true,
-                                animateOpen: {"height":"toggle"},
-                                animateClose: {"height":"toggle"},
-                                closeOnSelfClick: true
                             });
                             return;
                         }

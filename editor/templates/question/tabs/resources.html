@@ -4,9 +4,9 @@
 
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.mainTabber.currentTab().id)=='resources'}">
     {% if editable %}
-    <form class="alert alert-info" data-bind="fileupload: resources" data-url="{% url 'upload_resource' object.pk %}">
+    <form method="POST" class="alert alert-info" data-bind="upload_resource: resources" action="{% url 'upload_resource' object.pk %}">
         {% csrf_token %}
-        <h4 class="control-label">Upload a file</h4>
+        <label for="fileupload" class="control-label">Upload a file</label>
         <p><input id="fileupload" type="file" name="files[]"></p>
     </form>
     {% endif %}

@@ -3,6 +3,63 @@ if(!window.Editor)
     window.Editor = {};
 
 $(document).ready(function() {
+    
+    /** 
+     * @typedef noty_options
+     * @property {string} text
+     * @property {string} type - "alert", "success", "info" or "error".
+     * @property {}
+
+    /** Display a popover notification with the given text.
+     *
+     * @param {noty_options} options
+     */
+    window.noty = function(options) {
+        options = Object.assign({
+            type: 'alert',
+            timeout: 5000
+        }, options);
+
+        const el = document.createElement('div');
+        el.className = 'noty_message';
+        el.dataset.type = options.type;
+        el.dataset.layout = options.layout;
+        el.setAttribute('popover','auto');
+        el.innerHTML = options.text;
+
+        document.body.append(el);
+
+        el.showPopover();
+
+        if(options.timeout) {
+            setTimeout(() => {
+                el.hidePopover();
+            }, options.timeout);
+        }
+
+        el.addEventListener('toggle', e => {
+            if(e.newState == 'closed') {
+                el.parentElement.removeChild(el);
+            }
+        });
+    }
+
+    /** Is the given element a child of an element with class `.tab-pane:not(.active)`?
+     *
+     * @param {Element} element
+     * @returns {boolean}
+     */
+    function in_closed_tab_pane(element) {
+        let p = element.parentElement;
+        while(p) {
+            if(p.classList.contains('tab-pane') && !p.classList.contains('active')) {
+                return true;
+                break;
+            }
+            p = p.parentElement;
+        }
+        return false;
+    }
 
     function CSRFFormData(entries) {
         const f = new FormData();
@@ -66,17 +123,15 @@ $(document).ready(function() {
     var showSubstitutions = true;
 
     function find_jme_scope(element) {
-        var p = $(element).parents('.jme-scope').first();
-        if(!p) {
-            return {
-                scope: Numbas.jme.builtinScope,
-                showSubstitutions: false
+        while(element) {
+            if(element.jme_scope !== undefined) {
+                return {
+                    scope: element.jme_scope,
+                    showSubstitutions: element.dataset.showSubstitutions
+                }
             }
+            element = element.parentElement;
         }
-        return {
-            scope: p.data('jme-scope'),
-            showSubstitutions: p.data('jme-show-substitutions') || false
-        };
     }
 
     var post_json = Editor.post_json = function(url, data, extra_options) {
@@ -94,8 +149,6 @@ $(document).ready(function() {
         }
         return fetch(url, options);
     }
-
-    $.noty.defaultOptions.theme = 'noty_theme_twitter';
 
     slugify = function(s) {
         return s.trim().replace(/[^\w\s]/g,'').toLowerCase().replace(/\s/g,'-') || 'empty-slug';
@@ -714,7 +767,6 @@ $(document).ready(function() {
                 noty({
                     text: 'Thanks for your feedback!',
                     type: 'success',
-                    layout: 'topCenter'
                 });
             }
         }
@@ -725,7 +777,7 @@ $(document).ready(function() {
         this.edit_name = function() {
             ei.mainTabber.setTab('settings')();
             ko.tasks.runEarly();
-            $('#name-input').focus();
+            document.getElementById('#name-input').focus();
         }
 
         this.autoSave = ko.observable(null);
@@ -1113,10 +1165,10 @@ $(document).ready(function() {
             var value = valueAccessor();
             var allBindings = allBindingsAccessor();
 
-            $(element).val(ko.utils.unwrapObservable(value));
+            element.value = ko.unwrap(value);
             
-            var mode = ko.utils.unwrapObservable(allBindings.codemirrorMode) || 'javascript';
-            var readOnly = ko.utils.unwrapObservable(allBindings.readOnly) || element.hasAttribute('disabled') || false;
+            var mode = ko.unwrap(allBindings.codemirrorMode) || 'javascript';
+            var readOnly = ko.unwrap(allBindings.readOnly) || element.hasAttribute('disabled') || false;
 
             function onChange(editor,change) {
                 if(typeof value=='function') {
@@ -1203,7 +1255,7 @@ $(document).ready(function() {
             }
 
             setInterval(function() {
-                var visible = $(element).parents('.tab-pane:not(.active)').length==0;
+                let visible = !in_closed_tab_pane(element);
                 ko.utils.domData.set(element,'cm-visible',visible);
                 if(visible) {
                     if(!ko.utils.domData.get(element,'cm-visible-refresh')) {
@@ -1293,14 +1345,13 @@ $(document).ready(function() {
 
                 var preambleCSSAccessor = allBindingsAccessor.preambleCSS;
 
-                var tinymce_plugins = ko.utils.unwrapObservable(allBindingsAccessor.tinymce_plugins) || [];
+                var tinymce_plugins = ko.unwrap(allBindingsAccessor.tinymce_plugins) || [];
 
-                var t = $('<div class="wmTextArea" style="width:100%"/>');
-
-                $(element)
-                    .css('width',width)
-                    .append(t)
-                ;
+                var t = document.createElement('div');
+                t.classList.add('wmTextArea');
+                t.style.width = '100%';
+                element.style.width = width;
+                element.append(t);
 
                 function remove_empty_spans(node) {
                     if(node.nodeType==1) {
@@ -1341,8 +1392,8 @@ $(document).ready(function() {
                 .concat(tinymce_plugins);
 
                 //tinyMCE
-                t
-                    .tinymce({
+                tinymce.init({
+                        target: t,
                         theme: 'modern',
                         skin: 'lightgray',
                         plugins: plugins,
@@ -1406,7 +1457,7 @@ $(document).ready(function() {
                                 var s = ed.dom.create('style',{type:'text/css',id:'preamblecss'});
                                 ed.dom.doc.head.appendChild(s);
                                 ko.computed(function() {
-                                    s.textContent = ko.utils.unwrapObservable(preambleCSSAccessor);
+                                    s.textContent = ko.unwrap(preambleCSSAccessor);
                                 });
                             }
                             ed.on('keyup',function(e) {
@@ -1418,14 +1469,14 @@ $(document).ready(function() {
                             ed.setContent(ko.unwrap(valueAccessor));
                             ed.undoManager.clear();
                             ed.on('focus',function() {
-                                $(ed.getContainer()).addClass('wm-focus');
+                                ed.getContainer().classList.add('wm-focus');
                             });
                             ed.on('blur',function() {
-                                $(ed.getContainer()).removeClass('wm-focus');
+                                ed.getContainer().classList.remove('wm-focus');
                             });
 
                             var resizer = setInterval(function() {
-                                if($(ed.getContainer()).parents('.tab-pane:not(.active)').length==0) {
+                                if(!in_closed_tab_pane(ed.getContainer())) {
                                     ed.execCommand('mceAutoResize');
                                     clearInterval(resizer);
                                 }
@@ -1448,7 +1499,7 @@ $(document).ready(function() {
                             }
 
                         }
-                    })
+                    }).then(([ed]) => t.tinymce = ed);
                 ;
             }
 
@@ -1495,11 +1546,11 @@ $(document).ready(function() {
 
             var well = element.querySelector('.well.not-editing > .content-area');
             if(well) {
-                $(well).html(value);
+                well.innerHTML = value;
                 mathjax_typeset_element(well);
-                $(well).find('[data-bind]').each(function() {
-                    this.removeAttribute('data-bind');
-                });
+                for(let el of well.querySelectorAll('[data-bind]')) {
+                    el.removeAttribute('data-bind');
+                }
                 if(allBindingsAccessor.gaps) {
                     display_gaps(well);
                     ko.computed(function() {
@@ -1515,10 +1566,10 @@ $(document).ready(function() {
             }
 
             if(element.classList.contains('has-tinymce')) {
-                var tinymce = $(element).find('iframe');
+                var tinymce = element.querySelector('iframe');
 
-                if (!tinymce.is(':focus')) {
-                    var ed = $(element).children('.wmTextArea').tinymce();
+                if (document.activeElement == tinymce) {
+                    var ed = element.querySelector('.wmTextArea').tinymce;
                     if(ed && ed.initialized) {
                         if(ed.getContent()!=value) {
                             ed.setContent(value);
@@ -1532,14 +1583,14 @@ $(document).ready(function() {
     ko.bindingHandlers.debug = {
         update: function(element,valueAccessor) {
             var value = valueAccessor();
-            console.log(value,ko.utils.unwrapObservable(value));
+            console.log(value,ko.unwrap(value));
         }
     }
 
     ko.bindingHandlers.restrictedClick = {
         init: function(element,valueAccessor, allBindings, viewModel, bindingContext) {
             var fn = valueAccessor();
-            $(element).click(function(e) {
+            element.addEventListener('click', function(e) {
                 if(e.target.hasAttribute('clickable')) {
                     // Take all the event args, and prefix with the viewmodel
                     viewModel = bindingContext['$data'];
@@ -1549,19 +1600,6 @@ $(document).ready(function() {
             });
         }
     }
-
-    ko.bindingHandlers.foldlist = {
-        init: function(element,valueAccessor,allBindingsAccessor,viewModel)
-        {
-            var value = valueAccessor(), allBindings = allBindingsAccessor();
-            var show = allBindings.show;
-
-            element=$(element);
-            var b = $('<button type="button" class="delete" data-bind="click:remove" value="Delete"></button>');
-            b.click(function(){viewModel.remove()});
-            element.append(b);
-        }
-    };
 
     function truncate_string(str,maxlength) {
         if(str.length>maxlength) {
@@ -1690,10 +1728,10 @@ $(document).ready(function() {
             }
             element.setAttribute('data-jme-value-type',type);
             if(display.value !== undefined) {
-                $(element).html(display.value);
+                element.innerHTML = display.value;
                 element.setAttribute('data-jme-value-display','value');
             } else if(display.description !== undefined) {
-                $(element).html(display.description);
+                element.innerHTML = display.description;
                 element.setAttribute('data-jme-value-display','description');
             }
         }
@@ -1714,12 +1752,12 @@ $(document).ready(function() {
         init: function (element, valueAccessor) {
             // Initially set the element to be instantly visible/hidden depending on the value
             var value = valueAccessor();
-            $(element).toggle(ko.utils.unwrapObservable(value)); // Use "unwrapObservable" so we can handle values that may or may not be observable
+            $(element).toggle(ko.unwrap(value));
         },
         update: function (element, valueAccessor) {
             // Whenever the value subsequently changes, slowly fade the element in or out
             var value = valueAccessor();
-            ko.utils.unwrapObservable(value) ? $(element).slideDown(150) : $(element).slideUp(150);
+            ko.unwrap(value) ? $(element).slideDown(150) : $(element).slideUp(150);
         }
     };
 
@@ -1811,11 +1849,13 @@ $(document).ready(function() {
                 var task = p.current_task();
                 if(task) {
                     if(task.focus_on) {
-                        var s = $(task.focus_on);
-                        if(s.hasClass('wmTextArea')) {
-                            s.tinymce().focus();
-                        } else {
-                            s.focus();
+                        var s = document.querySelector(task.focus_on);
+                        if(s) {
+                            if(s.classList.contains('wmTextArea')) {
+                                s.tinymce.focus();
+                            } else {
+                                s.focus();
+                            }
                         }
                     }
                     if(task.switch_action) {
@@ -1849,7 +1889,7 @@ $(document).ready(function() {
             this.id = params.id;
             this.edit_item = function(item,e) {
                 var input = e.target.parentElement.nextElementSibling;
-                var i = $(e.target).index();
+                var i = [...e.target.parentElement.children].indexOf(e.target);
                 lb.items.splice(i,1);
                 if(input.value) {
                     lb.items.push(input.value);
@@ -1954,43 +1994,24 @@ $(document).ready(function() {
         '
     });
 
-    ko.bindingHandlers.dragOut = {
-        init: function(element, valueAccessor) {
-            var obj = {
-                data: null,
-                sortable: ''
-            };
-            obj = Object.assign(obj,valueAccessor());
-            $(element)
-                .draggable({
-                    handle: '.handle',
-                    revert: true, 
-                    revertDuration: 100,
-                    helper: 'clone',
-                    connectToSortable: obj.sortable
-                })
-            ;
-        }
-    };
-
     ko.bindingHandlers.JME = {
         update: function(element,valueAccessor,allBindingsAccessor) {
-            var value = ko.utils.unwrapObservable(valueAccessor());
+            var value = ko.unwrap(valueAccessor());
             var allBindings = allBindingsAccessor();
             var parser = allBindings.parser || Numbas.jme.standardParser;
             var scope = find_jme_scope(element).scope || Numbas.jme.builtinScope;
             var rules = ko.unwrap(allBindings.rules);
             var res = Editor.texJMEBit(value,rules,parser,scope);
-            $(element).toggleClass('jme-error',res.error);
+            element.classList.toggle('jme-error',res.error);
             if(res.error) {
-                $(element).html(res.message);
+                element.innerHTML = res.message;
             } else {
                 var tex = res.tex;
                 if(tex.length>0) {
                     element.innerHTML = '$'+tex+'$';
                     mathjax_typeset_element(element);
                 } else {
-                    $(element).html('');
+                    element.innerHTML = '';
                 }
             }
         }
@@ -2015,10 +2036,9 @@ $(document).ready(function() {
         update: function(element, valueAccessor) {
             const scope = ko.unwrap(valueAccessor());
             if(scope) {
-                element.classList.add('jme-scope');
-                $(element).data('jme-scope',scope);
+                Numbas.display_util.set_jme_scope(element, scope);
             } else {
-                element.classList.remove('jme-scope');
+                Numbas.display_util.set_jme_scope(element, undefined);
             }
         }
     }
@@ -2032,54 +2052,8 @@ $(document).ready(function() {
 
     ko.bindingHandlers.inline_latex = {
         update: function(element,valueAccessor) {
-            element.innerHTML = '';
-            var script = document.createElement('script');
-            script.setAttribute('type','math/tex');
-            script.textContent = ko.unwrap(valueAccessor());
-            element.appendChild(script);
+            element.innerHTML = '$' + ko.unwrap(valueAccessor()) + '$';
             mathjax_typeset_element(element);
-        }
-    }
-
-    ko.bindingHandlers.fromNow = {
-        init: function(element,valueAccessor) {
-            var value = valueAccessor();
-            function update() {
-                $(element).text(moment(ko.utils.unwrapObservable(value)).fromNow());
-            }
-            update();
-            ko.utils.domData.set(element,'fromNow',setInterval(update,30000));
-        },
-        update: function(element,valueAccessor) {
-            clearInterval(ko.utils.domData.get(element,'fromNow'));
-            ko.bindingHandlers.fromNow.init(element,valueAccessor);
-        }
-    }
-    ko.bindingHandlers.calendarTime = {
-        init: function(element,valueAccessor) {
-            var value = valueAccessor();
-            function update() {
-                $(element).text(moment(ko.utils.unwrapObservable(value)).format('DD/MM/YYYY'));
-            }
-            update();
-            ko.utils.domData.set(element,'calendarTime',setInterval(update,30000));
-        },
-        update: function(element,valueAccessor) {
-            clearInterval(ko.utils.domData.get(element,'calendarTime'));
-            ko.bindingHandlers.calendarTime.init(element,valueAccessor);
-        }
-    }
-
-    /** update the value of an observable when the input event is triggered
-     * augments the value binding
-     */
-    ko.bindingHandlers.inputValue = {
-        init: function(element,valueAccessor) {
-            var value = valueAccessor();
-            $(element).on('input',function() {
-                value($(element).val());
-            });
-            ko.applyBindingsToNode(element,{value:value});
         }
     }
 
@@ -2178,7 +2152,7 @@ $(document).ready(function() {
         this.writingComment = ko.observable(false);
         this.commentText = ko.observable('');
         this.commentIsEmpty = ko.pureComputed(function() {
-            return $(this.commentText()).text().trim()=='';
+            return !Numbas.util.isNonemptyHTML(this.commentText());
         },this);
         this.submitComment = function(form) {
             if(this.commentIsEmpty()) {
@@ -2227,15 +2201,7 @@ $(document).ready(function() {
             .catch(err => {
                 noty({
                     text: `Error hiding timeline item: ${err}`,
-                    layout: "topLeft",
-                    type: "error",
-                    textAlign: "center",
-                    animateOpen: {"height":"toggle"},
-                    animateClose: {"height":"toggle"},
-                    speed: 200,
-                    timeout: 5000,
-                    closable:true,
-                    closeOnSelfClick: true
+                    type: "error"
                 });
             })
         ;
@@ -2268,15 +2234,7 @@ $(document).ready(function() {
             .catch(err => {
                 noty({
                     text: `Error deleting timeline item: ${err}`,
-                    layout: "topLeft",
-                    type: "error",
-                    textAlign: "center",
-                    animateOpen: {"height":"toggle"},
-                    animateClose: {"height":"toggle"},
-                    speed: 200,
-                    timeout: 5000,
-                    closable:true,
-                    closeOnSelfClick: true
+                    type: "error"
                 });
             })
         ;
@@ -2289,54 +2247,87 @@ $(document).ready(function() {
         }
     };
 
-    ko.bindingHandlers.fileupload = {
+    ko.bindingHandlers.upload_resource = {
         init: function(element, valueAccessor, allBindingsAccessor) {
             var fileArray = valueAccessor();
             var allBindings = allBindingsAccessor();
             var afterUpload = allBindings.afterupload;
+            var question_pk = allBindings.question_pk;
+            console.log(question_pk);
 
-            $(element).fileupload({
-                dataType: 'json',
-                dropZone: $(element),
+            element.classList.add('file-receiver');
 
-                done: function (e, data) {
-                    data.res.load(data.result);
-                    if(afterUpload)
-                        afterUpload(data.res);
-                },
-                add: function(e, data) {
-                    data.res = new Resource();
-                    fileArray.splice(0,0,data.res);
-                    data.process().done(function() {
-                        data.submit();
+            element.addEventListener('dragenter', e => {
+                e.preventDefault();
+                element.classList.add('dropping-file');
+            });
+
+            element.addEventListener('dragleave', e => {
+                e.preventDefault();
+                element.classList.remove('dropping-file');
+            });
+
+            element.addEventListener('dragend', e => {
+                e.preventDefault();
+                element.classList.remove('dropping-file');
+            });
+
+            element.addEventListener('dragover', e => {
+                e.preventDefault();
+                element.classList.add('dropping-file');
+            });
+
+            element.addEventListener('drop', e => {
+                e.preventDefault();
+                const {files} = e.dataTransfer;
+                element.classList.remove('dropping-file');
+
+                for(let file of files) {
+                    const resource = new Resource();
+                    fileArray.splice(0,0,resource);
+
+                    const xhr = new XMLHttpRequest();
+                    xhr.upload.addEventListener("progress", e => {
+                        if (event.lengthComputable) {
+                            resource.progress(e.loaded / e.total);
+                        }
                     });
-                },
+                    xhr.addEventListener("loadend", () => {
+                        if(!(xhr.readyState === 4 && xhr.status === 200)) {
+                            return;
+                        }
+                        console.log(xhr.responseText);
+                        const result = JSON.parse(xhr.responseText);
+                        resource.load(result);
 
-                progress: function(e,data) {
-                    data.res.progress(data.loaded/data.total);
-                },
+                        if(afterUpload) {
+                            afterUpload(resource);
+                        }
+                    });
+                    xhr.open(element.method, element.action, true);
 
-                fail: function(e, data) {
-                    fileArray.remove(data.res);
-                    noty({text:'There was an error uploading the resource: '+data.errorThrown, type:'error',timeout: 5000, layout: 'topCenter'})
+                    const fd = new FormData(element);
+                    fd.set('files[]', file);
+                    xhr.send(fd);
                 }
-
             });
         }
     }
 
     function update_notifications(response) {
-        $('#notifications .dropdown-menu').html(response.html);
+        document.querySelector('#notifications .dropdown-menu').innerHTML = response.html;
+
         var description = response.num_unread+' unread '+(response.num_unread==1 ? 'notification' : 'notifications')
-        $('#notifications .dropdown-toggle').attr('title',description);
-        $('#notifications .badge').text(response.num_unread>0 ? response.num_unread : '');
-        $('#notifications .sr-description').text(description);
+        document.querySelector('#notifications .dropdown-toggle').setAttribute('title', description);
+
+        document.querySelector('#notifications .badge').textContent = response.num_unread > 0 ? response.num_unread : '';
+        document.querySelector('#notifications .sr-description').textContent = description;
         if(response.num_unread) {
-            $('#notifications').addClass('active');
-            $('#notifications .dropdown-toggle').removeClass('disabled');
+            document.querySelector('#notifications').classList.add('active');
+            document.querySelector('#notifications .dropdown-toggle').classList.remove('disabled');
         } else {
-            $('#notifications').removeClass('active open');
-            $('#notifications .dropdown-toggle').addClass('disabled');
+            document.querySelector('#notifications').classList.remove('active', 'open');
+            document.querySelector('#notifications .dropdown-toggle').classList.add('disabled');
         }
     }
 
@@ -2375,26 +2366,26 @@ $(document).ready(function() {
     fetch_notifications();
 
     var questions_in_basket = Editor.questions_in_basket = function() {
-        return $('#question_basket .dropdown-menu .question').map(function(){return parseInt($(this).attr('data-id'))}).toArray();
+        return [...document.querySelectorAll('#question_basket .dropdown-menu .question')].map(q => parseInt(q.dataset.id));
     }
 
     var update_basket = Editor.update_basket = function(response) {
-        var num_questions = $('#question_basket .dropdown-menu .question').length;
-        $('#question_basket .dropdown-toggle').attr('title',num_questions+' '+(num_questions==1 ? 'question' : 'questions')+' in your basket');
-        $('#question_basket .badge').text(num_questions>0 ? num_questions : '');
+        var num_questions = document.querySelectorAll('#question_basket .dropdown-menu .question').length;
+        document.querySelector('#question_basket .dropdown-toggle').setAttribute('title', `${num_questions} ${num_questions==1 ? 'question' : 'questions'} in your basket`);
+        document.querySelector('#question_basket .badge').textContent = num_questions>0 ? num_questions : '';
         if(num_questions) {
-            $('#question_basket .dropdown-toggle').removeClass('disabled');
+            document.querySelector('#question_basket .dropdown-toggle').classList.remove('disabled');
         } else {
-            $('#question_basket').removeClass('active open');
-            $('#question_basket .dropdown-toggle').addClass('disabled');
+            document.querySelector('#question_basket').classList.remove('active', 'open');
+            document.querySelector('#question_basket .dropdown-toggle').classList.add('disabled');
         }
         var ids = questions_in_basket();
-        $('.add-to-basket[data-question-id]').each(function() {
-            var id = parseInt($(this).attr('data-question-id'));
-            var inBasket = ids.indexOf(id)>=0;
-            $(this).toggleClass('in-basket',inBasket);
-            $(this).attr('title',inBasket ? 'This is in your basket' : 'Add this to your basket');
-        });
+        for(let a of document.querySelectorAll('.add-to-basket[data-question-id]')) {
+            var id = parseInt(a.dataset.questionId);
+            var inBasket = ids.indexOf(id) >= 0;
+            a.classList.toggle('in-basket', inBasket);
+            a.setAttribute('title', inBasket ? 'This is in your basket' : 'Add this to your basket');
+        }
     }
 
     update_basket();

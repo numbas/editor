@@ -83,8 +83,7 @@ function move_to(target_pk,selection) {
             }
         });
         noty({
-            text: r.message,
-            layout: 'topCenter',
+            text: r.message
         });
         num_items -= r.items_moved.length;
         document.getElementById('num-items').textContent = num_items+' item'+(num_items==1 ? '' : 's');
@@ -97,7 +96,6 @@ function move_to(target_pk,selection) {
         console.log(arguments);
         noty({
             text: err,
-            layout: 'topCenter',
             type: 'error'
         });
         all_rows.forEach(function(row) {

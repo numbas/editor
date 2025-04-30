@@ -48,7 +48,7 @@
                     <h3 class="modal-title">Insert image</h3>
                 </div>
                 <div class="modal-body">
-                    <form data-bind="fileupload: resources, afterupload: $root.insertImage" data-url="{% url 'upload_resource' object.pk %}">
+                    <form data-bind="upload_resource: resources, afterupload: $root.insertImage" method="POST" action="{% url 'upload_resource' object.pk %}">
                         {% csrf_token %}
                         <span class="control-label">Upload a file</span>
                         <input id="fileupload" type="file" name="files[]">

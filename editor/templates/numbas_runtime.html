@@ -6,12 +6,14 @@
 <script>
     Numbas.queueScript('localisation-resources',['i18next'],function() {
         Numbas.locale = {
-            preferred_locale: {% if user.is_authenticated %}"{{user.userprofile.language}}"{% else %}"en-GB"{% endif %},
+            {% with preferred_locale=user.userprofile.language|default_if_none:"en-GB" %}
+            preferred_locale: "{{preferred_locale}}",
             resources: {
                 {% for name,locale in NUMBAS_LOCALES %}
-                "{{locale|lower}}": {"translation":{% raw_include "js/numbas/locales/"|add:locale|add:".json" %} },
+                {% if locale == preferred_locale %}"{{locale|lower}}": {"translation":{% raw_include "js/numbas/locales/"|add:locale|add:".json" %} },{% endif %}
                 {% endfor %}
             }
+            {% endwith %}
         }
     });
 </script>

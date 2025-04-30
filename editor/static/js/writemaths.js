@@ -77,9 +77,10 @@ function findMaths(txt,target) {
             }
         }
 
-        re_startMaths.lastIndex = end;
+        re_startMaths.lastIndex = end + endm[0].length;
     }
 }
+window.findMaths = findMaths;
 
 /** 
  * Show a preview rendering of mathematical notation in an editable area.

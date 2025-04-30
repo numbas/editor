@@ -2,8 +2,7 @@
     {% if not dynamic_id %}id="{{id}}"{% endif %}
     {% if not editable %}disabled{% endif%} 
     data-bind="
-        value: {{property}}, 
-        inputValue: {{property}},
+        textInput: {{property}},
         {% if dynamic_id %}id: {{id}}{% endif %}
     "
     type="range"

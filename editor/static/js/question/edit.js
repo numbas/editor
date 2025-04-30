@@ -521,9 +521,8 @@ $(document).ready(function() {
             });
             var defined_constants = Numbas.jme.variables.makeConstants(constants,scope);
 
-            document.body.classList.add('jme-scope');
-            $(document.body).data('jme-scope',scope);
-            $(document.body).data('jme-show-substitutions',true);
+            document.body.jme_scope = scope;
+            document.body.dataset.showSubstitutions = true;
 
             return scope;
         },this);

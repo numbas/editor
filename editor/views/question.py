@@ -216,3 +216,19 @@ class CommentView(editor.views.generic.CommentView):
 
 class SetRestorePointView(editor.views.generic.SetRestorePointView):
     model = NewQuestion
+
+class UploadResourceView(generic.UpdateView):
+    model = NewQuestion
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        if not self.object.editoritem.can_be_edited_by(self.request.user):
+            return http.HttpResponseForbidden()
+
+        file = request.FILES['files[]']
+        r = Resource.objects.create(owner=request.user, file=file, filename=file.name)
+
+        self.object.resources.add(r)
+
+        return http.HttpResponse(json.dumps(r.as_json()), content_type='application/json')

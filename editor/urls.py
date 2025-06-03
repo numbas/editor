@@ -168,6 +168,9 @@ urlpatterns = [
     path('question/<int:pk>/<numbasslug:slug>/restore-point',
         login_required(question.SetRestorePointView.as_view()), name='set_restore_point_on_question'),
 
+    path('question/<int:pk>/resource/upload',
+        login_required(question.UploadResourceView.as_view()), name='upload_resource'),
+
     path('question/<int:pk>/<numbasslug:slug>/resources/question-resources/<path:resource>',
         resource.view_resource, name='view_resource'),
                        
@@ -187,11 +190,6 @@ urlpatterns = [
 
     path('question/<int:pk>/<numbasslug:slug>.exam',
         question.SourceView.as_view(), name='question_source'),
-
-    # Resources
-
-    path('resource/upload',
-        login_required(resource.upload_resource), name='upload_resource'),
 
     # Timeline items
 

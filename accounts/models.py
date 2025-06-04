@@ -78,13 +78,14 @@ class UserProfile(models.Model):
 
     def all_timeline(self):
         nonsticky_broadcasts = SiteBroadcast.objects.visible_now().exclude(sticky=True)
-        nonsticky_broadcast_timelineitems = TimelineItem.objects.filter(object_content_type=ContentType.objects.get_for_model(SiteBroadcast), object_id__in=nonsticky_broadcasts)
+        nonsticky_broadcast_timelineitems_filter = Q(object_content_type=ContentType.objects.get_for_model(SiteBroadcast), object_id__in=nonsticky_broadcasts)
 
         projects = Project.objects.filter(Q(owner=self.user) | Q(pk__in=self.user.individual_accesses.for_model(Project).values('object_id')) | Q(watching_non_members=self.user)).values('pk')
         editoritems = EditorItem.objects.filter(Q(author=self.user) | Q(pk__in=self.user.individual_accesses.for_model(EditorItem).values('object_id'))).values('pk')
         queues = ItemQueue.objects.filter(Q(owner=self.user) | Q(pk__in=self.user.individual_accesses.for_model(ItemQueue).values('object_id'))).values('pk')
 
         items = TimelineItem.objects.filter(
+            nonsticky_broadcast_timelineitems_filter |
             Q(editoritems__in=editoritems) |
             Q(editoritems__project__in=projects) |
             Q(projects__in=projects) |
@@ -92,9 +93,7 @@ class UserProfile(models.Model):
             Q(item_queue_entries__queue__in = queues) |
             Q(item_queue_entry__queue__project__in = projects) |
             Q(item_queue_entry__queue__in = queues)
-        )
-
-        items = (items | nonsticky_broadcast_timelineitems).order_by('-date')
+        ).order_by('-date')
 
         return items
 

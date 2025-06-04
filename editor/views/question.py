@@ -142,7 +142,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
     def get_context_data(self, **kwargs):
         context = super(UpdateView, self).get_context_data(**kwargs)
 
-        extensions = Extension.objects.filter(Extension.filter_can_be_viewed_by(self.request.user)) | self.object.extensions.all()
+        extensions = Extension.objects.filter(Extension.filter_can_be_viewed_by(self.user) | Q(pk__in=self.object.extensions.all()))
         extensions = extensions.distinct().order_by(Lower('name'))
         self.item_json['numbasExtensions'] = context['extensions'] = [e.as_json() for e in extensions]
 
@@ -155,16 +155,15 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         self.item_json['editing_history_used'] = self.object.editoritem.comments.exists() or self.object.editoritem.restore_points.exists()
 
         # get publicly available part types first
-        custom_part_types = CustomPartType.objects.filter(public_availability='always')
+        cpt_query = Q(public_availability='always')
         if not self.request.user.is_anonymous:
             # add in the user's own part types
-            users = [self.request.user]+self.object.editoritem.project.members()
-            custom_part_types |= CustomPartType.objects.filter(CustomPartType.filter_can_be_viewed_by(self.request.user))
+            cpt_query |= CustomPartType.filter_can_be_viewed_by(self.request.user)
         # only show part types ready to use
-        custom_part_types = custom_part_types.filter(ready_to_use=True)
+        cpt_query &= Q(ready_to_use=True)
         # also include part types already in use in this question
-        custom_part_types = custom_part_types | self.object.custom_part_types.all()
-        custom_part_types = custom_part_types.distinct()
+        cpt_query |= Q(pk__in=self.object.custom_part_types.all())
+        custom_part_types = CustomPartType.objects.filter(cpt_query)
         self.item_json['custom_part_types'] = context['custom_part_types'] = [c.as_json() for c in custom_part_types]
 
         self.item_json['resources'] = [r.as_json() for r in self.object.resources.all()]

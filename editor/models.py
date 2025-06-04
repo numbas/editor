@@ -242,7 +242,8 @@ class Project(models.Model, ControlledObject):
         return list(User.objects.filter(individual_accesses__in=self.access.all()).exclude(pk=self.owner.pk).order_by('last_name','first_name'))
 
     def all_timeline(self):
-        items = self.timeline.all() | TimelineItem.objects.filter(
+        items = TimelineItem.objects.filter(
+            Q(pk__in=self.timeline.all()) |
             Q(editoritems__project=self) |
             Q(item_queue_entry__queue__project = self) |
             Q(item_queue_entries__queue__project = self)

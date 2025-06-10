@@ -4132,6 +4132,23 @@ Once you've got a sub-expression, you can evaluate it to a normal JME data type,
         * ``expand_juxtapositions(expression("xy^z"))`` → ``expression("x*y^z")``
         * ``expand_juxtapositions(expression("xy!"))`` → ``expression("x*y!")``
 
+.. jme:function:: normalise_subscripts(name)
+    :keywords: name
+
+    Normalise the subscripts in a variable name.
+    In :ref:`mathematical-expression` parts, variable names ending with a number are rewritten so that the number is alwasys preceded by an underscore, e.g. ``x1`` is rewritten to ``x_1``.
+
+    This function can be used to perform the normalisation.
+
+    **Definition**:
+        * :data:`string` → :data:`string`
+
+    **Example**:
+        * ``normalise_subscripts("x1")`` → ``"x_1"``
+        * ``normalise_subscripts("x_1")`` → ``"x_1"``
+        * ``normalise_subscripts("xa")`` → ``"xa"``
+        * ``normalise_subscripts("x_a")`` → ``"x_a"``
+
 .. jme:function:: canonical_compare(expr1,expr2)
     :keywords: compare, comparison, order, sort
 

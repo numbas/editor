@@ -154,16 +154,21 @@ part_types.models = [
                 return new Numbas.jme.Scope([part.scope(),{caseSensitive: this.caseSensitive()}]);
             },model);
 
+            model.expandJuxtapositionsSettings = ko.pureComputed(function() {
+                return {
+                    singleLetterVariables: this.singleLetterVariables(),
+                    noUnknownFunctions: !this.allowUnknownFunctions(),
+                    implicitFunctionComposition: this.implicitFunctionComposition(),
+                    normaliseSubscripts: true,
+                };
+            },model);
+
             model.displayAnswer = ko.computed(function() {
                 try {
                     var scope = new Numbas.jme.Scope([this.scope()]);
                     scope.functions['subvar'] = {};
                     var tree = jme.compile(Editor.wrap_subvar(this.answer()));
-                    tree = scope.expandJuxtapositions(tree, {
-                        singleLetterVariables: this.singleLetterVariables(),
-                        noUnknownFunctions: !this.allowUnknownFunctions(),
-                        implicitFunctionComposition: this.implicitFunctionComposition()
-                    });
+                    tree = scope.expandJuxtapositions(tree, this.expandJuxtapositionsSettings());
                     return jme.display.treeToJME(tree);
                 } catch(e) {
                     return this.answer();
@@ -187,7 +192,7 @@ part_types.models = [
                         bits[i] = '1';
                     }
                     var correctAnswer = bits.join('');
-                    var answer = jme.compile(correctAnswer);
+                    var answer = scope.expandJuxtapositions(jme.compile(correctAnswer), this.expandJuxtapositionsSettings());
                     var names = jme.findvars(answer,[],scope);
                     return names.sort();
                 } catch(e) {

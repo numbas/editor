@@ -3567,6 +3567,17 @@ var jme_function_hints =
         "doc": "jme-reference"
     },
     {
+        "name": "normalise_subscripts",
+        "description": "Normalise the subscripts in a variable name.\nIn mathematical-expression parts, variable names ending with a number are rewritten so that the number is alwasys preceded by an underscore, e.g. <code>x1</code> is rewritten to <code>x_1</code>.",
+        "keywords": [
+            "name"
+        ],
+        "calling_patterns": [
+            "normalise_subscripts(name)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
         "name": "canonical_compare",
         "description": "Compare expressions <code>a</code> and <code>b</code> using the \"canonical\" ordering.\nReturns <code>-1</code> if <code>a</code> should go before <code>b</code>, <code>0</code> if they are considered \"equal\", and <code>1</code> if <code>a</code> should go after <code>b</code>.",
         "keywords": [

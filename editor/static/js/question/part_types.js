@@ -303,7 +303,9 @@ part_types.models = [
                 }
             }
             data.valuegenerators = this.valueGenerators().map(function(d) {
-                return {name: d.name, value: d.value()};
+                var tok = new Numbas.jme.types.TName(d.name);
+                var name = Numbas.jme.builtinScope.normaliseSubscripts(tok).name;
+                return {name: name, value: d.value()};
             });
         },
 

@@ -38,7 +38,7 @@ from django_tables2.config import RequestConfig
 
 from accounts.models import UserProfile, EditorItemViewed
 
-from editor.context_processors import get_mathjax_url
+from editor.context_processors import get_mathjax_2_url, get_mathjax_3_url
 from editor.tables import EditorItemTable, RecentlyPublishedTable
 from editor.models import EditorItem, Project, IndividualAccess, Licence, PullRequest, Taxonomy, Contributor, Folder
 import editor.lockdown_app
@@ -510,7 +510,8 @@ class CompileObject(MustHaveAccessMixin):
             '-o'+str(output_location),
             '-t'+str(theme_path),
             '-l'+locale,
-            '--mathjax-url',self.get_mathjax_url(),
+            '--mathjax-url',self.get_mathjax_2_url(),
+            '--mathjax-3-url',self.get_mathjax_3_url(),
             '--accessibility-statement-url', self.get_accessibility_statement_url(),
             '--resource-root', str((Path(settings.MEDIA_ROOT) / 'question-resources').resolve()),
         ] + switches
@@ -526,8 +527,11 @@ class CompileObject(MustHaveAccessMixin):
         else:
             return output_location
 
-    def get_mathjax_url(self):
-        return get_mathjax_url(self.request)
+    def get_mathjax_2_url(self):
+        return get_mathjax_2_url(self.request)
+    
+    def get_mathjax_3_url(self):
+        return get_mathjax_3_url(self.request)
     
     def get_accessibility_statement_url(self):
         return settings.GLOBAL_SETTINGS['HELP_URL'] + 'accessibility/exam.html'

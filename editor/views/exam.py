@@ -321,7 +321,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         self.item_json['editing_history_used'] = self.object.editoritem.comments.exists() or self.object.editoritem.restore_points.exists()
 
         self.item_json.update({
-            'themes': sorted(context['themes'], key=operator.itemgetter('name')),
+            'themes': sorted(context['themes'], key=lambda x: (x['path'] != 'default', x['name'].lower())),
             'locales': context['locales'],
         })
 

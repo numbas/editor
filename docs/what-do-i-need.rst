@@ -27,12 +27,11 @@ We aim for Numbas to be compatible with all popular browsers.
 We have tested Numbas on the following browsers.
 Any more recent versions should be assumed to work.
 
-* **Chrome** version 73 (released 2019-03-12).
-* **Firefox** version 81 (released 2020-09-22).
-* **Edge** version 79 (released 2020-01-15).
-* **macOS Safari** version 13 (released 2019-09-19).
-* **iOS Safari (iPhone/iPad)** version 13 (released 2019-09-19).
-* **Android WebView** version 73 (released 2019-03-12).
+* **Chrome** version 112 (released 2023-04-04).
+* **Firefox** version 117 (released 2023-08-29).
+* **Edge** version 112 (released 2023-04-06).
+* **macOS Safari** version 16.5 (released 2023-09-18, with MacOS Sonoma).
+* **iOS Safari (iPhone/iPad)** version 16.5 (released 2023-09-18).
 
 .. _recording-scores:
 

@@ -32,6 +32,7 @@ Any more recent versions should be assumed to work.
 * **Edge** version 112 (released 2023-04-06).
 * **macOS Safari** version 16.5 (released 2023-09-18, with MacOS Sonoma).
 * **iOS Safari (iPhone/iPad)** version 16.5 (released 2023-09-18).
+* **Safe Exam Browser for Windows** version 3.6 (released 2023-12-06).
 
 .. _recording-scores:
 

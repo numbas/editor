@@ -126,6 +126,7 @@ RequireScript.prototype = {
         if(this.loaded && !this.executed) {
             var dependencies_executed = this.fdeps.every(function(r){ return scriptreqs[r].executed; });
             if(dependencies_executed) {
+                this.executed = true;
                 if(this.callback) {
                     var module = { exports: {} };
                     this.callback.apply(window,[module]);
@@ -136,7 +137,6 @@ RequireScript.prototype = {
                         }
                     }
                 }
-                this.executed = true;
                 this.backdeps.forEach(function(r) {
                     scriptreqs[r].tryRun();
                 });
@@ -17761,7 +17761,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             var name = rulesetNodes[i].getAttribute('name');
             var set = [];
             //get new rule definitions
-            defNodes = rulesetNodes[i].selectNodes('ruledef');
+            var defNodes = rulesetNodes[i].selectNodes('ruledef');
             for( var j=0; j<defNodes.length; j++ ) {
                 var pattern = defNodes[j].getAttribute('pattern');
                 var result = defNodes[j].getAttribute('result');
@@ -26950,7 +26950,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                             return {valid:false, warnings: [R('answer.matrix.some cell not a number')]};
                         }
                     } else {
-                        var matrix = value.map(function(row){ return row.map(function(cell){ return Numbas.util.parseNumber(cell,this.allowFractions,this.allowedNotationStyles) }) });
+                        var matrix = value.map(row => row.map(cell => Numbas.util.parseNumber(cell,this.allowFractions,this.allowedNotationStyles)));
                         matrix.rows = value.length;
                         matrix.columns = matrix.rows>0 ? value[0].length : 0;
                         return {valid:true, value: matrix};
@@ -28779,7 +28779,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         var settings = this.settings;
         var tryGetAttribute = Numbas.xml.tryGetAttribute;
         //parse correct answer from XML
-        answerNode = xml.selectSingleNode('answer/correctanswer');
+        var answerNode = xml.selectSingleNode('answer/correctanswer');
         if(!answerNode) {
             this.error('part.jme.answer missing');
         }
@@ -29612,7 +29612,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
             this.numChoices = choiceNodes.length;
         }
         //get warning type and message for wrong number of choices
-        warningNode = xml.selectSingleNode('marking/warning');
+        var warningNode = xml.selectSingleNode('marking/warning');
         if(warningNode) {
             tryGetAttribute(settings,null,warningNode,'type','warningType');
         }
@@ -29633,10 +29633,10 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         } else {
             var matrixNodes = xml.selectNodes('marking/matrix/mark');
             var markingMatrixArray = settings.markingMatrixArray = [];
-            for( i=0; i<this.numAnswers; i++ ) {
+            for(var i=0; i<this.numAnswers; i++ ) {
                 markingMatrixArray.push([]);
             }
-            for( i=0; i<matrixNodes.length; i++ ) {
+            for(var i=0; i<matrixNodes.length; i++ ) {
                 var cell = {value: ""};
                 tryGetAttribute(cell,null, matrixNodes[i], ['answerIndex', 'choiceIndex', 'value']);
                 if(this.flipped) {
@@ -29649,7 +29649,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
             }
         }
         var distractors = [];
-        for( i=0; i<this.numAnswers; i++ ) {
+        for(var i=0; i<this.numAnswers; i++ ) {
             var row = [];
             for(var j=0;j<this.numChoices;j++) {
                 row.push('');
@@ -29657,7 +29657,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
             distractors.push(row);
         }
         var distractorNodes = xml.selectNodes('marking/distractors/distractor');
-        for( i=0; i<distractorNodes.length; i++ )
+        for(var i=0; i<distractorNodes.length; i++ )
         {
             var cell = {message: ""};
             tryGetAttribute(cell,null, distractorNodes[i], ['answerIndex', 'choiceIndex']);
@@ -29890,7 +29890,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         //ticks array - which answers/choices are selected?
         this.ticks = [];
         this.stagedAnswer = [];
-        for( i=0; i<this.numAnswers; i++ ) {
+        for(var i=0; i<this.numAnswers; i++ ) {
             this.ticks.push([]);
             this.stagedAnswer.push([]);
             for( var j=0; j<this.numChoices; j++ ) {

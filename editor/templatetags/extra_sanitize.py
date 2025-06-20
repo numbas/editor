@@ -51,7 +51,6 @@ def sanitize_shift_headings(value,lowest_level=3):
     if isinstance(value, str):
         c = bleach.sanitizer.Cleaner(tags=ALLOWED_TAGS + ['h1','h2','h3','h4','h5','h6'],
                              attributes=ALLOWED_ATTRIBUTES, 
-                             styles=ALLOWED_STYLES, strip=True,
                              filters=[heading_fix_filter(lowest_level)])
         return c.clean(value)
     return value

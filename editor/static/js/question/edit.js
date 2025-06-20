@@ -61,6 +61,9 @@ $(document).ready(function() {
         Editor.EditorItem.apply(this);
 
         this.resources = ko.observableArray([]);
+        this.total_resource_size = ko.pureComputed(() => {
+            return this.resources().map(r => r.size()).reduce((a,b) => a+b,0);
+        });
         this.extensions = ko.observableArray([]);
         this.statement = Editor.contentObservable('');
         this.advice = Editor.contentObservable('');

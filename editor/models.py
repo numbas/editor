@@ -937,12 +937,15 @@ class Resource(models.Model):
         super(Resource, self).delete(*args, **kwargs)
 
     def as_json(self):
+        p = Path(self.file.path)
+        stat = p.stat()
         return {
             'url': self.resource_url,
             'name': self.filename,
             'pk': self.pk,
             'alt_text': self.alt_text,
-            'mtime': os.path.getmtime(self.file.path),
+            'mtime': stat.st_mtime,
+            'size': self.file.size,
         }
 
 class Licence(models.Model):

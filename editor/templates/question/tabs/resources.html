@@ -10,6 +10,9 @@
         <p><input id="fileupload" type="file" name="files[]"></p>
     </form>
     {% endif %}
+    <!-- ko if: resources().length > 0 -->
+    <p><strong>Total size of resources: </strong> <span data-bind="text: Editor.filesizeformat(total_resource_size())"></span></p>
+    <!-- /ko -->
     <ul class="media-list" data-bind="foreach: resources">
         <li class="media resource">
             {% if editable %}<button type="button" class="pull-left btn btn-lg btn-link text-warning delete" data-bind="click: $root.deleteResource" title="Delete this resource"><span class="glyphicon glyphicon-remove"></span></button>{% endif %}
@@ -34,6 +37,15 @@
                         </div>
                         <!-- ko if: filetype()=='img' -->
                         {% property 'alt_text' 'Text alternative' placeholder="'Describe this image for someone who can\'t see it'" id="'input-resource-alt_text-'+$index()" dynamic_id=True %}
+                        <!-- /ko -->
+
+                        <p><strong>Size:</strong> <span data-bind="text: Editor.filesizeformat(size())"></span></p>
+
+                        <!-- ko if: too_big -->
+                        <div class="alert alert-warning">
+                            <p>This file is quite large. It will take a long time for students to download it.</p>
+                            <!-- ko if: filetype()=='img' --><p>Consider resizing this image to make it smaller.</p><!-- /ko -->
+                        </div>
                         <!-- /ko -->
                     {% endwith %}
                 </form>

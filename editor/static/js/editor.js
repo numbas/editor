@@ -2084,6 +2084,19 @@ $(document).ready(function() {
         this.used = ko.observable(false);
     }
 
+    Editor.filesizeformat = function(n) {
+        const kilo = 1 << 10;
+        const sizes = ['bytes','KB','MB','GB'];
+        let t = 1;
+        for(let size of sizes) {
+            if(n < kilo) {
+                return `${n.toFixed(1)} ${size}`;
+            }
+            n /= kilo;
+        }
+        return `${n.toFixed(0)} ${sizes.at(-1)}`;
+    }
+
     var Resource = Editor.Resource = function(data) {
         this.progress = ko.observable(0);
         this.url = ko.observable('');
@@ -2104,6 +2117,11 @@ $(document).ready(function() {
         this.alt_text = ko.observable('');
 
         this.mtime = ko.observable('');
+        this.size = ko.observable(0);
+
+        this.too_big = ko.pureComputed(function() {
+            return this.size() > 2 * (1 << 20);
+        }, this);
 
         this.timestamped_url = ko.pureComputed(function() {
             return `${this.url()}?mtime=${this.mtime()}`;
@@ -2121,6 +2139,7 @@ $(document).ready(function() {
             this.pk(data.pk);
             this.alt_text(data.alt_text);
             this.mtime(data.mtime);
+            this.size(data.size);
             this.deleteURL = data.delete_url;
         },
 

@@ -942,6 +942,7 @@ class Resource(models.Model):
             'name': self.filename,
             'pk': self.pk,
             'alt_text': self.alt_text,
+            'mtime': os.path.getmtime(self.file.path),
         }
 
 class Licence(models.Model):

@@ -2103,6 +2103,12 @@ $(document).ready(function() {
         this.pk = ko.observable(0);
         this.alt_text = ko.observable('');
 
+        this.mtime = ko.observable('');
+
+        this.timestamped_url = ko.pureComputed(function() {
+            return `${this.url()}?mtime=${this.mtime()}`;
+        },this);
+
         if(data) {
             this.load(data);
             this.progress(1);
@@ -2114,6 +2120,7 @@ $(document).ready(function() {
             this.name(data.name);
             this.pk(data.pk);
             this.alt_text(data.alt_text);
+            this.mtime(data.mtime);
             this.deleteURL = data.delete_url;
         },
 
@@ -2253,7 +2260,6 @@ $(document).ready(function() {
             var allBindings = allBindingsAccessor();
             var afterUpload = allBindings.afterupload;
             var question_pk = allBindings.question_pk;
-            console.log(question_pk);
 
             element.classList.add('file-receiver');
 
@@ -2296,9 +2302,9 @@ $(document).ready(function() {
                         if(!(xhr.readyState === 4 && xhr.status === 200)) {
                             return;
                         }
-                        console.log(xhr.responseText);
                         const result = JSON.parse(xhr.responseText);
                         resource.load(result);
+                        fileArray(fileArray().filter(r => r==resource || r.filename() != resource.filename()));
 
                         if(afterUpload) {
                             afterUpload(resource);
@@ -2488,7 +2494,6 @@ $(document).ready(function() {
             ;
         }
         function set_user(e,ui) {
-            console.log('set_user');
             var id = ui.item.id;
             $(this).parents('form').find('[name="selected_user"]').val(id);
         }

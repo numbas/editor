@@ -220,14 +220,18 @@ class UploadResourceView(generic.UpdateView):
     model = NewQuestion
 
     def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
+        q = self.object = self.get_object()
 
-        if not self.object.editoritem.can_be_edited_by(self.request.user):
+        if not q.editoritem.can_be_edited_by(self.request.user):
             return http.HttpResponseForbidden()
 
         file = request.FILES['files[]']
-        r = Resource.objects.create(owner=request.user, file=file, filename=file.name)
-
-        self.object.resources.add(r)
+        try:
+            r = Resource.objects.get(questions=q, filename=file.name)
+            r.file = file
+            r.save()
+        except Resource.DoesNotExist:
+            r = Resource.objects.create(owner=request.user, file=file, filename=file.name)
+            self.object.resources.add(r)
 
         return http.HttpResponse(json.dumps(r.as_json()), content_type='application/json')

@@ -18,7 +18,7 @@
                     <div class="bar" data-bind="style: {width: progress()+'%'}"></div>
                 </div>
                 <div data-bind="visible: progress()==1">
-                    <a data-bind="attr: {href: name}" target="_blank"><img class="thumbnail" data-bind="if: filetype()=='img', attr: {src: url, title: name, alt: alt_text}"/></a>
+                    <a data-bind="attr: {href: name}" target="_blank"><img class="thumbnail" data-bind="if: filetype()=='img', attr: {src: timestamped_url, title: name, alt: alt_text}"/></a>
                 </div>
             </div>
             <div class="media-body">

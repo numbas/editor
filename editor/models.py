@@ -1876,6 +1876,9 @@ class NewExam(models.Model):
     def get_absolute_url(self):
         return reverse('exam_edit', args=(self.pk, self.editoritem.slug))
 
+    def source_url(self):
+        return reverse('exam_source', args=(self.pk, self.editoritem.slug))
+
     @property
     def resources(self):
         return Resource.objects.filter(questions__in=self.questions.all()).distinct()

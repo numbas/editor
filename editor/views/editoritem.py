@@ -9,7 +9,7 @@ from datetime import datetime
 import os
 import subprocess
 from pathlib import Path
-from urllib.parse import urlparse, parse_qs, urlencode
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 from wsgiref.util import FileWrapper
 from django.core.exceptions import ValidationError, PermissionDenied
@@ -43,6 +43,7 @@ from editor.tables import EditorItemTable, RecentlyPublishedTable
 from editor.models import EditorItem, Project, IndividualAccess, Licence, PullRequest, Taxonomy, Contributor, Folder
 import editor.lockdown_app
 import editor.models
+from editor.templatetags.sstatic import sstatic
 import editor.views.generic
 from editor.views import request_is_ajax
 from editor.views.generic import ProjectQuerysetMixin
@@ -455,8 +456,9 @@ class ExtensionNotFoundCompileError(CompileError):
     pass
 
 class CompileObject(MustHaveAccessMixin):
+    generic = False
     
-    """Compile an exam or question."""
+    """Compile an exam or question, or a generic runtime."""
 
     def get_object(self):
         obj = super(CompileObject,self).get_object()
@@ -483,31 +485,53 @@ class CompileObject(MustHaveAccessMixin):
                 raise ExtensionNotFoundCompileError("Extension not found at {}. Is MEDIA_ROOT configured correctly? It should be the absolute path to your editor media directory.".format(extracted_path))
         self.numbasobject.data['extensions'] = [str(p) for p in extension_paths]
 
+
+    def theme_dir(self):
+        if hasattr(self.editoritem, 'exam'):
+            exam = self.editoritem.exam
+            if exam.custom_theme:
+                theme = exam.custom_theme
+                return Path(theme.extracted_path)
+            else:
+                return Path(settings.GLOBAL_SETTINGS['NUMBAS_PATH']) / 'themes' / exam.theme
+        else:
+            return Path(settings.GLOBAL_SETTINGS['NUMBAS_PATH']) / 'themes' / 'question'
+
+
     def output_location(self):
-        return Path(settings.GLOBAL_SETTINGS['PREVIEW_PATH']) / self.get_locale() / self.location
+        if hasattr(self.editoritem, 'exam'):
+            exam = self.editoritem.exam
+            if exam.custom_theme:
+                theme = exam.custom_theme
+                return f'{theme.pk}-{theme.slug}'
+            else:
+                return exam.theme
+        else:
+            return 'question'
+
+    def output_path(self):
+        return Path(settings.GLOBAL_SETTINGS['PREVIEW_PATH']) / self.output_location()
 
     def compile(self, switches):
         """
-            Construct a temporary exam/question file and compile it.
-            Returns the path to the output produced
+            Compile the generic runtime for this theme and locale combination.
         """
 
         self.add_extensions()
-        source = str(self.numbasobject)
 
         theme_path = Path(self.editoritem.theme_path if hasattr(self.editoritem, 'theme_path') else 'default')
         if not theme_path.exists():
             raise CompileError("Theme not found at {}. Is MEDIA_ROOT configured correctly? It should be the absolute path to your editor media directory.".format(theme_path))
 
-        output_location = self.output_location()
         locale = self.get_locale()
+
+        output_path = self.output_path()
 
         numbas_command = [
             settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
             str(Path(settings.GLOBAL_SETTINGS['NUMBAS_PATH']) / 'bin' / 'numbas.py'),
-            '--pipein',
             '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
-            '-o'+str(output_location),
+            '-o'+str(output_path),
             '-t'+str(theme_path),
             '-l'+locale,
             '--mathjax-url',self.get_mathjax_2_url(),
@@ -515,6 +539,21 @@ class CompileObject(MustHaveAccessMixin):
             '--accessibility-statement-url', self.get_accessibility_statement_url(),
             '--resource-root', str((Path(settings.MEDIA_ROOT) / 'question-resources').resolve()),
         ] + switches
+
+        if self.generic:
+            source = ''
+
+            numbas_command += [
+                '--generic',
+                '--load-exam-script-url', sstatic('js/load-exam.js'),
+            ]
+        else:
+            source = str(self.numbasobject)
+
+            numbas_command += [
+                '--pipein',
+            ]
+
 
         if settings.DEBUG:
             numbas_command += ['--show_traceback']
@@ -525,7 +564,7 @@ class CompileObject(MustHaveAccessMixin):
         if code != 0:
             raise CompileError('Compilation failed.', stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'), code=code)
         else:
-            return output_location
+            return output_path
 
     def get_mathjax_2_url(self):
         return get_mathjax_2_url(self.request)
@@ -545,27 +584,46 @@ class CompileObject(MustHaveAccessMixin):
             'code': error.code,
         }).flatten()))
 
+def directory_last_modified(p):
+    """
+        The last time any file in the given directory was modified.
+    """
+    return max((d / f).stat().st_mtime for d,dirs,files in p.walk() for f in files)
+
 class PreviewView(CompileObject, generic.DetailView):
     template_name = 'editoritem/preview.html'
 
+    generic = True
+
     def should_compile(self):
-        output_location = self.output_location()
-        if not output_location.exists():
+        output_path = self.output_path()
+        if not output_path.exists():
             return True
-        mtime = make_aware(datetime.fromtimestamp(output_location.stat().st_mtime))
-        if mtime<self.editoritem.last_modified:
-            return True
-        return 'refresh' in self.request.GET
+
+        mtime = output_path.stat().st_mtime
+
+        theme_path = self.theme_dir()
+
+        theme_mtime = directory_last_modified(theme_path)
+
+        return mtime < theme_mtime
 
     def get_preview_url(self):
-        return settings.GLOBAL_SETTINGS['PREVIEW_URL'] + self.get_locale() + '/' + self.location
+        return settings.GLOBAL_SETTINGS['PREVIEW_URL'] + self.output_location()
 
     def get_exam_url(self):
-        return self.get_preview_url() + '/index.html'
+        return urlunparse((
+            '',
+            '',
+            self.get_preview_url() + '/index.html',
+            '',
+            urlencode({
+                'source_url': self.editoritem.rel_obj.source_url(),
+            }),
+            ''
+        ))
 
     def access_valid(self):
-        self.location = self.editoritem.filename
-
         switches = ['-c']
 
         if self.should_compile():
@@ -663,6 +721,9 @@ class ZipView(CompileObject, generic.DetailView):
 
         return source_url
 
+    def output_location(self):
+        return self.editoritem.filename + '.zip'
+
     def access_valid(self):
         scorm = 'scorm' in self.request.GET
         switches = ['-cz','--source-url',self.get_source_url(),'--edit-url',self.get_edit_url()]
@@ -674,8 +735,6 @@ class ZipView(CompileObject, generic.DetailView):
             switches += ['--minify_css', minifier_paths['css']]
         if self.is_scorm():
             switches.append('-s')
-
-        self.location = self.editoritem.filename + '.zip'
 
         try:
             fsLocation = str(self.compile(switches))

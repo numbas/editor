@@ -52,6 +52,8 @@ from editor.views.user import find_users
 import editor.forms
 from accounts.util import user_json
 
+NUMBAS_PATH = settings.GLOBAL_SETTINGS['NUMBAS_PATH']
+
 class MustBeAuthorMixin(object):
     def dispatch(self, request, *args, **kwargs):
         if request.user != self.get_object().author:
@@ -477,15 +479,6 @@ class CompileObject(MustHaveAccessMixin):
         else:
             return 'en-GB'
 
-    def add_extensions(self):
-        extensions = editor.models.Extension.objects.filter(location__in=self.numbasobject.data.get('extensions', []))
-        extension_paths = [Path.cwd() / e.extracted_path for e in extensions]
-        for extracted_path in extension_paths:
-            if not extracted_path.exists():
-                raise ExtensionNotFoundCompileError("Extension not found at {}. Is MEDIA_ROOT configured correctly? It should be the absolute path to your editor media directory.".format(extracted_path))
-        self.numbasobject.data['extensions'] = [str(p) for p in extension_paths]
-
-
     def theme_dir(self):
         if hasattr(self.editoritem, 'exam'):
             exam = self.editoritem.exam
@@ -493,9 +486,9 @@ class CompileObject(MustHaveAccessMixin):
                 theme = exam.custom_theme
                 return Path(theme.extracted_path)
             else:
-                return Path(settings.GLOBAL_SETTINGS['NUMBAS_PATH']) / 'themes' / exam.theme
+                return Path(NUMBAS_PATH) / 'themes' / exam.theme
         else:
-            return Path(settings.GLOBAL_SETTINGS['NUMBAS_PATH']) / 'themes' / 'question'
+            return Path(NUMBAS_PATH) / 'themes' / 'question'
 
 
     def output_location(self):
@@ -512,12 +505,18 @@ class CompileObject(MustHaveAccessMixin):
     def output_path(self):
         return Path(settings.GLOBAL_SETTINGS['PREVIEW_PATH']) / self.output_location()
 
+    def get_extension_paths(self):
+        extensions = editor.models.Extension.objects.filter(location__in=self.numbasobject.data.get('extensions', []))
+        extension_paths = [Path.cwd() / e.extracted_path for e in extensions]
+        for extracted_path in extension_paths:
+            if not extracted_path.exists():
+                raise ExtensionNotFoundCompileError("Extension not found at {}. Is MEDIA_ROOT configured correctly? It should be the absolute path to your editor media directory.".format(extracted_path))
+        return [str(p) for p in extension_paths]
+
     def compile(self, switches):
         """
             Compile the generic runtime for this theme and locale combination.
         """
-
-        self.add_extensions()
 
         theme_path = Path(self.editoritem.theme_path if hasattr(self.editoritem, 'theme_path') else 'default')
         if not theme_path.exists():
@@ -529,8 +528,8 @@ class CompileObject(MustHaveAccessMixin):
 
         numbas_command = [
             settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
-            str(Path(settings.GLOBAL_SETTINGS['NUMBAS_PATH']) / 'bin' / 'numbas.py'),
-            '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
+            str(Path(NUMBAS_PATH) / 'bin' / 'numbas.py'),
+            '-p'+NUMBAS_PATH,
             '-o'+str(output_path),
             '-t'+str(theme_path),
             '-l'+locale,
@@ -545,13 +544,14 @@ class CompileObject(MustHaveAccessMixin):
 
             numbas_command += [
                 '--generic',
-                '--load-exam-script-url', sstatic('js/load-exam.js'),
+                '--load-exam-script-url', sstatic('js/numbas/load-exam.js'),
             ]
         else:
             source = str(self.numbasobject)
 
             numbas_command += [
                 '--pipein',
+                '--extension-paths', json.dumps(self.get_extension_paths()),
             ]
 
 
@@ -606,11 +606,36 @@ class PreviewView(CompileObject, generic.DetailView):
 
         theme_mtime = directory_last_modified(theme_path)
 
-        return mtime < theme_mtime
+        runtime_mtime = directory_last_modified(Path(NUMBAS_PATH) / 'runtime')
+
+        return mtime < max(theme_mtime, runtime_mtime)
 
     def get_preview_url(self):
         return settings.GLOBAL_SETTINGS['PREVIEW_URL'] + self.output_location()
 
+    def get_extensions(self):
+        extensions = editor.models.Extension.objects.filter(location__in=self.numbasobject.data.get('extensions', []))
+        out = {}
+        for e in extensions:
+            stylesheets = []
+            javascripts = []
+            root = e.extracted_path
+            for d,dirs,files in Path(e.extracted_path).walk():
+                if 'standalone_scripts' in [d.name]+[x.name for x in d.relative_to(root).parents]:
+                    continue
+                for f in files:
+                    p = d / f
+                    if p.suffix in ('.mjs','.js'):
+                        javascripts.append(str(p.relative_to(root)))
+                    if p.suffix in ('.css',):
+                        stylesheets.append(str(p.relative_to(root)))
+            out[e.location] = {
+                'root': e.script_root,
+                'stylesheets': stylesheets,
+                'javascripts': javascripts,
+            }
+        return out
+                
     def get_exam_url(self):
         return urlunparse((
             '',
@@ -619,6 +644,8 @@ class PreviewView(CompileObject, generic.DetailView):
             '',
             urlencode({
                 'source_url': self.editoritem.rel_obj.source_url(),
+                'extensions': json.dumps(self.get_extensions()),
+                'locale': self.get_locale(),
             }),
             ''
         ))

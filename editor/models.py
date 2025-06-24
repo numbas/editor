@@ -1767,6 +1767,9 @@ class NewQuestion(models.Model):
     def get_absolute_url(self):
         return reverse('question_edit', args=(self.pk, self.editoritem.slug))
 
+    def source_url(self):
+        return reverse('question_source', args=(self.pk, self.editoritem.slug))
+
     @property
     def resource_paths(self):
         media_root = Path(settings.MEDIA_ROOT).resolve() / 'question-resources'

@@ -602,13 +602,15 @@ class PreviewView(CompileObject, generic.DetailView):
 
         mtime = output_path.stat().st_mtime
 
-        theme_path = self.theme_dir()
+        dirs = [
+            self.theme_dir(),
+            Path(NUMBAS_PATH) / 'runtime',
+            Path(NUMBAS_PATH) / 'themes' / 'default'
+        ]
 
-        theme_mtime = directory_last_modified(theme_path)
+        compiler_mtime = max(directory_last_modified(d) for d in dirs)
 
-        runtime_mtime = directory_last_modified(Path(NUMBAS_PATH) / 'runtime')
-
-        return mtime < max(theme_mtime, runtime_mtime)
+        return mtime < compiler_mtime
 
     def get_preview_url(self):
         return settings.GLOBAL_SETTINGS['PREVIEW_URL'] + self.output_location()

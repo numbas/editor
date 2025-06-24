@@ -1,6 +1,7 @@
 import json
 import traceback
 import operator
+from pathlib import Path
 import zipfile
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -33,6 +34,14 @@ from examparser.numbasobject import NumbasObject
 class PreviewView(editor.views.editoritem.PreviewView):
     """Compile an exam as a preview."""
     model = NewExam
+
+class PreviewFileView(editor.views.editoritem.PreviewFileView):
+    """Show a file from a preview."""
+    model = NewExam
+
+    def get_resource(self, file):
+        obj = self.object
+        return Resource.objects.filter(questions__in=obj.questions.all(), filename=file).first()
 
 class EmbedView(editor.views.editoritem.EmbedView):
     """Compile an exam and show it as an embed."""

@@ -107,29 +107,32 @@ urlpatterns = [
     # Exams
 
     path('exam/new/', login_required(exam.CreateView.as_view()), name='exam_new'),
-    
+
     path('exam/upload/', exam.UploadView.as_view(), name='exam_upload'),
-                       
+
     path('exam/<int:pk>/<numbasslug:slug>/', exam.UpdateView.as_view(),
         name='exam_edit'),
 
     path('exam/<int:pk>/<numbasslug:slug>/copy/', login_required(exam.CopyView.as_view()), name='exam_copy',),
-                       
+
     path('exam/<int:pk>/<numbasslug:slug>/delete/',
         login_required(exam.DeleteView.as_view()), name='exam_delete'),
-    
+
     path('exam/<int:pk>/<numbasslug:slug>/preview/',
         exam.PreviewView.as_view(), name='exam_preview'),
-                       
+
+    path('exam/<int:pk>/<numbasslug:slug>/preview/iframe/<path:file>',
+        exam.PreviewFileView.as_view(), name='exam_preview_file'),
+
     path('exam/<int:pk>/<numbasslug:slug>/embed/',
         exam.EmbedView.as_view(), name='exam_embed'),
-                       
+
     path('exam/<int:pk>/<numbasslug:slug>.zip',
         exam.ZipView.as_view(), name='exam_download'),
 
     path('exam/<int:pk>/<numbasslug:slug>.exam',
         exam.SourceView.as_view(), name='exam_source'),
-                       
+
     re_path(r'^exam/share/(?P<access>(view|edit))/(?P<share_uuid>.*)$',
         login_required(exam.ShareLinkView.as_view()), name='share_exam'),
 
@@ -173,18 +176,21 @@ urlpatterns = [
 
     path('question/<int:pk>/<numbasslug:slug>/resources/question-resources/<path:resource>',
         resource.view_resource, name='view_resource'),
-                       
+
     path('question/<int:pk>/<numbasslug:slug>/copy/', login_required(question.CopyView.as_view()), name='question_copy',),
-                       
+
     path('question/<int:pk>/<numbasslug:slug>/delete/',
         login_required(question.DeleteView.as_view()), name='question_delete'),
-                       
+
     path('question/<int:pk>/<numbasslug:slug>/preview/',
         question.PreviewView.as_view(), name='question_preview'),
-                       
+
+    path('question/<int:pk>/<numbasslug:slug>/preview/iframe/<path:file>',
+        question.PreviewFileView.as_view(), name='question_preview_file'),
+
     path('question/<int:pk>/<numbasslug:slug>/embed/',
         question.EmbedView.as_view(), name='question_embed'),
-                       
+
     path('question/<int:pk>/<numbasslug:slug>.zip',
         question.ZipView.as_view(), name='question_download'),
 

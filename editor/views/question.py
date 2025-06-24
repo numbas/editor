@@ -1,12 +1,13 @@
 import json
 import traceback
+from pathlib import Path
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django.db import transaction
 from django.db.models import Q
 from django.db.models.functions import Lower
-from django.http import Http404
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django import http
 from django.shortcuts import redirect
 from django.views import generic
@@ -23,6 +24,14 @@ from accounts.models import UserProfile
 class PreviewView(editor.views.editoritem.PreviewView):
     """Compile question as a preview."""
     model = NewQuestion
+
+class PreviewFileView(editor.views.editoritem.PreviewFileView):
+    """Show a file from a preview."""
+    model = NewQuestion
+
+    def get_resource(self, file):
+        obj = self.object
+        return obj.resources.filter(filename=file).first()
 
 class EmbedView(editor.views.editoritem.EmbedView):
     """Compile question and show it."""

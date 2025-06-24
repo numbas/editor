@@ -20,6 +20,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.syndication.views import Feed
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.http import http_date
 from django.utils.decorators import method_decorator
 from django.utils.timezone import make_aware
 from django.db.models import Q, Min, Max, Count
@@ -463,7 +464,7 @@ class CompileObject(MustHaveAccessMixin):
     """Compile an exam or question, or a generic runtime."""
 
     def get_object(self):
-        obj = super(CompileObject,self).get_object()
+        obj = self.object = super(CompileObject,self).get_object()
         self.editoritem = obj.editoritem
         self.numbasobject = self.editoritem.as_numbasobject(self.request)
         return obj
@@ -642,7 +643,7 @@ class PreviewView(CompileObject, generic.DetailView):
         return urlunparse((
             '',
             '',
-            self.get_preview_url() + '/index.html',
+            reverse(self.editoritem.item_type+'_preview_file',args=(self.object.pk,self.editoritem.slug,'index.html')),
             '',
             urlencode({
                 'source_url': self.editoritem.rel_obj.source_url(),
@@ -675,6 +676,53 @@ class PreviewView(CompileObject, generic.DetailView):
         }
 
         return self.render_to_response(context)
+
+class PreviewFileView(PreviewView):
+    """Show a file from a preview."""
+
+    def get(self, request, *args, **kwargs):
+        obj = self.get_object()
+
+        file = Path(kwargs['file'])
+
+        output_path = self.output_path()
+
+        p = output_path / file
+
+        question_resources_path = Path('resources','question-resources')
+
+        if not p.is_relative_to(output_path):
+            return http.HttpResponseForbidden('Invalid file access.')
+
+        query = '?' + request.GET.urlencode() if request.GET else ''
+
+        if p.exists():
+            if p.suffix == '.html':
+                with open(p) as f:
+                    return http.HttpResponse(f.read())
+            else:
+                print(file)
+                print(list(request.headers.keys()))
+                return http.HttpResponseRedirect(
+                    self.get_preview_url() + '/' + str(file)+query,
+                    status=301,
+                    headers={'Last-Modified': http_date(p.stat().st_mtime)}
+                )
+        elif file.is_relative_to(question_resources_path):
+            file = file.relative_to(question_resources_path)
+            resource = self.get_resource(file)
+            if resource:
+                p = Path(settings.MEDIA_ROOT) / resource.file.name
+                return http.HttpResponseRedirect(
+                    settings.MEDIA_URL + resource.file.name + query,
+                    status=301,
+                    headers={'Last-Modified': http_date(p.stat().st_mtime)}
+                )
+
+        return http.HttpResponseNotFound('')
+
+    def get_resource_url(self, file):
+        raise NotImplementedError
 
 class MakeLockdownLinkView(generic.DetailView):
     model = EditorItem

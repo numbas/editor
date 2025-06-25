@@ -155,10 +155,9 @@ Display
     Interface language
         Specify which translation to use for the text in the user interface, i.e. button labels, error messages, etc.
 
-    Allow students to print question content?
-        If this is turned off, all questions will be hidden when the exam is printed.
-        If a student tries to print during an exam, they will see nothing.
-        If they try to print a completed exam, they will only see the results summary screen.
+    Allow students to print their transcript?
+        If this is turned off, the student will not be shown a button to print a transcript of the exam.
+        You can control whether the printout contains the content of questions with the :term:`Show questions in printed results summary?` option.
 
     Show student's name?
         If ticked, the student's name is shown on the results page after the exam has finished.

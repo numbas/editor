@@ -136,6 +136,9 @@ Choices
         A message to display to the student in the part's feedback section after they select a particular choice. 
         It can be useful to give some explanation of why a choice is incorrect.
 
+    Text before choices (:term:`match choices with answers` only)
+        Text to show down the left of the table, to the left of all the choices.
+
 .. _answers:
 
 Answers
@@ -149,6 +152,9 @@ Only `Match choices with answers` parts have answers as well as choices.
 
     List of answers
         If :guilabel:`Variable list of answers?` is ticked, this JME expression defines the list of answer strings to display to the student. 
+
+    Text above answers
+        Text to show on the top of the table, above all of the answers.
 
 .. _marking-matrix:
 

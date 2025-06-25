@@ -1020,7 +1020,10 @@ part_types.models = [
                     {name: 'strictuppertriangle', niceName: 'Upper triangle (no diagonal)'},
                     {name: 'expression', niceName: 'Custom expression'}
                 ],
-                layoutExpression: ko.observable('')
+                layoutExpression: ko.observable(''),
+
+                choicesHeader: ko.observable(''),
+                answersHeader: ko.observable(''),
             };
 
             model.matrix = Editor.editableGrid(
@@ -1125,6 +1128,9 @@ part_types.models = [
                 var answers = this.answers();
                 data.answers = answers.map(function(a){return a.content()});
             }
+
+            data.choicesHeader = this.choicesHeader();
+            data.answersHeader = this.answersHeader();
         },
 
         variable_references: function(part,model) {
@@ -1148,7 +1154,7 @@ part_types.models = [
         },
 
         load: function(data) {
-            tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','shuffleAnswers','showCellAnswerState'],this);
+            tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','shuffleAnswers','showCellAnswerState', 'choicesHeader', 'answersHeader'],this);
             var warningType = tryGetAttribute(data,'warningType');
             for(var i=0;i<this.warningTypes.length;i++)
             {

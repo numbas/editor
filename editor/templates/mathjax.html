@@ -7,8 +7,9 @@ MathJax = {
         packages: {'[+]': ['numbas']}
     },
     loader: {
-        load: ['[custom]/numbas-mathjax.js'],
-        paths: {custom: '{{STATIC_URL}}js/numbas/mathjax_custom'}
+        load: ['[numbas]/numbas-mathjax.js'],
+        paths: {numbas: '{{STATIC_URL}}js/numbas/mathjax_custom'},
+        versionWarnings: false
     },
     startup: {
         typeset: false

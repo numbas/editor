@@ -72,10 +72,6 @@ Marking
         "All-or-nothing" means that the student is awarded the :term:`Maximum marks` available if their selection exactly matches the marking matrix, and zero marks otherwise.
         This marking method is suitable for situations where the student must exactly match a certain pattern, and there is no meaningful "partially correct" answer.
 
-    Number of display columns
-        For :term:`choose one from a list` and :term:`choose several from a list` parts, this dictates how many columns the choices are displayed in. 
-        If 0, the choices are displayed on a single line, wrapped at the edges of the screen.
-
     Selection type
         For :term:`match choices with answers` parts, "One from each row" means that the student can only select one answer from each row and "Checkboxes" means that the student can select any number of choice-answer pairs.
 
@@ -94,6 +90,15 @@ Marking
 
         .. figure:: images/radiobuttons.png
             :alt: A list of choices with radio buttons
+
+    Number of display columns
+        For :term:`choose one from a list` and :term:`choose several from a list` parts, this dictates how many columns the choices are displayed in. 
+        If 0, the choices are displayed on a single line, wrapped at the edges of the screen.
+
+    Show a blank choice?
+        For :term:`choose one from a list` parts with :term:`Selection type` set to "Drop down list", if this box is ticked then a blank choice will be added to the start of the list and initially selected.
+
+        If this is not ticked, then the part will be gin with the first choice selected.
 
     Custom marking matrix
         If the checkbox is ticked, the :ref:`JME <jme>` expression in the box below is evaluated and used to assign numbers of marks to choices. 

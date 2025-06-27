@@ -21,6 +21,10 @@
             </div>
         </div>
 
+        <div data-bind="fadeVisible: displayType().name == 'dropdownlist'">
+            {% booleanproperty 'showBlankOption' 'Show a blank choice?' help_url='question/parts/multiple-choice.html#term-Show-a-blank-choice' %}
+        </div>
+
         <div data-bind="fadeVisible: displayType().name == 'radiogroup'">
             {% property 'displayColumns' 'Number of display columns' help_url='question/parts/multiple-choice.html#term-Number-of-display-columns' zero_means='not displayed in columns' %}
         </div>

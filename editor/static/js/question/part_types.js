@@ -665,6 +665,7 @@ part_types.models = [
                 displayColumns: ko.observable(0),
                 customMatrix: ko.observable(''),
                 displayType:ko.observable(''),
+                showBlankOption: ko.observable(true),
                 showCellAnswerState: ko.observable(true),
                 customChoices: ko.observable(false),
                 customChoicesExpression: ko.observable(''),
@@ -712,6 +713,7 @@ part_types.models = [
             data.shuffleChoices = this.shuffleChoices();
             data.displayType = this.displayType().name;
             data.displayColumns = this.displayColumns();
+            data.showBlankOption = this.showBlankOption();
             data.showCellAnswerState = this.showCellAnswerState();
 
             if(this.customChoices()) {
@@ -752,7 +754,7 @@ part_types.models = [
         },
 
         load: function(data) {
-            tryLoad(data,['minMarks','maxMarks','shuffleChoices','displayColumns','showCellAnswerState'],this);
+            tryLoad(data,['minMarks','maxMarks','shuffleChoices','displayColumns','showCellAnswerState', 'showBlankOption'],this);
             if(typeof data.matrix == 'string') {
                 this.customMarking(true);
                 this.customMatrix(data.matrix);

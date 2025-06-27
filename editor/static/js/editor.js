@@ -2278,7 +2278,6 @@ $(document).ready(function() {
             var fileArray = valueAccessor();
             var allBindings = allBindingsAccessor();
             var afterUpload = allBindings.afterupload;
-            var question_pk = allBindings.question_pk;
 
             element.classList.add('file-receiver');
 
@@ -2442,11 +2441,14 @@ $(document).ready(function() {
 
     const question_basket = document.getElementById('question_basket');
 
-    question_basket.querySelector('.empty-basket').addEventListener('click', e => {
-        e.preventDefault();
+    const empty_basket_button = question_basket.querySelector('.empty-basket');
+    if(empty_basket_button) {
+        empty_basket_button.addEventListener('click', e => {
+            e.preventDefault();
 
-        Editor.empty_basket();
-    })
+            Editor.empty_basket();
+        });
+    }
 
     question_basket.addEventListener('click', e => {
         if(e.target.classList.contains('btn-remove')) {

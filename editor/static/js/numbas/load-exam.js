@@ -5,7 +5,14 @@ Numbas.queueScript('go',['start-exam', 'display'], async function() {
 
     Numbas.locale.set_preferred_locale(locale);
 
-    const options = {exam_url: params.get('source_url')};
+    const root_element = document.createElement('numbas-exam');
+    document.getElementById('with-stylesheet').append(root_element);
+    console.log('appended');
+
+    const options = {
+        exam_url: params.get('source_url'),
+        element: root_element
+    };
 
     const exam_data = await Numbas.load_exam(options);
 

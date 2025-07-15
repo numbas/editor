@@ -194,12 +194,15 @@ Numbas.queueScript = function(file, deps, callback) {
         req = new RequireScript(file, deps, callback);
     }
     req.script_loaded();
+    Numbas.tryInit();
 
     return req.promise;
 }
-
-/** Empty; kept for backwards compatibility. */
+/** Called when all files have been requested, will try to execute all queued code if all script files have been loaded. */
 Numbas.tryInit = function() {
+    if(Numbas.dead) {
+        return;
+    }
 }
 
 
@@ -15570,7 +15573,6 @@ Numbas.queueScript('localisation', ['i18next', 'localisation-resources'], functi
             resources: Numbas.locale.resources
         });
         Numbas.locale.set_preferred_locale(Numbas.locale.preferred_locale);
-        Numbas.signals.trigger('localisation initialised');
     };
 });
 
@@ -27173,7 +27175,6 @@ Numbas.queueScript('answer-widgets', ['knockout', 'util', 'jme', 'jme-display', 
         return v !== undefined ? Knockout.isObservable(v) ? v : Knockout.observable(v) : Knockout.observable(d);
     }
 
-Numbas.signals.on('localisation initialised', () => {
     Knockout.components.register('answer-widget', {
         viewModel: function(params) {
             this.answerJSON = params.answer;
@@ -28320,7 +28321,6 @@ Numbas.signals.on('localisation initialised', () => {
         update: function() {
         }
     };
-});
 });
 
 Numbas.queueScript('display-util', ['math'], function() {

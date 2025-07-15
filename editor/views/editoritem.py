@@ -596,6 +596,8 @@ class PreviewView(CompileObject, generic.DetailView):
 
     generic = True
 
+    index_filename = 'index.html'
+                
     def should_compile(self):
         output_path = self.output_path()
         if not output_path.exists():
@@ -638,12 +640,12 @@ class PreviewView(CompileObject, generic.DetailView):
                 'javascripts': javascripts,
             }
         return out
-                
+
     def get_exam_url(self):
         return urlunparse((
             '',
             '',
-            reverse(self.editoritem.item_type+'_preview_file',args=(self.object.pk,self.editoritem.slug,'index.html')),
+            reverse(self.editoritem.item_type+'_preview_file',args=(self.object.pk,self.editoritem.slug, self.index_filename)),
             '',
             urlencode({
                 'source_url': self.editoritem.rel_obj.source_url(),

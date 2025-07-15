@@ -420,8 +420,7 @@ def question_lists(request, pk):
 class OfflineAnalysisView(PreviewView):
     template_name = 'editoritem/embed.html'
 
-    def get_exam_url(self):
-        return self.get_preview_url() + '/analysis.html'
+    index_filename = 'analysis.html'
 
     def render_to_response(self, context):
         return redirect(self.get_exam_url())

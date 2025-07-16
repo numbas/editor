@@ -70,7 +70,7 @@ class UserProfileForm(forms.ModelForm):
             'language', 
             'avatar',
             'wrap_lines',
-            'mathjax_3_url',
+            'mathjax_4_url',
             'mathjax_2_url',
             'email_about_stamps',
             'email_about_comments',
@@ -78,11 +78,11 @@ class UserProfileForm(forms.ModelForm):
             'never_email'
         )
         widgets = {
-            'mathjax_3_url': forms.TextInput(attrs={'class':'form-control','placeholder':settings.MATHJAX_3_URL}),
+            'mathjax_4_url': forms.TextInput(attrs={'class':'form-control','placeholder':settings.MATHJAX_4_URL}),
             'mathjax_2_url': forms.TextInput(attrs={'class':'form-control','placeholder':settings.MATHJAX_2_URL}),
         }
         help_texts = {
-            'mathjax_3_url': 'This will be used in all questions and exams you compile. Leave blank to use the default.',
+            'mathjax_4_url': 'This will be used in all questions and exams you compile. Leave blank to use the default.',
             'mathjax_2_url': 'This will be used in all questions and exams you compile with pre-2025 themes. Leave blank to use the default.',
         }
 
@@ -112,7 +112,7 @@ class UserProfileForm(forms.ModelForm):
         self.fields['bio'].initial = self.profile.bio
         self.fields['wrap_lines'].initial = self.profile.wrap_lines
         self.fields['mathjax_2_url'].initial = self.profile.mathjax_2_url
-        self.fields['mathjax_3_url'].initial = self.profile.mathjax_3_url
+        self.fields['mathjax_4_url'].initial = self.profile.mathjax_4_url
         self.fields['email_about_stamps'].initial = self.profile.email_about_stamps
         self.fields['email_about_comments'].initial = self.profile.email_about_comments
         self.fields['never_email'].initial = self.profile.never_email
@@ -128,7 +128,7 @@ class UserProfileForm(forms.ModelForm):
         self.profile.bio = self.cleaned_data.get('bio')
         self.profile.wrap_lines = self.cleaned_data.get('wrap_lines')
         self.profile.mathjax_2_url = self.cleaned_data.get('mathjax_2_url')
-        self.profile.mathjax_3_url = self.cleaned_data.get('mathjax_3_url')
+        self.profile.mathjax_4_url = self.cleaned_data.get('mathjax_4_url')
         self.profile.email_about_stamps = self.cleaned_data.get('email_about_stamps')
         self.profile.email_about_comments = self.cleaned_data.get('email_about_comments')
         self.profile.never_email = self.cleaned_data.get('never_email')

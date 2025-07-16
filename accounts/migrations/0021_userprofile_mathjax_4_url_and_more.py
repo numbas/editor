@@ -12,12 +12,17 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='userprofile',
-            name='mathjax_3_url',
-            field=models.CharField(blank=True, default='', max_length=300, verbose_name='Preferred URL to load MathJax 3 from'),
+            name='mathjax_4_url',
+            field=models.CharField(blank=True, default='', max_length=300, verbose_name='Preferred URL to load MathJax 4 from'),
+        ),
+        migrations.RenameField(
+            model_name='userprofile',
+            old_name='mathjax_url',
+            new_name='mathjax_2_url',
         ),
         migrations.AlterField(
             model_name='userprofile',
-            name='mathjax_url',
+            name='mathjax_2_url',
             field=models.CharField(blank=True, default='', max_length=300, verbose_name='Preferred URL to load MathJax 2 from'),
         ),
     ]

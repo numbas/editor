@@ -3,7 +3,7 @@
  */
 (function() {
 
-    var NumbasMap = new MathJax._.input.tex.SymbolMap.CommandMap(
+    var NumbasMap = new MathJax._.input.tex.TokenMap.CommandMap(
         'numbasMap', 
 
         {

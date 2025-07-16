@@ -72,17 +72,17 @@
             <div class="help-block">{{form.mathjax_2_url.help_text}}</div>
         </div>
 
-        <div class="form-group {% if form.mathjax_3_url.errors %}has-error{% endif %}">
-            <label for="{{form.mathjax_3_url.auto_id}}">{{form.mathjax_3_url.label}}</label>
-            {{form.mathjax_3_url}}
-            {% if form.mathjax_3_url.errors %}
+        <div class="form-group {% if form.mathjax_4_url.errors %}has-error{% endif %}">
+            <label for="{{form.mathjax_4_url.auto_id}}">{{form.mathjax_4_url.label}}</label>
+            {{form.mathjax_4_url}}
+            {% if form.mathjax_4_url.errors %}
             <ul class="help-block list-unstyled">
-                {% for error in form.mathjax_3_url.errors %}
+                {% for error in form.mathjax_4_url.errors %}
                 <li class="alert alert-danger">{{error}}</li>
                 {% endfor %}
             </ul>
             {% endif %}
-            <div class="help-block">{{form.mathjax_3_url.help_text}}</div>
+            <div class="help-block">{{form.mathjax_4_url.help_text}}</div>
         </div>
 
         {% if email_active %}

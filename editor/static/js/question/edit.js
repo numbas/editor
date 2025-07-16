@@ -4594,10 +4594,6 @@ $(document).ready(function() {
             throw(e);
         }
     });
-    var missing = Numbas.checkAllScriptsLoaded();
-    if(missing.length>0) {
-        loading_error('The following scripts did not load: \n\n'+missing.map(function(r) { return '* '+r.file; }).join('\n'));
-    }
 
     Mousetrap.bind(['ctrl+b','command+b'],function() {
         window.open(item_json.previewURL,item_json.previewWindow);

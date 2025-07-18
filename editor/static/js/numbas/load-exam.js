@@ -9,6 +9,10 @@ Numbas.queueScript('go',['start-exam', 'display'], async function() {
 
     const root_element = document.createElement('numbas-exam');
     root_element.setAttribute('source_url', params.get('source_url'));
-    root_element.setAttribute('extensions', params.get('extensions'));
+    const extension_data_script = document.createElement('script');
+    extension_data_script.setAttribute('type', 'application/json');
+    extension_data_script.setAttribute('slot','extension-data');
+    extension_data_script.textContent = params.get('extensions');
+    root_element.append(extension_data_script);
     container.append(root_element);
 });

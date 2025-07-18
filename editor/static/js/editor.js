@@ -1686,7 +1686,7 @@ $(document).ready(function() {
                 }
                 description = 'HTML node';
                 if(!abbreviate) {
-                    code = v.value
+                    code = v.value;
                 }
                 break;
             default:
@@ -1728,7 +1728,14 @@ $(document).ready(function() {
             }
             element.setAttribute('data-jme-value-type',type);
             if(display.value !== undefined) {
-                element.innerHTML = display.value;
+                element.innerHTML = '';
+                if(Array.isArray(display.value)) {
+                    for(let el of display.value) {
+                        element.append(el);
+                    }
+                } else {
+                    element.innerHTML = display.value;
+                }
                 element.setAttribute('data-jme-value-display','value');
             } else if(display.description !== undefined) {
                 element.innerHTML = display.description;

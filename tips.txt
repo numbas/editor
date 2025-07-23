@@ -1,0 +1,676 @@
+## Generate a random list of unique numbers
+
+Suppose you want to pick a few numbers from a range, but you don't want any
+repeats.
+
+Use the `shuffle` function to put the numbers in random order, then take as
+many as you need:
+
+```shuffle(0..10)[0..3]```
+
+[See this in action](https://numbas.mathcentre.ac.uk/question/20932/randomly-pick-a-list-of-unique-numbers/)
+
+
+---
+
+## Picking two different numbers
+
+Generate two distinct numbers with the `except` operation:
+
+* `a = random(1..10)`
+* `b = random(1..10 except a)`
+
+`b` will be chosen from the numbers in the range 1 to 10, excluding the chosen
+value of `a`.
+
+[See an example](https://numbas.mathcentre.ac.uk/question/53647/generate-two-distinct-numbers-neither-of-which-is-zero/)
+
+---
+
+## Try the quantities extension
+
+The 'quantities' extension adds the ability to work with quantities with
+associated units.
+
+You can do arithmetic with quantities:
+
+`qty(10,"kg") / qty(5,"m^3") = qty(2,"kg/m^3")`
+
+The 'quantity with units' part type lets you ask the student to include units
+with their answer.
+
+[Read about the quantities extension](https://numbas.mathcentre.ac.uk/extensions/55/documentation)
+
+---
+
+## Want the answer box somewhere else?
+
+For most part types, the answer input is underneath the prompt.
+If you want it to appear somewhere in the middle of the prompt, make it a
+gap-fill by clicking the "Replace with a gap-fill" button.
+
+[More about gap-fill parts](https://docs.numbas.org.uk/en/latest/question/parts/gapfill.html)
+
+---
+
+## Illustrate your questions
+
+It's easy to add images to your questions.
+Click the "Insert/Edit Image" button in any content area and upload a picture.
+
+There are also a variety of ways of including randomised or interactive
+diagrams.
+
+[See how to include an image](https://docs.numbas.org.uk/en/latest/authoring/how-do-i.html#include-an-image)
+
+---
+
+## Use readable variable names!
+
+Short names for question variables like `m` and `cf123` aren't much use when
+you come back to fix or extend an old question.
+
+Give variables readable names that tell you what they're for, such as
+`num_people` or `initial_mass`. And always remember to fill out the
+description field!
+
+[Learn about valid variable names](https://docs.numbas.org.uk/en/latest/jme-reference.html#variable-names)
+
+---
+
+## Display variables representing vectors and matrices in bold
+
+Variable names used in the `\simplify` command be given annotations to change
+how they are displayed.
+
+For example, `vec:x` is rendered as $\vec{x}$.
+
+[Read about variable name annotations](https://docs.numbas.org.uk/en/latest/jme-reference.html#variable-name-annotations)
+
+---
+
+## Working with rounded numbers
+
+Use `precround` and `siground` to round a number for use in further
+calculations.
+
+Use `dpformat` and `sigformat` to *display* a number to a certain precision;
+these functions produce strings, so you can't use them for further
+calculations.
+
+[Read the documentation on `dpformat`](https://docs.numbas.org.uk/en/latest/jme-reference.html#dpformat)
+
+---
+
+## Conditional visibility
+
+Use the 'Conditional visibility' button in the text editor to only show a
+block of text if a certain condition is satisfied.
+
+You can use this to display different passages of text depending on the values of question
+variables.
+
+[See it in action](https://numbas.mathcentre.ac.uk/question/7711/conditional-visibility/)
+
+---
+
+## The random person extension
+
+When writing a word problem involving named people, it's a good idea to use 
+names that represent the whole population.
+
+The 'random people' extension picks names based on UK birth data, so you don't
+have to come up with your own.
+
+[Read about the random person extension](https://numbas.mathcentre.ac.uk/extensions/46/documentation)
+
+---
+
+## Displaying amounts of money
+
+It's not £2.1 and £0.03, it's £2.10 and 3p!
+
+To display an amount of money in the right format, use the `currency`
+function.
+
+[Read more](https://docs.numbas.org.uk/en/latest/authoring/how-do-i.html#show-amounts-of-money-with-trailing-zeros)
+
+---
+
+## Display numbers with the right punctuation
+
+Notation for numbers differs around the world. By default, Numbas shows
+numbers with a dot for the decimal separator, and no thousands separator.
+
+Use the `formatnumber` function to display a number in your chosen notation,
+and the 'Allowed notation' setting in number entry parts so your students can
+use it in their answers.
+
+[Read about number notation](https://docs.numbas.org.uk/en/latest/number-notation.html)
+
+---
+
+## Generating randomised LaTeX expressions
+
+Use the `latex` function to mark a string as containing LaTeX notation, so
+it's displayed properly.
+
+[See an example](https://docs.numbas.org.uk/en/latest/authoring/how-do-i.html#include-a-randomised-latex-command)
+
+---
+
+## Make sure your question variables satisfy a condition
+
+If you need your question variables to have certain properties that you can't
+guarantee through their definitions, use the 'Variable testing` field to write
+the condition that they must satisfy.
+
+Only sets of variables satisfying the condition will be shown to the student.
+
+[Read about variable testing](https://docs.numbas.org.uk/en/latest/question/reference.html#variable-testing)
+
+---
+
+## Assign several variables corresponding to a scenario
+
+A simple way of randomising a question, particularly when working with 
+real-world data, is to come up with a number of distinct scenarios. Use the 
+`dictionary` data type to list the values of variables corresponding to each 
+scenario, then pick randomly from a list of these dictionaries.
+
+[See an example](https://numbas.mathcentre.ac.uk/question/26868/use-a-dictionary-to-set-several-variables-corresponding-to-a-scenario/)
+
+---
+
+## Give the student a hint
+
+Give the student a hint in the form of a reminder of a formula, a reference to
+their notes, or even a video using an information-only step.
+
+You can apply an optional penalty to the student's score if they choose to
+show the hint.
+
+[Read about steps](https://docs.numbas.org.uk/en/latest/question/parts/reference.html#term-steps)
+
+---
+
+## Plan your question before you write it
+
+Write questions better and more efficiently by planning them out before you
+open the editor.
+
+Think about what you want to assess, what you'll ask the student to do, and
+how the question will be structured.
+
+[Have a look at our guide on planning a question](https://docs.numbas.org.uk/en/latest/authoring/planning-a-question.html)
+
+---
+
+## Pay attention to text formatting
+
+Little things like mismatched fonts can make your question harder to read.
+
+Make sure your use of text styling is consistent - use the 'Clear formatting' button
+in the text editor to reset a block of text.
+
+Always use LaTeX for mathematical expressions, but never for prose.
+
+---
+
+## Use LaTeX to display mathematics
+
+Numbas uses LaTeX to typeset mathematical expressions, ensuring that they're
+laid out correctly and accessible to screenreaders.
+
+If you don't already know how to write LaTeX, it's easy to learn.
+
+[Find out how to use LaTeX](https://docs.numbas.org.uk/en/latest/latex.html)
+
+---
+
+## Use the LaTeX `\text` command to include words
+
+If you need to include a full word such as "time spent" or "distance
+travelled" in a LaTeX formula, use the `\text` command to display it using the
+right font.
+
+---
+
+## Get someone else to check your questions
+
+Try not to give questions to your students until someone else has checked them
+over - it's easy not to notice mistakes or missing information in a question
+you've just written.
+
+Your collaborators can use the editor's feedback and commenting features to let you know if
+they find any problems.
+
+[Find out more about the collaboration features](https://docs.numbas.org.uk/en/latest/tutorials/collaboration.html)
+
+---
+
+## Organise your material into folders
+
+You can organise the content in your projects into folders to make it easier
+to find.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/project/reference.html#organising-content-inside-a-project)
+
+---
+
+## Use projects to separate material for different purposes
+
+Every question and exam in the Numbas editor belongs to a project.
+
+Create a project to keep all the material for a particular course in
+one place, and add in collaborators to grant automatic access to each other's
+material.
+
+[Learn about projects](https://docs.numbas.org.uk/en/latest/project/reference.html#creating-a-new-project)
+
+---
+
+## Consider publishing your material
+
+Anything you create on the Numbas editor is by default only visible to you.
+
+If you can, consider publishing your questions and exams under a Creative
+Commons licence so others can use them.
+
+[Find out more to publish an item](https://docs.numbas.org.uk/en/latest/question/reference.html#access)
+
+---
+
+## Give others access to your question
+
+Anything you create on the Numbas editor is by default only visible to you and
+any other members of the project it's in.
+
+You can grant individual access to an item using the 'Access' tab.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/question/reference.html#access)
+
+---
+
+## Choose from a pool of questions
+
+Each group of questions in an exam has a "Questions to use" field where you
+can specify which questions are used.
+You can use all the questions in your chosen order, in random order, or pick a
+random subset.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/exam/reference.html#term-questions-to-use)
+
+---
+
+## Set a pass threshold for your exam
+
+Use the exam's "Pass threshold" field to set a percentage score that the
+student must achieve to pass.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/exam/reference.html#term-pass-threshold)
+
+---
+
+## Give feedback based on the student's total score
+
+You can write a list of feedback messages corresponding to different score
+thresholds.
+
+The appropriate message is shown on the results page after the student has
+finished the exam.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/exam/reference.html#term-feedback-messages)
+
+---
+
+## Write an introduction to your exam
+
+Give the student any information they need before the exam starts, such as
+timing and allowed equipment, using the 'Introduction' field.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/exam/reference.html#term-introduction)
+
+---
+
+## Change how Numbas looks with a theme
+
+You can change how Numbas looks, from the colour scheme to the logo, or
+completely redesign the interface.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/themes.html)
+
+---
+
+## Create printable assessments using the 'Printed worksheet' theme
+
+The 'Printed worksheet' theme provides an interface to produce printable
+copies of your exam, with separate answer sheets.
+
+Each copy is randomised independently, so you can give each student a unique
+worksheet.
+
+[See an example](https://numbas.mathcentre.ac.uk/exam/3402/printed-worksheet/)
+
+---
+
+## Use Numbas in your language
+
+Set your preferred language in your user profile, or change the "Interface
+language" setting in your exams.
+
+If Numbas hasn't been translated into your language yet, you can help!
+
+[Find out more to help translate Numbas](https://www.numbas.org.uk/contributing-to-numbas/#numbas-in-your-own-language)
+
+---
+
+## Add a password to unlock the exam
+
+For invigilated exams, it's a good idea to lock an exam with a password so
+that students can't begin before they're allowed.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/exam/reference.html#term-password-to-begin-the-exam)
+
+---
+
+## Control the feedback students get
+
+In credit-bearing assessments, you might not want the student to get any
+feedback about their answers until they've finished the exam.
+
+Use the exam's feedback settings to control whether they can see their scores
+and other feedback. You might want to turn off the "generate another question
+like this one" button too.
+
+[Read about feedback options](https://docs.numbas.org.uk/en/latest/exam/reference.html#feedback)
+
+---
+
+## Don't show the results page for final exams
+
+If the result of an exam is subject to scaling, you don't want the student to
+see their score before it's been moderated.
+
+Use the "Show results page" option to control when the student sees their
+results.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/exam/reference.html#term-show-results-page)
+
+---
+
+## Give questions descriptive names
+
+A good question name describes what the student has to do.
+
+For example, "Find the roots of a quadratic equation" is a good name, but
+"algebra 1.3" is not.
+
+You can use the 'Tags' field to add information such as which section of the
+course the question corresponds to.
+
+[Find out more to add tags](https://docs.numbas.org.uk/en/latest/question/reference.html#term-tags)
+
+---
+
+## Group question variables
+
+In the question editor you can organise variables into groups. Use groups to
+collect together related variables - for example, you could put all random
+values in one group and all the variables used for each part in their own
+groups.
+
+---
+
+## Lock variables
+
+While defining question variables, it can be helpful to fix the value of one
+variable while you generate new values for the others.
+
+Click the lock icon next to a variable's name to fix its value until you
+unlock it again. Any variables that the locked variable depends on will also
+be locked.
+
+[Read about locking variables](https://docs.numbas.org.uk/en/latest/question/reference.html#locking-variable-values)
+
+---
+
+## Which variables are randomised?
+
+In the 'Variables' tab of the question editor, variables which have a random
+element in their definitions have a 'shuffle' icon next to their names to make
+them easier to find.
+
+---
+
+## Extensions add features to Numbas
+
+There are many extensions available to use.
+
+Extensions add new JME functions, data types, and integrations with other
+software.
+
+You can write your own extensions, too!
+
+[Find out more to use extensions](https://docs.numbas.org.uk/en/latest/question/reference.html#extensions)
+
+---
+
+## Change how a part is marked with a custom marking algorithm
+
+If you want marking behaviour that isn't possible with the built-in options,
+you can write a custom marking algorithm.
+
+You can build off the existing algorithm for the part type you're using, so
+you don't have to start from scratch.
+
+[Read about custom marking algorithms](https://docs.numbas.org.uk/en/latest/marking-algorithm.html)
+
+---
+
+## Add unit tests to question parts
+
+Unit tests allow you to save the state of the marking algorithm after it has run, to confirm after making any changes to the part or question that the same behaviour is produced.
+
+Find them in the 'Marking algorithm' tab.
+
+[Read about unit tests](https://docs.numbas.org.uk/en/latest/question/parts/reference.html#unit-tests)
+
+---
+
+## Allow error-carried forward marking
+
+If a student makes an error in their answer to part **a**, which they have to
+use to find their answer for part **b**, you might think it's unfair to
+penalise them twice.
+
+Use adaptive marking to recalculate the correct answer for subsequent parts as
+if the student's answer was correct, so they'll be given credit for following
+the correct method.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/question/parts/reference.html#adaptive-marking)
+
+---
+
+## Assess lab work using adaptive marking
+
+You can use the adaptive marking feature to ask students to enter data at the
+beginning of a question and then use it to set up the expected answers for the
+rest of the question.
+
+[See an example](https://numbas.mathcentre.ac.uk/question/52463/experiment-proof-of-concept/)
+
+---
+
+## Use a pattern restrictions on mathematical expression parts
+
+If you want the student to enter a mathematical expression in a certain form,
+you can add a _pattern restriction_.
+
+You can apply a penalty or award no marks at all if the student's answer isn't
+in the form you want.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/question/parts/mathematical-expression.html#pattern-restriction)
+
+---
+
+## Disallow unexepected variables in mathematical expression parts
+
+Students frequently forget to put a multiplication symbol between the names of
+variables. Numbas interprets a string of letters as a single variable.
+
+Use the 'Warn if student uses an unexpected variable name' option to warn the
+student when this happens.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/question/parts/mathematical-expression.html#term-warn-if-student-uses-an-unexpected-variable-name)
+
+---
+
+## Take care when marking equations
+
+Mathematical expression parts are marked by comparing the values produced by
+the student's answer and the expected answer. For equations, these are always
+'true' or 'false', which can lead to false positives.
+
+Use the 'Variable value generators' fields to set up the chosen values to
+check for true equality.
+
+[Find out more about marking equations](https://docs.numbas.org.uk/en/latest/question/parts/mathematical-expression.html#marking-an-equation)
+
+---
+
+## Use a precision restriction in number entry parts
+
+If you want the student to give their answer to a certain precision, don't
+round off the correct answer: instead, set a precision restriction so you
+don't get caught out by edge cases.
+
+[Find out more about precision restrictions](https://docs.numbas.org.uk/en/latest/question/parts/numberentry.html#term-precision-restriction)
+
+---
+
+## Use scientific notation for very large or very small numbers
+
+Tick the box for 'Scientific' notation in a number entry part's 'Allowed
+notation' field so the student can enter numbers like `1.2e100` $ = 1.2 \times
+10^{100}$.
+
+[Read about number notation](https://docs.numbas.org.uk/en/latest/number-notation.html#number-notation)
+
+---
+
+## Ask the student to choose from a drop-down box
+
+"Choose one from a list" parts can be displayed as a drop-down selector instead of
+a series of radio boxes.
+
+[Find out how](https://docs.numbas.org.uk/en/latest/question/parts/multiple-choice.html#term-selection-type)
+
+---
+
+## Display choices in columns
+
+If you've got a lot of choices in a multiple-choice part, make them line up by
+setting a number of display columns.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/question/parts/multiple-choice.html#term-number-of-display-columns)
+
+---
+
+## Custom marking matrices
+
+You can make the marking matrix for a multiple-choice part depend on question
+variables by setting a _custom marking matrix_. This is a list or array giving
+the number of marks to award for each choice.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/question/parts/multiple-choice.html#term-custom-marking-matrix)
+
+---
+
+## Change the layout of a "match choices with answers" part.
+
+You can remove some choice/answer pairs from a "match choices with answers"
+part. For example, if the grid is symmetric, you can save the student some
+time by only showing the lower or upper triangle of options.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/question/parts/multiple-choice.html#term-layout)
+
+---
+
+## Write tailored feedback for each choice in a multiple-choice part
+
+In "choose one from a list" and "choose several from a list" parts, you can
+write a 'distractor' message for each choice, which is shown in the feedback
+when the student selects that choice.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/question/parts/multiple-choice.html#term-distractor-message)
+
+---
+
+## Randomise the available choices in a multiple-choice part
+
+If the number of choices available depends on the value of a question
+variable, you can give a variable list of choices.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/question/parts/multiple-choice.html#term-variable-list-of-choices)
+
+---
+
+## Take care when substituting values into mathematical expressions
+
+Substituting values into a mathematical expression isn't simple - that's what
+the `\simplify` command is for.
+
+Always use `\simplify` when randomising mathematical expressions, so the final
+result looks 'human'.
+
+[Read about substituting variables into maths](https://docs.numbas.org.uk/en/latest/simplification.html)
+
+---
+
+## Specify how mathematical expressions are simplified
+
+The `\simplify` command has a library of rules it uses to rearrange
+expressions. Sometimes you don't want to use them all. Fortunately, you can
+specify which rules can be applied.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/simplification.html#id1)
+
+---
+
+## Specify how fractions are displayed
+
+You can tell the `\simplify` command to render all numbers as fractions,
+top-heavy fractions in mixed form, or to display fractions flat on one line.
+
+[Find out more](https://docs.numbas.org.uk/en/latest/simplification.html#display-options)
+
+---
+
+## Check out the tutorials
+
+If you haven't already, make sure you work through the "Getting Started" tutorials in the
+documentation.
+
+[Get started](https://docs.numbas.org.uk/en/latest/tutorials/write-question.html)
+
+---
+
+## Stuck? Ask for help
+
+If you've got a problem you can't solve on your own, ask for help on the
+Numbas users mailing list.
+
+[Join the group](https://groups.google.com/forum/#!forum/numbas-users)
+
+---
+
+## Think about accessibility
+
+Don't make your tests inaccessible to students using assistive technology.
+Make sure images have alternative text, and don't rely on purely visual
+elements such as colour to convey information.
+
+Numbas is regularly tested against a variety of accessibility requirements.
+
+[Read Numbas' accessibility statement](https://docs.numbas.org.uk/en/latest/accessibility/exam.html)

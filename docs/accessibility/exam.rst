@@ -19,7 +19,7 @@ This statement was first prepared in October 2019 and last updated in September 
 What’s covered by this statement
 --------------------------------
 
-The Numbas runtime, as seen by students, using the default theme.
+The Numbas exam interface, as seen by students, using the default theme.
 
 What’s not covered by this statement
 ------------------------------------
@@ -134,29 +134,54 @@ How to adapt Numbas to your needs
 Change the colours of text and the page background
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Click the :guilabel:`Display options` button to change the colour of text and the page's background.
+Click the :guilabel:`Display options` button and use the :guilabel:`Colour scheme` box to select a colour scheme.
 
-Your browser's colour picker is used. 
-In most browsers, you can pick a colour by clicking on a colour wheel, or by typing a colour value in hexadecimal or RGB format.
+The options are:
+
+Automatic
+    Either the light or dark built-in colour schemes are used, depending on your device's stated preference.
+    Most devices choose a light scheme during the day and switch to dark at night.
+
+Light
+    Black text on a white background.
+
+Dark
+    White text on a black background.
+
+Custom
+    After selecting this, a series of colour pickers are shown for different elements of the interface.
+
+    Your browser's colour picker is used. 
+    In most browsers, you can pick a colour by clicking on a colour wheel, or by typing a colour value in hexadecimal or RGB format.
+
+    Numbas automatically calculates a suitable text colour to match each of the colours you pick.
+    It tries to match the level of contrast between your chosen :guilabel:`Background colour` and :guilabel:`Text colour`.
 
 
-Changing the size of text
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Changing the appearance of text
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Use your browser’s zoom setting to change the size of text and interface elements.
+After clicking the :guilabel:`Display options` button, you are shown a modal dialog with some settings controlling the appearance of text.
+
+You can change the font face used, the size of text, and the weight (thickness) of text.
+
+Or you can use your browser’s zoom setting to change the size of text and interface elements.
 This is often under ‘Zoom’ in the browser’s settings menu; you can also zoom in or out by pressing ``Ctrl +`` or ``Ctrl -`` on the keyboard (``Cmd +`` or ``Cmd -`` on Macs).
 Mobile users can use a pinch gesture to zoom in and out.
 
 Enlarging images
 ~~~~~~~~~~~~~~~~
 
-You can click on an image to enlarge it to nearly fill the screen.
+You can click on the magnifying glass icon at the top-right of any image to enlarge it to nearly fill the screen.
 Click outside the image or press the :kbd:`Escape` key to return to the main interface.
 
 Navigating with a keyboard
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In most browsers, pressing the :kbd:`Tab` key will move focus between interactive elements in the display.
+
+The list of questions in the sidebar of sequential exams uses the arrow keys to move focus between questions.
+Press :kbd:`Enter` or :kbd:`Space` to show the selected question.
 
 Numbas uses the `MathJax accessibility extensions <https://docs.mathjax.org/en/v2.7-latest/misc/accessibility-features.html>`__ to provide interactive exploration of mathematical notation.
 
@@ -165,6 +190,9 @@ Printing a Numbas exam
 
 The default Numbas theme contains a print stylesheet which your browser can use to produce a printed version of an exam. 
 After starting a Numbas exam, use your browser’s :guilabel:`Print` feature.
+
+Some exams may not allow you to print the full transcript of your exam.
+This is determined by the exam author.
 
 Using a screenreader
 ~~~~~~~~~~~~~~~~~~~~

@@ -16,8 +16,8 @@ There are separate accessibility statements for the Numbas editor and for Numbas
 .. toctree::
     :maxdepth: 1
 
-    editor
-    exam
+    For students - Accessibility statement for Numbas exams <exam>
+    For instructors - Accessibility statement for the Numbas editor <editor>
 
 Accessibility conformance report
 --------------------------------

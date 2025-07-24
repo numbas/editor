@@ -168,9 +168,9 @@
                             <a data-bind="visible: ready_to_download"><span class="text-success"><span class="glyphicon glyphicon-ok"></span> This {{item_type}} is ready to download.</span></a>
                             <a data-bind="visible: !ready_to_download()"><span class="text-danger"><span class="glyphicon glyphicon-exclamation-sign"></span> This {{item_type}} might need some attention: <span data-bind="text: ready_to_download_reason"></span></span></a>
                         </li>
-                        <li class="indent"><a href="{% editoritem_url 'download' object %}?scorm">SCORM package</a></li>
-                        <li class="indent"><a href="{% editoritem_url 'download' object %}">standalone .zip (no SCORM)</a></li>
-                        <li class="indent"><a href="{% editoritem_url 'source' object %}">source</a></li>
+                        <li class="indent"><a href="{% editoritem_url 'download' object %}{% querystring scorm="true" token=object.editoritem.share_uuid_view %}">SCORM package</a></li>
+                        <li class="indent"><a href="{% editoritem_url 'download' object %}{% querystring token=object.editoritem.share_uuid_view %}">standalone .zip (no SCORM)</a></li>
+                        <li class="indent"><a href="{% editoritem_url 'source' object %}{% querystring token=object.editoritem.share_uuid_view %}">source</a></li>
                     </ul>
                 </div>
             </li>

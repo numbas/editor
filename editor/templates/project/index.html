@@ -9,6 +9,9 @@
 {% block javascripts %}
 {{ block.super }}
 <script src="{% sstatic 'js/project/index.js' %}"></script>
+
+{% include 'numbas_runtime.html' %}
+
 {% endblock %}
 
 {% block stylesheets %}

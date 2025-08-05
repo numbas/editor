@@ -145,7 +145,7 @@ SITE_TITLE = 'Numbas'
 SITE_ID = 1
 
 MATHJAX_2_URL = 'https://cdn.jsdelivr.net/npm/mathjax@2'
-MATHJAX_4_URL = 'https://cdn.jsdelivr.net/npm/mathjax@4.0.0-beta.7'
+MATHJAX_4_URL = 'https://cdn.jsdelivr.net/npm/mathjax@4'
 
 MEDIA_ROOT = 'media/'
 MEDIA_URL = '/media/'

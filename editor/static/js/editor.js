@@ -2345,151 +2345,155 @@ $(document).ready(function() {
         }
     }
 
-    function update_notifications(response) {
-        document.querySelector('#notifications .dropdown-menu').innerHTML = response.html;
+    if(document.querySelector('#notifications')) {
+        function update_notifications(response) {
+            document.querySelector('#notifications .dropdown-menu').innerHTML = response.html;
 
-        var description = response.num_unread+' unread '+(response.num_unread==1 ? 'notification' : 'notifications')
-        document.querySelector('#notifications .dropdown-toggle').setAttribute('title', description);
+            var description = response.num_unread+' unread '+(response.num_unread==1 ? 'notification' : 'notifications')
+            document.querySelector('#notifications .dropdown-toggle').setAttribute('title', description);
 
-        document.querySelector('#notifications .badge').textContent = response.num_unread > 0 ? response.num_unread : '';
-        document.querySelector('#notifications .sr-description').textContent = description;
-        if(response.num_unread) {
-            document.querySelector('#notifications').classList.add('active');
-            document.querySelector('#notifications .dropdown-toggle').classList.remove('disabled');
-        } else {
-            document.querySelector('#notifications').classList.remove('active', 'open');
-            document.querySelector('#notifications .dropdown-toggle').classList.add('disabled');
-        }
-    }
-
-    document.getElementById('notifications').addEventListener('click', ({target}) => {
-        if(!target.classList.contains('mark-all-as-read')) {
-            return;
+            document.querySelector('#notifications .badge').textContent = response.num_unread > 0 ? response.num_unread : '';
+            document.querySelector('#notifications .sr-description').textContent = description;
+            if(response.num_unread) {
+                document.querySelector('#notifications').classList.add('active');
+                document.querySelector('#notifications .dropdown-toggle').classList.remove('disabled');
+            } else {
+                document.querySelector('#notifications').classList.remove('active', 'open');
+                document.querySelector('#notifications .dropdown-toggle').classList.add('disabled');
+            }
         }
 
-        update_notifications({html:'', num_unread: 0});
+        document.getElementById('notifications').addEventListener('click', ({target}) => {
+            if(!target.classList.contains('mark-all-as-read')) {
+                return;
+            }
 
-        e.stopPropagation();
-        e.preventDefault();
+            update_notifications({html:'', num_unread: 0});
 
-        var url = target.getAttribute('href');
-        fetch(url, {method: 'POST', body: CSRFFormData()}).then(response => response.json()).then(update_notifications);
-    });
-
-    var last_notification = null;
-
-    async function fetch_notifications() {
-        if(!document.hasFocus()) {
-            return;
-        }
-        if(!is_logged_in) {
-            return;
-        }
-        const response = await (await fetch(Editor.url_prefix+'notifications/unread_json/')).json();
-        if(response.last_notification != last_notification) {
-            last_notification = response.last_notification;
-            update_notifications(response);
-        }
-    }
-
-    setInterval(fetch_notifications,15000);
-
-    fetch_notifications();
-
-    var questions_in_basket = Editor.questions_in_basket = function() {
-        return [...document.querySelectorAll('#question_basket .dropdown-menu .question')].map(q => parseInt(q.dataset.id));
-    }
-
-    var update_basket = Editor.update_basket = function(response) {
-        var num_questions = document.querySelectorAll('#question_basket .dropdown-menu .question').length;
-        document.querySelector('#question_basket .dropdown-toggle').setAttribute('title', `${num_questions} ${num_questions==1 ? 'question' : 'questions'} in your basket`);
-        document.querySelector('#question_basket .badge').textContent = num_questions>0 ? num_questions : '';
-        if(num_questions) {
-            document.querySelector('#question_basket .dropdown-toggle').classList.remove('disabled');
-        } else {
-            document.querySelector('#question_basket').classList.remove('active', 'open');
-            document.querySelector('#question_basket .dropdown-toggle').classList.add('disabled');
-        }
-        var ids = questions_in_basket();
-        for(let a of document.querySelectorAll('.add-to-basket[data-question-id]')) {
-            var id = parseInt(a.dataset.questionId);
-            var inBasket = ids.indexOf(id) >= 0;
-            a.classList.toggle('in-basket', inBasket);
-            a.setAttribute('title', inBasket ? 'This is in your basket' : 'Add this to your basket');
-        }
-    }
-
-    update_basket();
-
-    Editor.add_question_to_basket = function(id) {
-        fetch(Editor.url_prefix+'question_basket/add/',{method: 'POST', body: CSRFFormData({id: id})})
-            .then(response => response.text()).then(response => {
-                document.querySelector('#question_basket .dropdown-menu').innerHTML = response;
-                update_basket();
-            })
-        ;
-    }
-    Editor.remove_question_from_basket = function(id) {
-        fetch(Editor.url_prefix+'question_basket/remove/',{method: 'POST', body: CSRFFormData({id: id})})
-            .then(response => response.text()).then(response => {
-                document.querySelector('#question_basket .dropdown-menu').innerHTML = response;
-                update_basket();
-            })
-        ;
-    }
-    Editor.empty_basket = function() {
-        fetch(Editor.url_prefix+'question_basket/empty/',{method: 'POST', body: CSRFFormData({id: id})})
-            .then(response => response.text()).then(response => {
-                document.querySelector('#question_basket .dropdown-menu').innerHTML = response;
-                update_basket();
-            })
-        ;
-    }
-
-    const question_basket = document.getElementById('question_basket');
-
-    const empty_basket_button = question_basket.querySelector('.empty-basket');
-    if(empty_basket_button) {
-        empty_basket_button.addEventListener('click', e => {
+            e.stopPropagation();
             e.preventDefault();
 
-            Editor.empty_basket();
+            var url = target.getAttribute('href');
+            fetch(url, {method: 'POST', body: CSRFFormData()}).then(response => response.json()).then(update_notifications);
+        });
+
+        var last_notification = null;
+
+        async function fetch_notifications() {
+            if(!document.hasFocus()) {
+                return;
+            }
+            if(!is_logged_in) {
+                return;
+            }
+            const response = await (await fetch(Editor.url_prefix+'notifications/unread_json/')).json();
+            if(response.last_notification != last_notification) {
+                last_notification = response.last_notification;
+                update_notifications(response);
+            }
+        }
+
+        setInterval(fetch_notifications,15000);
+
+        fetch_notifications();
+    }
+
+    if(document.querySelector('#question_basket')) {
+        var questions_in_basket = Editor.questions_in_basket = function() {
+            return [...document.querySelectorAll('#question_basket .dropdown-menu .question')].map(q => parseInt(q.dataset.id));
+        }
+
+        var update_basket = Editor.update_basket = function(response) {
+            var num_questions = document.querySelectorAll('#question_basket .dropdown-menu .question').length;
+            document.querySelector('#question_basket .dropdown-toggle').setAttribute('title', `${num_questions} ${num_questions==1 ? 'question' : 'questions'} in your basket`);
+            document.querySelector('#question_basket .badge').textContent = num_questions>0 ? num_questions : '';
+            if(num_questions) {
+                document.querySelector('#question_basket .dropdown-toggle').classList.remove('disabled');
+            } else {
+                document.querySelector('#question_basket').classList.remove('active', 'open');
+                document.querySelector('#question_basket .dropdown-toggle').classList.add('disabled');
+            }
+            var ids = questions_in_basket();
+            for(let a of document.querySelectorAll('.add-to-basket[data-question-id]')) {
+                var id = parseInt(a.dataset.questionId);
+                var inBasket = ids.indexOf(id) >= 0;
+                a.classList.toggle('in-basket', inBasket);
+                a.setAttribute('title', inBasket ? 'This is in your basket' : 'Add this to your basket');
+            }
+        }
+
+        update_basket();
+
+        Editor.add_question_to_basket = function(id) {
+            fetch(Editor.url_prefix+'question_basket/add/',{method: 'POST', body: CSRFFormData({id: id})})
+                .then(response => response.text()).then(response => {
+                    document.querySelector('#question_basket .dropdown-menu').innerHTML = response;
+                    update_basket();
+                })
+            ;
+        }
+        Editor.remove_question_from_basket = function(id) {
+            fetch(Editor.url_prefix+'question_basket/remove/',{method: 'POST', body: CSRFFormData({id: id})})
+                .then(response => response.text()).then(response => {
+                    document.querySelector('#question_basket .dropdown-menu').innerHTML = response;
+                    update_basket();
+                })
+            ;
+        }
+        Editor.empty_basket = function() {
+            fetch(Editor.url_prefix+'question_basket/empty/',{method: 'POST', body: CSRFFormData({id: id})})
+                .then(response => response.text()).then(response => {
+                    document.querySelector('#question_basket .dropdown-menu').innerHTML = response;
+                    update_basket();
+                })
+            ;
+        }
+
+        const question_basket = document.getElementById('question_basket');
+
+        const empty_basket_button = question_basket.querySelector('.empty-basket');
+        if(empty_basket_button) {
+            empty_basket_button.addEventListener('click', e => {
+                e.preventDefault();
+
+                Editor.empty_basket();
+            });
+        }
+
+        question_basket.addEventListener('click', e => {
+            if(e.target.classList.contains('btn-remove')) {
+                e.preventDefault();
+                Editor.remove_question_from_basket(e.target.dataset.id);
+                return;
+            }
+        });
+
+        document.body.addEventListener('click', e => {
+            if(e.target.classList.contains('add-to-basket')) {
+                e.preventDefault();
+
+                const id = parseInt(e.target.dataset.questionId);
+                if(questions_in_basket().indexOf(id) >= 0) {
+                    Editor.remove_question_from_basket(id);
+                } else {
+                    Editor.add_question_to_basket(id);
+                }
+            } else if(e.target.classList.contains('add-to-queue')) {
+                e.preventDefault();
+                
+                const id = e.target.dataset.itemId;
+                const name = e.target.dataset.itemName;
+                document.querySelector('#add-to-queue-modal .item-name').textContent = name;
+                for(let a of document.querySelectorAll('#add-to-queue-modal .queues a.pick')) {
+                    if(!a.dataset.originalHref) {
+                        a.setAttribute('data-original-href', a.getAttribute('href'));
+                    }
+                    a.setAttribute('href', a.getAttribute('data-original-href')+'?item='+id);
+                }
+                $('#add-to-queue-modal').modal('show');
+            }
         });
     }
-
-    question_basket.addEventListener('click', e => {
-        if(e.target.classList.contains('btn-remove')) {
-            e.preventDefault();
-            Editor.remove_question_from_basket(e.target.dataset.id);
-            return;
-        }
-    });
-
-    document.body.addEventListener('click', e => {
-        if(e.target.classList.contains('add-to-basket')) {
-            e.preventDefault();
-
-            const id = parseInt(e.target.dataset.questionId);
-            if(questions_in_basket().indexOf(id) >= 0) {
-                Editor.remove_question_from_basket(id);
-            } else {
-                Editor.add_question_to_basket(id);
-            }
-        } else if(e.target.classList.contains('add-to-queue')) {
-            e.preventDefault();
-            
-            const id = e.target.dataset.itemId;
-            const name = e.target.dataset.itemName;
-            document.querySelector('#add-to-queue-modal .item-name').textContent = name;
-            for(let a of document.querySelectorAll('#add-to-queue-modal .queues a.pick')) {
-                if(!a.dataset.originalHref) {
-                    a.setAttribute('data-original-href', a.getAttribute('href'));
-                }
-                a.setAttribute('href', a.getAttribute('data-original-href')+'?item='+id);
-            }
-            $('#add-to-queue-modal').modal('show');
-        }
-    });
 
     Editor.autocomplete_source = function(obj,from,to) {
         return function(s,callback) {

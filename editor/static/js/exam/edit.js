@@ -1258,7 +1258,7 @@ $(document).ready(function() {
             } catch(e) {
                 document.body.className += ' loaded';
             }
-            Editor.update_basket();
+            Editor.update_basket && Editor.update_basket();
             mathjax_typeset_element(document.querySelector('.timeline'));
         }
         catch(e) {

@@ -2398,7 +2398,9 @@ $(document).ready(function() {
         fetch_notifications();
     }
 
-    if(document.querySelector('#question_basket')) {
+    const question_basket = document.getElementById('question_basket');
+
+    if(question_basket) {
         var questions_in_basket = Editor.questions_in_basket = function() {
             return [...document.querySelectorAll('#question_basket .dropdown-menu .question')].map(q => parseInt(q.dataset.id));
         }
@@ -2449,8 +2451,6 @@ $(document).ready(function() {
             ;
         }
 
-        const question_basket = document.getElementById('question_basket');
-
         const empty_basket_button = question_basket.querySelector('.empty-basket');
         if(empty_basket_button) {
             empty_basket_button.addEventListener('click', e => {
@@ -2461,36 +2461,45 @@ $(document).ready(function() {
         }
 
         question_basket.addEventListener('click', e => {
-            if(e.target.classList.contains('btn-remove')) {
-                e.preventDefault();
-                Editor.remove_question_from_basket(e.target.dataset.id);
-                return;
+            let el = e.target;
+            while(el) {
+                if(el.classList.contains('btn-remove')) {
+                    e.preventDefault();
+                    Editor.remove_question_from_basket(el.dataset.id);
+                    return;
+                }
+                el = el.parentElement;
             }
         });
 
         document.body.addEventListener('click', e => {
-            if(e.target.classList.contains('add-to-basket')) {
-                e.preventDefault();
+            let el = e.target;
+            while(el) {
+                if(el.classList.contains('add-to-basket')) {
+                    e.preventDefault();
 
-                const id = parseInt(e.target.dataset.questionId);
-                if(questions_in_basket().indexOf(id) >= 0) {
-                    Editor.remove_question_from_basket(id);
-                } else {
-                    Editor.add_question_to_basket(id);
-                }
-            } else if(e.target.classList.contains('add-to-queue')) {
-                e.preventDefault();
-                
-                const id = e.target.dataset.itemId;
-                const name = e.target.dataset.itemName;
-                document.querySelector('#add-to-queue-modal .item-name').textContent = name;
-                for(let a of document.querySelectorAll('#add-to-queue-modal .queues a.pick')) {
-                    if(!a.dataset.originalHref) {
-                        a.setAttribute('data-original-href', a.getAttribute('href'));
+                    const id = parseInt(el.dataset.questionId);
+                    if(questions_in_basket().indexOf(id) >= 0) {
+                        Editor.remove_question_from_basket(id);
+                    } else {
+                        Editor.add_question_to_basket(id);
                     }
-                    a.setAttribute('href', a.getAttribute('data-original-href')+'?item='+id);
+                } else if(el.classList.contains('add-to-queue')) {
+                    e.preventDefault();
+                    
+                    const id = el.dataset.itemId;
+                    const name = el.dataset.itemName;
+                    document.querySelector('#add-to-queue-modal .item-name').textContent = name;
+                    for(let a of document.querySelectorAll('#add-to-queue-modal .queues a.pick')) {
+                        if(!a.dataset.originalHref) {
+                            a.setAttribute('data-original-href', a.getAttribute('href'));
+                        }
+                        a.setAttribute('href', a.getAttribute('data-original-href')+'?item='+id);
+                    }
+                    $('#add-to-queue-modal').modal('show');
                 }
-                $('#add-to-queue-modal').modal('show');
+
+                el = el.parentElement;
             }
         });
     }

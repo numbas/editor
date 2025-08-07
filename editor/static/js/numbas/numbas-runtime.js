@@ -19505,6 +19505,7 @@ var schedule = Numbas.schedule = /** @lends Numbas.schedule */ {
  */
 var SignalBox = schedule.SignalBox = function() {
     this.callbacks = {};
+    this.generic_listeners = [];
     schedule.signalboxes.push(this);
 }
 SignalBox.prototype = { /** @lends Numbas.schedule.SignalBox.prototype */
@@ -19522,6 +19523,13 @@ SignalBox.prototype = { /** @lends Numbas.schedule.SignalBox.prototype */
      * @private
      */
     callbacks: {},
+
+    /** Callback functions which will be called when any signal is triggered.
+     *
+     * @type {Array<Numbas.schedule.callback>}
+     * @private
+     */
+    generic_listeners: [],
 
     /** Get a callback object for the event with the given name.
      * If the callback hasn't been accessed before, it's created.
@@ -19586,6 +19594,16 @@ SignalBox.prototype = { /** @lends Numbas.schedule.SignalBox.prototype */
         return promise;
     },
 
+    /** 
+     * Register a callback function which will be called whenever any signal has resolved.
+     * The callback is called with the name of the triggered signal.
+     *
+     * @param {Function} fn
+     */
+    on_any: function(fn) {
+        this.generic_listeners.push(fn);
+    },
+
     /** Halt this signal box because of an error: reject all outstanding promises.
      *
      * @param {Error} error - The error that caused the signal box to halt.
@@ -19614,6 +19632,10 @@ SignalBox.prototype = { /** @lends Numbas.schedule.SignalBox.prototype */
         }
         callback.resolved = true;
         callback.resolve();
+
+        this.generic_listeners.forEach(fn => {
+            fn(name);
+        });
     }
 }
 
@@ -19669,6 +19691,9 @@ EventBox.prototype = {
         ev.listeners.forEach(function(callback) {
             callback.apply(this, args);
         });
+        this.getEvent('').listeners.forEach(function(callback) {
+            callback.apply(this, [name, ...args]);
+        });
         ev.next_resolve(...arguments);
         this.setEventPromise(ev);
     }
@@ -19706,6 +19731,12 @@ class Scheduler {
             Numbas.display && Numbas.display.die(error);
             console.error(error);
         });
+
+        this.last = this.last.then(async () => {
+            await (new Promise(resolve => {
+                setTimeout(resolve, 1);
+            }));
+        })
 
         this.last.then(() => {
             this.completed_jobs += 1;

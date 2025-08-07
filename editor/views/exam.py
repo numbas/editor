@@ -200,7 +200,9 @@ class UploadView(editor.views.editoritem.CreateView):
         extensions = Extension.objects.filter(location__in=q.get('extensions',[]))
         qo.extensions.set(extensions)
 
-        resources = [self.resources[filename] for filename in q.get('resources',[]) if filename in self.resources]
+        resource_paths = [f[0] if isinstance(f,list) else f for f in q.get('resources',[])]
+
+        resources = [self.resources[filename] for filename in resource_paths if filename in self.resources]
         qo.resources.set(resources)
 
         contributors = q.get('contributors',[])

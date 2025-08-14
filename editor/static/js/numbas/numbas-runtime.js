@@ -19633,7 +19633,7 @@ SignalBox.prototype = { /** @lends Numbas.schedule.SignalBox.prototype */
         callback.resolved = true;
         callback.resolve();
 
-        this.generic_listeners.forEach(fn => {
+        this.generic_listeners.forEach((fn) => {
             fn(name);
         });
     }
@@ -19733,7 +19733,7 @@ class Scheduler {
         });
 
         this.last = this.last.then(async () => {
-            await (new Promise(resolve => {
+            await (new Promise((resolve) => {
                 setTimeout(resolve, 1);
             }));
         })

@@ -41,6 +41,10 @@ Wherever you want to embed Numbas content, write a ``<numbas-exam>`` tag with th
 
     If you have multiple Numbas exams in the same page and a SCORM API, make sure to set ``scorm="false"`` on all, or all but one, of the ``<numbas-exam>`` elements in the page, so that they don't conflict with each other.
 
+``template``
+    The ID of the ``<template>`` element that contains the templates for Numbas to generate HTML.
+    If you omit this, the ID ``numbas-exam-template`` is used.
+
 Extension data
 --------------
 

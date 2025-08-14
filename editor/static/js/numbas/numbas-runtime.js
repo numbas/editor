@@ -19594,7 +19594,7 @@ SignalBox.prototype = { /** @lends Numbas.schedule.SignalBox.prototype */
         return promise;
     },
 
-    /** 
+    /**
      * Register a callback function which will be called whenever any signal has resolved.
      * The callback is called with the name of the triggered signal.
      *

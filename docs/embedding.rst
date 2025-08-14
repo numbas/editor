@@ -16,6 +16,14 @@ You should load :file:`numbas.js` in your page, and make sure that :file:`numbas
 Inside :file:`index.html`, there is a large ``<template>`` element with the ID ``numbas-exam-template``.
 Copy all of this into your page, and change the URL in the ``<style id="numbas-style">`` tag to the URL of your copy of :file:`numbas.css`.
 
+.. note::
+   At the moment, the default Numbas theme uses an icon font for the tick, cross and warning feedback symbols.
+   Due to a browser limitation, the definition of the icon font can't be inside the custom element, so you have to copy it across to your main page's stylesheet.
+
+   From :file:`numbas.css`, copy the ``@font-face`` block defining ``font-family: 'FontAwesome'`` into your page's stylesheet.
+
+   In the future we will replace the icon font with SVG symbols which won't have this limitation, and this step won't be needed.
+
 Now you are ready to include Numbas content in your page.
 
 Embedding a Numbas exam

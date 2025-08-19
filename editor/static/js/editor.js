@@ -2308,11 +2308,7 @@ $(document).ready(function() {
                 element.classList.add('dropping-file');
             });
 
-            element.addEventListener('drop', e => {
-                e.preventDefault();
-                const {files} = e.dataTransfer;
-                element.classList.remove('dropping-file');
-
+            function upload_files(files) {
                 for(let file of files) {
                     const resource = new Resource();
                     fileArray.splice(0,0,resource);
@@ -2340,6 +2336,20 @@ $(document).ready(function() {
                     const fd = new FormData(element);
                     fd.set('files[]', file);
                     xhr.send(fd);
+                }
+            }
+
+            element.addEventListener('drop', e => {
+                e.preventDefault();
+                const {files} = e.dataTransfer;
+                element.classList.remove('dropping-file');
+
+                upload_files(files);
+            });
+
+            element.addEventListener('input', e => {
+                if(e.target.files) {
+                    upload_files(e.target.files);
                 }
             });
         }

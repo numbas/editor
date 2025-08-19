@@ -70,3 +70,8 @@ The extension data JSON has the following format::
             "stylesheets": (a list of filenames of all CSS files needed by the extension, relative to the root)
         }
     }
+
+Example
+-------
+
+There is a short page demonstrating this at `numbas.org.uk/demos/generic-runtime <https://www.numbas.org.uk/demos/generic-runtime/>`__.

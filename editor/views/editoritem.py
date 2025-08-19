@@ -642,13 +642,23 @@ class PreviewView(CompileObject, generic.DetailView):
         return out
 
     def get_exam_url(self):
+        token = self.request.GET.get('token','')
+        
+        source_url = self.editoritem.rel_obj.source_url()
+        if token:
+            b = urlparse(source_url)
+            b = b._replace(query = urlencode({
+                'token': token,
+            }))
+            source_url = urlunparse(b)
+
         return urlunparse((
             '',
             '',
             reverse(self.editoritem.item_type+'_preview_file',args=(self.object.pk,self.editoritem.slug, self.index_filename)),
             '',
             urlencode({
-                'source_url': self.editoritem.rel_obj.source_url(),
+                'source_url': source_url,
                 'extensions': json.dumps(self.get_extensions()),
                 'locale': self.get_locale(),
             }),

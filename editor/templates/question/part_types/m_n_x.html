@@ -61,7 +61,7 @@
         </div>
         {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='question/parts/multiple-choice.html#term-Shuffle-order-of-choices' %}
 
-        {% property 'choicesHeader' 'Text before choices' help_url='question/parts/multiple-choice.html#term-Text-before-choices' %}
+        {% property 'choicesHeader' 'Text before choices' help_url='question/parts/multiple-choice.html#term-Text-before-choices-match-choices-with-answers-only' %}
     </form>
     <ul class="choices list-unstyled list-group" data-bind="fadeVisible: !customChoices()">
         <!-- ko foreach: {data: choices, afterAdd: Editor.afterAdd} -->

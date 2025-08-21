@@ -2453,7 +2453,7 @@ $(document).ready(function() {
             ;
         }
         Editor.empty_basket = function() {
-            fetch(Editor.url_prefix+'question_basket/empty/',{method: 'POST', body: CSRFFormData({id: id})})
+            fetch(Editor.url_prefix+'question_basket/empty/',{method: 'POST', body: CSRFFormData({})})
                 .then(response => response.text()).then(response => {
                     document.querySelector('#question_basket .dropdown-menu').innerHTML = response;
                     update_basket();

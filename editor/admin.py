@@ -9,7 +9,19 @@ admin.site.register(editor.models.Tip)
 
 admin.site.register(editor.models.NewExam)
 admin.site.register(editor.models.NewQuestion)
-admin.site.register(editor.models.Theme)
+
+class ExamInline(admin.TabularInline):
+    model = editor.models.NewExam
+    fields = ['editoritem']
+    readonly_fields = ['editoritem']
+    can_delete = False
+    show_change_link = True
+    extra = 0
+
+class ThemeAdmin(admin.ModelAdmin):
+    inlines = [ExamInline]
+
+admin.site.register(editor.models.Theme, ThemeAdmin)
 
 admin.site.register(editor.models.AbilityFramework)
 admin.site.register(editor.models.AbilityLevel)

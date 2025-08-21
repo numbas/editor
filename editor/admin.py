@@ -7,8 +7,27 @@ import editor.models
 admin.site.register(editor.models.SiteBroadcast)
 admin.site.register(editor.models.Tip)
 
-admin.site.register(editor.models.NewExam)
-admin.site.register(editor.models.NewQuestion)
+@admin.display(description="Name")
+def editoritem_name(obj):
+    return obj.editoritem.name
+
+@admin.display(description="Author")
+def editoritem_author(obj):
+    return obj.editoritem.author.get_full_name()
+
+class ExamAdmin(admin.ModelAdmin):
+    model = editor.models.NewExam
+    list_display = [editoritem_name, editoritem_author]
+    search_fields = ['editoritem__name']
+
+admin.site.register(editor.models.NewExam, ExamAdmin)
+
+class QuestionAdmin(admin.ModelAdmin):
+    model = editor.models.NewQuestion
+    list_display = [editoritem_name, editoritem_author]
+    search_fields = ['editoritem__name']
+
+admin.site.register(editor.models.NewQuestion, QuestionAdmin)
 
 class ExamInline(admin.TabularInline):
     model = editor.models.NewExam
@@ -20,6 +39,15 @@ class ExamInline(admin.TabularInline):
 
 class ThemeAdmin(admin.ModelAdmin):
     inlines = [ExamInline]
+    search_fields = ['name']
+    list_display = ['name', 'exam_count']
+
+    def get_queryset(self, request):
+        return editor.models.Theme.objects.annotate(used_count=Count('used_in_newexams'))
+
+    @admin.display(description="Used in exams", ordering='used_count')
+    def exam_count(self, obj):
+        return obj.used_count
 
 admin.site.register(editor.models.Theme, ThemeAdmin)
 
@@ -44,6 +72,8 @@ admin.site.register(editor.models.Licence, LicenceAdmin)
 
 class ExtensionAdmin(admin.ModelAdmin):
     list_display = ['name', 'location', 'public', 'author']
+    search_fields = ['name', 'location']
+
 admin.site.register(editor.models.Extension, ExtensionAdmin)
 
 class EditorTagAdmin(admin.ModelAdmin):

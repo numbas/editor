@@ -1154,6 +1154,7 @@ $(document).ready(function() {
     Numbas.queueScript('knockout',[],function() {});
     var deps = ['jme-display','jme','answer-widgets'];
     Numbas.queueScript('start-editor',deps, async function() {
+        Numbas.display_util.set_jme_scope(document.body, Numbas.jme.builtinScope);
         try {
             var item_json = window.item_json;
             viewModel = new CustomPartType(item_json.data, item_json.save_url, item_json.set_access_url);

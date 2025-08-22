@@ -66,6 +66,7 @@ Contents of a theme
 A theme is a folder containing the following three things:
 
 * An optional file called ``inherit.txt`` containing the name of a theme to extend.
+* An optional file called ``numbas-theme.json`` containing metadata about the theme.
 * A folder called ``files`` containing static files to be included in the compiled exam. 
   For a theme which does not extend another, this contains at the minimum a JavaScript file ``files/scripts/display.js``.
 * A folder called ``templates`` containing, at the least, two files, called ``templates/index.html`` and ``templates/question.xslt``.
@@ -77,10 +78,32 @@ A theme is a folder containing the following three things:
     For backwards compatibility, if either of these files are found in those paths, they're used instead of any template files. 
     This way, if an old-style theme extends the ``default`` theme and overrides ``index.html``, it will still work.
 
+Theme metadata
+**************
+
+A theme can contain a file :file:`numbas-theme.json` at the top level, containing metadata about the theme, in JSON format.
+
+Here's the default metadata::
+
+    {
+        "html": {
+            "output": "index.html"
+        },
+        "css": {
+            "output": "numbas.css"
+        },
+        "js": {
+            "output": "numbas.js"
+        }
+    }
+
+If you want a compiled file to have a different name, change the ``"output"`` property of the relevant section.
+
+
 JavaScript and CSS files
 ************************
 
-All JavaScript and CSS files used by a Numbas exam are collected into two files, ``scripts.js`` and ``styles.css``. 
+All JavaScript and CSS files used by a Numbas exam are collected into two files, ``numbas.js`` and ``numbas.css``. 
 These are the only files you need to load from your theme's ``index.html`` - all script and stylesheet files, including those provided by your theme, are collected into these.
 
 HTML and XSLT templates

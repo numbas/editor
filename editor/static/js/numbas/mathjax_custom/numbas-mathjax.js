@@ -34,7 +34,7 @@
 
                     if(scope.showSubstitutions) {
                         const tok = jme.evaluate(expr, scope);
-                        tex = jme.display.texify({tok}, settings, scope);
+                        tex = '{' + jme.display.texify({tok}, settings, scope) + '}';
                     } else {
                         const res = Editor.texJMEBit(expr, settings, null, scope);
                         tex = `\\class{jme-var}{\\left\\{${res.tex || res.message}\\right\\}}`;
@@ -70,7 +70,7 @@
                     let tex;
                     if(scope.showSubstitutions) {
                         const subbed_tree = Numbas.jme.display.subvars(expr, scope);
-                        tex = Numbas.jme.display.treeToLaTeX(subbed_tree, ruleset, scope);
+                        tex = '{' + Numbas.jme.display.treeToLaTeX(subbed_tree, ruleset, scope) + '}';
                     } else {
                         const res = Editor.texJMEBit(expr, ruleset, null, scope);
                         tex = `\\class{jme-simplify}{\\left\\{${res.tex || res.message}\\right\\}}`;

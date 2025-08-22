@@ -1568,7 +1568,7 @@ $(document).ready(function() {
             if(element.classList.contains('has-tinymce')) {
                 var tinymce = element.querySelector('iframe');
 
-                if (document.activeElement == tinymce) {
+                if (document.activeElement != tinymce) {
                     var ed = element.querySelector('.wmTextArea').tinymce;
                     if(ed && ed.initialized) {
                         if(ed.getContent()!=value) {

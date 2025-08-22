@@ -29,7 +29,10 @@ Now you are ready to include Numbas content in your page.
 Embedding a Numbas exam
 -----------------------
 
-Wherever you want to embed Numbas content, write a ``<numbas-exam>`` tag with the following attributes:
+Wherever you want to embed Numbas content, write a ``<numbas-exam>`` tag.
+
+Attributes
+**********
 
 ``source_url``
     The URL of the .exam file defining the question or exam.
@@ -42,7 +45,8 @@ Wherever you want to embed Numbas content, write a ``<numbas-exam>`` tag with th
 ``noload``
     If this is present, then the exam doesn't load automatically when the page loads.
 
-    This is a good idea if you have lots of 
+    This is a good idea if you have lots of exams in the page.
+    You can use the ``.load_exam()`` method on each ``<numbas-exam>`` element when you want it to load.
 
 ``scorm``
     If this is set to ``false``, then the exam will not try to use the SCORM API in the containing page.
@@ -53,8 +57,39 @@ Wherever you want to embed Numbas content, write a ``<numbas-exam>`` tag with th
     The ID of the ``<template>`` element that contains the templates for Numbas to generate HTML.
     If you omit this, the ID ``numbas-exam-template`` is used.
 
+Properties
+**********
+
+The element object has an ``exam`` property which can be accessed from JavaScript, representing the ``Numbas.Exam`` object which this element contains.
+
+Wait until the ``numbas:setExam`` event has been triggered before trying to access this.
+
+Methods
+*******
+
+.. function:: load_exam()
+
+    Load the exam.
+
+    This is called automatically when the element is connected to the page and the document has finished loading, unless the ``noload`` attribute is set.
+
+    Once called, it will wait for the Numbas runtime to finish loading before loading the exam.
+
+    If the exam has already been loaded, it does nothing.
+
+
+Events
+******
+
+The ``<numbas-exam>`` event will trigger an event for each signal and event produced by the Numbas exam object.
+
+The names of signals are prefixed with ``numbas:signal:``, and events are prefixed with ``numbas:event:``.
+
+It also triggers events ``numbas:loaded`` after the exam's ``ready`` signal has triggered, and ``numbas:setExam`` once the element's ``.exam`` property is set.
+
+
 Extension data
---------------
+**************
 
 If the exam uses any extensions, you must tell Numbas how to find the extension's files by adding a ``<script type="application/json" slot="extension-data">`` element inside ``<numbas-exam>``.
 

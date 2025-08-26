@@ -1,16 +1,18 @@
 /* Use this file to add CSS rules affecting the appearance of your theme. */
 
-:root {
-    /* These colours are used as the background of the sidebar, among other places, in light mode and dark mode respectively. */
-    --light-main-color: #a2d1f0; 
-    --dark-main-color: #1b4764;
+@layer theme {
+    .numbas-container, #style-modal {
+        /* These colours are used as the background of the sidebar, among other places, in light mode and dark mode respectively. */
+        --light-main-color: #a2d1f0; 
+        --dark-main-color: #1b4764;
 
-    /* More colours are defined in `files/resources/color-mix.css`. */
+        /* More colours are defined in `files/resources/color-mix.css`. */
 
 
-    /* This determines the default main font */
-    --main-font: sans-serif;
-    /* To add more font options, add to Numbas.display.font_options -- see `files/scripts/display-base.js`. */
+        /* This determines the default main font */
+        --main-font: sans-serif;
+        /* To add more font options, add to Numbas.display.font_options -- see `files/scripts/display-base.js`. */
 
-    /* More variables are defined in `files/resources/_variables.css`. */
+        /* More variables are defined in `files/resources/_variables.css`. */
+    }
 }

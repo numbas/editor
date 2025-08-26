@@ -106,6 +106,12 @@ The extension data JSON has the following format::
         }
     }
 
+So an exam which uses JSXGraph, loaded from ``extensions/jsxgraph``, would look like this::
+
+    <numbas-exam source_url="test.exam">
+        <script type="application/json" slot="extension-data">{"jsxgraph": {"root": "extensions/jsxgraph", "stylesheets": ["jsxgraph.css"], "javascripts": ["jsxgraph.js"]}}</script>
+    </numbas-exam>
+
 Example
 -------
 

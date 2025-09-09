@@ -368,7 +368,8 @@ class Exporter:
             'question_basket': [self.absolute_url(q) for q in userprofile.question_basket.all()],
             'personal_project': self.absolute_url(userprofile.personal_project),
             'wrap_lines': userprofile.wrap_lines,
-            'mathjax_url': userprofile.mathjax_url,
+            'mathjax_2_url': userprofile.mathjax_2_url,
+            'mathjax_4_url': userprofile.mathjax_4_url,
 
             'never_email': userprofile.never_email,
 

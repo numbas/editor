@@ -158,6 +158,11 @@ Custom
     It tries to match the level of contrast between your chosen :guilabel:`Background colour` and :guilabel:`Text colour`.
 
 
+When the page background is dark, images and diagrams will still be displayed on a white background, so that you're guaranteed to see the image as the question author designed it.
+There is an option called :guilabel:`Invert images in dark mode` which will invert all images and diagrams when the page's background is dark, in order to reduce the amount of white space.
+Bear in mind that while most diagrams remain legible with their colours inverted, photos can end up looking unnatural.
+
+
 Changing the appearance of text
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

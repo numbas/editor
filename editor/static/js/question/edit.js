@@ -1239,7 +1239,7 @@ $(document).ready(function() {
                 scope.setVariable(v.name(), v.value());
             });
 
-            var exam_variable_names = this.exam_variables.map(v => v.name());
+            var scope_variable_names = Object.keys(scope.allVariables());
 
             //make structure of variables to evaluate
             var todo = {};
@@ -1268,7 +1268,7 @@ $(document).ready(function() {
                     if(!tree) {
                         throw(new Numbas.Error('jme.variables.empty definition',{name:name}));
                     }
-                    var vars = jme.findvars(tree,exam_variable_names,scope);
+                    var vars = jme.findvars(tree, scope_variable_names, scope);
                     v.error('');
                 }
                 catch(e) {

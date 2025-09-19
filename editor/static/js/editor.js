@@ -1431,7 +1431,7 @@ $(document).ready(function() {
                         setup: function(ed) {
                             ed.on('keydown', function(oe) {
                                 // when inside a math environment, pressing the enter key adds a <br> instead of a paragraph break.
-                                if(oe.key != 'Enter' || oe.shiftKey || oe.ctrlKey || oe.altKey || oe.metaKey || !ed.getBody().classList.contains('in-maths')) {
+                                if(oe.key != 'Enter' || oe.shiftKey || oe.ctrlKey || oe.altKey || oe.metaKey || !element.classList.contains('in-maths')) {
                                     return;
                                 }
                                 oe.preventDefault();

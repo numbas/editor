@@ -740,7 +740,7 @@ $(document).ready(function() {
             }
             if(data.variable_overrides) {
                 this.questions().forEach(function(q,i) {
-                    data.variable_overrides[i].forEach(function(vod) {
+                    (data.variable_overrides[i] || []).forEach(function(vod) {
                         var v = q.variable_overrides().find(function(vo) { return vo.name==vod.name; });
                         if(v) {
                             v.definition(vod.definition);

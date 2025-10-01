@@ -2747,6 +2747,40 @@ Logic
         * ``true XOR true`` → ``false``
         * ``false XOR false`` → ``false``
 
+.. jme:function:: x nand y
+    :keywords: and, not, logical
+    :op: nand
+
+    Logical NAND.
+    Equivalent to ``not (x and y)``.
+    Returns ``true`` when at most one of ``x`` or ``y`` is true.
+    Returns ``false`` when ``x`` and ``y`` are both true.
+
+    **Definitions**:
+        * :data:`boolean`, :data:`boolean` → :data:`boolean`
+
+    **Examples**:
+        * ``true NAND false`` → ``true``
+        * ``true NAND true`` → ``false``
+        * ``false NAND false`` → ``true``
+
+.. jme:function:: x nor y
+    :keywords: or, not, logical
+    :op: nor
+
+    Logical NOR.
+    Equivalent to ``not (x or y)``.
+    Returns ``true`` when neither ``x`` nor ``y`` is true.
+    Returns ``false`` when either of ``x`` or ``y`` is true.
+
+    **Definitions**:
+        * :data:`boolean`, :data:`boolean` → :data:`boolean`
+
+    **Examples**:
+        * ``true NOR false`` → ``false``
+        * ``true NOR true`` → ``false``
+        * ``false NOR false`` → ``true``
+
 .. jme:function:: x implies y
     :keywords: logical, implication
     :op: implies

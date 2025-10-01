@@ -2437,6 +2437,32 @@ var jme_function_hints =
         "doc": "jme-reference"
     },
     {
+        "name": "nand",
+        "description": "Logical NAND.\nEquivalent to <code>not (x and y)</code>.\nReturns <code>true</code> when at most one of <code>x</code> or <code>y</code> is true.\nReturns <code>false</code> when <code>x</code> and <code>y</code> are both true.",
+        "keywords": [
+            "and",
+            "not",
+            "logical"
+        ],
+        "calling_patterns": [
+            "x nand y"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "nor",
+        "description": "Logical NOR.\nEquivalent to <code>not (x or y)</code>.\nReturns <code>true</code> when neither <code>x</code> nor <code>y</code> is true.\nReturns <code>false</code> when either of <code>x</code> or <code>y</code> is true.",
+        "keywords": [
+            "or",
+            "not",
+            "logical"
+        ],
+        "calling_patterns": [
+            "x nor y"
+        ],
+        "doc": "jme-reference"
+    },
+    {
         "name": "implies",
         "description": "Logical implication.\nIf <code>x</code> is true and <code>y</code> is false, then the implication is false.\nOtherwise, the implication is true.",
         "keywords": [

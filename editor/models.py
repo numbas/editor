@@ -1187,7 +1187,6 @@ class Folder(models.Model):
             queue += f.folders.all()
         return folders, items
     
-@reversion.register
 class EditorItem(models.Model, NumbasObject, ControlledObject):
     """
         Base model for exams and questions - each exam or question has a reference to an instance of this
@@ -1739,7 +1738,6 @@ def create_timelineitem(sender, instance, created, **kwargs):
             user = None
         TimelineItem.objects.create(object=instance, timeline=instance.timeline_object(), user=user)
 
-@reversion.register
 class NewQuestion(models.Model):
     editoritem = models.OneToOneField(EditorItem, on_delete=models.CASCADE, related_name='question')
 
@@ -1855,7 +1853,6 @@ def set_question_custom_part_types(instance, **kwargs):
     custom_part_types = CustomPartType.objects.filter(short_name__in=part_types)
     q.custom_part_types.add(*custom_part_types)
 
-@reversion.register
 class NewExam(models.Model):
     editoritem = models.OneToOneField(EditorItem, on_delete=models.CASCADE, related_name='exam')
 

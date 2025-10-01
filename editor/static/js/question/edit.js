@@ -1028,6 +1028,7 @@ $(document).ready(function() {
         },
 
         getVariable: function(name) {
+            name = name.split(/\s*,\s*/)[0];
             name = Numbas.jme.normaliseName(name);
             var variables = this.variables().concat(this.exam_variables);
             for(var i = 0; i<variables.length;i++) {

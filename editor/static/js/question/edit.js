@@ -1812,7 +1812,7 @@ $(document).ready(function() {
         ko.computed(function() {
             try {
                 if(this.used_or_required()) {
-                    if(!this.loaded()) {
+                    if(!this.loaded() && !ext.failed) {
                         try {
                             ext.load();
                         } catch(e) {
@@ -1862,12 +1862,14 @@ $(document).ready(function() {
             Promise.all(script_promises).then(function() {
                 Numbas.activateExtension(ext.location);
                 ext.loaded(true);
-                ext.resolve_loadPromise();
                 viewModel.regenerateVariables();
             }).catch(function(err) {
+                ext.failed = true;
                 console.error(err);
+                ext.error(err);
             }).finally(function() {
                 ext.loading(false);
+                ext.resolve_loadPromise();
             });
         }
     }

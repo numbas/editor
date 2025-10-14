@@ -386,12 +386,12 @@ $(document).ready(function() {
     }
     Extension.prototype = {
         load: function() {
+            if(this.loaded() || this.loading()) {
+                return;
+            }
             this.error(false);
             this.loading(true);
             var ext = this;
-            if(this.loaded()) {
-                return;
-            }
             var script_promises = [];
             this.scripts.forEach(function(name) {
                 var script = document.createElement('script');

@@ -129,6 +129,11 @@ window.writemaths = function(element) {
                 target += anchor.textContent.length;
             }
             anchor = anchor.parentElement;
+        } else {
+            target = 0;
+            for(let i=0; i<selection.anchorOffset; i++) {
+                target += anchor.childNodes[i].textContent.length;
+            }
         }
 
         let p = anchor;
@@ -139,7 +144,17 @@ window.writemaths = function(element) {
             p = p.parentElement;
         }
 
-        const txt = anchor.textContent;
+        let txt = '';
+        for(let n of anchor.childNodes) {
+            if(n.nodeType==n.ELEMENT_NODE && n.nodeName.toLowerCase()=='br') {
+                if(txt.length < target) {
+                    target += 1;
+                }
+                txt += '\n';
+            } else {
+                txt += n.textContent;
+            }
+        }
 
         const q = findMaths(txt, target);
 
@@ -149,13 +164,13 @@ window.writemaths = function(element) {
 
         const {math, startDelimiter, endDelimiter} = q;
 
+        element.classList.add('in-maths');
+
         if(!math.trim()) {
             return;
         }
 
         show_preview();
-
-        element.classList.add('in-maths');
 
         if(math != lastMath) {
             const tex = startDelimiter + math + endDelimiter;

@@ -1435,12 +1435,7 @@ $(document).ready(function() {
                                     return;
                                 }
                                 oe.preventDefault();
-                                ed.insertContent('<br data-math-br-hack="true"/>');
-                                ed.dom.fire(ed.selection.getNode(),'keydown',{keyCode:37,key:'ArrowDown'});
-                                var br = ed.getBody().querySelector('[data-math-br-hack="true"]');
-                                ed.selection.select(br);
-                                ed.selection.getRng(1).collapse(0);
-                                br.removeAttribute('data-math-br-hack');
+                                ed.dom.fire(ed.selection.getNode(),'keydown',{keyCode: 13, key:'Enter', shiftKey: true});
                             });
 
                         },

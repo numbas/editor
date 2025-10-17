@@ -28,7 +28,7 @@ window.measureText = function(element, str) {
         measurer.style['visibility'] = 'hidden';
     }
 
-    var keys = ['font-size','font-style', 'font-weight', 'font-family', 'line-height', 'text-transform', 'letter-spacing'];
+    var keys = ['font-size','font-style', 'font-weight', 'font-family', 'line-height', 'text-transform', 'letter-spacing', 'border-style'];
     var id = element.value+';'+keys.map(function(key) { return styles[key]; }).join(';');
     if(measureText_cache[id]) {
         return measureText_cache[id];

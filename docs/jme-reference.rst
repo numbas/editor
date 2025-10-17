@@ -1021,6 +1021,8 @@ Number operations
 
     **Example**:
         * ``withintolerance(pi,22/7,0.1)`` → ``true``
+        * ``withintolerance(1 + 0.11i, 1 + 1/10 i, 0.02)`` → ``true``
+        * ``withintolerance(1 + 0.11i, 2 + 1/10 i, 0.02)`` → ``false``
 
 .. jme:function:: dpformat(n,d,[style])
     :keywords: string, format, decimal, places, write

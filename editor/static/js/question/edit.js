@@ -404,10 +404,14 @@ $(document).ready(function() {
                 return scope;
             }
 
+            var seen_functions = {}
+
             functions.map(function(f) {
                 try {
                     const name = jme.normaliseName(f.name(), scope);
-                    var cfn = made_functions[name][0];
+                    var i = seen_functions[name] || 0;
+                    seen_functions[name] = i + 1;
+                    var cfn = made_functions[name][i];
 
                     var oevaluate = cfn.evaluate;
                     cfn.evaluate = function(args,scope) {

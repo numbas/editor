@@ -13,6 +13,7 @@
             </div>
         </div>
         {% property 'answer' 'Answer pattern' monospace=True help_url='question/parts/match-text-pattern.html#term-Answer-pattern' %}
+        {% booleanproperty 'allowEmpty' 'Allow the student to submit an empty answer?' monospace=True help_url='question/parts/match-text-pattern.html#term-Allow-the-student-to-submit-an-empty-answer' %}
         <div data-bind="fadeVisible: $parent.showCorrectAnswer() && matchMode().name=='regex'">
             {% property 'displayAnswer' 'Display answer' help_url='question/parts/match-text-pattern.html#term-Display-answer' %}
         </div>

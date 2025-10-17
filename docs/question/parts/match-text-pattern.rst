@@ -27,6 +27,11 @@ Marking
 
         You can substitute variables, the same as in content areas, by enclosing expressions in curly braces, e.g. ``{answervar}``. 
 
+    Allow the student to submit an empty answer?
+        If this is not ticked, then the student will be prevented from submitting an empty answer.
+
+        Tick this if entering nothing is a valid response for this part.
+
     Display answer
         A representative correct answer string to display to the student, in case they press the :guilabel:`Reveal answers` button. 
         You can substitute variables by enclosing expressions in curly braces, the same as in content areas.

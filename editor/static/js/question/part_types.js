@@ -605,6 +605,7 @@ part_types.models = [
                 displayAnswer: Editor.contentObservable(''),
                 caseSensitive: ko.observable(false),
                 partialCredit: ko.observable(0),
+                allowEmpty: ko.observable(false),
                 matchModes: [
                     {name: 'regex', niceName: 'Regular expression'},
                     {name: 'exact', niceName: 'Exact match'}
@@ -617,12 +618,12 @@ part_types.models = [
         toJSON: function(data) {
             data.answer = this.answer();
             data.displayAnswer = this.displayAnswer();
-            if(this.caseSensitive())
-            {
+            if(this.caseSensitive()) {
                 data.caseSensitive = this.caseSensitive();
                 data.partialCredit = this.partialCredit();
             }
             data.matchMode = this.matchMode().name;
+            data.allowEmpty = this.allowEmpty();
         },
 
         variable_references: function(part,model) {
@@ -634,7 +635,7 @@ part_types.models = [
         },
 
         load: function(data) {
-            tryLoad(data,['answer','displayAnswer','caseSensitive','partialCredit','matchMode'],this);
+            tryLoad(data,['answer','displayAnswer','caseSensitive','partialCredit','matchMode','allowEmpty'],this);
             for(var i=0;i<this.matchModes.length;i++) {
                 if(this.matchModes[i].name == this.matchMode())
                     this.matchMode(this.matchModes[i]);

@@ -203,7 +203,7 @@ class BaseUpdateView(generic.UpdateView):
         raise NotImplementedError
 
     def form_valid(self, form):
-        with transaction.atomic(), reversion.create_revision():
+        with transaction.atomic():
             self.object = form.save(commit=False)
             self.pre_save(form)
             self.object.editoritem.taxonomy_nodes.clear()
@@ -214,8 +214,6 @@ class BaseUpdateView(generic.UpdateView):
             Contributor.objects.get_or_create(item=self.object.editoritem,user=self.user)
 
             self.object.save()
-
-            reversion.set_user(self.user)
 
         return http.HttpResponse(json.dumps(self.form_valid_response_dict(form)), content_type='application/json')
 
@@ -267,7 +265,6 @@ class BaseUpdateView(generic.UpdateView):
 
         if self.editable:
             self.item_json['access_rights'] = context['access_rights']
-            context['versions'] = [] # reversion.get_for_object(self.object)
 
         context['stamp_choices'] = editor.models.STAMP_STATUS_CHOICES
 

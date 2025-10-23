@@ -6,7 +6,7 @@ django-el-pagination==4.1.2
 git+https://github.com/christianp/django-html_sanitizer.git@django4compat#egg=django-html_sanitizer # 2022-08-23: fork with django 4.0 compatibility; the project seems unmaintained
 git+https://github.com/openwisp/django-notifications@django-5.x#egg=django-notifications-hq # 2025-04-10: fork with django 5.0 compatibility
 django-registration-redux==2.13
-django-reversion==5.1.0
+django-reversion==6.0.0
 django-tables2==2.7.5
 django-taggit==6.1.0
 django-uuslug==2.0.0

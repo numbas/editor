@@ -149,6 +149,7 @@ class SetRestorePointView(generic.UpdateView, TimelineItemViewMixin):
 
         with reversion.create_revision():
             obj.save()
+            obj.editoritem.save()
             reversion.set_user(request.user)
 
         revision = reversion.models.Version.objects.get_for_object(obj).first().revision

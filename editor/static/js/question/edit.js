@@ -1175,7 +1175,7 @@ $(document).ready(function() {
                     if(!tree) {
                         throw("no tree");
                     }
-                    var is_random = Numbas.jme.isRandom(tree,prep.scope);
+                    var is_random = !Numbas.jme.isDeterministic(tree, prep.scope) && Numbas.jme.isRandom(tree,prep.scope);
                     v.random(is_random);
                 } catch(e) {
                     v.random(false);

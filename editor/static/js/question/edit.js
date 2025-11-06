@@ -364,6 +364,7 @@ $(document).ready(function() {
             var functions = this.functions();
 
             var function_defs = functions.map(function(f) {
+                f.error('');
                 try {
                     var def = {
                         name: f.name().toLowerCase(),

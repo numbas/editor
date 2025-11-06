@@ -114,7 +114,7 @@ $(document).ready(function() {
             definition: [
                 {
                     name: 'allowResize',
-                    label: 'Allow student to change size of matrix??',
+                    label: 'Allow student to change size of matrix?',
                     input_type: 'checkbox',
                     default_value: true
                 },

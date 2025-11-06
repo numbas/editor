@@ -386,36 +386,36 @@ $(document).ready(function() {
     }
     Extension.prototype = {
         load: function() {
-            if(this.loaded() || this.loading()) {
-                return;
-            }
-            this.error(false);
-            this.loading(true);
-            var ext = this;
-            var script_promises = [];
-            this.scripts.forEach(function(name) {
-                var script = document.createElement('script');
-                script.setAttribute('src', ext.script_url+name);
-                var promise = new Promise(function(resolve,reject) {
-                    script.addEventListener('load',function(e) {
-                        resolve(e);
+            if(!(this.loaded() || this.loading())) {
+                this.error(false);
+                this.loading(true);
+                var ext = this;
+                var script_promises = [];
+                this.scripts.forEach(function(name) {
+                    var script = document.createElement('script');
+                    script.setAttribute('src', ext.script_url+name);
+                    var promise = new Promise(function(resolve,reject) {
+                        script.addEventListener('load',function(e) {
+                            resolve(e);
+                        });
+                        script.addEventListener('error',function(e) {
+                            reject(e);
+                        });
                     });
-                    script.addEventListener('error',function(e) {
-                        reject(e);
-                    });
+                    script_promises.push(promise);
+                    document.head.appendChild(script);
                 });
-                script_promises.push(promise);
-                document.head.appendChild(script);
-            });
-            return Promise.all(script_promises).then(function() {
-                Numbas.activateExtension(ext.location);
-                ext.loaded(true);
-            }).catch(function(err) {
-                console.error(err);
-                ext.error(true);
-            }).finally(function() {
-                ext.loading(false);
-            });
+                this.load_promise = Promise.all(script_promises).then(function() {
+                    Numbas.activateExtension(ext.location);
+                    ext.loaded(true);
+                }).catch(function(err) {
+                    console.error(err);
+                    ext.error(true);
+                }).finally(function() {
+                    ext.loading(false);
+                });
+            }
+            return this.load_promise;
         }
     };
 

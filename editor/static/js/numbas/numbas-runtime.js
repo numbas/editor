@@ -2069,15 +2069,15 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
         'number': function(tok) {
             this.addoutput(tok);
         },
-            'integer': function(tok) {
-                this.addoutput(tok);
-            },
-            'string': function(tok) {
-                this.addoutput(tok);
-            },
-            'boolean': function(tok) {
-                this.addoutput(tok);
-            },
+        'integer': function(tok) {
+            this.addoutput(tok);
+        },
+        'string': function(tok) {
+            this.addoutput(tok);
+        },
+        'boolean': function(tok) {
+            this.addoutput(tok);
+        },
         'name': function(tok) {
             var i = this.i;
             // if followed by an open bracket, this is a function application
@@ -23002,6 +23002,9 @@ var negate = math.negate;
  * @memberof Numbas.math
  */
 var Fraction = math.Fraction = function(numerator, denominator) {
+    if(denominator === undefined) {
+        denominator = 1;
+    }
     if(denominator < 0) {
         numerator = -numerator;
         denominator = -denominator;

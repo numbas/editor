@@ -224,8 +224,10 @@ class SetAccessView(generic.UpdateView):
 
         existing_accesses = item.access.all()
 
-        user_ids = [int(x) for x in self.request.POST.getlist('user_ids[]')]
-        access_levels = self.request.POST.getlist('access_levels[]')
+        data = json.loads(request.body.decode('utf-8'))
+
+        user_ids = data.get('user_ids',[])
+        access_levels = data.get('access_levels',[])
 
         access_dict = {u:a for u,a in zip(user_ids, access_levels)}
 

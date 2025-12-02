@@ -2690,6 +2690,8 @@ Logic
     Logical AND.
     Returns ``true`` if both ``x`` and ``y`` are true, otherwise returns ``false``.
 
+    Evaluated lazily: if the left-hand argument is ``true``, the right-hand argument is not evaluated.
+
     **Definitions**:
         * :data:`boolean`, :data:`boolean` → :data:`boolean`
         * :data:`set`, :data:`set` → :data:`set`
@@ -2723,6 +2725,8 @@ Logic
     Logical OR.
     Returns ``true`` when at least one of ``x`` and ``y`` is true.
     Returns false when both ``x`` and ``y`` are false.
+
+    Evaluated lazily: if the left-hand argument is ``true``, the right-hand argument is not evaluated.
 
     **Definitions**:
         * :data:`boolean`, :data:`boolean` → :data:`boolean`
@@ -2758,6 +2762,8 @@ Logic
     Returns ``true`` when at most one of ``x`` or ``y`` is true.
     Returns ``false`` when ``x`` and ``y`` are both true.
 
+    Evaluated lazily: if the left-hand argument is ``false``, the right-hand argument is not evaluated.
+
     **Definitions**:
         * :data:`boolean`, :data:`boolean` → :data:`boolean`
 
@@ -2775,6 +2781,8 @@ Logic
     Returns ``true`` when neither ``x`` nor ``y`` is true.
     Returns ``false`` when either of ``x`` or ``y`` is true.
 
+    Evaluated lazily: if the left-hand argument is ``true``, the right-hand argument is not evaluated.
+
     **Definitions**:
         * :data:`boolean`, :data:`boolean` → :data:`boolean`
 
@@ -2790,6 +2798,8 @@ Logic
     Logical implication.
     If ``x`` is true and ``y`` is false, then the implication is false.
     Otherwise, the implication is true.
+
+    Evaluated lazily: if the left-hand argument is ``false``, the right-hand argument is not evaluated.
 
     **Definitions**:
         * :data:`boolean`, :data:`boolean` → :data:`boolean`

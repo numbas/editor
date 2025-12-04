@@ -353,6 +353,10 @@ This tab provides tools to test your variables for desired properties, so you ca
     While this tool allows you to pick sets of variables that would be hard to generate constructively, it's a random process so you must be aware that there's a chance no suitable set of values will ever be found. 
     Use the :guilabel:`Test condition` button to see how likely this is.
 
+.. note::
+    If you're using :jme:func:`seedrandom` to generate variables deterministically, you need to ensure that you use a different seed on each attempt to generate variables.
+    The variable ``variable_generation_run_number`` counts the number of attempts that have been made to generate variables, so you can use that as part of your seed value.
+
 .. glossary::
 
     Condition to satisfy

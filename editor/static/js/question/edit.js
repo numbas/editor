@@ -572,10 +572,12 @@ $(document).ready(function() {
         },this);
 
         const random_int_string = () => new Numbas.jme.types.TString(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)+'');
+        let variable_generation_run_number = 0;
 
         this.exam_variables = Object.entries({
             'initial_seed': random_int_string,
             'student_id': random_int_string,
+            'variable_generation_run_number': () => new Numbas.jme.types.TString((variable_generation_run_number++).toString()),
         }).map(([name, value_generator]) => {
             const v = new Variable(q);
             v.is_exam_variable = true;

@@ -143,6 +143,18 @@ table.variable-list .value-cell .value-wrapper {
 .panel.variable-groups {
     max-height: 40em;
     overflow-y: auto;
+    position: relative;
+}
+
+.panel.variable-groups .panel-heading {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+.panel.variable-groups .panel-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: calc(var(--total) - var(--n));
 }
 
 .extensions {

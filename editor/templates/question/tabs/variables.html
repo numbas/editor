@@ -80,7 +80,7 @@
                     }">
                         <span data-bind="text: $data.name"></span>
                     </div>
-                    <div class="panel-footer">
+                    <div class="panel-footer" data-bind="attr: {style: '--n: '+$index()+'; --total: '+$root.allVariableGroups().length}">
                         {% if editable %}
                         <button id="add-variable-button" type="button" class="btn btn-default add-variable" data-bind="click: addVariable, attr: {title: (variables().length ? 'Add another variable' : 'Add a variable')+' to '+name()}">
                             <span class="glyphicon glyphicon-plus"></span>

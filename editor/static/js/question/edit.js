@@ -1325,6 +1325,10 @@ $(document).ready(function() {
             var scope = result.scope = new jme.Scope([prep.scope]);
             var todo = prep.todo;
 
+            this.exam_variables.forEach(function(v) {
+                scope.setVariable(v.name(), v.value());
+            });
+
             var errors = [];
 
             function computeVariable(name,todo,scope,path,computeFn) {

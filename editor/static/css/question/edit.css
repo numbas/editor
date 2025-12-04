@@ -141,7 +141,7 @@ table.variable-list .value-cell .value-wrapper {
 }
 
 .panel.variable-groups {
-    max-height: 40em;
+    max-height: calc(100svh - 36em);
     overflow-y: auto;
     position: relative;
 }

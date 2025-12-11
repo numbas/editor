@@ -1,3 +1,7 @@
+summary {
+    display: revert;
+}
+
 .nothing-here {
     font-style: italic;
 }

@@ -51,7 +51,7 @@
                         const tok = jme.evaluate(expr, scope);
                         tex = maybe_wrap_tex(jme.display.texify({tok}, settings, scope));
                     } else {
-                        const res = Editor.texJMEBit(expr, settings, null, scope);
+                        const res = Editor.texJMEBit(expr, settings, scope);
                         tex = `\\class{jme-var}{\\left\\{${res.tex || res.message}\\right\\}}`;
                     }
 
@@ -88,7 +88,7 @@
                         const subbed_tree = Numbas.jme.display.subvars(expr, scope);
                         tex = maybe_wrap_tex(Numbas.jme.display.treeToLaTeX(subbed_tree, ruleset, scope));
                     } else {
-                        const res = Editor.texJMEBit(expr, ruleset, null, scope);
+                        const res = Editor.texJMEBit(expr, ruleset, scope);
                         tex = `\\class{jme-simplify}{\\left\\{${res.tex || res.message}\\right\\}}`;
                     }
 

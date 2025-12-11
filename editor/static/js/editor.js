@@ -91,8 +91,9 @@ $(document).ready(function() {
         }
     }
 
-    var wrap_subvar = Editor.wrap_subvar = function(expr) {
-        var sbits = Numbas.util.splitbrackets(expr,'{','}');
+    var wrap_subvar = Editor.wrap_subvar = function(expr, notation) {
+        const [l,r] = notation.subvars_delimiters;
+        var sbits = Numbas.util.splitbrackets(expr,l,r);
         var out = '';
         for(var j=0;j<sbits.length;j+=1) {
             out += j%2 ? ' subvar('+sbits[j]+')' : sbits[j]; //subvar here instead of \\color because we're still in JME
@@ -100,9 +101,9 @@ $(document).ready(function() {
         return out;
     }
 
-    Editor.texJMEBit = function(expr,rules,parser,scope) {
+    Editor.texJMEBit = function(expr, rules, scope, notation) {
         rules = rules || 'basic';
-        parser = parser || scope.parser || Numbas.jme.standardParser;
+        notation = notation || scope.notation || Numbas.jme.notations.standard;
         scope = new Numbas.jme.Scope(scope || Numbas.jme.builtinScope);
         try{
             if(viewModel && viewModel.rulesets) {
@@ -110,8 +111,8 @@ $(document).ready(function() {
                     scope.setRuleset(r.name(), Numbas.jme.collectRuleset(r.sets(),scope.allRulesets()));
                 });
             }
-            expr = wrap_subvar(expr);
-            var tex = Numbas.jme.display.exprToLaTeX(expr,rules,scope,parser);
+            expr = wrap_subvar(expr, notation);
+            var tex = Numbas.jme.display.exprToLaTeX(expr,rules,scope,notation);
             return {tex: tex, error: false};
         } catch(e) {
             var tex = e.message.replace(/<\/?(code|em|strong)>/g,'');
@@ -2016,10 +2017,10 @@ $(document).ready(function() {
         update: function(element,valueAccessor,allBindingsAccessor) {
             var value = ko.unwrap(valueAccessor());
             var allBindings = allBindingsAccessor();
-            var parser = allBindings.parser || Numbas.jme.standardParser;
             var scope = find_jme_scope(element).scope || Numbas.jme.builtinScope;
             var rules = ko.unwrap(allBindings.rules);
-            var res = Editor.texJMEBit(value,rules,parser,scope);
+            var notation = ko.unwrap(allBindings.notation);
+            var res = Editor.texJMEBit(value, rules, scope, notation);
             element.classList.toggle('jme-error',res.error);
             if(res.error) {
                 element.innerHTML = res.message;

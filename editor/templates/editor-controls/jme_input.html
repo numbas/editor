@@ -3,4 +3,4 @@
     autosize: {max: 500, min: 30, padding: 10, value: {{property}} },
     {% if dynamic_id %}attr: {id: {{id}}}{% endif %}
 "/>
-<output {% if not dynamic_id %}for="{{id}}"{% endif %} data-bind="JME: {{display_property}}{% if parser %}, parser: {{parser}}{% endif %}{% if rules %}, rules: {{rules}}{% endif %}, attr: { {% if dynamic_id %}for: {{id}}{% endif %} }" class="jme-preview"></output>
+<output {% if not dynamic_id %}for="{{id}}"{% endif %} data-bind="JME: {{display_property}}{% if notation %}, notation: {{notation}}{% endif %}{% if rules %}, rules: {{rules}}{% endif %}, attr: { {% if dynamic_id %}for: {{id}}{% endif %} }" class="jme-preview"></output>

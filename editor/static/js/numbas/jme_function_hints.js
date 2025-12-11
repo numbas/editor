@@ -3452,8 +3452,8 @@ var jme_function_hints =
             "compile"
         ],
         "calling_patterns": [
-            "expression(string)",
-            "parse(string)"
+            "expression(string, [notation_name])",
+            "parse(string, [notation_name])"
         ],
         "doc": "jme-reference"
     },

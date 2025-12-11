@@ -2205,7 +2205,7 @@ Strings
 
     Convert ``x`` to a string.
 
-    When converting a :data:`expression` value to a string, you can give a list of :ref:`display options <jme-display-options>` as a second argument, either as a comma-separated string or a list of strings.
+    When converting a :data:`expression` value to a string, you can give a list of :ref:`display options <jme-display-options>` as a second argument, either as a comma-separated string or a list of strings, and a :ref:`JME notation <jme-notations>` name
 
     **Definitions**:
         * :data:`number` → :data:`string` - rendered using the ``plain-en`` :ref:`notation style <number-notation>`.
@@ -2215,12 +2215,14 @@ Strings
         * :data:`name` → :data:`string`
         * :data:`expression` → :data:`string`
         * :data:`expression`, :data:`string` or :data:`list of string` → :data:`string`
+        * :data:`expression`, :data:`string` or :data:`list of string`, :data:`string` → :data:`string`
 
     **Example**:
         * ``string(123)`` → ``"123"``
         * ``string(x)`` → ``"x"``
         * ``string(expression("0.5"))`` → ``"0.5"``
         * ``string(expression("0.5"),"fractionNumbers")`` → ``"1/2"``
+        * ``string(expression("set([1,2])"),"","set_theory")`` → ``"{1, 2}"``
 
 
 .. jme:function:: jme_string(x)
@@ -3976,8 +3978,8 @@ There are functions to construct sub-expressions from strings of code, or by joi
 
 Once you've got a sub-expression, you can evaluate it to a normal JME data type, test if it matches a :ref:`pattern <pattern-matching>`, substitute values or other sub-expressions for free variables, rearrange using :ref:`simplification rules <simplification-rules>`, or test if it is equivalent to another sub-expression.
 
-.. jme:function:: expression(string)
-                  parse(string)
+.. jme:function:: expression(string, [notation_name])
+                  parse(string, [notation_name])
     :keywords: parse, jme, compile
     :noexamples:
 
@@ -3986,6 +3988,9 @@ Once you've got a sub-expression, you can evaluate it to a normal JME data type,
 
     ``parse(string)`` is a synonym for ``expression(string)``.
 
+    You can optionally give the name of a :ref:`JME notation <jme-notations>` to use when parsing the string.
+    If you don't give this argument, the standard JME notation is used.
+
     .. warning::
 
         Note that the argument to ``expression`` is evaluated using the same rules as any other JME expression, so for example ``expression("2" + "x")`` is equivalent to ``expression("2x")``, not ``expression("2 + x")``.
@@ -3993,9 +3998,12 @@ Once you've got a sub-expression, you can evaluate it to a normal JME data type,
 
     **Definitions**:
         * :data:`string` → :data:`expression`
+        * :data:`string`, :data:`string` → :data:`expression`
 
-    **Example**:
+    **Examples**:
         * `A question using randomly chosen variable names <https://numbas.mathcentre.ac.uk/question/20358/randomise-variable-names-expression-version/>`_.
+        * ``parse("(1,2)", "vector_shorthand") = parse("vector(1,2)")``
+        * ``parse("(1,2)", "real_interval") = parse("interval(1,2,false,false)")``
 
 
 .. jme:function:: eval(expression, values)

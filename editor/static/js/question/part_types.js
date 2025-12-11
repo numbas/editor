@@ -67,7 +67,7 @@ part_types.models = [
         }
     },
     {
-        name:'jme', 
+        name: 'jme', 
         niceName: 'Mathematical expression', 
         description: 'Ask the student to enter an algebraic expression, using JME syntax.',
         help_url: HELP_URL + 'question/parts/mathematical-expression.html',
@@ -77,7 +77,14 @@ part_types.models = [
         has_marking_settings: true,
         tabs: function(part,model) {
             var restrictions_tab_in_use = ko.computed(function() {
-                return model.mustmatchpattern.pattern()!='' || model.maxlength.length()!=0 || model.minlength.length()!=0 || model.musthave.strings().length>0 || model.notallowed.strings().length>0;
+                return (
+                    model.mustmatchpattern.pattern()!='' 
+                    || model.maxlength.length()!=0
+                    || model.minlength.length()!=0
+                    || model.musthave.strings().length>0
+                    || model.notallowed.strings().length>0
+                    || model.functionSets().some(s => !s.used())
+                );
             });
             var accuracy_tab_in_use = ko.computed(function() {
                 return model.valueGenerators().some(function(v){ return v.value()!=''; });
@@ -222,6 +229,60 @@ part_types.models = [
                 });
             },model);
 
+            var _functionSets = {};
+            model.functionSets = ko.computed(function() {
+                const defined_sets = this.scope().allFunctionSets();
+                for(let x of Object.keys(_functionSets)) {
+                    if(!defined_sets[x]) {
+                        delete _functionSets[x];
+                    }
+                }
+                Object.entries(defined_sets).forEach(([name,set]) => {
+                    if(!_functionSets[name]) {
+                        const extension = part.q.usedExtensions().find((ext) => {
+                            const next = Numbas.extensions[ext.location];
+                            if(!next) {
+                                return false;
+                            }
+                            return Object.values(next.scope.function_sets).some(s2 => s2 == set);
+                        });
+
+                        const help_url = extension ? extension.url : `${HELP_URL}jme-reference.html`;
+
+                        _functionSets[name] = {
+                            set,
+                            used: ko.observable(true),
+                            function_names: [...new Set(set.functions.map(f => f.name))],
+                            help_url
+                        }
+                    }
+                });
+                return Object.values(_functionSets);
+            },model);
+
+            model.used_functionSets = ko.pureComputed(function() {
+                return this.functionSets().filter(s=>s.used());
+            },model);
+
+            model.select_all_functionSets = function() {
+                model.functionSets().forEach(s => s.used(true));
+            }
+
+            model.deselect_all_functionSets = function() {
+                model.functionSets().forEach(s => s.used(false));
+            }
+
+            model.functionSetSearch = ko.observable('');
+
+            model.shown_functionSets = ko.computed(function() {
+                const query = model.functionSetSearch().toLowerCase().trim();
+                return this.functionSets().filter(({set, function_names}) => ([set.name].concat(function_names)).some(name => name.toLowerCase().contains(query)));
+            }, model);
+
+            model.enabledFunctions = ko.observableArray([]);
+
+            model.disabledFunctions = ko.observableArray([]);
+
             model.mustmatchpattern.capturedNames = ko.computed(function() {
                 var pattern = this.mustmatchpattern.pattern();
                 try {
@@ -307,6 +368,10 @@ part_types.models = [
                 var name = Numbas.jme.builtinScope.normaliseSubscripts(tok).name;
                 return {name: name, value: d.value()};
             });
+
+            data.functionsets = this.functionSets().filter(f => f.used()).map(f => f.set.name);
+            data.enabledfunctions = this.enabledFunctions();
+            data.disabledfunctions = this.disabledFunctions();
         },
 
         variable_references: function(part,model) {
@@ -325,7 +390,7 @@ part_types.models = [
         },
 
         load: function(data) {
-            tryLoad(data,['answer','answerSimplification','checkVariableNames','singleLetterVariables','allowUnknownFunctions','implicitFunctionComposition','caseSensitive','showPreview','failureRate'],this);
+            tryLoad(data,['answer','answerSimplification','checkVariableNames','singleLetterVariables','allowUnknownFunctions','implicitFunctionComposition','caseSensitive','showPreview','failureRate','enabledFunctions','disabledFunctions'],this);
             var checkingType = tryGetAttribute(data,'checkingType');
             for(var i=0;i<this.checkingTypes.length;i++) {
                 if(this.checkingTypes[i].name == checkingType)
@@ -344,6 +409,11 @@ part_types.models = [
             tryLoad(tryGetAttribute(data,'mustHave'),['strings','showStrings','partialCredit','message'],this.musthave);
             tryLoad(tryGetAttribute(data,'notAllowed'),['strings','showStrings','partialCredt','message'],this.notallowed);
             tryLoad(tryGetAttribute(data,'mustMatchPattern'),['pattern', 'partialCredit', 'message', 'nameToCompare', 'warningTime'],this.mustmatchpattern);
+
+            var functionSets = tryGetAttribute(data, 'functionSets') || [];
+            this.functionSets().forEach(({set,used}) => {
+                used(functionSets.indexOf(set.name) >= 0);
+            });
             
             var valueGenerators = tryGetAttribute(data,'valueGenerators');
             if(valueGenerators) {

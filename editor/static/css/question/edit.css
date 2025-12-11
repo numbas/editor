@@ -268,6 +268,19 @@ table.variable-list .value-cell .value-wrapper {
     margin-bottom: 8rem;
 }
 
+.part .function-sets > li {
+    display: flex;
+    gap: 1em;
+    align-items: baseline;
+    margin-bottom: 1em;
+}
+.part .function-sets li > label {
+    flex-shrink: 0;
+}
+.part .function-sets li .functions-in-set {
+    flex-grow: 1;
+}
+
 .jme-value {
     font-family: monospace;
 }
@@ -434,4 +447,16 @@ table.variable-list .value-cell .value-wrapper {
     display: flex;
     align-items: center;
     gap: 0.5em;
+}
+
+.part .function-sets {
+    max-height: 50svh;
+    overflow-y: auto;
+}
+
+.part .function-sets .functions-in-set code {
+    background: white;
+}
+.part .function-sets .functions-in-set {
+    margin-bottom: 0.5lh;
 }

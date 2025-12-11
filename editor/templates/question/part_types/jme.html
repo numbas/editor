@@ -123,6 +123,52 @@
 
     <hr>
 
+    <h4>Allowed functions</h4>
+    <p class="help-block">Choose the functions and operations that students can use in their answers.</p>
+
+    <p>
+        <button type="button" class="btn btn-sm" data-bind="disable: used_functionSets().length==functionSets().length, click: select_all_functionSets">Select all</button>
+        <button type="button" class="btn btn-sm" data-bind="disable: used_functionSets().length==0, click: deselect_all_functionSets">Deselect all</button>
+        <label class="form-inline">
+            Search
+            <input class="form-control" type="search" data-bind="textInput: functionSetSearch" placeholder="Function or set name">
+        </label>
+    </p>
+    <div class="well function-sets">
+        <ul data-bind="foreach: shown_functionSets">
+            <li>
+                <input data-bind="attr: {id: 'function-set-'+set.name}, checked: used" type="checkbox">
+                <label data-bind="attr: {for: 'function-set-'+set.name}, text: set.description"></label>
+                <details class="functions-in-set">
+                    <summary data-bind="text: function_names.length+Numbas.util.pluralise(function_names.length, ' function', ' functions')"></summary>
+                    <ul data-bind="foreach: function_names" class="list-inline">
+                        <li><a data-bind="attr: {href: $parent.help_url + '#' + $data}" target="numbasquickhelp"><code data-bind="text: $data"></code></a></li>
+                    </ul>
+                </details>
+            </li>
+        </ul>
+    </div>
+
+    <div class="form-group clearfix">
+        <label for="input-enabled-functions" class="{{form_label_class}} control-label">
+            Individual allowed functions {% helplink 'question/parts/mathematical-expression.html#term-Individual-allowed-functions' %}
+        </label>
+        <div class="{{form_control_class}}">
+            <listbox params="id: 'input-enabled-functions', items: enabledFunctions{% if not editable %}, disabled: true{% endif %}"></listbox>
+        </div>
+    </div>
+
+    <div class="form-group clearfix">
+        <label for="input-disabled-functions" class="{{form_label_class}} control-label">
+            Individual forbidden functions {% helplink 'question/parts/mathematical-expression.html#term-Individual-forbidden-functions' %}
+        </label>
+        <div class="{{form_control_class}}">
+            <listbox params="id: 'input-disabled-functions', items: disabledFunctions{% if not editable %}, disabled: true{% endif %}"></listbox>
+        </div>
+    </div>
+
+    <hr>
+
     <h4>String restrictions</h4>
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         {% property 'minlength.length' 'Minimum length' min=0 help_url='question/parts/mathematical-expression.html#term-Minimum-length-restriction' %}

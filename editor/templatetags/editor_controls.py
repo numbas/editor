@@ -45,7 +45,7 @@ def property_tag(context, property_name, label, *args, **kwargs):
 def jme_input(context, property_name, *args, **kwargs):
     context.update({
         'property': property_name,
-        'parser': kwargs.get('parser'),
+        'notation': kwargs.get('notation'),
         'rules': kwargs.get('rules'),
         'disable': kwargs.get('disable', False),
         'display_property': kwargs.get('display_property', property_name),
@@ -62,7 +62,7 @@ def jmeproperty(context, property_name, label, *args, **kwargs):
         'dynamic_label': kwargs.get('dynamic_label', False),
         'help_url': kwargs.get('help_url'),
         'disable': kwargs.get('disable', False),
-        'parser': kwargs.get('parser'),
+        'notation': kwargs.get('notation'),
         'rules': kwargs.get('rules'),
         'display_property': kwargs.get('display_property',property_name),
         'form_label_class': context.get('form_label_class', 'col-sm-3'),

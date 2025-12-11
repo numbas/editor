@@ -4600,7 +4600,7 @@ $(document).ready(function() {
 
     Numbas.queueScript('knockout',[], function() {});
 
-    var deps = ['jme-display','jme-variables','jme','editor-extras','marking','json', 'answer-widgets', 'display-util'];
+    var deps = ['jme-display', 'jme-notations', 'jme-variables', 'jme', 'editor-extras', 'marking', 'json', 'answer-widgets', 'display-util', 'part'];
     Numbas.queueScript('start-editor',deps,function() {
         Numbas.display_util.set_jme_scope(document.body, Numbas.jme.builtinScope);
         try {

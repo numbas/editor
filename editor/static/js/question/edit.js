@@ -410,6 +410,9 @@ $(document).ready(function() {
             functions.map(function(f) {
                 try {
                     const name = jme.normaliseName(f.name(), scope);
+                    if(!name) {
+                        return;
+                    }
                     var i = seen_functions[name] || 0;
                     seen_functions[name] = i + 1;
                     var cfn = made_functions[name][i];

@@ -19,6 +19,10 @@ Numbas.queueScript('go',['start-exam', 'display'], async function() {
         root_element.append(extension_data_script);
 
         container.append(root_element);
+
+        root_element.addEventListener('numbas:loaded', ({detail}) => {
+            Numbas.exam = detail.exam;
+        });
     }
 
     Numbas.get_exam_init_data = function() {

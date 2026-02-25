@@ -17611,8 +17611,9 @@ if(res) { \
             return {parameters: []};
         }
         var p = this;
+        const replacements = new jme.types.TList(this.getErrorCarriedForwardReplacements().map(r => scope.getVariable(r.variable)));
         var cache = this.pre_submit_cache.find(function(c) {
-            return c.exec_path == exec_path && util.eq(studentAnswer, c.studentAnswer, scope);
+            return c.exec_path == exec_path && util.eq(studentAnswer, c.studentAnswer, scope) && util.eq(replacements, c.replacements, scope);
         });
         if(cache) {
             return {parameters: cache.results};
@@ -17638,6 +17639,7 @@ if(res) { \
             p.pre_submit_cache.push({
                 exec_path: exec_path,
                 studentAnswer: studentAnswer,
+                replacements: replacements,
                 results: results
             });
         });
@@ -19031,6 +19033,13 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             }
             q.generateVariables();
             q.signals.on(['variablesSet', 'partsGenerated'], function() {
+                Object.entries(qobj.interactive_state || {}).forEach(([name, state]) => {
+                    const tok = q.scope.getVariable(name);
+                    if(!tok) {
+                        return;
+                    }
+                    tok.resume_interactive_state(state);
+                });
                 q.parts.forEach(function(part) {
                     part.resume();
                 });
@@ -30130,9 +30139,11 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
         }
         var pobj = this.store.loadPart(this);
         if(pobj.studentAnswer !== undefined) {
-            this.stagedAnswer = pobj.studentAnswer.matrix;
-            this.stagedAnswer.rows = pobj.studentAnswer.rows;
-            this.stagedAnswer.columns = pobj.studentAnswer.columns;
+            this.stagedAnswer = pobj.studentAnswer.matrix || [];
+            if(this.stagedAnswer !== undefined) {
+                this.stagedAnswer.rows = pobj.studentAnswer.rows;
+                this.stagedAnswer.columns = pobj.studentAnswer.columns;
+            }
         }
     },
     finaliseLoad: function() {
@@ -30342,6 +30353,7 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
         } else {
             this.studentAnswerRows = 0;
             this.studentAnswerColumns = 0;
+            this.stagedAnswer = [];
         }
         this.studentAnswer = this.stagedAnswer;
     },

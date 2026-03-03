@@ -116,6 +116,32 @@ Variables
         If this is ticked, the multiplication symbol (or implicit multiplication) will be interpreted as function composition when the right-hand side is a function application with one argument, and the left-hand side is the name of a function defined in JME.
         For example, ``ln * abs(x)`` and ``ln abs(x)`` will be interpreted as ``ln(abs(x))``.
 
+.. _mathematical-expression-allowed-functions:
+
+Allowed functions
+-----------------
+
+Choose the functions and operations available to the student.
+
+By default, all :ref:`defined functions <jme-functions>` are available.
+You can disable individual sets of functions, or click :guilabel:`Deselect all` and then enable just the sets that the student will need.
+
+Functions are grouped by topic, so you can quickly pick sets of functions that go together.
+You can also allow or forbid individually named functions.
+
+You might want to do this to prevent a student from using a function which would make the question trivial.
+For example, when asking the student to write :math:`\sin(x)` in terms of exponentials, you might disable the "trigonometric functions" set, but allow "arithmetic operations" and "exponentials, logarithms and roots".
+
+.. glossary::
+
+    Individual allowed functions
+        These functions will be added to the evaluation scope, after any chosen function sets.
+
+    Individual forbidden functions
+        These functions will be removed from the evaluation scope, after any chosen function sets or individual allowed functions are added.
+
+        For example, if you want the student to define :math:`\cos(x)` in terms of :math:`\sin(x)`, you might allow all function sets and then add ``sin`` to the list of individual forbidden functions.
+
 String restrictions
 -------------------
 

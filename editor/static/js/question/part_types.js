@@ -295,7 +295,11 @@ part_types.models = [
 
             model.shown_functionSets = ko.computed(function() {
                 const query = model.functionSetSearch().toLowerCase().trim();
-                return this.functionSets().filter(({set, function_names}) => ([set.name].concat(function_names)).some(name => name.toLowerCase().contains(query)));
+                const hint_keywords = Object.fromEntries(jme_function_hints.map(d => [d.name, d.keywords]));
+                return this.functionSets().filter(({set, function_names}) => {
+                    const keywords = function_names.flatMap(name => hint_keywords[name] || []);
+                    return ([set.name].concat(function_names).concat(keywords)).some(name => name.toLowerCase().contains(query))
+                });
             }, model);
 
             model.enabledFunctions = ko.observableArray([]);

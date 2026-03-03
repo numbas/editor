@@ -18,6 +18,10 @@ Expressions are strings of text, made of *variable names*, *literal values*, *gr
 Whitespace (space characters, tabs, newlines, etc.) can be used to separate literal values, for example ``a 2`` is not interpreted the same as ``a2``. 
 For all other purposes, whitespace is ignored.
 
+Numbas supports several different :ref:`jme-notations`.
+Most of this page is about the :term:`standard <jme-notation-standard>` notation.
+The subsections below describe the syntax of the standard notation.
+
 .. _variable-names:
 
 Variable names
@@ -290,6 +294,69 @@ The following superscript characters are recognised::
 
     ⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁽ ⁾ ⁺ ⁻ ⁼ ⁿ ⁱ
 
+.. _jme-notations:
+
+Notations
+---------
+
+Mathematical notation is not as well-defined as you might hope.
+With a limited number of symbols to choose from, mathematicians have established many conflicting notational conventions, so that often the interpretation or validity of an expression depends on its context.
+
+Numbas supports this with the idea of *JME notation systems*.
+Each JME notation system provides a *parser*, which converts a string of notation to an abstract expression, and a *renderer*, which does the opposite.
+
+These notation systems are most useful when interpreting answers given by the student.
+See the :term:`Notation` setting for :ref:`mathematical expression` parts.
+
+Here's a list of the built-in JME notation systems.
+These notations all behave similarly to the standard notation, apart from the described differences.
+
+
+.. _jme-notation-standard:
+Standard (``"standard"``)
+    This notation is designed to cover most uses up to undergraduate level.
+    Its syntax is described above.
+
+.. _jme-notation-set-theory:
+Set theory (``"set_theory")``
+    In this notation, curly braces delimit sets, instead of marking places for variable substitution.
+
+    For example, ``{1}`` is equivalent to ``set([1])`` in the standard notation.
+
+    Variable substitution is delimited by double square brackets: for example, ``1 + [[x]]``.
+
+.. _jme-notation-square-brackets:
+Square brackets for grouping (``"square_brackets_grouping"``)
+    In this notation, square brackets can be used for grouping terms, instead of indexing collections.
+
+    For example, ``[(x+1)(x+2)]`` is equivalent to ``((x+1)(x+2))`` in the standard notation. 
+
+    Its ID is ``"boolean_logic"``.
+
+.. _jme-notation-boolean-logic:
+Boolean logic (``"boolean_logic")``
+    In this notation, the symbols ``+`` and ``*`` represent boolean ``OR`` and ``AND``, respectively.
+
+    For example, ``true + false`` is equivalent to ``true or false``.
+
+.. _jme-notation-vector-shorthand:
+Vector shorthand (``"vector_shorthand"``)
+    In this notation, parentheses delimit vectors, and angle brackets delimit a dot/inner/scalar product.
+
+    For example, ``<(1,2), (3,4)>`` is equivalent to ``dot(vector(1,2), vector(3,4))`` in the standard notation.
+
+.. _jme-notation-real-interval:
+Real intervals (``"real_interval"``)
+    In this interval, square brackets and parentheses delimit intervals of real numbers.
+
+    A square bracket denotes a closed end, while a parenthesis denotes an open end.
+
+    For example, ``[1,2)`` is equivalent to ``interval(1,2,true,false)`` in the standard notation.
+
+.. _jme-notation-pattern:
+Pattern-matching (``"pattern_matching"``)
+    This notation is equivalent to the standard notation but adds the operators used by :ref:`the pattern-matching syntax <pattern-matching-reference>`.
+
 .. _jme-data-types:
 
 Data types
@@ -465,6 +532,14 @@ Some extensions add new data types.
     **Automatically converts to:**
         * :data:`list` - a list of :data:`vector` values corresponding to the rows of the matrix.
 
+.. data:: interval
+
+    A union of extended real intervals. Any :data:`number` value is valid as the start or end point, and each end can be open or closed.
+
+    **Examples**: ``interval(1,2)`` (open at both ends), ``interval(1,2,true,true)`` (closed at both ends)
+
+    See functions realted to :ref:`jme-fns-intervals`.
+
 .. data:: name
 
     A variable name. 
@@ -593,6 +668,7 @@ Arithmetic
         * :data:`rational`, :data:`rational` → :data:`rational`
         * :data:`decimal`, :data:`decimal` → :data:`decimal`
         * :data:`number`, :data:`decimal` → :data:`decimal`
+        * :data:`interval`, :data:`interval` → :data:`interval`
 
     **Examples**:
         * ``1+2`` → ``3``
@@ -617,6 +693,7 @@ Arithmetic
         * :data:`decimal`, :data:`decimal` → :data:`decimal`
         * :data:`number`, :data:`decimal` → :data:`decimal`
         * :data:`set`, :data:`set` → :data:`set`
+        * :data:`interval`, :data:`interval` → :data:`interval`
 
     **Examples**:
         * ``1-2`` → ``-1``
@@ -642,6 +719,7 @@ Arithmetic
         * :data:`rational`, :data:`rational` → :data:`rational`
         * :data:`decimal`, :data:`decimal` → :data:`decimal`
         * :data:`number`, :data:`decimal` → :data:`decimal`
+        * :data:`interval`, :data:`interval` → :data:`interval`
 
     **Examples**:
         * ``1*2`` → ``2``
@@ -2747,6 +2825,7 @@ Logic
     **Definitions**:
         * :data:`boolean`, :data:`boolean` → :data:`boolean`
         * :data:`set`, :data:`set` → :data:`set` - equivalent to ``union(x,y)``
+        * :data:`interval`, :data:`interval` → :data:`interval` - equivalent to ``union(x,y)``
 
     **Examples**:
         * ``true or false`` → ``true``
@@ -3606,14 +3685,16 @@ Sets
 .. jme:function:: union(a,b)
     :keywords: join, either, or, set
 
-    Union of sets ``a`` and ``b``
+    Union of sets ``a`` and ``b``.
 
     **Definitions**:
         * :data:`set`, :data:`set` → :data:`set`
+        * :data:`interval`, :data:`interval` → :data:`interval`
 
     **Examples**:
         * ``union(set(1,2,3),set(2,4,6))`` → ``set(1,2,3,4,6)``
         * ``set(1,2,3) or set(2,4,6)`` → ``set(1,2,3,4,6)``
+        * ``union(interval(1,3), interval(2,4))`` → ``interval(1,4,false,false)``
 
 .. jme:function:: intersection(a,b)
     :keywords: join, both, and
@@ -3622,19 +3703,164 @@ Sets
 
     **Definitions**:
         * :data:`set`, :data:`set` → :data:`set`
+        * :data:`interval`, :data:`interval` → :data:`interval`
 
     **Examples**:
         * ``intersection(set(1,2,3),set(2,4,6))`` → ``set(2)``
         * ``set(1,2,3) and set(2,4,6)`` → ``set(2)``
+        * ``intersection( interval(1,3), interval(2,4) )`` → ``interval(2,3,false,false)``
+        * ``intersection( interval(1,3,false,true), interval(2,4,true,false) )`` → ``interval(2,3,true,true)``
 
 .. jme:function:: a - b
     :keywords: difference
     :op: -
 
-    Set minus - elements which are in a but not b
+    Set minus - elements which are in a but not b.
+
+    **Definitions**:
+        * :data:`set`, :data:`set` → :data:`set`
 
     **Example**:
         * ``set(1,2,3,4) - set(2,4,6)`` → ``set(1,3)``
+
+
+.. _jme-fns-intervals:
+
+Intervals
+---------
+
+.. jme:function:: interval(start, end, [includes_start], [includes_end])
+    :noexamples:
+   
+    The real interval between ``start`` and ``end``.
+
+    You can specify whether the start and/or end are included in the interval (whether it is open or closed at each end).
+    If you don't give the ``includes_start`` or ``includes_end`` parameters, they default to ``false``, meaning 'open'.
+
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`interval`
+        * :data:`number`, :data:`number`, :data:`boolean`, :data:`boolean` → :data:`interval`
+
+    **Examples**:
+        * ``interval(1,2)``
+        * ``interval(-infinity, 0)``
+        * ``interval(1,2,true,true)``
+
+.. jme:function:: complement(x)
+    :keywords: opposite, inverse, invert, not
+
+    The complement of the given intervals: the intervals corresponding to the rest of the real line.
+
+    Can also be written as ``not x``.
+
+    **Definitions**:
+        * :data:`interval` → :data:`interval`
+
+    **Examples**:
+        * ``complement(interval(1,2))`` → ``union(interval(-infinity,1,false,true), interval(2,infinity,true,false))``
+        * ``complement(union(interval(-infinity,1,false,true), interval(2,infinity,true,false)))`` → ``interval(1,2,false,false)``
+
+.. jme:function:: difference(a,b)
+    :keywords: difference
+    :op: -
+
+    The difference of two intervals - numbers which are in a but not b.
+
+    Can also be written ``a - b`` or ``a except b``.
+
+    **Definitions**:
+        * :data:`interval`, :data:`interval` → :data:`interval`
+
+    **Example**:
+        * ``interval(1,5) - interval(2,3)`` → ``union(interval(1,2,false,true), interval(3,5,true,false))``
+
+.. jme:function:: start(x)
+
+    The greatest lower bound of the interval ``x``.
+
+    If ``x`` is the union of several intervals, the lowest start value is returned.
+
+    If the interval is open at the start, ``start(x)`` is not a member of the interval.
+
+    **Definitions**:
+        * :data:`interval` → :data:`number`
+
+    **Examples**:
+        * ``start(interval(1,2))`` → ``1``
+        * ``start(interval(-infinity,infinity))`` → ``-infinity``
+        * ``start(interval(2,3) + interval(1,2))`` → ``1``
+        
+.. jme:function:: end(x)
+
+    The lowest upper bound of the interval ``x``.
+
+    If ``x`` is the union of several intervals, the lowest end value is returned.
+
+    If the interval is open at the end, ``end(x)`` is not a member of the interval.
+
+    **Definitions**:
+        * :data:`interval` → :data:`number`
+
+    **Examples**:
+        * ``end(interval(1,2))`` → ``2``
+        * ``end(interval(-infinity,infinity))`` → ``infinity``
+        * ``end(interval(2,3) + interval(1,2))`` → ``3``
+        
+.. jme:function:: closed_start(x)
+
+    Is the interval closed at its lowest endpoint?
+
+    **Definitions**:
+        * :data:`interval` → :data:`boolean`
+
+    **Examples**:
+        * ``closed_start(interval(1,2))`` → ``false``
+        * ``closed_start(interval(1,2,true,false))`` → ``true``
+
+.. jme:function:: closed_end(x)
+
+    Is the interval closed at its lowest endpoint?
+
+    **Definitions**:
+        * :data:`interval` → :data:`boolean`
+
+    **Examples**:
+        * ``closed_end(interval(1,2))`` → ``false``
+        * ``closed_end(interval(1,2,false,true))`` → ``true``
+
+.. jme:function:: open_start(x)
+
+    Is the interval open at its lowest endpoint?
+
+    **Definitions**:
+        * :data:`interval` → :data:`boolean`
+
+    **Examples**:
+        * ``open_start(interval(1,2))`` → ``true``
+        * ``open_start(interval(1,2,true,false))`` → ``false``
+
+.. jme:function:: open_end(x)
+
+    Is the interval open at its lowest endpoint?
+
+    **Definitions**:
+        * :data:`interval` → :data:`boolean`
+
+    **Examples**:
+        * ``open_end(interval(1,2))`` → ``true``
+        * ``open_end(interval(1,2,false,true))`` → ``false``
+
+.. jme:function:: components(x)
+    :keywords: separate, decompose, expand, list
+
+    Return a list of each of the connected components of the union of intervals ``x``.
+
+    **Definitions**:
+        * :data:`interval` → :data:`list of interval`
+
+    **Example**:
+        * ``components(interval(1,2) + interval(3,4) + interval(5,infinity))`` → ``[interval(1,2,false,false), interval(3,4,false,false), interval(5,infinity,false,false)]``
+    
 
 .. _jme-fns-randomisation:
 
@@ -4020,20 +4246,25 @@ Once you've got a sub-expression, you can evaluate it to a normal JME data type,
         * ``parse("(1,2)", "real_interval") = parse("interval(1,2,false,false)")``
 
 
-.. jme:function:: eval(expression, values)
+.. jme:function:: eval(expression, [scope], [values])
     :keywords: evaluate, jme
 
-    Evaluate the given sub-expression.
+    Evaluate the given sub-expression in the given scope.
+
+    If ``scope`` is not given, the current scope is used.
 
     If ``values`` is given, it should be a dictionary mapping names of variables to their values.
 
     **Definitions**:
         * :data:`expression` → unspecified
+        * :data:`expression`, :data:`scope` → unspecified
         * :data:`expression`, :data:`dict` → unspecified
+        * :data:`expression`, :data:`scope`, :data:`dict` → unspecified
 
     **Example**:
         * ``eval(expression("1+2"))`` → ``3``
         * ``eval(expression("x+1"), ["x":1])`` → ``2``
+        * ``eval(expression("x"), scope() |> case_sensitive(true), ["X": 1])`` → ``x``
 
 .. jme:function:: args(expression)
     :keywords: arguments, operands
@@ -4283,6 +4514,73 @@ Once you've got a sub-expression, you can evaluate it to a normal JME data type,
     **Example**:
         * ``scope_case_sensitive(findvars(expression("x+X")))`` → ``["X","x"]``
         * ``scope_case_sensitive(let(x,1,X,2,x+X), true)`` → ``3``
+
+.. jme:function:: scope()
+   :noexamples:
+
+   Create a new evaluation scope for expressions.
+
+   The scope can be modified with operations such as :jme:func:`case_sensitive`, :jme:func:`set_variables`
+
+.. jme:function:: case_sensitive(scope, case_sensitive)
+
+    Create a copy of the given scope with the given case-sensitivity.
+
+    Scopes are case-insensitive by default.
+
+    **Definition**:
+        * :data:`scope`, :data:`boolean` → :data:`scope`
+
+    **Example**:
+        * ``eval(expression("x"), scope() |> case_sensitive(true), ["X": 1])`` → ``x``
+        * ``eval(expression("x"), scope() |> case_sensitive(false), ["X": 1])`` → ``1``
+
+.. jme:function:: set_variables(scope, variables)
+
+    Create a copy of the given scope with the given dictionary of variable values set.
+
+    If the variable is already set in the scope, it is overwritten.
+
+    **Definition**:
+        * :data:`scope`, :data:`dict` → :data:`scope`
+
+    **Example**:
+        * ``eval(expression("x"), scope() |> set_variables(["x": 1]))`` → ``1``
+
+.. jme:function:: add_function_sets(scope, set_names)
+
+    Create a copy of the given scope with the function sets with the given names added.
+
+    The function sets are loaded from the scope this function is evaluated in.
+
+    **Definition**:
+        * :data:`scope`, :data:`list of string` → :data:`scope`
+
+    **Example**:
+        * ``eval(expression("sin(0)"), scope() |> add_function_sets(["trigonometry"]))`` → ``0``
+
+.. jme:function:: add_functions(scope, function_names)
+
+    Create a copy of the given scope with the functions with the given names added.
+
+    The functions are loaded from the scope this function is evaluated in.
+
+    **Definition**:
+        * :data:`scope`, :data:`list of string` → :data:`scope`
+
+    **Example**:
+        * ``eval(expression("sin(0)"), scope() |> add_functions(["sin"]))`` → ``0``
+
+.. jme:function:: remove_functions(scope, function_names)
+    :noexamples:
+
+    Create a copy of the given scope without the functions with the given names.
+
+    **Definition**:
+        * :data:`scope`, :data:`list of string` → :data:`scope`
+
+    **Example**:
+        * ``eval(expression("sin(0)"), scope() |> remove_functions(["sin"]))`` raises an error because ``sin`` is not defined.
 
 Calculus
 --------

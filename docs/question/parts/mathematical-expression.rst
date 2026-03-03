@@ -23,6 +23,9 @@ Marking
 
         If the answer is an equation, see the note on :ref:`marking-an-equation`.
 
+    Notation
+        The :ref:`notation system <jme-notations>` to use when interpreting the answer, and when displaying the correct answer.
+
     Show preview of student's answer?
         If ticked, a rendering of the student's answer in mathematical notation is displayed beside the input box. 
         You should leave this on unless you expect the answer to be very simple and need the space - the feedback about how their answer is interpreted is very useful to students.

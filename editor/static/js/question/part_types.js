@@ -173,8 +173,12 @@ part_types.models = [
             model.notations = ko.computed(function() {
                 const notations = {};
                 for(let ext of part.q.usedExtensions()) {
-                    if(ext.scope.notations) {
-                        Object.assign(notations, ext.scope.notations);
+                    if(!ext.loaded()) {
+                        continue;
+                    }
+                    const next = Numbas.extensions[ext.location];
+                    if(next?.scope.notations) {
+                        Object.assign(notations, next?.scope.notations);
                     }
                 }
                 Object.assign(notations, Numbas.jme.notations);
@@ -186,9 +190,10 @@ part_types.models = [
                 try {
                     var scope = new Numbas.jme.Scope([this.scope()]);
                     scope.functions['subvar'] = {};
-                    var tree = model.notation().notation.compile(Editor.wrap_subvar(this.answer(), this.notation().notation));
+                    const notation = model.notation().notation;
+                    var tree = notation.compile(Editor.wrap_subvar(this.answer(), this.notation().notation));
                     tree = scope.expandJuxtapositions(tree, this.expandJuxtapositionsSettings());
-                    return jme.display.treeToJME(tree);
+                    return notation.treeToJME(tree);
                 } catch(e) {
                     return this.answer();
                 }
@@ -258,7 +263,7 @@ part_types.models = [
                             if(!next) {
                                 return false;
                             }
-                            return Object.values(next.scope.function_sets).some(s2 => s2 == set);
+                            return Object.values(next?.scope.function_sets).some(s2 => s2 == set);
                         });
 
                         const help_url = extension ? extension.url : `${HELP_URL}jme-reference.html`;

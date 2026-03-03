@@ -3114,7 +3114,7 @@ var jme_function_hints =
     },
     {
         "name": "union",
-        "description": "Union of sets <code>a</code> and <code>b</code>",
+        "description": "Union of sets <code>a</code> and <code>b</code>.",
         "keywords": [
             "join",
             "either",
@@ -3141,12 +3141,128 @@ var jme_function_hints =
     },
     {
         "name": "-",
-        "description": "Set minus - elements which are in a but not b",
+        "description": "Set minus - elements which are in a but not b.",
         "keywords": [
             "difference"
         ],
         "calling_patterns": [
             "a - b"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "interval",
+        "description": "The real interval between <code>start</code> and <code>end</code>.",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "interval(start, end, [includes_start], [includes_end])"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "complement",
+        "description": "The complement of the given intervals: the intervals corresponding to the rest of the real line.",
+        "keywords": [
+            "opposite",
+            "inverse",
+            "invert",
+            "not"
+        ],
+        "calling_patterns": [
+            "complement(x)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "-",
+        "description": "The difference of two intervals - numbers which are in a but not b.",
+        "keywords": [
+            "difference"
+        ],
+        "calling_patterns": [
+            "difference(a,b)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "start",
+        "description": "The greatest lower bound of the interval <code>x</code>.",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "start(x)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "end",
+        "description": "The lowest upper bound of the interval <code>x</code>.",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "end(x)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "closed_start",
+        "description": "Is the interval closed at its lowest endpoint?",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "closed_start(x)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "closed_end",
+        "description": "Is the interval closed at its lowest endpoint?",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "closed_end(x)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "open_start",
+        "description": "Is the interval open at its lowest endpoint?",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "open_start(x)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "open_end",
+        "description": "Is the interval open at its lowest endpoint?",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "open_end(x)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "components",
+        "description": "Return a list of each of the connected components of the union of intervals <code>x</code>.",
+        "keywords": [
+            "separate",
+            "decompose",
+            "expand",
+            "list"
+        ],
+        "calling_patterns": [
+            "components(x)"
         ],
         "doc": "jme-reference"
     },
@@ -3459,13 +3575,13 @@ var jme_function_hints =
     },
     {
         "name": "eval",
-        "description": "Evaluate the given sub-expression.",
+        "description": "Evaluate the given sub-expression in the given scope.",
         "keywords": [
             "evaluate",
             "jme"
         ],
         "calling_patterns": [
-            "eval(expression, values)"
+            "eval(expression, [scope], [values])"
         ],
         "doc": "jme-reference"
     },
@@ -3642,6 +3758,72 @@ var jme_function_hints =
         ],
         "calling_patterns": [
             "scope_case_sensitive(expression, [case_sensitive])"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "scope",
+        "description": "Create a new evaluation scope for expressions.",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "scope()"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "case_sensitive",
+        "description": "Create a copy of the given scope with the given case-sensitivity.",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "case_sensitive(scope, case_sensitive)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "set_variables",
+        "description": "Create a copy of the given scope with the given dictionary of variable values set.",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "set_variables(scope, variables)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "add_function_sets",
+        "description": "Create a copy of the given scope with the function sets with the given names added.",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "add_function_sets(scope, set_names)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "add_functions",
+        "description": "Create a copy of the given scope with the functions with the given names added.",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "add_functions(scope, function_names)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "remove_functions",
+        "description": "Create a copy of the given scope without the functions with the given names.",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "remove_functions(scope, function_names)"
         ],
         "doc": "jme-reference"
     },

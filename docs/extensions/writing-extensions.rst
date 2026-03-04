@@ -81,7 +81,8 @@ Extensions created through the editor automatically have a ``README.md`` file, w
 Adding JME functions
 --------------------
 
-An extension can add JME functions (or rulesets, or anything else that goes in a `Scope <https://docs.numbas.org.uk/runtime_api/en/latest/Numbas.jme.Scope.html>`_ object by manipulating the ``extension.scope`` object.
+An extension can add JME functions (or rulesets, or anything else that goes in a `Scope <https://docs.numbas.org.uk/runtime_api/en/latest/Numbas.jme.Scope.html>`_ object) by manipulating the ``extension.scope`` object.
+
 Here's an example which adds a single JME function::
 
     Numbas.addExtension('difference',['jme'],function(extension) {
@@ -96,10 +97,40 @@ The editor uses this to show variable definitions that introduce randomisation, 
 
 (Download this extension: :download:`difference.zip <_static/difference.zip>`)
 
+Adding JME function sets
+------------------------
+
+If the functions provided by your extension can be usefully grouped, you should use ``Numbas.jme.FunctionSet`` objects to do that, so that question authors can select them in the :ref:`mathematical-expression-allowed-functions` setting of :ref:`mathematical-expression` parts.
+
+You might like to put functions that a student could use in one function set, and functions that should only be used by question authors in another set.
+
+Here's an example which does that::
+
+    Numbas.addExtension('collatz',['jme'],function(extension) {
+      var funcObj = Numbas.jme.funcObj;
+      var TNum = Numbas.jme.types.TNum;
+
+      const collatz_set = new Numbas.jme.FunctionSet({name: 'Collatz operation', description: 'Functions which perform the Collatz operation'});
+      extension.scope.addFunctionSet(collatz_set);
+      collatz_set.add_function('collatz', [TNum], TNum, x => x%2 == 0 ? x/2 : 3*x+1);
+
+      const helper_set = new Numbas.jme.FunctionSet({name: 'Collatz helpers', description: 'Helper functions for generating questions about the Collatz sequence'});
+      extension.scope.addFunctionSet(helper_set);
+      helper_set.add_function('collatz_num_steps', [TNum], TNum, function(x) {
+        let n = 0;
+        while(x > 1) {
+          x = x%2 == 0 ? x/2 : 3*x+1;
+          n += 1;
+        }
+        return n;
+      });
+    })
+    
+
 Adding a new JME data type
 --------------------------
 
-JME data types are JavaScript objects, distinguished by their ``type`` property.
+:ref:`JME data types <jme-data-types>` are JavaScript objects, distinguished by their ``type`` property.
 The object should have a `value` property which contains the data it represents.
 The JME system can happily use new data types, but you'll need to tell it how to render them as LaTeX or JME code.
 This is done by adding methods to ``Numbas.jme.display.typeToTeX`` and ``Numbas.jme.display.typeToJME``.
@@ -186,6 +217,64 @@ Here's an example extension which defines a toy "chemical" data type (excuse the
     });
 
 (Download this extension: :download:`chemicals.zip <_static/chemicals.zip>`)
+
+Adding a new JME notation
+-------------------------
+
+You can define a new :ref:`JME notation <jme-notations>` to change how JME expressions are parsed and rendered.
+
+Make a class extending ``Numbas.jme.Notation``.
+It should have two properties: ``Parser``, a class which parses strings into abstract JME trees; and ``JMEifier``, a class which renders abstract JME trees as strings.
+It should also have a ``name`` property containing a human-readable name for the notation, to be displayed in the editor.
+
+If your notation uses curly braces for something other than variable substitution, you can set different delimiters with the property ``subvars_delimiters = [left_delimiter, right_delimiter]``.
+
+Add an instance of your ``Notation`` class to the dictionary ``Numbas.jme.notations``.
+
+Each ``Notation`` object provides methods ``compile(string)`` and ``treeToJME(tree)``, which use the ``Parser`` and ``JMEifier``.
+
+Here's an example which changes literal numbers to use hexadecimal notation::
+
+    Numbas.addExtension('hexadecimal-notation',['jme'],function(extension) {
+      var scope = extension.scope;
+
+      class HexadecimalNotation extends Numbas.jme.Notation {
+        name = 'Hexadecimal number literals';
+
+        Parser = class extends Numbas.jme.Parser {
+          // change the regular expressions for number and integer tokens to match the hexadecimal format.
+          re = Object.assign({}, Numbas.jme.standardParser.re, {
+            re_integer: /^[0-9a-fA-F]+(?!\.|[0-9a-fA-F])/,
+            re_number: /^[0-9a-fA-F]+(?:\.[0-9a-fA-F]+)?/,
+          });
+      
+          // Number literal strings are passed through this function to normalise them.
+          // We override it to instead parse the string as a hexadecimal number, then convert to a decimal string.
+          normaliseNumber(str) {
+            const m = str.match(/^([0-9a-fA-F]+)(?:\.([0-9a-fA-F]+))?/);
+            const int = m[1];
+            const fract = m[2] || '0';
+            return parseInt(int, 16) + parseInt(fract, 16) / (16**fract.length)
+            return parseInt(str,16).toString();
+          }
+        }
+                        
+        JMEifier = class extends Numbas.jme.display.JMEifier {
+          typeToJME = Object.assign({}, Numbas.jme.display.JMEifier.prototype.typeToJME, {
+            number(tree,tok) {
+              return tok.value.toString(16);
+            }
+          });
+        }
+      }
+                        
+      Numbas.jme.notations['hexadecimal'] = new HexadecimalNotation();
+
+      // Example
+      const jme_tree = Numbas.jme.notations.hexadecimal.compile('2A = 7 * 6'); // returns a tree object representing the parsed expression.
+      const jme_string = Numbas.jme.notations.treeToJME(jme_tree); // returns "2A = 7 * 6";
+
+    });
 
 Adding a new answer input method
 --------------------------------

@@ -239,6 +239,10 @@ Synonymous keywords and characters
 
 JME interprets some keywords and characters as synonyms for others, when there are multiple conventional ways of writing the same thing, and there's no ambiguity about what they mean.
 
+Names, numbers and punctuation characters are normalised using `the Unicode NFKD form <https://www.unicode.org/reports/tr15/>`__.
+Most Unicode mathematical characters are normalised to equivalent ASCII versions.
+There are too many of these to list here; for more information see `the Unicode math normalization project <https://github.com/numbas/unicode-math-normalization>`__.  
+
 Often there is a single Unicode character for a mathematical symbol which can also be written in JME as a combination of ASCII characters.
 
 .. list-table::

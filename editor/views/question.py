@@ -167,7 +167,11 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         cpt_query = Q(public_availability='always')
         if not self.request.user.is_anonymous:
             # add in the user's own part types
-            cpt_query |= CustomPartType.filter_can_be_viewed_by(self.request.user)
+            visible_query = CustomPartType.filter_can_be_viewed_by(self.request.user)
+            if(len(visible_query)==0):
+                cpt_query = visible_query
+            else:
+                cpt_query |= visible_query
         # only show part types ready to use
         cpt_query &= Q(ready_to_use=True)
         # also include part types already in use in this question

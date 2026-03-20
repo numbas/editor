@@ -19,3 +19,4 @@ emoji==2.14.1
 pycryptodome==3.22.0
 setuptools==78.1.0
 huey==2.5.3
+jsonschema==4.26.0

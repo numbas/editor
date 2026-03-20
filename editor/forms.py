@@ -264,8 +264,10 @@ def validate_exam_file(f):
 
         editor.models.validate_content(content)
         f.seek(0)
-    except (UnicodeDecodeError, forms.ValidationError):
-        raise forms.ValidationError("Not a valid .exam file")
+    except UnicodeDecodeError as err:
+        raise forms.ValidationError(f"Not a valid .exam file: {err}")
+    except forms.ValidationError as err:
+        raise err
 
 class UploadExamForm(forms.ModelForm):
     file = forms.FileField(required=True, validators=[validate_exam_file])

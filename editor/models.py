@@ -7,6 +7,7 @@ from zipfile import ZipFile
 import json
 from datetime import datetime
 from itertools import groupby
+import jsonschema
 import codecs
 from pathlib import Path
 import urllib.parse
@@ -414,10 +415,14 @@ class EditorTag(taggit.models.TagBase):
 def validate_content(content):
     try:
         obj = numbasobject.NumbasObject(content)
-        if not 'name' in obj.data:
-            raise ValidationError('No "name" property in content.')
+        with open(Path(settings.GLOBAL_SETTINGS['NUMBAS_PATH']) / 'schema' / 'exam_schema.json') as f:
+            schema = json.load(f)
+
+        jsonschema.validate(json.loads(json.dumps(obj.data)), schema) # The data is dumped to JSON and then loaded again to ensure that tuples turn into lists.
+    except jsonschema.ValidationError as err:
+        raise ValidationError(f"The .exam file is not valid.", params={'schema_error':err})
     except Exception as err:
-        raise ValidationError(err)
+        raise ValidationError(f"The .exam file is not valid: {err}")
 
 class EditablePackageMixin(object):
     """

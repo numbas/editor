@@ -163,6 +163,9 @@ class UploadView(editor.views.editoritem.CreateView):
 
         return HttpResponseRedirect(self.get_success_url())
 
+    def form_invalid(self, form):
+        return super().form_invalid(form)
+
     def add_contributors(self,item,contributor_data):
         root = self.request.build_absolute_uri('/')
         for c in contributor_data:

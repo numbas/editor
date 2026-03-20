@@ -17,9 +17,15 @@
         <div class="col-sm-10">
             {{field.as_widget}}
             {% if field.errors %}
-            <ul class="errorlist list-unstyled">
-                {% for error in field.errors %}
-                <li>{{error}}</li>
+            <ul class="errorlist list-unstyled alert alert-warning">
+                {% for error in field.errors.as_data %}
+                <li>
+                    {{error.message}}
+                    {% if error.params.schema_error %}
+                    <p>The validator produced the following error:</p>
+                    <pre>{{error.params.schema_error}}</pre>
+                    {% endif %}
+                </li>
                 {% endfor %}
             {% endif %}
         </div>

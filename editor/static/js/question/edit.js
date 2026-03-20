@@ -3515,7 +3515,7 @@ $(document).ready(function() {
                     o.prompt = this.prompt();
                 }
                 if(this.steps().length) {
-                    o.stepsPenalty = this.stepsPenalty(),
+                    o.stepsPenalty = parseFloat(this.stepsPenalty()),
                     o.steps = this.steps().map(function(s){return s.toJSON();});
                 }
 

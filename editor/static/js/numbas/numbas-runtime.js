@@ -17613,7 +17613,7 @@ if(res) { \
         var p = this;
         const replacements = new jme.types.TList(this.getErrorCarriedForwardReplacements().map(r => scope.getVariable(r.variable)));
         var cache = this.pre_submit_cache.find(function(c) {
-            return c.exec_path == exec_path && util.eq(studentAnswer, c.studentAnswer, scope) && util.eq(replacements, c.replacements, scope);
+            return c.exec_path == exec_path && util.eq(studentAnswer, c.studentAnswer, scope) && (c.replacements === null || util.eq(replacements, c.replacements, scope));
         });
         if(cache) {
             return {parameters: cache.results};
@@ -18652,7 +18652,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                     outtype: fd.type,
                     parameters: fd.parameters.map(function(p) {
                         return {
-                            name:p[0],
+                            name: p[0],
                             type: p[1]
                         }
                     })

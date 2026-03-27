@@ -41,7 +41,7 @@ from accounts.models import UserProfile, EditorItemViewed
 
 from editor.context_processors import get_mathjax_2_url, get_mathjax_4_url
 from editor.tables import EditorItemTable, RecentlyPublishedTable
-from editor.models import EditorItem, Project, IndividualAccess, Licence, PullRequest, Taxonomy, Contributor, Folder
+from editor.models import EditorItem, Project, IndividualAccess, Licence, PullRequest, Taxonomy, Contributor, Folder, Theme
 import editor.lockdown_app
 import editor.models
 from editor.templatetags.sstatic import sstatic
@@ -53,7 +53,7 @@ from editor.views.user import find_users
 import editor.forms
 from accounts.util import user_json
 
-NUMBAS_PATH = settings.GLOBAL_SETTINGS['NUMBAS_PATH']
+NUMBAS_PATH = Path(settings.GLOBAL_SETTINGS['NUMBAS_PATH'])
 
 class MustBeAuthorMixin(object):
     def dispatch(self, request, *args, **kwargs):
@@ -477,28 +477,36 @@ class CompileObject(MustHaveAccessMixin):
         else:
             return 'en-GB'
 
-    def theme_dir(self):
+    def get_theme(self):
+        theme_query = self.request.GET.get('theme')
+        if theme_query == '':
+            theme_query = None
+
+        if theme_query is not None:
+            try:
+                theme = Theme.objects.get(slug=theme_query)
+                return (f'{theme.pk}-{theme.slug}', Path(theme.extracted_path))
+            except Theme.DoesNotExist:
+                return (theme_query, NUMBAS_PATH / 'themes' / theme_query)
+
         if hasattr(self.editoritem, 'exam'):
             exam = self.editoritem.exam
             if exam.custom_theme:
                 theme = exam.custom_theme
-                return Path(theme.extracted_path)
+                return (f'{theme.pk}-{theme.slug}', Path(theme.extracted_path))
             else:
-                return Path(NUMBAS_PATH) / 'themes' / exam.theme
+                return (exam.theme, NUMBAS_PATH / 'themes' / exam.theme)
         else:
-            return Path(NUMBAS_PATH) / 'themes' / 'question'
+            return ('question', NUMBAS_PATH / 'themes' / 'question')
 
+
+    def theme_dir(self):
+        slug, path = self.get_theme()
+        return path
 
     def output_location(self):
-        if hasattr(self.editoritem, 'exam'):
-            exam = self.editoritem.exam
-            if exam.custom_theme:
-                theme = exam.custom_theme
-                return f'{theme.pk}-{theme.slug}'
-            else:
-                return exam.theme
-        else:
-            return 'question'
+        slug, path = self.get_theme()
+        return slug
 
     def output_path(self):
         return Path(settings.GLOBAL_SETTINGS['PREVIEW_PATH']) / self.output_location()
@@ -516,7 +524,7 @@ class CompileObject(MustHaveAccessMixin):
             Compile the generic runtime for this theme and locale combination.
         """
 
-        theme_path = Path(self.editoritem.theme_path if hasattr(self.editoritem, 'theme_path') else 'default')
+        _, theme_path = self.get_theme()
         if not theme_path.exists():
             raise CompileError("Theme not found at {}. Is MEDIA_ROOT configured correctly? It should be the absolute path to your editor media directory.".format(theme_path))
 
@@ -526,8 +534,8 @@ class CompileObject(MustHaveAccessMixin):
 
         numbas_command = [
             settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
-            str(Path(NUMBAS_PATH) / 'bin' / 'numbas.py'),
-            '-p'+NUMBAS_PATH,
+            str(NUMBAS_PATH / 'bin' / 'numbas.py'),
+            '-p'+str(NUMBAS_PATH),
             '-o'+str(output_path),
             '-t'+str(theme_path),
             '-l'+locale,
@@ -604,8 +612,8 @@ class PreviewView(CompileObject, generic.DetailView):
 
         dirs = [
             self.theme_dir(),
-            Path(NUMBAS_PATH) / 'runtime',
-            Path(NUMBAS_PATH) / 'themes' / 'default'
+            NUMBAS_PATH / 'runtime',
+            NUMBAS_PATH / 'themes' / 'default'
         ]
 
         compiler_mtime = max(directory_last_modified(d) for d in dirs)
@@ -640,6 +648,8 @@ class PreviewView(CompileObject, generic.DetailView):
 
     def get_exam_url(self):
         token = self.request.GET.get('token','')
+
+        theme_slug, _ = self.get_theme()
         
         source_url = self.editoritem.rel_obj.source_url()
         if token:
@@ -652,7 +662,15 @@ class PreviewView(CompileObject, generic.DetailView):
         return urlunparse((
             '',
             '',
-            reverse(self.editoritem.item_type+'_preview_file',args=(self.object.pk,self.editoritem.slug, self.index_filename)),
+            reverse(
+                self.editoritem.item_type+'_preview_file',
+                args=(
+                    self.object.pk,
+                    self.editoritem.slug,
+                    theme_slug,
+                    self.index_filename,
+                )
+            ),
             '',
             urlencode({
                 'source_url': source_url,
@@ -689,8 +707,13 @@ class PreviewView(CompileObject, generic.DetailView):
 class PreviewFileView(PreviewView):
     """Show a file from a preview."""
 
+    def output_location(self):
+        return self.theme_slug
+
     def get(self, request, *args, **kwargs):
         obj = self.get_object()
+
+        self.theme_slug = kwargs['theme']
 
         file = Path(kwargs['file'])
 
@@ -710,8 +733,6 @@ class PreviewFileView(PreviewView):
                 with open(p) as f:
                     return http.HttpResponse(f.read())
             else:
-                print(file)
-                print(list(request.headers.keys()))
                 return http.HttpResponseRedirect(
                     self.get_preview_url() + '/' + str(file)+query,
                     status=301,

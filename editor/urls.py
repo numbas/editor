@@ -121,7 +121,7 @@ urlpatterns = [
     path('exam/<int:pk>/<numbasslug:slug>/preview/',
         exam.PreviewView.as_view(), name='exam_preview'),
 
-    path('exam/<int:pk>/<numbasslug:slug>/preview/iframe/<path:file>',
+    path('exam/<int:pk>/<numbasslug:slug>/preview/iframe/<numbasslug:theme>/<path:file>',
         exam.PreviewFileView.as_view(), name='exam_preview_file'),
 
     path('exam/<int:pk>/<numbasslug:slug>/embed/',
@@ -185,7 +185,7 @@ urlpatterns = [
     path('question/<int:pk>/<numbasslug:slug>/preview/',
         question.PreviewView.as_view(), name='question_preview'),
 
-    path('question/<int:pk>/<numbasslug:slug>/preview/iframe/<path:file>',
+    path('question/<int:pk>/<numbasslug:slug>/preview/iframe/<numbasslug:theme>/<path:file>',
         question.PreviewFileView.as_view(), name='question_preview_file'),
 
     path('question/<int:pk>/<numbasslug:slug>/embed/',

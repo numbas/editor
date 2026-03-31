@@ -151,7 +151,7 @@ part_types.models = [
             model.part = part;
 
             model.scope = ko.computed(function() {
-                return new Numbas.jme.Scope([part.scope(),{caseSensitive: this.caseSensitive()}]);
+                return new Numbas.jme.Scope([part.baseScope(),{caseSensitive: this.caseSensitive()}]);
             },model);
 
             model.expandJuxtapositionsSettings = ko.pureComputed(function() {

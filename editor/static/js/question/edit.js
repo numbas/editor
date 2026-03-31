@@ -2928,9 +2928,17 @@ $(document).ready(function() {
             q.mainTabber.setTab('parts')();
         }
 
-        this.scope = ko.pureComputed(function() {
+        this.baseScope = ko.pureComputed(function() {
             return this.q.baseScope();
         },this);
+
+        this.scope = ko.pureComputed(function() {
+            if(this.type()?.model.scope) {
+                return this.type().model.scope();
+            } else {
+                return this.q.baseScope();
+            }
+        }, this);
 
         this.showChildren = ko.pureComputed(function() {
             var currentPart = q.currentPart();

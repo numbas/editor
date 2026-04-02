@@ -378,6 +378,12 @@ The following simplification rules are available:
         * ``sqrt(12)`` → ``2*sqrt(3)``
         * ``sqrt(x^2 * y^5)`` → ``x * y^2 * sqrt(y)``
 
+    collectIntegerFactors
+        Extract common integer factors from terms.
+
+        * ``4x+2`` → ``2(2x + 1)``
+        * ``12x - 18y` → ``6(2x - 3y)``
+
 .. _display_only_functions:
 
 Display-only JME functions

@@ -1808,23 +1808,24 @@ $(document).ready(function() {
             this.static = params.option.static;
             this.static_value = params.option.static_value;
             this.dynamic_value = params.option.dynamic_value;
+            this.has_static = params.option.has_static;
             this.disable = params.disable;
             this.type_hint = params.type_hint;
         },
         template: '\
             <div class="control">\
-            <!-- ko if: static -->\
+            <!-- ko if: has_static && static() -->\
                 <div>\
                     <!-- ko template: { nodes: $componentTemplateNodes} --><!-- /ko -->\
                 </div>\
             <!-- /ko -->\
-            <!-- ko if: !static() -->\
+            <!-- ko if: !has_static || !static() -->\
                 <textarea data-bind="disable: disable, codemirror: dynamic_value, codemirrorMode: \'jme\'"></textarea>\
                 <undefined-variable-warning params="expr: dynamic_value, vars: [\'settings\']"></undefined-variable-warning>\
                 <p class="help-block" data-bind="if: type_hint">This should evaluate to a <code data-bind="text: type_hint"></code>.</p>\
             <!-- /ko -->\
             </div>\
-            <label class="static-switch"><input type="checkbox" data-bind="checked: static, disable: disable"> Static?</label>\
+            <!-- ko if: has_static --><label class="static-switch"><input type="checkbox" data-bind="checked: static, disable: disable"> Static?</label><!-- /ko -->\
         '
     });
 

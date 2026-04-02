@@ -157,14 +157,21 @@ $(document).ready(function() {
                 {
                     name: 'rowHeaders',
                     label: 'Row headers',
-                    input_type: 'mathematical_expression',
+                    input_type: 'list_of_strings',
                     default_value: []
                 },
                 {
                     name: 'columnHeaders',
                     label: 'Column headers',
-                    input_type: 'mathematical_expression',
+                    input_type: 'list_of_strings',
                     default_value: []
+                },
+                {
+                    name: 'prefilledCells',
+                    label: 'Pre-filled cells',
+                    type_hint: 'list of list of string',
+                    input_type: 'code',
+                    default_value: [[]]
                 }
             ]
         },
@@ -228,7 +235,7 @@ $(document).ready(function() {
                     'mathematical_expression': 'string',
                     'checkbox': 'boolean',
                     'dropdown': 'string',
-                    'code': 'string',
+                    'code': def.type_hint,
                     'percent': 'number',
                     'html': 'string'
                 }
@@ -275,6 +282,9 @@ $(document).ready(function() {
                             }
                         );
                         break;
+                    case 'code':
+                        value = new MaybeStaticOption(def.default_value, jme_default_value, undefined, undefined, false);
+                        break;
                     default:
                         value = new MaybeStaticOption(def.default_value, jme_default_value);
                 }
@@ -305,11 +315,12 @@ $(document).ready(function() {
         }
     };
 
-    function MaybeStaticOption(static_value, dynamic_value, save_staticFn, load_staticFn) {
+    function MaybeStaticOption(static_value, dynamic_value, save_staticFn, load_staticFn, has_static) {
         this.static = ko.observable(true);
         this.static_value = ko.isObservable(static_value) || typeof(static_value)=='object' ? static_value : ko.observable(static_value);
         this.isNumber = typeof(ko.unwrap(static_value))=='number';
         this.dynamic_value = ko.isObservable(dynamic_value) ? dynamic_value : ko.observable(dynamic_value);
+        this.has_static = has_static ?? true;
         this.save_staticFn = save_staticFn;
         this.load_staticFn = load_staticFn;
     }
@@ -335,7 +346,7 @@ $(document).ready(function() {
             }
         },
         toJSON: function() {
-            var static = this.static();
+            var static = this.has_static && this.static();
             var value = static ? ko.unwrap(this.static_value) : this.dynamic_value();
             if(static && this.isNumber) {
                 value = parseFloat(value);

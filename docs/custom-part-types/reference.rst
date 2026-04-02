@@ -267,8 +267,9 @@ The student enters a two-dimensional array of values.
     "Allowed notation styles", ``allowedNotationStyles``, :data:`list` of :data:`string`, "The allowed :ref:`styles of number notation <number-notation>`."
     "Allow fractions?", ``allowFractions``, :data:`boolean`, "Allow the student to enter numbers as fractions?"
     "Show brackets?", ``showBrackets``, :data:`boolean`, "If ``true``, parentheses are drawn on the left and right of the matrix."
-    "Row headers", ``rowHeaders``, :data:`list`, "Text to show on the left of each row. One string for each row."
-    "Column headers", ``columnHeaders``, :data:`list`, "Text to show above each column. One string for each column."
+    "Row headers", ``rowHeaders``, :data:`list of string`, "Text to show on the left of each row. One string for each row. If column headers are defined, then the first row is the row with column headers."
+    "Column headers", ``columnHeaders``, :data:`list of string`, "Text to show above each column. One string for each column."
+    "Pre-filled cells", ``prefilledCells`, :data:`list of list of string`, "Strings to pre-fill each cell with. If an empty string is given, then the cell is editable. Otherwise, the cell is filled with that string and is not editable."
 
 If ``parseCells`` is ``true``, the answer is a :data:`matrix` value corresponding to the student's input.
 The part will not be marked unless all of the cells in the student's matrix are valid numbers.

@@ -4003,7 +4003,14 @@ $(document).ready(function() {
                     var same_question = Numbas.util.objects_equal(json,mt.last_question_json);
                     var same_variables = mt.last_variables && variables.length==mt.last_variables.length && variables.every(function(v,i) {
                         var lv = mt.last_variables[i];
-                        return lv.name==v.name && lv.value!==null && Numbas.util.eq(v.value,lv.value);
+                        try {
+                            return lv.name==v.name && lv.value !== null && Numbas.util.eq(v.value,lv.value);
+                        } catch(e) {
+                            if(e.originalMessage == 'util.equality not defined for type') {
+                                return true;
+                            }
+                            throw(e);
+                        }
                     });
                     if(same_question && same_variables) {
                         return mt.question();

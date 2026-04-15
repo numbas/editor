@@ -1160,6 +1160,21 @@ $(document).ready(function() {
         });
     }
 
+    ko.bindingHandlers.copy_link = {
+        init: function(element, valueAccessor) {
+            const href = ko.unwrap(valueAccessor());
+            console.log('code_link', href);
+            element.setAttribute('href', href);
+            element.textContent = href;
+            element.classList.add('share-link');
+            element.addEventListener('click', (e) => {
+                e.preventDefault();
+                navigator.clipboard.writeText(href);
+                element.classList.add('copied');
+            });
+        }
+    };
+
     ko.bindingHandlers.codemirror = {
         init: function(element,valueAccessor,allBindingsAccessor, viewModel, bindingContext) {
             var value = valueAccessor();

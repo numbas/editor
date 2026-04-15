@@ -456,3 +456,17 @@ body.fill-viewport .page-header h1 {
 .file-receiver.dropping-file {
     filter: contrast(70%) brightness(70%);
 }
+
+.share-link {
+    margin-bottom: 1lh;
+    display: block;
+}
+
+.share-link.copied::after {
+    content: 'Copied to your clipboard';
+    margin-left: 2em;
+    font-style: italic;
+    text-decoration: none;
+    color: black;
+    font-family: "Source Sans Pro","Helvetica Neue",Helvetica,Arial,sans-serif;
+}

@@ -131,10 +131,10 @@
             </div>
             <dl class="share-links list-group">
                 <dt>View</dt>
-                <dd><pre class="share-link form-control">{{SITE_ROOT}}{% url 'share_'|add:item_type 'view' object.editoritem.share_uuid_view %}</pre></dd>
+                <dd><a data-bind="copy_link: '{{SITE_ROOT}}{% url 'share_'|add:item_type 'view' object.editoritem.share_uuid_view %}'"></a></dd>
                 
                 <dt>Edit</dt>
-                <dd><pre class="share-link form-control">{{SITE_ROOT}}{% url 'share_'|add:item_type 'edit' object.editoritem.share_uuid_edit %}</pre></dd>
+                <dd><a data-bind="copy_link: '{{SITE_ROOT}}{% url 'share_'|add:item_type 'edit' object.editoritem.share_uuid_edit %}'"></a></dd>
             </dl>
         </div>
     </div>

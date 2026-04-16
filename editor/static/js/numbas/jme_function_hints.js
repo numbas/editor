@@ -3659,6 +3659,39 @@ var jme_function_hints =
         "doc": "jme-reference"
     },
     {
+        "name": "then",
+        "description": "After resolving the given promise, perform the given anonymous function on it.",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "then(promise, function)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "fetch_text",
+        "description": "Performs an HTTP GET request to the given URL, and resolves to the response's body text.",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "fetch_text(url)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "fetch_json",
+        "description": "Performs an HTTP GET request to the given URL and, assuming the response is JSON content, resolves to the decoded JSON.",
+        "keywords": [
+            ""
+        ],
+        "calling_patterns": [
+            "fetch_json(url)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
         "name": "match",
         "description": "If <code>expr</code> matches <code>pattern</code>, return a dictionary of the form <code>[\"match\": boolean, \"groups\": dict]</code>, where <code>\"groups\"</code> is a dictionary mapping names of matches to sub-expressions.",
         "keywords": [

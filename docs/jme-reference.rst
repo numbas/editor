@@ -509,6 +509,16 @@ Some extensions add new data types.
 
     See functions related to :ref:`jme-fns-subexpressions`.
 
+.. data:: promise
+
+    A value which will be computed asynchronously.
+
+    :ref:`Part pre-submit tasks <pre-submit>` can use promise values to use the results of long-running computations in marking algorithms.
+
+    :ref:`Question variables <variables>` defined as promises will be resolved to their values, and any variables depending on promised values will wait until they have resolved before being computed themselves.
+
+    Promise values can't be replaced in adaptive marking: the adaptive marking process assumes that all changed variables can be computed synchronously.
+
 Automatic data type conversion
 ------------------------------
 
@@ -4281,6 +4291,52 @@ Calculus
         * ``diff(expression("x^2 + 2x + 4"), "x")`` → ``expression("2x + 2")``
         * ``diff(expression("x * y + 3x + 2y"), "x")`` → ``expression("y + 3")``
         * ``diff(expression("cos(x^2)"), "x")`` → ``expression("-2 * sin(x^2) * x")``
+
+Asynchronous functions
+----------------------
+
+.. warning::
+
+    These functions perform work which is completed *asynchronously*: they return a :data:`promise` value which eventually resolves to the result of the function.
+
+    You can use these functions in the definitions of question variables, but if used in marking algorithms or in other places where Numbas expects functions to evaluate synchronously, you'll only get the :data:`promise` value.
+
+    In the editor, it's a good idea to lock the values of variables defined with asynchronous functions, so they're not continuously re-evaluated as you edit other variables.
+
+.. jme:function:: then(promise, function)
+    :noexamples:
+
+    After resolving the given promise, perform the given anonymous function on it.
+
+    Returns a promise which will resolve to the result of the function.
+
+    **Definitions**:
+        * :data:`promise`, :data:`lambda` → :data:`promise`.
+
+    **Example**:
+        ``fetch_text("data.csv") |> then(text -> len(text))``
+
+.. jme:function:: fetch_text(url)
+    :noexamples:
+
+    Performs an HTTP GET request to the given URL, and resolves to the response's body text.
+
+    **Definitions**:
+        * :data:`string` → :data:`promise` of :data:`string`
+
+    **Example**:
+        * ``fetch_text("resources/question-resources/mydata.csv")``
+
+.. jme:function:: fetch_json(url)
+    :noexamples:
+
+    Performs an HTTP GET request to the given URL and, assuming the response is JSON content, resolves to the decoded JSON.
+
+    **Definitions**:
+        * :data:`string` → :data:`promise`
+
+    **Example**:
+        * ``fetch_json("resources/question-resources/mydata.json")``
 
 .. _jme-fns-pattern-matching:
 

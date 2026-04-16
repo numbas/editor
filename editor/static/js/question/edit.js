@@ -1217,7 +1217,6 @@ $(document).ready(function() {
             }
 
             // fill in observables
-            console.log(results);
             this.variables().map(function(v) {
                 if(v.locked.peek()) {
                     return;

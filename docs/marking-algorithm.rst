@@ -295,6 +295,8 @@ All the built-in :ref:`JME functions <jme-functions>` are available in marking n
                 concat_feedback(result["feedback"], result["marks"])
             )
 
+.. _pre-submit:
+
 Pre-submit tasks
 ----------------
 

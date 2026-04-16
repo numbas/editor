@@ -58,7 +58,8 @@
                                 <td class="type" data-bind="click: $parent.makeCurrentVariable, text: type"></td>
                                 <td class="value-cell" data-bind="click: $parent.makeCurrentVariable">
                                     <div class="value-wrapper">
-                                        <div class="value jme-value tex2jax_ignore" data-bind="jmevalue: value, error: $parent.anyError, scope: $root.questionScope"></div>
+                                        <em data-bind="if: $root.generatingVariables">Value is being generated...</em>
+                                        <div class="value jme-value tex2jax_ignore" data-bind="visible: !$root.generatingVariables(), jmevalue: value, error: $parent.anyError, scope: $root.questionScope"></div>
                                     </div>
                                 </td>
                                 <td>

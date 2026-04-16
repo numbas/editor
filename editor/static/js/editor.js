@@ -1686,7 +1686,8 @@ $(document).ready(function() {
                 }
                 break;
             case 'dict':
-                description = 'Dictionary with '+Object.keys(v.value).length+" entries";
+                const num_keys = Object.keys(v.value).length;
+                description = 'Dictionary with '+num_keys+" "+Numbas.util.pluralise(num_keys, 'entry', 'entries');
                 break;
             case 'html':
                 if(v.value.length==1 && v.value[0].tagName=='IMG') {

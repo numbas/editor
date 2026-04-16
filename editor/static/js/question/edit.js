@@ -67,6 +67,9 @@ $(document).ready(function() {
         this.extensions = ko.observableArray([]);
         this.statement = Editor.contentObservable('');
         this.advice = Editor.contentObservable('');
+
+        this.generatingVariables = ko.observable(false);
+
         var rulesets = this.rulesets = ko.observableArray([]);
         this.functions = ko.observableArray([]);
         this.currentFunction = ko.observable(null);
@@ -668,21 +671,26 @@ $(document).ready(function() {
         localStorage.setItem(this.autocalc_storage_key, 'false');
 
         ko.computed(function() {
-            if(!this.autoCalculateVariables())
+            if(!this.autoCalculateVariables()) {
                 return;
+            }
+
             //the ko dependency checker seems not to pay attention to what happens in the computeVariables method, so access the variable bits here to give it a prompt
             if(this.extensions().some(function(ext) { return ext.loading(); })) {
                 return;
             }
+
             this.functions().map(function(v) {
                 v.name();
                 v.definition();
                 v.parameters();
             });
+
             this.variables().map(function(v) {
                 v.name();
                 v.definition();
             });
+
             this.generateVariablePreview();
         },this).extend({rateLimit:300});
 
@@ -1146,7 +1154,16 @@ $(document).ready(function() {
             return this.allParts().find(p => p.id == id);
         },
 
-        generateVariablePreview: function() {
+        generateVariablePreview: async function() {
+            //this.generatingVariables(true);
+            var going = true;
+
+            setTimeout(() => {
+                if(going) {
+                    this.generatingVariables(true);
+                }
+            }, 100);
+
             if(!Numbas.jme) {
                 var q = this;
                 Numbas.init = function() {
@@ -1157,13 +1174,6 @@ $(document).ready(function() {
 
             this.functions().map(function(f) {
                 f.error('');
-            });
-            this.variables().map(function(v) {
-                if(!v.locked.peek()) {
-                    v.error('');
-                    v.warnings([]);
-                    v.value(null);
-                }
             });
 
             var prep = this.prepareVariables();
@@ -1196,7 +1206,7 @@ $(document).ready(function() {
                 maxRuns = 1;
             }
             while(runs<maxRuns && !conditionSatisfied) {
-                results = this.computeVariables(prep);
+                results = await this.computeVariables(prep);
                 conditionSatisfied = results.conditionSatisfied;
                 runs += 1;
             }
@@ -1207,10 +1217,12 @@ $(document).ready(function() {
             }
 
             // fill in observables
+            console.log(results);
             this.variables().map(function(v) {
                 if(v.locked.peek()) {
                     return;
                 }
+
                 var name = v.name().toLowerCase();
                 var result = results.variables[name];
                 if(!result) {
@@ -1224,9 +1236,13 @@ $(document).ready(function() {
                 }
                 if('error' in result) {
                     v.error(result.error);
+                } else {
+                    v.error('');
                 }
                 if('warnings' in result) {
                     v.warnings(result.warnings);
+                } else {
+                    v.warnings([]);
                 }
             });
 
@@ -1238,6 +1254,9 @@ $(document).ready(function() {
 
             this.questionScope(results.scope);
             this.should_remake_instance = true;
+
+            going = false;
+            this.generatingVariables(false);
         },
 
         // get everything ready to compute variables - make functions, and work out dependency graph
@@ -1324,7 +1343,7 @@ $(document).ready(function() {
             return randoms;
         },
 
-        computeVariables: function(prep) {
+        computeVariables: async function(prep) {
             var result = {variables: {}, conditionSatisfied: true};
             var jme = Numbas.jme;
             var scope = result.scope = new jme.Scope([prep.scope]);
@@ -1336,14 +1355,14 @@ $(document).ready(function() {
 
             var errors = [];
 
-            function computeVariable(name,todo,scope,path,computeFn) {
+            async function computeVariable(name,todo,scope,path,computeFn) {
                 scope.editor_evaluation_warnings = [];
                 var value;
                 try {
-                    value = jme.variables.computeVariable.apply(jme.variables, arguments);
+                    value = await jme.variables.computeVariablePromise.apply(jme.variables, arguments);
                 }
                 catch(e) {
-                    name = todo[name].originalName || name;
+                    name = todo[name]?.originalName || name;
                     if(!result.variables[name]) {
                         result.variables[name] = {error: e.message};
                     }
@@ -1360,7 +1379,7 @@ $(document).ready(function() {
             }
 
             try {
-                var vresult = Numbas.jme.variables.makeVariables(todo,scope,prep.condition,computeVariable);
+                var vresult = await Numbas.jme.variables.makeVariablesPromise(todo,scope,prep.condition,computeVariable);
                 result.conditionSatisfied = vresult.conditionSatisfied;
                 Object.keys(vresult.variables).forEach(function(name) {
                     result.variables[name] = result.variables[name] || {};
@@ -1442,7 +1461,7 @@ $(document).ready(function() {
             }
 
             var ot = Math.ceil(running_time);
-            function test() {
+            async function test() {
                 var t = new Date();
                 if(q.variablesTest.cancel || t>end) {
                     finish();
@@ -1454,7 +1473,7 @@ $(document).ready(function() {
                     }
                     try {
                         runs += 1;
-                        var run = q.computeVariables(prep);
+                        var run = await q.computeVariables(prep);
                     } catch(e) {
                         q.variablesTest.running(false);
                         return;

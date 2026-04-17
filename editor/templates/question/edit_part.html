@@ -643,6 +643,21 @@
                 {% selectproperty 'variableReplacementStrategy' 'Variable replacement strategy' options_text='niceName' options='variableReplacementStrategies' help_url='question/parts/reference.html#term-Variable-replacement-strategy' %}
                 {% property 'adaptiveMarkingPenalty' 'Penalty when adaptive marking is used' min=0 help_url='question/parts/reference.html#term-Penalty-when-adaptive-marking-is-used' %}
             </form>
+
+            <!-- ko if: variableReplacementBackReferences().length > 0 -->
+            <hr>
+            <p>The answer to this part is used to replace variables in the following other parts:</p>
+            <ul data-bind="foreach: variableReplacementBackReferences">
+                <li>
+                    <span class="part-reference btn btn-sm btn-default" data-bind="click: goTo, text: name">
+                    </span>
+                </li>
+            </ul>
+
+            <form class="form-horizontal" data-bind="submit: Editor.noop">
+                {% property 'adaptiveMarkingUseCondition' 'Condition for using this part\'s answer in adaptive marking' min=0 monospace=True help_url='question/parts/reference.html#term-Condition-for-using-this-parts-answer-in-adaptive-marking' %}
+            </form>
+            <!-- /ko -->
         </div>
     </section>
     <section class="tab-pane" data-bind="activeIf: ko.unwrap(tabber.currentTab().id)=='nextparts'">

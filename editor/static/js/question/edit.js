@@ -3183,6 +3183,10 @@ $(document).ready(function() {
             return q.variables().length>0 && q.allParts().length>1;
         },this);
         this.adaptiveMarkingPenalty = ko.observable(0);
+        this.variableReplacementBackReferences = ko.pureComputed(function() {
+            return this.q.allParts().filter(p => p.variableReplacements().some(vr => vr.replacement()==this.id));
+        }, this);
+        this.adaptiveMarkingUseCondition = ko.observable('');
 
         this.variableReplacementStrategies = [
             {name: 'originalfirst', niceName: 'Try without replacements first'},
@@ -3519,6 +3523,7 @@ $(document).ready(function() {
                     nextParts: this.nextParts().map(function(np){ return np.toJSON(); }),
                     suggestGoingBack: !this.isFirstPart() && this.suggestGoingBack(),
                     adaptiveMarkingPenalty: this.adaptiveMarkingPenalty(),
+                    adaptiveMarkingUseCondition: this.adaptiveMarkingUseCondition(),
                     exploreObjective: this.exploreObjective() ? this.exploreObjective().name() : null,
                 });
                 if(this.prompt()) {
@@ -3578,6 +3583,7 @@ $(document).ready(function() {
                     'showCorrectAnswer',
                     'showFeedbackIcon',
                     'adaptiveMarkingPenalty',
+                    'adaptiveMarkingUseCondition',
                     'suggestGoingBack'
                 ],this);
                 this.exploreObjective(this.q.objectives().find(function(o) { return o.name()==data.exploreObjective; }));

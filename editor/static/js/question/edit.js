@@ -3187,6 +3187,7 @@ $(document).ready(function() {
             return this.q.allParts().filter(p => p.variableReplacements().some(vr => vr.replacement()==this.id));
         }, this);
         this.adaptiveMarkingUseCondition = ko.observable('');
+        this.adaptiveMarkingNotUsedMessage = ko.observable('');
 
         this.variableReplacementStrategies = [
             {name: 'originalfirst', niceName: 'Try without replacements first'},
@@ -3524,6 +3525,7 @@ $(document).ready(function() {
                     suggestGoingBack: !this.isFirstPart() && this.suggestGoingBack(),
                     adaptiveMarkingPenalty: this.adaptiveMarkingPenalty(),
                     adaptiveMarkingUseCondition: this.adaptiveMarkingUseCondition(),
+                    adaptiveMarkingNotUsedMessage: this.adaptiveMarkingNotUsedMessage(),
                     exploreObjective: this.exploreObjective() ? this.exploreObjective().name() : null,
                 });
                 if(this.prompt()) {
@@ -3584,6 +3586,7 @@ $(document).ready(function() {
                     'showFeedbackIcon',
                     'adaptiveMarkingPenalty',
                     'adaptiveMarkingUseCondition',
+                    'adaptiveMarkingNotUsedMessage',
                     'suggestGoingBack'
                 ],this);
                 this.exploreObjective(this.q.objectives().find(function(o) { return o.name()==data.exploreObjective; }));

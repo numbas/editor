@@ -24,6 +24,7 @@ from django.utils.http import http_date
 from django.utils.decorators import method_decorator
 from django.utils.timezone import make_aware
 from django.db.models import Q, Min, Max, Count
+from django.db.models.functions import Lower
 from django.db import transaction, IntegrityError
 from django import http
 from django.shortcuts import redirect, render
@@ -41,7 +42,7 @@ from accounts.models import UserProfile, EditorItemViewed
 
 from editor.context_processors import get_mathjax_2_url, get_mathjax_4_url
 from editor.tables import EditorItemTable, RecentlyPublishedTable
-from editor.models import EditorItem, Project, IndividualAccess, Licence, PullRequest, Taxonomy, Contributor, Folder, Theme
+from editor.models import EditorItem, Project, IndividualAccess, Licence, PullRequest, Taxonomy, Contributor, Folder, Theme, Extension, CustomPartType
 import editor.lockdown_app
 import editor.models
 from editor.templatetags.sstatic import sstatic
@@ -337,6 +338,7 @@ class SearchView(ListView):
             form.data.setdefault(field, form.fields[field].initial)
         form.is_valid()
 
+
         items = self.get_viewable_items()
 
         # filter based on tags
@@ -423,6 +425,32 @@ class SearchView(ListView):
         else:
             self.filter_taxonomy_node = Q()
 
+        # filter based on custom part types
+        custom_part_type = form.cleaned_data.get('custom_part_type')
+        custom_part_types = CustomPartType.objects.filter(CustomPartType.filter_can_be_viewed_by(self.request.user))
+        form.fields['custom_part_type'].choices = [('','-----')] + sorted([(c.pk, c.name) for c in custom_part_types], key=lambda x: x[1].lower())
+        if custom_part_type:
+            items = items.filter(question__custom_part_types=custom_part_type)
+
+        # filter based on theme
+        custom_themes = Theme.objects.filter(Theme.filter_can_be_viewed_by(self.request.user))
+        form.fields['theme'].choices = sorted(settings.GLOBAL_SETTINGS['NUMBAS_THEMES'] + [(t.name, t.slug) for t in custom_themes], key=lambda x: x[0].lower())
+        form.fields['theme'].choices.insert(0, ("Any theme", ""))
+        form.fields['theme'].choices = [(b,a) for a,b in form.fields['theme'].choices]
+
+        theme = form.cleaned_data.get('theme')
+        if theme:
+            items = items.filter(Q(exam__custom_theme__slug=theme) | Q(exam__theme=theme))
+
+        # filter based on extensions
+        extensions = Extension.objects.filter(Extension.filter_can_be_viewed_by(self.request.user))
+        extensions = extensions.distinct().order_by(Lower('name'))
+        form.fields['extension'].choices = [('','-----')] + sorted([(e.location, e.name) for e in extensions], key=lambda x: x[1].lower())
+
+        extension = self.request.GET.get('extension')
+        if extension:
+            items = items.filter(question__extensions__location=extension)
+        
         items = items.distinct()
 
         return items

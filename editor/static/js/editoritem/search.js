@@ -59,7 +59,7 @@ $(document).ready(function() {
     var vm = window.vm = {taxonomies: taxonomies};
     ko.applyBindings(vm);
 
-    $('#id_item_types, #id_usage input, #id_status, #id_author').on('change',form_changed('search-panel-form'));
+    $('#id_item_types, #id_usage input, #id_status, #id_author,#id_custom_part_type,#id_theme,#id_extension').on('change',form_changed('search-panel-form'));
     $('#ability_levels').on('change','input[type="checkbox"]',form_changed('search-panel-form'));
     $('input[name="author"]').on('autocompleteselect',form_changed('search-panel-form'));
 

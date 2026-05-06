@@ -109,6 +109,10 @@ class EditorItemSearchForm(forms.Form):
     status = forms.ChoiceField(choices=[('any', 'Any status'),('draft','Draft')]+list(editor.models.STAMP_STATUS_CHOICES), required=False, widget=BootstrapRadioSelect)
     order_by = forms.ChoiceField(choices=[('last_modified', 'Last modified'), ('name', 'Name'), ('licence', 'Usage rights'), ('author', 'Author')], required=False, widget=BootstrapSelect, initial='last_modified')
 
+    custom_part_type = forms.ModelChoiceField(queryset=editor.models.CustomPartType.objects.all(), widget=BootstrapSelect, required=False)
+    theme = forms.ChoiceField(choices=[(b,a) for a,b in settings.GLOBAL_SETTINGS['NUMBAS_THEMES']]+[(t.slug,t.name) for t in editor.models.Theme.objects.all()], widget=BootstrapSelect, required=False)
+    extension = forms.ChoiceField(choices=[(e.location, e.name) for e in editor.models.Extension.objects.all()], widget=BootstrapSelect, required=False)
+
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
     exclude_tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
 

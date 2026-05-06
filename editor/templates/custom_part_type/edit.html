@@ -149,6 +149,15 @@
                             Re-upload
                         </a>
                         </li>
+
+                        <li role="separator" class="divider"></li>
+
+                        <li>
+                            <a href="{% url 'search' %}?custom_part_type={{object.pk}}">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                                Questions using this part type
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </li>

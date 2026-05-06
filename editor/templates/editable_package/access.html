@@ -70,6 +70,13 @@
             </form>
         </div>
     </div>
+
+    {% if object.package_noun == 'extension' %}
+    <p><a href="{% url 'search' %}?extension={{object.location}}"><span class="glyphicon glyphicon-search"></span> Questions using this extension</a></p>
+    {% endif %}
+    {% if object.package_noun == 'theme' %}
+    <p><a href="{% url 'search' %}?theme={{object.slug}}"><span class="glyphicon glyphicon-search"></span> Exams using this theme</a></p>
+    {% endif %}
 {% endblock package_edit_content %}
 
 

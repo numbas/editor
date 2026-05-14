@@ -1961,7 +1961,7 @@ class NewExam(models.Model):
 
     @property
     def extensions(self):
-        return Extension.objects.filter(questions__in=self.questions.all()).distinct()
+        return Extension.objects.filter(Q(questions__in=self.questions.all()) | Q(custom_part_types__questions__in=self.questions.all())).distinct()
 
     @property
     def custom_part_types(self):

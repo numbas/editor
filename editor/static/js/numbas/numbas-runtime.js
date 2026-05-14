@@ -9073,7 +9073,7 @@ builtin_function_set({name: 'jme', description: 'Working with JME expressions'},
 
     set.add_function('scope', [], TScope, null, {
         evaluate: function(args, scope) {
-            return new TScope(new jme.Scope({}));
+            return new TScope(new jme.Scope({constants: scope.allConstants()}));
         }
     });
 
@@ -13313,6 +13313,7 @@ Rule.prototype = /** @lends Numbas.jme.rules.Rule.prototype */ {
             return extend_options(this.options, options);
         }
     },
+
     /** Match a rule on given syntax tree.
      *
      * @memberof Numbas.jme.rules.Rule.prototype
@@ -15085,6 +15086,28 @@ class PatternParser extends jme.Parser {
         this.addBinaryOperator('`&', {precedence: 100000});     // and
         this.addBinaryOperator('`where', {precedence: 1000000});   // condition
         this.addBinaryOperator('`@', {precedence: 1000000, rightAssociative: true});   // macro
+    }
+
+    compile(expr) {
+        const tree = super.compile(expr);
+        return this.expand_pattern(tree);
+    }
+
+    /** Expand any annotations in the pattern which would expand to a larger expression.
+     *
+     * @param {Numbas.jme.tree} pattern
+     * @returns {Numbas.jme.tree}
+     */
+    expand_pattern(tree) {
+        if(tree.args) {
+            tree = {tok: tree.tok, args: tree.args.map(arg => this.expand_pattern(arg))};
+        }
+
+        if(tree.tok.type=='name' && tree.tok.nameWithoutAnnotation == '$n' && tree.tok.annotation?.includes('rational')) {
+            return this.compile('integer:$n/integer:$n`?');
+        }
+
+        return tree;
     }
 }
 
@@ -31355,6 +31378,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         functionSets: [],
         enabledFunctions: [],
         disabledFunctions: [],
+        notation: 'standard',
     },
     /** The name of the input widget this part uses, if any.
      *
@@ -31417,7 +31441,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
             scope,
             notation
         );
-        settings.mustMatchPattern = notation.subvars(settings.mustMatchPatternString || '', scope);
+        settings.mustMatchPattern = notation.treeToJME(notation.subvars(settings.mustMatchPatternString || '', scope), {}, scope);
         this.markingScope = new jme.Scope(this.getScope());
         this.markingScope.variables = {};
         return settings.correctAnswer;

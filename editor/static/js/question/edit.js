@@ -243,6 +243,7 @@ $(document).ready(function() {
         this.maxMarks = ko.observable(0);
         this.penalties = ko.observableArray([]);
         this.objectives = ko.observableArray([]);
+        this.showAllParts = ko.observable(false);
 
         this.objective_visibility_options = [
             {name: 'Always', id: 'always'},
@@ -1539,6 +1540,7 @@ $(document).ready(function() {
                 penalties: this.penalties().map(function(p){return p.toJSON();}),
                 objectiveVisibility: this.objectiveVisibility().id,
                 penaltyVisibility: this.penaltyVisibility().id,
+                showAllParts: this.showAllParts(),
             }
         },
 
@@ -1581,7 +1583,7 @@ $(document).ready(function() {
 
             contentData = data.JSONContent;
 
-            tryLoad(contentData,['name','statement','advice','maxMarks'],this);
+            tryLoad(contentData,['name','statement','advice','maxMarks', 'showAllParts'],this);
 
             if('builtin_constants' in contentData) {
                 this.builtin_constants.forEach(function(c) {

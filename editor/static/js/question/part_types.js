@@ -42,19 +42,20 @@ part_types.models = [
                     var type = gaps[0].type().name;
                     return gaps.every(function(g) { return g.type().name==type; });
                 }),
-                sortAnswers: ko.observable(false)
+                sortAnswers: ko.observable(false),
+                inlineCorrectAnswer: ko.observable(true)
             };
             return model;
         },
 
         toJSON: function(data,part) {
-            if(part.gaps().length)
-            {
+            if(part.gaps().length) {
                 data.gaps = part.gaps().map(function(g) {
                     return g.toJSON();
                 });
             }
             data.sortAnswers = this.sortAnswers();
+            data.inlineCorrectAnswer = this.inlineCorrectAnswer();
         },
         load: function(data,part) {
             if(data.gaps)
@@ -63,7 +64,7 @@ part_types.models = [
                     part.gaps.push(new Editor.question.Part('gap',part.q,part,part.gaps,g));
                 });
             }
-            tryLoad(data,['sortAnswers'],this);
+            tryLoad(data,['sortAnswers', 'inlineCorrectAnswer'],this);
         }
     },
     {

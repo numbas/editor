@@ -22,13 +22,21 @@ Marking
         The lowest answer will be submitted against the first gap, and so on.
         Because the order of marking might not correspond with the order in which the gaps are shown to the student, no feedback icon is shown next to the gap input boxes, only in the feedback summary for the whole part.
 
+    Show expected answers inline?
+        If ticked, then each gap has its expected answer shown in a separate block next to its input.
+        If not ticked, then a big "expected answer" block is shown after the part prompt, containing a duplicate of the prompt with the expected answers filled in.
+
 The ``studentAnswer`` marking parameter is a :data:`list` value, containing the string the student's answers to each of the gaps.
 
-This part type provides one property to the :data:`settings` object:
+This part type provides the following properties to the :data:`settings` object:
 
 .. data:: sortAnswers
 
     See :term:`Sort student's answers before marking?`
+
+.. data:: inlineCorrectAnswer
+
+    See :term:`Show expected answers inline?`
 
 Example
 #######

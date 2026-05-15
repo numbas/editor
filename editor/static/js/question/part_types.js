@@ -666,7 +666,7 @@ part_types.models = [
                 shuffleChoices: ko.observable(false),
                 displayColumns: ko.observable(0),
                 customMatrix: ko.observable(''),
-                displayType:ko.observable(''),
+                displayType: ko.observable(''),
                 showBlankOption: ko.observable(true),
                 showCellAnswerState: ko.observable(true),
                 customChoices: ko.observable(false),
@@ -675,7 +675,11 @@ part_types.models = [
                     {name: 'radiogroup', niceName: 'Radio buttons'},
                     {name: 'dropdownlist', niceName: 'Drop down list'}
                 ],
-                choices: ko.observableArray([])
+                choices: ko.observableArray([]),
+                interpretedAnswerForm: Editor.optionObservable([
+                    {name: 'list of list of boolean', niceName: '2D array of booleans'},
+                    {name: 'index of choice', niceName: 'Index of selected choice'}
+                ]),
             };
             var _customMarking = ko.observable(false);
             model.customMarking = ko.computed({
@@ -717,6 +721,7 @@ part_types.models = [
             data.displayColumns = this.displayColumns();
             data.showBlankOption = this.showBlankOption();
             data.showCellAnswerState = this.showCellAnswerState();
+            data.interpretedAnswerForm = this.interpretedAnswerForm().name;
 
             if(this.customChoices()) {
                 data.choices = this.customChoicesExpression();
@@ -756,7 +761,7 @@ part_types.models = [
         },
 
         load: function(data) {
-            tryLoad(data,['minMarks','maxMarks','shuffleChoices','displayColumns','showCellAnswerState', 'showBlankOption'],this);
+            tryLoad(data,['minMarks','maxMarks','shuffleChoices','displayColumns','showCellAnswerState', 'showBlankOption', 'interpretedAnswerForm'],this);
             if(typeof data.matrix == 'string') {
                 this.customMarking(true);
                 this.customMatrix(data.matrix);
@@ -832,6 +837,12 @@ part_types.models = [
                 customChoicesExpression: ko.observable(''),
 
                 choices: ko.observableArray([]),
+
+                interpretedAnswerForm: Editor.optionObservable([
+                    {name: 'list of list of boolean', niceName: '2D array of booleans'},
+                    {name: 'list of boolean', niceName: 'List of booleans'},
+                    {name: 'indices of choices', niceName: 'Indices of selected choices'}
+                ]),
             };
             var _customMarking = ko.observable(false);
             model.customMarking = ko.computed({
@@ -876,6 +887,7 @@ part_types.models = [
             data.warningType = this.warningType().name;
             data.showCellAnswerState = this.showCellAnswerState();
             data.markingMethod = this.markingMethod().name;
+            data.interpretedAnswerForm = this.interpretedAnswerForm().name;
 
             if(this.customChoices()) {
                 data.choices = this.customChoicesExpression();
@@ -918,7 +930,7 @@ part_types.models = [
         },
 
         load: function(data) {
-            tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','displayColumns','showCellAnswerState'],this);
+            tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','displayColumns','showCellAnswerState', 'interpretedAnswerForm'],this);
             if(typeof data.matrix == 'string') {
                 this.customMarking(true);
                 this.customMatrix(data.matrix);
@@ -1028,7 +1040,18 @@ part_types.models = [
 
                 choicesHeader: ko.observable(''),
                 answersHeader: ko.observable(''),
+
             };
+            model.interpretedAnswerForm = Editor.optionObservable(ko.computed(function() {
+                var options = [
+                    {name: 'list of list of boolean', niceName: '2D array of booleans'},
+                    {name: 'indices of pairs', niceName: 'List of chosen pairs'},
+                ];
+                if(model.displayType().name == 'radiogroup') {
+                    options.push({name: 'list of indices', niceName: 'List of chosen answer indices'});
+                }
+                return options
+            }));
 
             model.matrix = Editor.editableGrid(
                 ko.computed(function() {
@@ -1110,6 +1133,7 @@ part_types.models = [
             data.warningType = this.warningType().name;
             data.showCellAnswerState = this.showCellAnswerState();
             data.markingMethod = this.markingMethod().name;
+            data.interpretedAnswerForm = this.interpretedAnswerForm()?.name;
 
             if(this.customChoices()) {
                 data.choices = this.customChoicesExpression();
@@ -1158,7 +1182,20 @@ part_types.models = [
         },
 
         load: function(data) {
-            tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','shuffleAnswers','showCellAnswerState', 'choicesHeader', 'answersHeader'],this);
+            tryLoad(data,
+                [
+                    'minMarks',
+                    'maxMarks',
+                    'minAnswers',
+                    'maxAnswers',
+                    'shuffleChoices',
+                    'shuffleAnswers',
+                    'showCellAnswerState',
+                    'choicesHeader',
+                    'answersHeader',
+                ],
+                this
+            );
             var warningType = tryGetAttribute(data,'warningType');
             for(var i=0;i<this.warningTypes.length;i++)
             {
@@ -1173,6 +1210,7 @@ part_types.models = [
                     this.displayType(this.displayTypes[i]);
                 }
             }
+            tryLoad(data, ['interpretedAnswerForm'], this);
             if(data.markingMethod) {
                 for(var i=0;i<this.markingMethods.length;i++)
                 {

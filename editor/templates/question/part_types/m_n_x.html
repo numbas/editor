@@ -50,6 +50,15 @@
         <hr>
 
         {% booleanproperty 'showCellAnswerState' 'Show choice feedback state?' help_url='question/parts/multiple-choice.html#term-Show-choice-feedback-state' %}    
+
+        <div class="form-group">
+            <label for="input-interpretedAnswerForm" class="{{form_label_class}} control-label">
+                Form of the interpreted answer {% helplink 'question/parts/multiple-choice.html#term-Form-of-the-interpreted-answer' %}
+            </label>
+            <div class="{{form_control_class}}">
+                <select id="input-interpretedAnswerForm" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: interpretedAnswerForm.options, value: interpretedAnswerForm, optionsText: 'niceName'"></select>
+            </div>
+        </div>
     </form>
 </section>
 

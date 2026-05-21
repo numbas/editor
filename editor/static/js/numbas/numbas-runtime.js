@@ -27906,6 +27906,8 @@ Numbas.signals.on('localisation initialised', () => {
             this.hasColumnHeaders = Knockout.computed(function() {
                 return Knockout.unwrap(this.columnHeaders).length > 0;
             }, this);
+            this.cellFeedback = defaultObservable(params.cellFeedback, []);
+            this.gridlines = defaultObservable(params.gridlines, {rows: [], columns: []});
             this.title = params.title || '';
             var _numRows = typeof params.rows == 'function' ? params.rows : Knockout.observable(Knockout.unwrap(params.rows) || 2);
             this.numRows = Knockout.computed({
@@ -27967,7 +27969,26 @@ Numbas.signals.on('localisation initialised', () => {
                 var prefilled = ((Knockout.unwrap(vm.prefilledCells) || [])[row] || [])[column];
                 var use_prefilled = prefilled != '' && prefilled !== undefined;
                 c = use_prefilled ? prefilled : c;
-                var cell = {cell: Knockout.observable(c), prefilled: use_prefilled, label: R('matrix input.cell label', {row:row + 1, column:column + 1})};
+                const feedback = Knockout.pureComputed(() => {
+                    const v = (vm.cellFeedback()[row] || [])[column];
+                    return v;
+                });
+                const lineRight = Knockout.pureComputed(function() {
+                    const lines = vm.gridlines().columns;
+                    return column < vm.numColumns()-1 && lines[column];
+                });
+                const lineBottom = Knockout.pureComputed(function() {
+                    const lines = vm.gridlines().rows;
+                    return row < vm.numRows()-1 && lines[row];
+                });
+                var cell = {
+                    cell: Knockout.observable(c),
+                    prefilled: use_prefilled,
+                    label: R('matrix input.cell label', {row:row + 1, column:column + 1}),
+                    feedback,
+                    lineRight,
+                    lineBottom
+                };
                 cell.cell.subscribe(make_result);
                 return cell;
             }
@@ -28130,7 +28151,7 @@ Numbas.signals.on('localisation initialised', () => {
                             <tr>
                                 <th data-bind="visible: $parent.hasRowHeaders"><span data-bind="latex: $parent.rowHeaders()[$index()+($parent.hasColumnHeaders() ? 1 : 0)] || ''"></span></th>
                                 <!-- ko foreach: $data -->
-                                <td class="cell"><input type="text" autocapitalize="off" inputmode="text" spellcheck="false" data-bind="attr: {'aria-label': label}, textInput: cell, autosize: true, disable: prefilled || $parents[1].disable, event: $parents[1].events"/></td>
+                                <td class="cell" data-bind="css: {'line-right': lineRight, 'line-bottom': lineBottom}, attr: {'feedback-state': feedback}"><input type="text" autocapitalize="off" inputmode="text" spellcheck="false" data-bind="attr: {'aria-label': label}, textInput: cell, autosize: true, disable: prefilled || $parents[1].disable, event: $parents[1].events"/></td>
                                 <!-- /ko -->
                             </tr>
                         </tbody>
@@ -30117,7 +30138,10 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
                 'prefilledcells',
                 'tolerance',
                 'markpercell',
-                'allowfractions'
+                'allowfractions',
+                'gridlines',
+                'gridlinescustomrows',
+                'gridlinescustomcolumns',
             ],
             [
                 'correctAnswerFractions',
@@ -30131,7 +30155,10 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
                 'prefilledCellsString',
                 'toleranceString',
                 'markPerCell',
-                'allowFractions'
+                'allowFractions',
+                'gridlines',
+                'gridlinesCustomRows',
+                'gridlinesCustomColumns',
             ]
         );
         tryGetAttribute(settings, xml, 'answer/precision', ['type', 'partialcredit', 'strict'], ['precisionType', 'precisionPC', 'strictPrecision']);
@@ -30158,7 +30185,10 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
                 'prefilledCells',
                 'tolerance',
                 'markPerCell',
-                'allowFractions'
+                'allowFractions',
+                'gridlines',
+                'gridlinesCustomRows',
+                'gridlinesCustomColumns',
             ],
             settings,
             [
@@ -30174,7 +30204,10 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
                 'prefilledCellsString',
                 'toleranceString',
                 'markPerCell',
-                'allowFractions'
+                'allowFractions',
+                'gridlines',
+                'gridlinesCustomRows',
+                'gridlinesCustomColumns',
             ]
         );
         tryLoad(data, ['precisionType', 'precision', 'precisionPartialCredit', 'precisionMessage', 'strictPrecision'], settings, ['precisionType', 'precisionString', 'precisionPC', 'precisionMessage', 'strictPrecision']);
@@ -30331,7 +30364,10 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
         minColumns: 0,
         maxColumns: 0,
         prefilledCellsString: '',
-        prefilledCells: []
+        prefilledCells: [],
+        gridlines: 'none',
+        gridlinesCustomRows: '',
+        gridlinesCustomColumns: '',
     },
     /** The name of the input widget this part uses, if any.
      *

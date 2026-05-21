@@ -508,7 +508,17 @@ part_types.models = [
                 precisionPartialCredit: ko.observable(0),
                 precisionMessage: ko.observable('You have not given your answer to the correct precision.'),
                 strictPrecision: ko.observable(true),
-                prefilledCells: ko.observable('')
+                prefilledCells: ko.observable(''),
+                gridlines: Editor.optionObservable([
+                    {name: 'none', niceName: 'None'},
+                    {name: 'afterFirstRow', niceName: 'After first row'},
+                    {name: 'beforeLastRow', niceName: 'Before last row'},
+                    {name: 'afterFirstColumn', niceName: 'After first column'},
+                    {name: 'beforeLastColumn', niceName: 'Before last column'},
+                    {name: 'custom', niceName: 'Custom expression'},
+                ]),
+                gridlinesCustomRows: ko.observable('repeat(false, numrows-1)'),
+                gridlinesCustomColumns: ko.observable('repeat(false, numcolumns-1)'),
             }
             model.precisionType = ko.observable(model.precisionTypes[0]);
             model.precisionWord = ko.computed(function() {
@@ -541,6 +551,9 @@ part_types.models = [
             data.minRows = this.minRows();
             data.maxRows = this.maxRows();
             data.prefilledCells = this.prefilledCells();
+            data.gridlines = this.gridlines().name;
+            data.gridlinesCustomRows = this.gridlinesCustomRows();
+            data.gridlinesCustomColumns = this.gridlinesCustomColumns();
 
             if(this.precisionType().name!='none') {
                 data.precisionType = this.precisionType().name;
@@ -581,7 +594,10 @@ part_types.models = [
                 'maxColumns',
                 'minRows',
                 'maxRows',
-                'prefilledCells'
+                'prefilledCells',
+                'gridlines',
+                'gridlinesCustomRows',
+                'gridlinesCustomColumns',
             ],this);
             for(var i=0;i<this.precisionTypes.length;i++) {
                 if(this.precisionTypes[i].name == this.precisionType())

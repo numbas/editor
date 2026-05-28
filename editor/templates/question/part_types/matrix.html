@@ -73,5 +73,36 @@
         </div>
     </div>
 
+    <hr>
+
+    <div class="form-group">
+        <label for="input-gridlines" class="{{form_label_class}} control-label">
+            Grid lines {% helplink 'question/parts/matrixentry.html#term-Grid-lines' %}
+        </label>
+        <div class="{{form_control_class}}">
+            <select id="input-gridlines" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: gridlines.options, value: gridlines, optionsText: 'niceName'"></select>
+        </div>
+    </div>
+
+    <div data-bind="fadeVisible: gridlines().name=='custom'">
+        <div class="form-group">
+            <label for="input-gridlinesCustomRows" class="{{form_label_class}} control-label">
+                Rows with lines {% helplink 'question/parts/matrixentry.html#term-Rows-with-lines' %}
+            </label>
+            <div class="{{form_control_class}}">
+                <textarea id="input-gridlinesCustomRows" {% if not editable %}disabled{% endif %} data-bind="codemirror: gridlinesCustomRows, codemirrorMode: 'jme'"></textarea>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="input-gridlinesCustomColumns" class="{{form_label_class}} control-label">
+                Columns with lines {% helplink 'question/parts/matrixentry.html#term-Columns-with-lines' %}
+            </label>
+            <div class="{{form_control_class}}">
+                <textarea id="input-gridlinesCustomColumns" {% if not editable %}disabled{% endif %} data-bind="codemirror: gridlinesCustomColumns, codemirrorMode: 'jme'"></textarea>
+            </div>
+        </div>
+    </div>
+
+
 </form>
 </section>

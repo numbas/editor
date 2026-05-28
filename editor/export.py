@@ -522,7 +522,8 @@ class ProjectExporter(Exporter):
         root = self.get_root()
         for resource in Resource.objects.filter(questions__editoritem__project=project).distinct():
             with (root / 'resources' / resource.file.name).open('wb') as f:
-                f.write(resource.file.file.read())
+                with resource.file.file.open() as sf:
+                    f.write(sf.read())
 
 
 class UserExporter(Exporter):
@@ -600,7 +601,8 @@ class UserExporter(Exporter):
         all_resources = Resource.objects.filter(Q(owner=user) | Q(questions__editoritem__author=user)).distinct()
         for resource in all_resources:
             with (root / 'resources' / resource.file.name).open('wb') as f:
-                f.write(resource.file.file.read())
+                with resource.file.file.open() as sf:
+                    f.write(sf.read())
 
     def export_items(self):
         user = self.object

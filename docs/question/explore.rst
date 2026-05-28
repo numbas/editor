@@ -49,6 +49,14 @@ Click on :guilabel:`Explore mode options` at the top of the parts list to set up
       The maximum mark the student can be awarded for this question.
       If the total obtained by adding up the scores for the objectives and taking away penalties exceeds this amount, this amount is awarded instead.
 
+   Show all parts at once?
+      If ticked, then all of the generated parts will be shown at once, in the order that they were generated.
+      When a part has only one next part option available, it's automatically selected and that part is generated.
+
+      Use this if your question is entirely linear, so that students can see information from previous parts without having to navigate backwards.
+
+      If students can take multiple next part options from a particular part, this layout could be confusing.
+
    Show objectives
       If :guilabel:`Always` is chosen, all objectives are shown in the score breakdown table.
       

@@ -122,6 +122,28 @@ Marking
         If this is not ticked, no highlighting will be applied to ticked choices.
         This is appropriate if the part uses a custom marking algorithm which awards a score based on the set of choices considered as a whole.
 
+    Form of the interpreted answer
+        This option determines the form of the :ref:`JME <jme>` representation of the student's answer, used for things like adaptive marking or next part variable replacements.
+
+        All multiple choice part types have a default form "2D array of booleans", which is a nested list indexed first by answer number and then by choice number, with the entry ``true`` if the student selected that answer/choice pair and ``false`` otherwise.
+
+        "Choose one from a list" parts can use the form "index of selected choice", which is the integer index of the choice that the student selected.
+
+        "Choose several from a list" parts can use the following forms:
+
+        List of booleans
+            A list containing a boolean for each choice, representing whether the choice was selected.
+
+        Indices of selected choices
+            A list of the integer indices of just the choices that the student selected.
+
+        "Match choices with answers" parts can use the following forms:
+
+        List of chosen pairs
+            A list of pairs of the form ``[answer index, choice index]`` that the student selected.
+        List of chosen answer indices
+            Only available if the :term:`Selection type` is "One from each row". For each choice, the index of the corresponding answer that the student selected, or ``nothing`` if they didn't select an answer.
+
 .. _choices:
 
 Choices

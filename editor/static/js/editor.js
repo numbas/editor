@@ -372,7 +372,7 @@ $(document).ready(function() {
         var obs = ko.computed({
             read: _obs,
             write: function(v) {
-                v = typeof(v)=='string' ? options.find(function(o) {return o.name==v}) || options[0] : v;
+                v = typeof(v)=='string' ? ko.unwrap(options).find(function(o) {return o.name==v}) || options[0] : v;
                 return _obs(v);
             }
         })

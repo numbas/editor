@@ -33,6 +33,15 @@
         <div data-bind="fadeVisible: customMarking">
             {% property 'customMatrix' 'Custom matrix expression' monospace=True help_url='question/parts/multiple-choice.html#term-Custom-matrix-expression' %}
         </div>
+
+        <div class="form-group">
+            <label for="input-interpretedAnswerForm" class="{{form_label_class}} control-label">
+                Form of the interpreted answer {% helplink 'question/parts/multiple-choice.html#term-Form-of-the-interpreted-answer' %}
+            </label>
+            <div class="{{form_control_class}}">
+                <select id="input-interpretedAnswerForm" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: interpretedAnswerForm.options, value: interpretedAnswerForm, optionsText: 'niceName'"></select>
+            </div>
+        </div>
     </form>
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='choices'}">

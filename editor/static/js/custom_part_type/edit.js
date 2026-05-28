@@ -172,7 +172,21 @@ $(document).ready(function() {
                     type_hint: 'list of list of string',
                     input_type: 'code',
                     default_value: [[]]
-                }
+                },
+                {
+                    name: 'gridlinesRows',
+                    label: 'Row lines',
+                    type_hint: 'list of boolean',
+                    input_type: 'code',
+                    default_value: []
+                },
+                {
+                    name: 'gridlinesColumns',
+                    label: 'Column lines',
+                    type_hint: 'list of boolean',
+                    input_type: 'code',
+                    default_value: []
+                },
             ]
         },
         {

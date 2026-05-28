@@ -85,6 +85,30 @@ Marking
         A 2D array of either :data:`string` or :data:`number` values, giving values to fill the cells of the matrix with.
         An empty string ``""`` denotes a blank cell that the student can write an answer in; any other value is filled in and the student may not change it.
 
+    Grid lines
+        This setting determines whether grid lines are drawn between rows and columns.
+        If :guilabel:`Custom expression` is selected, then the :term:`Rows with lines` and :term:`Columns with lines` fields must be filled in.
+
+    Rows with lines
+        A :ref:`JME` expression which must evaluate to a list of :data:`boolean` values, determining whether lines are drawn between rows.
+        A line is drawn between rows ``i`` and ``i+1`` if the entry at position ``i`` is ``true``.
+
+        The variable ``numRows`` represents the number of rows in the student's answer.
+
+        If this field is empty, then no lines are drawn.
+
+        **Example**: ``repeat(true, numRows-1)`` draws a line after every row. (There are ``numRows-1`` lines because the last row can not have a line drawn after it.)
+
+    Columns with lines
+        A :ref:`JME` expression which must evaluate to a list of :data:`boolean` values, determining whether lines are drawn between columns.
+        A line is drawn between columns ``i`` and ``i+1`` if the entry at position ``i`` is ``true``.
+
+        The variable ``numColumns`` represents the number of rows in the student's answer.
+
+        If this field is empty, then no lines are drawn.
+
+        **Example**: ``[true] + repeat(false, numRows-3) + [true]`` draws a line after the first column and before the last column, and nothing else.
+
 Marking settings
 ################
 

@@ -1561,7 +1561,7 @@ class Parser {
 
         , 'iu'),
 
-        re_string: util.re_jme_string,
+        re_string: /^("""|'''|['"])/,  // this doesn't match a whole token - it just gets the opening delimiter. The tokeniser's `parse` method then gets the rest of the string. This is to avoid backtracking.
         re_comment: /^\/\/.*?(?:\n|$)/,
         re_keypair: /^:/,
         re_lambda: /^(?:->|→)/u,
@@ -1699,10 +1699,44 @@ class Parser {
         },
         {
             re: 're_string',
-            parse(result, tokens, expr, pos) {
-                var str = result[2];
+            parse: function(result, tokens, expr, pos) {
+                const delimiter = result[0];
+
+                let i = pos + delimiter.length;
+
+                function next(s,str) {
+                    const index = str.indexOf(s);
+                    return index < 0 ? Infinity : index;
+                }
+
+                while(i < expr.length) {
+                    i = i + Math.min(next('\\',expr.slice(i)), next(delimiter, expr.slice(i)));
+
+                    if(i===Infinity) {
+                        break;
+                    }
+
+                    if(expr[i]=='\\') {
+                        i += 2;
+                        continue;
+                    }
+
+                    if(expr.slice(i, i+delimiter.length) == delimiter) {
+                        break;
+                    }
+
+                    // never get here???
+                    i += 1;
+                }
+
+                if(i >= expr.length) {
+                    return; // no match
+                }
+
+
+                var str = expr.slice(pos+delimiter.length, i);
                 var token = new TString(jme.unescape(str));
-                return {tokens: [token], start: pos, end: pos + result[0].length};
+                return {tokens: [token], start: pos, end: i + delimiter.length};
             }
         },
         {
@@ -2312,6 +2346,9 @@ class Parser {
                 var m = expr.slice(pos).match(regex);
                 if(m) {
                     var result = tt.parse.apply(this, [m, tokens, expr, pos]);
+                    if(!result) {
+                        continue;
+                    }
                     result.tokens.forEach(function(t) {
                         t.pos = result.start;
                     });
@@ -5761,6 +5798,10 @@ function find_valid_assignments(tree, scope, assignments, outtype) {
                 return assignments;
             }
         }
+        case 'expression': {
+            console.log('expression');
+            return find_valid_assignments(tree.tok.tree, scope, assignments, outtype);
+        }
         // all other token types: must be compatible with desired outtype, or we mustn't care what the output type is.
         default: {
             if(outtype && !jme.isTypeCompatible(tree.tok.type, outtype)) {
@@ -6874,7 +6915,14 @@ builtin_function_set({name: 'trigonometry', description: 'Trigonometric function
     set.add_function('min', [TRange], TNum, function(range) {
         return range[0];
     });
-    set.add_function('max', [sig.listof(sig.type('number'))], TNum, math.listmax, {unwrapValues: true});
+    set.add_function('max', [sig.listof(sig.type('number'))], TNum, function(values) {
+        var x = math.listmax(values);
+        return x==undefined ? new types.TNothing() : x
+    }, {unwrapValues: true});
+    set.add_function('min', [sig.listof(sig.type('number'))], TNum, function(values) {
+        var x = math.listmin(values);
+        return x==undefined ? new types.TNothing() : x
+    }, {unwrapValues: true});
     set.add_function('max', [TInt, TInt], TInt, math.max);
     set.add_function('min', [TInt, TInt], TInt, math.min);
     set.add_function('max', [sig.listof(sig.type('integer'))], TInt, math.listmax, {unwrapValues: true});
@@ -6887,6 +6935,9 @@ builtin_function_set({name: 'trigonometry', description: 'Trigonometric function
     set.add_function('min', [sig.listof(sig.type('rational'))], TRational, function(l) {
         return Fraction.min.apply(Fraction, l);
     }, {unwrapValues: true});
+
+
+
     set.add_function('trunc', [TRational], TInt, function(a) {
         return a.trunc();
     });
@@ -6926,7 +6977,6 @@ builtin_function_set({name: 'trigonometry', description: 'Trigonometric function
     set.add_function('fract', [TDecimal], TDecimal, function(a) {
         return a.re.minus(a.re.trunc());
     });
-    set.add_function('min', [sig.listof(sig.type('number'))], TNum, math.listmin, {unwrapValues: true});
 
     /**
      * Define a function with input signature `type, number` which returns a number-like type with the `precisionType` attribute specified.
@@ -12371,13 +12421,16 @@ JMEifier.prototype = {
 
         var str = '"' + jme.escape(s) + '"';
 
-        if(options.latex && !this.settings.ignorestringattributes) {
-            return 'latex(' + str + ')';
-        } else if(options.safe && !this.settings.ignorestringattributes) {
-            return 'safe(' + str + ')';
-        } else {
-            return str;
+        if(!this.settings.ignorestringattributes) {
+            if(options.safe) {
+                str = 'safe(' + str + ')';
+            }
+            if(options.latex) {
+                str = 'latex(' + str + ')';
+            }
         }
+
+        return str;
     },
 
     complex_number: function(n, options) {
@@ -18258,6 +18311,10 @@ if(res) { \
         }
         if(this.display) {
             this.display.updateNextParts();
+
+            if(this.availableNextParts().length == 1 && this.question.showAllParts) {
+                this.makeNextPart(this.availableNextParts()[0]);
+            }
         }
         if(!this.parentPart?.submitting) {
             this.store && this.store.partAnswered(this);
@@ -19492,6 +19549,12 @@ Question.prototype = /** @lends Numbas.Question.prototype */
      */
     penaltyVisibility: 'always',
 
+    /** Should all the parts in this explore mode question be shown together? If false, only one part is shown at a time.
+     *
+     * @type {boolean}
+     */
+    showAllParts: false,
+
     /** In explore mode, the part that the student is currently looking at.
      *
      * @type {Numbas.parts.Part}
@@ -19548,7 +19611,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         q.xml = xml;
         q.originalXML = q.xml;
 
-        tryGetAttribute(q, q.xml, '.', ['name', 'customName', 'partsMode', 'maxMarks', 'objectiveVisibility', 'penaltyVisibility']);
+        tryGetAttribute(q, q.xml, '.', ['name', 'customName', 'partsMode', 'maxMarks', 'objectiveVisibility', 'penaltyVisibility', 'showAllParts']);
         q.hasCustomName = q.customName.trim() != '';
         if(q.hasCustomName) {
             q.name = q.customName.trim();
@@ -19769,7 +19832,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         var q = this;
         var tryLoad = Numbas.json.tryLoad;
         var tryGet = Numbas.json.tryGet;
-        tryLoad(data, ['name', 'customName', 'partsMode', 'maxMarks', 'objectiveVisibility', 'penaltyVisibility', 'statement', 'advice'], q);
+        tryLoad(data, ['name', 'customName', 'partsMode', 'maxMarks', 'objectiveVisibility', 'penaltyVisibility', 'showAllParts', 'statement', 'advice'], q);
 
 
         var tags = tryGet(data, 'tags');
@@ -29144,6 +29207,8 @@ Numbas.signals.on('localisation initialised', () => {
             this.minRows = this.options.minRows || 0;
             this.maxRows = this.options.maxRows || 0;
             this.prefilledCells = this.options.prefilledCells || [];
+            this.gridlinesRows = this.options.gridlinesRows || [];
+            this.gridlinesColumns = this.options.gridlinesColumns || [];
             this.showBrackets = this.options.showBrackets === undefined ? true : this.options.showBrackets;
             this.rowHeaders = this.options.rowHeaders || [];
             this.columnHeaders = this.options.columnHeaders || [];
@@ -29256,6 +29321,8 @@ Numbas.signals.on('localisation initialised', () => {
                     minRows: minRows,
                     maxRows: maxRows,
                     prefilledCells: prefilledCells,
+                    gridlinesRows: gridlinesRows,
+                    gridlinesColumns: gridlinesColumns,
                     showBrackets: showBrackets,
                     rowHeaders: rowHeaders,
                     columnHeaders: columnHeaders,
@@ -29289,6 +29356,9 @@ Numbas.signals.on('localisation initialised', () => {
             this.hasColumnHeaders = Knockout.computed(function() {
                 return Knockout.unwrap(this.columnHeaders).length > 0;
             }, this);
+            this.cellFeedback = defaultObservable(params.cellFeedback, []);
+            this.gridlinesRows = defaultObservable(params.gridlinesRows, []);
+            this.gridlinesColumns = defaultObservable(params.gridlinesColumns, []);
             this.title = params.title || '';
             var _numRows = typeof params.rows == 'function' ? params.rows : Knockout.observable(Knockout.unwrap(params.rows) || 2);
             this.numRows = Knockout.computed({
@@ -29350,7 +29420,26 @@ Numbas.signals.on('localisation initialised', () => {
                 var prefilled = ((Knockout.unwrap(vm.prefilledCells) || [])[row] || [])[column];
                 var use_prefilled = prefilled != '' && prefilled !== undefined;
                 c = use_prefilled ? prefilled : c;
-                var cell = {cell: Knockout.observable(c), prefilled: use_prefilled, label: R('matrix input.cell label', {row:row + 1, column:column + 1})};
+                const feedback = Knockout.pureComputed(() => {
+                    const v = (vm.cellFeedback()[row] || [])[column];
+                    return v;
+                });
+                const lineRight = Knockout.pureComputed(function() {
+                    const lines = vm.gridlinesColumns();
+                    return column < vm.numColumns()-1 && lines[column];
+                });
+                const lineBottom = Knockout.pureComputed(function() {
+                    const lines = vm.gridlinesRows();
+                    return row < vm.numRows()-1 && lines[row];
+                });
+                var cell = {
+                    cell: Knockout.observable(c),
+                    prefilled: use_prefilled,
+                    label: R('matrix input.cell label', {row:row + 1, column:column + 1}),
+                    feedback,
+                    lineRight,
+                    lineBottom
+                };
                 cell.cell.subscribe(make_result);
                 return cell;
             }
@@ -29513,7 +29602,7 @@ Numbas.signals.on('localisation initialised', () => {
                             <tr>
                                 <th data-bind="visible: $parent.hasRowHeaders"><span data-bind="latex: $parent.rowHeaders()[$index()+($parent.hasColumnHeaders() ? 1 : 0)] || ''"></span></th>
                                 <!-- ko foreach: $data -->
-                                <td class="cell"><input type="text" autocapitalize="off" inputmode="text" spellcheck="false" data-bind="attr: {'aria-label': label}, textInput: cell, autosize: true, disable: prefilled || $parents[1].disable, event: $parents[1].events"/></td>
+                                <td class="cell" data-bind="css: {'line-right': lineRight, 'line-bottom': lineBottom}, attr: {'feedback-state': feedback}"><input type="text" autocapitalize="off" inputmode="text" spellcheck="false" data-bind="attr: {'aria-label': label}, textInput: cell, autosize: true, disable: prefilled || $parents[1].disable, event: $parents[1].events"/></td>
                                 <!-- /ko -->
                             </tr>
                         </tbody>
@@ -30821,9 +30910,11 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
      * Extends {@link Numbas.parts.Part#settings}
      *
      * @property {boolean} sortAnswers - Should the student's answers to the gaps be put in ascending order before marking?
+     * @property {boolean} inlineCorrectAnswer - Should the expected answer for each gap be shown next to its input? If false, a duplicate of the prompt is shown, with the correct answer for each gap.
      */
     settings: {
-        sortAnswers: false
+        sortAnswers: false,
+        inlineCorrectAnswer: true
     },
 
     loadFromXML: function(xml) {
@@ -30831,6 +30922,7 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
         var settings = this.settings;
         var tryGetAttribute = Numbas.xml.tryGetAttribute;
         this.marks = 0;
+        tryGetAttribute(this.settings, this.xml, '.', ['inlinecorrectanswer'], ['inlineCorrectAnswer']);
         tryGetAttribute(settings, xml, 'marking', ['sortanswers'], ['sortAnswers']);
         for(var i = 0 ; i < gapXML.length; i++) {
             var gap = Numbas.createPartFromXML(i, gapXML[i], this.path + 'g' + i, this.question, this, this.store);
@@ -30841,7 +30933,7 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
         var p = this;
         var settings = this.settings;
         var tryLoad = Numbas.json.tryLoad;
-        tryLoad(data, ['sortAnswers'], settings);
+        tryLoad(data, ['sortAnswers', 'inlineCorrectAnswer'], settings);
         if('gaps' in data) {
             data.gaps.forEach(function(gd, i) {
                 var gap = Numbas.createPartFromJSON(i, gd, p.path + 'g' + i, p.question, p, p.store);
@@ -31534,7 +31626,10 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
                 'prefilledcells',
                 'tolerance',
                 'markpercell',
-                'allowfractions'
+                'allowfractions',
+                'gridlines',
+                'gridlinescustomrows',
+                'gridlinescustomcolumns',
             ],
             [
                 'correctAnswerFractions',
@@ -31548,7 +31643,10 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
                 'prefilledCellsString',
                 'toleranceString',
                 'markPerCell',
-                'allowFractions'
+                'allowFractions',
+                'gridlines',
+                'gridlinesCustomRows',
+                'gridlinesCustomColumns',
             ]
         );
         tryGetAttribute(settings, xml, 'answer/precision', ['type', 'partialcredit', 'strict'], ['precisionType', 'precisionPC', 'strictPrecision']);
@@ -31575,7 +31673,10 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
                 'prefilledCells',
                 'tolerance',
                 'markPerCell',
-                'allowFractions'
+                'allowFractions',
+                'gridlines',
+                'gridlinesCustomRows',
+                'gridlinesCustomColumns',
             ],
             settings,
             [
@@ -31591,7 +31692,10 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
                 'prefilledCellsString',
                 'toleranceString',
                 'markPerCell',
-                'allowFractions'
+                'allowFractions',
+                'gridlines',
+                'gridlinesCustomRows',
+                'gridlinesCustomColumns',
             ]
         );
         tryLoad(data, ['precisionType', 'precision', 'precisionPartialCredit', 'precisionMessage', 'strictPrecision'], settings, ['precisionType', 'precisionString', 'precisionPC', 'precisionMessage', 'strictPrecision']);
@@ -31748,7 +31852,10 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
         minColumns: 0,
         maxColumns: 0,
         prefilledCellsString: '',
-        prefilledCells: []
+        prefilledCells: [],
+        gridlines: 'none',
+        gridlinesCustomRows: '',
+        gridlinesCustomColumns: '',
     },
     /** The name of the input widget this part uses, if any.
      *
@@ -31890,7 +31997,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
             this.flipped = false;
         }
         //work out marks available
-        tryGetAttribute(settings, xml, '.', 'showCellAnswerState');
+        tryGetAttribute(settings, xml, '.', ['showCellAnswerState', 'interpretedAnswerForm']);
         tryGetAttribute(settings, xml, 'marking', 'method', 'markingMethod');
         tryGetAttribute(settings, xml, 'marking/maxmarks', 'enabled', 'maxMarksEnabled');
         if(this.type == '1_n_2') {
@@ -32085,6 +32192,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         if(this.type != '1_n_2') {
             tryLoad(data, ['maxMarks'], this, ['marks']);
         }
+        tryLoad(data, ['showCellAnswerState', 'interpretedAnswerForm'], settings);
         tryLoad(data, ['minMarks', 'markingMethod'], settings, ['minimumMarks', 'markingMethod']);
         tryLoad(data, ['minAnswers', 'maxAnswers', 'shuffleChoices', 'shuffleAnswers', 'displayType', 'displayColumns', 'showBlankOption'], settings, ['minAnswersString', 'maxAnswersString', 'shuffleChoices', 'shuffleAnswers', 'displayType', 'displayColumns', 'showBlankOption']);
         tryLoad(data, ['warningType'], settings);
@@ -32351,6 +32459,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
      * @property {string} warningType - What to do if the student picks the wrong number of responses? Either `none` (do nothing), `prevent` (don't let the student submit), or `warn` (show a warning but let them submit).
      * @property {string} layoutType - The kind of layout to use. See {@link Numbas.parts.MultipleResponsePart.layoutTypes}.
      * @property {JME} layoutExpression - Expression giving a 2d array or matrix describing the layout when `layoutType` is `'expression'`.
+     * @property {string} interpretedAnswerForm - How the student's answer should be represented in the `interpreted_answer` note.
      */
     settings:
     {
@@ -32367,6 +32476,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         warningType: 'none',                //what to do if wrong number of responses
         layoutType: 'all',
         layoutExpression: '',
+        interpretedAnswerForm: 'list of list of boolean',
     },
     /** The name of the input widget this part uses, if any.
      *

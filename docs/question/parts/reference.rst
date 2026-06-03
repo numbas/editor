@@ -43,6 +43,11 @@ The following properties are available on every type of part.
         For example, if there are 6 marks available and the penalty for revealing steps is 2 marks, the total available after revealing steps is 4. 
         An answer worth 3 marks without revealing steps is instead worth :math:`3 \times \frac{4}{6} = 2` marks after revealing steps.
 
+    Label for button to show steps
+        The label on the button that shows the steps.
+        If this field is empty, then the default message is used.
+        In English, this is "Show steps".
+
     Show correct answer on reveal?
         When the student reveals answers to the question, or views the question in review mode, should a correct answer be shown? You might want to turn this off if you're doing custom marking and the part has no "correct" answer.
 

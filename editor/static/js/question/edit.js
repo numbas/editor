@@ -2978,6 +2978,7 @@ $(document).ready(function() {
         },this);
         this.steps = ko.observableArray([]);
         this.stepsPenalty = ko.observable(0);
+        this.showStepsLabel = ko.observable('');
 
         this.gaps = ko.observableArray([]);
 
@@ -3550,7 +3551,8 @@ $(document).ready(function() {
                     o.prompt = this.prompt();
                 }
                 if(this.steps().length) {
-                    o.stepsPenalty = parseFloat(this.stepsPenalty()),
+                    o.stepsPenalty = parseFloat(this.stepsPenalty());
+                    o.showStepsLabel = this.showStepsLabel();
                     o.steps = this.steps().map(function(s){return s.toJSON();});
                 }
 
@@ -3600,6 +3602,7 @@ $(document).ready(function() {
                 tryLoad(data,[
                     'prompt',
                     'stepsPenalty',
+                    'showStepsLabel',
                     'showCorrectAnswer',
                     'showFeedbackIcon',
                     'adaptiveMarkingPenalty',

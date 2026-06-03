@@ -5,6 +5,7 @@
 <!-- ko if: !isAlternative() -->
 <div data-bind="visible: steps().length">
     {% property 'stepsPenalty' 'Penalty for revealing steps' min=0 help_url='question/parts/reference.html#term-Penalty-for-revealing-steps' %}
+    {% property 'showStepsLabel' 'Label for button to show steps' help_url='question/parts/reference.html#term-Label-for-button-to-show-steps' zero_means='Leave empty to use the default' %}
 </div>
 <div data-bind="visible: type().has_correct_answer">
     {% booleanproperty 'showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/parts/reference.html#term-Show-correct-answer-on-reveal' %}

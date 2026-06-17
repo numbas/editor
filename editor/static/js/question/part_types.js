@@ -667,6 +667,7 @@ part_types.models = [
                 {tab: 'marking-settings', value: model.numColumns, type: 'jme', description: 'Number of columns'},
                 {tab: 'marking-settings', value: model.tolerance, type: 'jme', description: 'Margin of error allowed in each cell'},
                 {tab: 'marking-settings', value: model.precision, type: 'jme', description: model.precisionWord},
+                {tab: 'marking-settings', value: model.prefilledCells, type: 'jme', description: 'Pre-filled cells'},
             ];
             return o;
         },

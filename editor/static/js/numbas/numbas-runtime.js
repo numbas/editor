@@ -29167,14 +29167,14 @@ Numbas.signals.on('localisation initialised', () => {
             this.disable = params.disable;
             this.widget = params.widget || Knockout.computed(function() {
                 var part = Knockout.unwrap(this.part);
-                return part && part.input_widget();
+                return part && Knockout.unwrap(part.input_widget());
             }, this);
             this.widget_options = params.widget_options || Knockout.computed(function() {
                 var part = Knockout.unwrap(this.part);
                 return part && part.input_options()
             }, this);
             this.classes = {'answer-widget':true};
-            this.classes['answer-widget-' + this.widget] = true;
+            this.classes['answer-widget-' + Knockout.unwrap(this.widget)] = true;
             this.events = params.events;
             this.title = params.title || '';
         },
@@ -32123,6 +32123,7 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
         return {
             allowFractions: this.settings.allowFractions,
             allowedNotationStyles: ['plain', 'en', 'si-en'],
+            prefilledCells: this.settings.prefilledCells,
             allowResize: this.settings.allowResize,
             numRows: this.settings.numRows,
             numColumns: this.settings.numColumns,

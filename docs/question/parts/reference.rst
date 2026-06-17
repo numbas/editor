@@ -326,6 +326,17 @@ Then, if the student correctly applies the formula, their answer will match the 
             Credit for the part is scaled down accordingly. 
             For example, if there are 6 marks available and the penalty for using adaptive marking is 2 marks, the total available after revealing steps is 4. 
             An answer worth 3 marks without the penalty is instead worth :math:`3 \times \frac{4}{6} = 2` marks when adaptive marking is used.
+
+        Condition for using this part's answer in adaptive marking
+
+            An expression which must evaluate to a :data:`boolean` value which determines whether the student's answer to this part can be used by other parts in adaptive marking.
+            If the expression evaluates to `false`, then this part's answer will not be used by other parts, and the :term:`Message when this part's answer is not used` will be shown in the feedback of any parts which use this part in a variable replacement.
+
+        Message when this part's answer is not used
+        
+            If this part has been answered but does not satisfy the :term:`Condition for using this part's answer in adaptive marking`, then on submitting an answer to any part which uses this part in a variable replacement, this message will be shown in the part feedback.
+
+            The message should describe why the student's answer was not used.
         
 .. warning::
     This feature can be very powerful, but make sure you don't introduce any new random variation in these dependent variables, or the correct answer will change each time the student submits their answer.

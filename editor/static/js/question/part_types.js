@@ -1280,6 +1280,8 @@ part_types.models = [
                 {tab: 'marking-settings', value: model.maxMarks, type: 'jme', description: 'Maximum marks'},
                 {tab: 'marking-settings', value: model.minAnswers, type: 'jme', description: 'Minimum answers'},
                 {tab: 'marking-settings', value: model.maxAnswers, type: 'jme', description: 'Maximum answers'},
+                {tab: 'marking-settings', value: model.customChoicesExpression, type: 'jme', description: 'List of choices'},
+                {tab: 'marking-settings', value: model.customAnswersExpression, type: 'jme', description: 'List of answers'},
                 {tab: 'marking-settings', value: model.customMatrix, type: 'jme', description: 'Custom matrix expression'},
                 {tab: 'marking-settings', value: model.layoutExpression, type: 'jme', description: 'Custom layout expression'},
                 {tab: 'choices', value: model.customChoicesExpression, type: 'jme', description: 'List of choices'},

@@ -127,7 +127,13 @@ Marking
 
         All multiple choice part types have a default form "2D array of booleans", which is a nested list indexed first by answer number and then by choice number, with the entry ``true`` if the student selected that answer/choice pair and ``false`` otherwise.
 
-        "Choose one from a list" parts can use the form "index of selected choice", which is the integer index of the choice that the student selected.
+        "Choose one from a list" parts can use the following forms:
+
+        Index of selected choice
+            The integer index of the choice that the student selected.
+
+        Text of selected choice
+            The text of the choice that the student selected.
 
         "Choose several from a list" parts can use the following forms:
 
@@ -137,12 +143,22 @@ Marking
         Indices of selected choices
             A list of the integer indices of just the choices that the student selected.
 
+        Text of selected choices
+            A list containing the text of each choice that the student selected.
+
         "Match choices with answers" parts can use the following forms:
 
         List of chosen pairs
             A list of pairs of the form ``[answer index, choice index]`` that the student selected.
+
+        Text of chosen pairs
+            A list of pairs of the form ``[answer text, choice text]`` that the student selected.
+
         List of chosen answer indices
             Only available if the :term:`Selection type` is "One from each row". For each choice, the index of the corresponding answer that the student selected, or ``nothing`` if they didn't select an answer.
+
+        List of chosen answer texts
+            Only available if the :term:`Selection type` is "One from each row". For each choice, the text of the corresponding answer that the student selected, or ``nothing`` if they didn't select an answer.
 
 .. _choices:
 

@@ -791,7 +791,8 @@ part_types.models = [
                 choices: ko.observableArray([]),
                 interpretedAnswerForm: Editor.optionObservable([
                     {name: 'list of list of boolean', niceName: '2D array of booleans'},
-                    {name: 'index of choice', niceName: 'Index of selected choice'}
+                    {name: 'index of choice', niceName: 'Index of selected choice'},
+                    {name: 'text of choice', niceName: 'Text of selected choice'},
                 ]),
             };
             var _customMarking = ko.observable(false);
@@ -954,7 +955,8 @@ part_types.models = [
                 interpretedAnswerForm: Editor.optionObservable([
                     {name: 'list of list of boolean', niceName: '2D array of booleans'},
                     {name: 'list of boolean', niceName: 'List of booleans'},
-                    {name: 'indices of choices', niceName: 'Indices of selected choices'}
+                    {name: 'indices of choices', niceName: 'Indices of selected choices'},
+                    {name: 'text of choices', niceName: 'Text of selected choices'},
                 ]),
             };
             var _customMarking = ko.observable(false);
@@ -1159,9 +1161,11 @@ part_types.models = [
                 var options = [
                     {name: 'list of list of boolean', niceName: '2D array of booleans'},
                     {name: 'indices of pairs', niceName: 'List of chosen pairs'},
+                    {name: 'text of pairs', niceName: 'Text of chosen pairs'},
                 ];
                 if(model.displayType().name == 'radiogroup') {
                     options.push({name: 'list of indices', niceName: 'List of chosen answer indices'});
+                    options.push({name: 'list of texts', niceName: 'List of chosen answer texts'});
                 }
                 return options
             }));

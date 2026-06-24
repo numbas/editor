@@ -100,7 +100,7 @@ Marking
 
         If this is not ticked, then the part will be gin with the first choice selected.
 
-    Custom marking matrix
+    Custom marking matrix?
         If the checkbox is ticked, the :ref:`JME <jme>` expression in the box below is evaluated and used to assign numbers of marks to choices. 
     
     Custom matrix expression
@@ -208,7 +208,7 @@ Only :term:`Match choices with answers` parts have a marking matrix tab: for the
 Assign marks to each pair of choice and answer using the input boxes.
 
 .. glossary::
-    Custom marking matrix
+    Custom marking matrix?
         If the checkbox is ticked, the :ref:`JME <jme>` expression in the box below is evaluated and used to assign numbers of marks to choices. 
     
     Custom matrix expression

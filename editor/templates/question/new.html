@@ -2,33 +2,33 @@
 
 {% block title %}Create a new question - {{block.super}}{% endblock title %}
 
-{% block content %}
-<div class="page-header">
-    <h1><span class="glyphicon glyphicon-plus"></span> Create a new question</h1>
-</div>
+{% block body_classes %}padded-main {{block.super}}{% endblock %}
 
-<form action="" method="post" class="form-horizontal">
+{% block content %}
+<header>
+    <h1><span class="glyphicon glyphicon-plus"></span> Create a new question</h1>
+</header>
+
+<form action="" method="post">
     {% csrf_token %}
     {% for field in form.hidden_fields %}{{field}}{% endfor %}
 
     {% for field in form.visible_fields %}
-    <div class="form-group {% if field.errors %}has-error{% endif %}">
-        <label class="col-sm-2 control-label">{{field.label}}</label>
-        <div class="col-sm-10">
-            {{field.as_widget}}
-            {% if field.errors %}
-            <ul class="errorlist list-unstyled">
-                {% for error in field.errors %}
-                <li>{{error}}</li>
-                {% endfor %}
-            {% endif %}
-        </div>
-    </div>
+    <p>
+        <label for="{{field.auto_id}}">{{field.label}}</label>
+
+        {{field.as_widget}}
+        {% if field.errors %}
+        <ul class="errorlist list-unstyled">
+            {% for error in field.errors %}
+            <li>{{error}}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </p>
     {% endfor %}
 
-    <div class="col-sm-offset-2 col-sm-10">
-        <button type="submit" class="btn btn-primary">Create</button></p>
-    </div>
+    <button type="submit" class="btn primary">Create</button></p>
 </form>
 
 {% endblock content %}

@@ -12,8 +12,8 @@
     {{ block.super }}
 
     <!-- question editor -->
-    <script src="{% sstatic 'js/question/part_types.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/question/edit.js' %}" type="text/javascript"></script>
+    <script src="{% sstatic 'js/question/edit_elm.js' %}" type="application/javascript"></script>
+    <script src="{% sstatic 'js/question/edit.mjs' %}" type="module"></script>
 {% endblock javascripts %}
 
 {% block stylesheets %}
@@ -23,132 +23,6 @@
 
 {% block content %}
 {{block.super}}
-    <div class="modal fade" id="previewModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h3 class="modal-title">Preview</h3>
-                </div>
-                <div class="modal-body">
-                    <div class="preview-content jme-scope"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary regenerate-button"><span class="glyphicon glyphicon-refresh"></span> Regenerate variables</button>
-                </div>
-            </div>
-        </div>
-        <style type="text/css" data-bind="text: Editor.makeCSSMoreSpecific(preamble.css(),'#previewModal ')"></style>
-    </div>
-    <div class="modal fade" id="imagePickModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h3 class="modal-title">Insert image</h3>
-                </div>
-                <div class="modal-body">
-                    <form data-bind="upload_resource: resources, afterupload: $root.insertImage" method="POST" action="{% url 'upload_resource' object.pk %}">
-                        {% csrf_token %}
-                        <span class="control-label">Upload a file</span>
-                        <input id="fileupload" type="file" name="files[]">
-                    </form>
-
-
-                    <ul class="list-unstyled resources-list" data-bind="foreach: resources">
-                        <li class="resource clearfix" data-bind="visible: can_embed, click: $root.insertImage">
-                            <img class="thumbnail" data-bind="visible: filetype()=='img', attr: {src: url, title: name, alt: alt_text}"/>
-                            <span data-bind="text: name"></span><span data-bind="visible: filetype()=='html'"> (will be embedded as an iframe)</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="imageAttributeModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h3 class="modal-title">Image attributes</h3>
-                </div>
-                <div class="modal-body">
-                    <form class="form-horizontal" data-bind="submit: Editor.noop">
-                        <div class="form-group">
-                            <label class="label-block">
-                                <span class="col-sm-3 control-label">Width</span>
-                                <div class="col-sm-9 controls">
-                                    <input type="text" class="form-control" data-bind="value: imageModal.width">
-                                </div>
-                            </label>
-                        </div>
-                        <div class="form-group">
-                            <label class="label-block">
-                                <span class="col-sm-3 control-label">Height</span>
-                                <div class="col-sm-9 controls">
-                                    <input type="text" class="form-control" data-bind="value: imageModal.height">
-                                </div>
-                            </label>
-                        </div>
-                        <div class="form-group">
-                            <label class="label-block">
-                                <span class="col-sm-3 control-label">Title text</span>
-                                <div class="col-sm-9 controls">
-                                    <input type="text" class="form-control" data-bind="value: imageModal.title">
-                                </div>
-                            </label>
-                        </div>
-                        <div class="form-group">
-                            <label class="label-block">
-                                <span class="col-sm-3 control-label">Alt text</span>
-                                <div class="col-sm-9 controls">
-                                    <input type="text" class="form-control" data-bind="value: imageModal.alt">
-                                </div>
-                            </label>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-bind="click: function(){$('#imageAttributeModal').modal('hide');}">Cancel</button>
-                    <button type="button" class="btn btn-primary" data-bind="click: $root.changeImageAttributes">Apply</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="iframeAttributeModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h3 class="modal-title">Embedded page attributes</h3>
-                </div>
-                <div class="modal-body">
-                    <form class="form-horizontal" data-bind="submit: Editor.noop">
-                        <div class="form-group">
-                            <label class="label-block">
-                                <span class="col-sm-3 control-label">Width</span>
-                                <div class="col-sm-9 controls">
-                                    <input type="text" class="form-control" data-bind="value: iframeModal.width">
-                                </div>
-                            </label>
-                        </div>
-                        <div class="form-group">
-                            <label class="label-block">
-                                <span class="col-sm-3 control-label">Height</span>
-                                <div class="col-sm-9 controls">
-                                    <input type="text" class="form-control" data-bind="value: iframeModal.height">
-                                </div>
-                            </label>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-bind="click: function(){$('#iframeAttributeModal').modal('hide');}">Cancel</button>
-                    <button type="button" class="btn btn-primary" data-bind="click: $root.changeIframeAttributes">Apply</button>
-                </div>
-            </div>
-        </div>
-    </div>
 {% endblock content %}
 
 {% block settings %}
@@ -175,32 +49,78 @@
 
 {% block main_tab_content %}
 {{ block.super }}
-    <!-- Question statement -->
-    {% include "question/tabs/statement.html" %}
+    <tab-panel :current_tab="current_tab" tabid="statement" group="main">
+        <p><label for="statement">Statement</label></p>
 
-    <!-- Variables -->
-    {% include "question/tabs/variables.html" %}
+        <textarea id="statement" v-model="question.statement"></textarea>
+    </tab-panel>
 
-    <!-- Parts -->
-    {% include "question/tabs/parts.html" %}
+    <tab-panel :current_tab="current_tab" tabid="parts" class="tabbed-sidebar" group="main">
+        <tab-list :tabs="part_tabs" v-model="current_part" class="vertical" name="parts"></tab-list>
 
-    <!-- Advice -->
-    {% include "question/tabs/advice.html" %}
+        <tab-panel v-for="part_tab in part_tabs" :current_tab="current_part" :tabid="part_tab.id" group="parts">
+            <part-editor v-model="part_tab.part"></part-editor>
+        </tab-panel>
+    </tab-panel>
 
-    <!-- Extensions and scripts -->
-    {% include "question/tabs/extensions.html" %}
-
-    <!-- Resources -->
-    {% include "question/tabs/resources.html" %}
-
-    <!-- Testing -->
-    {% include "question/tabs/testing.html" %}
-
-    <!-- Exams using this question -->
-    {% include "question/tabs/exams.html" %}
 
 {% endblock main_tab_content %}
 
 {% block access_tab_nav %}
     <editor-pager params="visible: !$root.published(), editor: $root, previousTab: 'settings', task_group: 'access'"></editor-pager>
 {% endblock access_tab_nav %}
+
+{% block templates %}
+{{block.super}}
+
+<template id="part-editor-template">
+    <h2>[[part_label]]</h2>
+
+    <tab-list :tabs="part.tabs" v-model="current_tab" :name="tab_group"></tab-list>
+
+    <tab-panel :current_tab="current_tab" tabid="prompt" :group="tab_group">
+        <p><label for="prompt">Prompt</label></p>
+        <textarea id="prompt" v-model="part.prompt"></textarea>
+    </tab-panel>
+
+    <template v-if="part.type == 'numberentry'">
+        <tab-panel :current_tab="current_tab" tabid="marking-settings" :group="tab_group">
+            <form>
+                <fieldset>
+                    <editor-property id="marks" label="Marks" help="parts/reference.html#term-Marks">
+                        <input id="marks" v-model="part.marks">
+                    </editor-property>
+
+                    <editor-property id="show-correct-answer" label="Show correct answer on reveal?" help="parts/reference.html#term-Show-correct-answer-on-reveal">
+                        <input id="show-correct-answer" type="checkbox" v-model="part.showCorrectAnswer">
+                    </editor-property>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Answer</legend>
+                    
+                    <editor-property id="minvalue" label="Minimum accepted value" help="parts/numberentry.html#term-Minumum-accepted-value">
+                       <input id="minvalue" class="monospace" v-model="part.minvalue">
+                    </editor-property>
+                    
+                    <editor-property id="maxvalue" label="Maximum accepted value" help="parts/numberentry.html#term-Minumum-accepted-value">
+                       <input id="maxvalue" class="monospace" v-model="part.maxvalue">
+                    </editor-property>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Advanced settings</legend>
+
+                    <editor-property id="displayAnswer" label="Display answer" help="parts/numberentry.html#term-Display-answer">
+                        <input id="displayAnswer" class="monospace" v-model="part.displayAnswer">
+                        <div class="help-block" v-if="part.displayAnswer == ''">(The midpoint of the minimum and maximum accepted values)</div>
+                    </editor-property>
+
+                    <editor-property id="precisionType" label="Precision restriction" help="parts/numberentry.html#term-Display-answer">
+                    </editor-property>
+                </fieldset>
+            </form>
+        </tab-panel>
+    </template>
+</template>
+{% endblock %}

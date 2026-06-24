@@ -46,6 +46,7 @@ from editor.models import EditorItem, Project, IndividualAccess, Licence, PullRe
 import editor.lockdown_app
 import editor.models
 from editor.templatetags.sstatic import sstatic
+from editor.templatetags.icons import icon_map
 import editor.views.generic
 from editor.views import request_is_ajax
 from editor.views.generic import ProjectQuerysetMixin
@@ -240,7 +241,7 @@ class BaseUpdateView(generic.UpdateView):
         context['can_delete'] = self.can_delete
         context['can_copy'] = self.can_copy
 
-        context['project'] = self.object.editoritem.project
+        project = context['project'] = self.object.editoritem.project
 
         context['access_rights'] = [{'user': user_json(a.user), 'access_level': a.access} for a in self.object.editoritem.access.all()]
 
@@ -248,18 +249,47 @@ class BaseUpdateView(generic.UpdateView):
 
         taxonomies = [{'pk':taxonomy.pk, 'name': taxonomy.name, 'description': taxonomy.description, 'nodes': taxonomy.json} for taxonomy in Taxonomy.objects.all()]
 
+        breadcrumbs = []
+        ei = self.object.editoritem
+        f = ei.folder
+        while f:
+            breadcrumbs.insert(0,f)
+            f = f.parent
+        context['breadcrumbs'] = breadcrumbs
+
+        item_type = self.object.editoritem.item_type
+
         self.item_json = context['item_json'] = {
             'itemJSON': self.object.edit_dict(),
             'editable': self.editable,
-            'item_type': self.object.editoritem.item_type,
+            'item_type': item_type,
+            'icon_map': icon_map,
+            'project': {
+                'name': project.name,
+                'url': reverse('project_index', args=(project.pk,)),
+                'breadcrumbs': [{'name': f.name, 'url': f.get_absolute_url()} for f in breadcrumbs],
+            },
 
             'licences': licences,
             'taxonomies': taxonomies,
 
             'ability_frameworks': [editor.views.generic.ability_framework_json(af) for af in editor.models.AbilityFramework.objects.all()],
 
-            'previewURL': reverse('{}_preview'.format(self.object.editoritem.item_type), args=(self.object.pk, self.object.editoritem.slug)),
-            'previewWindow': str(calendar.timegm(time.gmtime())),
+            'preview': {
+                'url': reverse(f'{item_type}_preview', args=(self.object.pk, self.object.editoritem.slug)),
+                'target': str(calendar.timegm(time.gmtime())),
+            },
+
+            'urls': { 
+                k: reverse(f'{item_type}_{k}', args=(self.object.pk, self.object.editoritem.slug)) 
+                for k in ['copy','delete','download','source']
+            },
+
+            'share': {
+                'view': str(self.object.editoritem.share_uuid_view),
+                'edit': str(self.object.editoritem.share_uuid_edit),
+            },
+
             'current_stamp': editor.views.generic.stamp_json(self.object.editoritem.get_current_stamp()),
             'helpURL': settings.GLOBAL_SETTINGS['HELP_URL'],
         }
@@ -271,14 +301,6 @@ class BaseUpdateView(generic.UpdateView):
 
         context['preferred_locale'] = self.request.user.userprofile.language if not self.request.user.is_anonymous else 'en-GB'
         context['locale_files'] = [code for name, code in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']]
-
-        breadcrumbs = []
-        ei = self.object.editoritem
-        f = ei.folder
-        while f:
-            breadcrumbs.insert(0,f)
-            f = f.parent
-        context['breadcrumbs'] = breadcrumbs
 
         stamps_per_user = {}
         for s in ei.stamps.all():

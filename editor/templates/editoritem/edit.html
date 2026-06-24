@@ -1,6 +1,8 @@
 {% extends "layout.html" %}
+{% load i18n %}
 {% load user_link %}
 {% load can_edit %}
+{% load icons %}
 {% load links %}
 {% load json_filter %}
 
@@ -16,6 +18,8 @@
 {% endif %}
 {% endblock head %}
 
+{% block body_classes %}editor {{block.super}}{% endblock %}
+
 
 {% block javascripts %}
     {{ block.super }}
@@ -29,16 +33,16 @@
     </script>
 {% endblock javascripts %}
 
-{% block content_container %}container-fluid{% endblock %}
+{% block content_container %}{% endblock %}
 
 
 {% block content %}
 
-<div class="page-loading" data-bind="visible: false">
+<div id="page-loading" v-if="!question">
     <h1>Loading...</h1>
 </div>
 
-<div class="page-error">
+<div id="page-error" v-if="loading_error">
     <div class="page-header text-danger">
         <h2>Error</h2>
     </div>
@@ -47,167 +51,91 @@
     <pre class="trace"></pre>
 </div>
 
-<div class="loaded-content">
-    <div class="page-header">
-        {% block page_header %}
-        <div class="project-header">
-            <ol class="list-inline">
-                <li class="project"><span class="glyphicon glyphicon-briefcase"></span> <a href="{% url 'project_index' object.editoritem.project.pk %}">{{object.editoritem.project.name}}</a>
-                {% for folder in breadcrumbs %}
-                <li><a href="{{folder.get_absolute_url}}">{{folder.name}}</a></li>
-                {% endfor %}
-            </ol>
-        </div>
-        <h1 class="name-header">
-            <span class="glyphicon glyphicon-{{object.icon}}"></span> 
-            <span class="name" data-bind="mathjaxHTML: name">{{object.name}}</span>
-            {% if editable %}
-            <button type="button" class="btn btn-link" title="Change this {{item_type}}'s name" data-bind="click: mainTabber.setTab('settings')"><span class="glyphicon glyphicon-pencil"></span></button>
-            {% endif %}
+<div id="loaded-content" v-if="question != null">
+    <header>
+        <ol id="location" class="list-inline">
+            <li class="project">
+                {% icon 'project' %}
+                <a href="{% url 'project_index' object.editoritem.project.pk %}">{{object.editoritem.project.name}}</a>
+            </li>
+            {% for folder in breadcrumbs %}
+            <li class="folder">
+                <a href="{{folder.get_absolute_url}}">{{folder.name}}</a>
+            </li>
+            {% endfor %}
+        </ol>
+        <h1>
+            {% icon object.icon %} 
+            <span class="name" v-mathjax-html="question.name"></span>
         </h1>
-        <div class="stamp-header">
-            {% if user.is_authenticated %}
-                <div class="btn-group">
-                    <button type="button" class="stamp btn btn-lg btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-bind="attr: {'data-stamp':current_stamp().status}">
-                        Status: <span data-bind="text: current_stamp().status_display"></span> <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu">
-                    {% for name,description in stamp_choices %}
-                        <li><a class="stamp" data-stamp="{{name}}" tabindex="-1" href="#" data-bind="click: addStamp('{{name}}')">{{description}}</a></li>
-                    {% endfor %}
-                        <li role="separator" class="divider"></li>
-                        <li>
-                        <a tabindex="-1" href="#" {% if editable %}data-bind="click: mainTabber.setTab('access')"{% endif %}>
-                                {% if object.editoritem.published %}
-                                <span class="text-success"><span class="glyphicon glyphicon-ok"></span> Published</span>
-                                {% else %}
-                                <span class="text-muted"><span class="glyphicon glyphicon-lock"></span> Not published</span>
-                                {% endif %}
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            {% else %}
-                <span class="label label-default stamp" data-bind="text: current_stamp().status_display, attr: {'data-stamp':current_stamp().status}"></span>
-            {% endif %}
-        </div>
-        <!-- ko if: $root.autoSave -->
-        <div class="save-status alert" data-bind="class: autoSave().status_info().class">
-            <span class="glyphicon" data-bind="class: autoSave().status_info().icon"></span>
-            <span data-bind="text: autoSave().status_info().message">Saved</span>
-        </div>
-        <!-- /ko -->
-        {% endblock page_header %}
-    </div>
-    <nav class="navbar navbar-blank">
-        <ul class="nav navbar-nav nav-tabs">
-            <li class="run single-button">
-                <div class="btn-group">
-                    <a class="btn btn-success" data-bind="attr: {href: item_json.previewURL+'?refresh', target: item_json.previewWindow}" title="Run this {{item_type}} in a new window (Ctrl+B)">
-                        <span class="glyphicon glyphicon-play"></span>
-                        &nbsp;
-                        Run
-                    </a>
-                </div>
-            </li>
-            <li class="dropdown single-button">
-                <div class="btn-group">
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="organisation-dropdown-button">
-                        Organisation
-                        <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledBy="organisation-dropdown-button">
-                    {% block admin_controls %}
-                    {% with can_copy=object.editoritem|can_be_copied_by:request.user %}
-                    <li class="{% if not can_copy %}disabled{% endif %}">
-                    <a {% if can_copy %}href="{% editoritem_url 'copy' object %}" target="_blank"{% endif %} title="{% if can_copy %}Create your own copy of this {{item_type}}{% else %}This item's licence doesn't allow you to modify it.{% endif %}">
-                        <span class="text-warning">
-                            <span class="glyphicon glyphicon-duplicate"></span>
-                            &nbsp;
-                            Make a copy
-                        </span>
-                    </a>
-                    </li>
-                    {% endwith %}
+    </header>
+    <nav id="tabs">
+        <a class="btn success" :href="preview_url" :target="preview_window" title="Run this {{item_type}} in a new window">
+            {% icon 'play' %}
+            &nbsp;
+            Run
+        </a>
 
-                    {% if editable %}
-                    <li class="">
-                        <a href="{% editoritem_url 'delete' object %}" title="Delete this {{item_type}} permanently">
-                            <span class="text-danger">
-                                <span class="glyphicon glyphicon-remove"></span> 
-                                &nbsp;
-                                Delete
-                            </span>
-                        </a>
-                    </li>
-                    {% endif %}
-
-                    <li role="separator" class="divider"></li>
-
-                    <li>
-                        <a href="#" class="add-to-queue" title="Add this to a queue" data-item-id="{{object.editoritem.pk}}">
-                            <span class="glyphicon glyphicon-list" aria-hidden="true"></span> 
-                            Add to a queue
-                        </a>
-                    </li>
-
-                    {% endblock admin_controls %}
-                    </ul>
-                </div>
-            </li>
-            <li class="dropdown single-button">
-                <div class="btn-group">
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="download-dropdown-button">
-                        <span class="glyphicon glyphicon-cloud-download"></span>
-                        &nbsp;
-                        Download
-                        <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledBy="download-dropdown-button">
-                        <li class="disabled">
-                            <a data-bind="visible: ready_to_download"><span class="text-success"><span class="glyphicon glyphicon-ok"></span> This {{item_type}} is ready to download.</span></a>
-                            <a data-bind="visible: !ready_to_download()"><span class="text-danger"><span class="glyphicon glyphicon-exclamation-sign"></span> This {{item_type}} might need some attention: <span data-bind="text: ready_to_download_reason"></span></span></a>
-                        </li>
-                        <li class="indent"><a href="{% editoritem_url 'download' object %}{% querystring scorm="true" token=object.editoritem.share_uuid_view %}">SCORM package</a></li>
-                        <li class="indent"><a href="{% editoritem_url 'download' object %}{% querystring token=object.editoritem.share_uuid_view %}">standalone .zip (no SCORM)</a></li>
-                        <li class="indent"><a href="{% editoritem_url 'source' object %}{% querystring token=object.editoritem.share_uuid_view %}">source</a></li>
-                    </ul>
-                </div>
-            </li>
-            <!-- ko foreach: mainTabber.tabs -->
-            <li data-bind="visible: visible, css: {active: $root.mainTabber.currentTab() == $data, 'in-use': $data.in_use, 'warning': $data.warning}">
-                <a href="#" data-bind="click: $root.mainTabber.currentTab">
-                    <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> 
-                    <span class="tab-label hidden-xs hidden-sm" data-bind="text: title"></span>
-                    <span class="sr-only" data-bind="visible: in_use">(in use)</span>
-                    <!-- ko if: warning -->
-                    <span class="sr-only">has errors</span>
-                    <span class="badge">!</span>
-                    <!-- /ko -->
+        <button type="button" class="btn" id="organisation-dropdown" popovertarget="organisation-menu">
+            Organisation
+        </button>
+        <menu id="organisation-menu" popover="auto">
+            {% block admin_controls %}
+            {% with can_copy=object.editoritem|can_be_copied_by:request.user %}
+            <li class="{% if not can_copy %}disabled{% endif %}">
+                <a class="warning" {% if can_copy %}href="{% editoritem_url 'copy' object %}" target="_blank"{% endif %} title="{% if can_copy %}Create your own copy of this {{item_type}}{% else %}This item's licence doesn't allow you to modify it.{% endif %}">
+                    {% icon 'duplicate' %}
+                    &nbsp;
+                    Make a copy
                 </a>
             </li>
-            <!-- /ko -->
-        </ul>
+            {% endwith %}
+
+            {% if editable %}
+            <li>
+                <a class="danger" href="{% editoritem_url 'delete' object %}" title="Delete this {{item_type}} permanently">
+                    {% icon 'remove' %}
+                    &nbsp;
+                    Delete
+                </a>
+            </li>
+            {% endif %}
+
+            <hr/>
+
+            <li>
+                <a href="#" class="add-to-queue" title="Add this to a queue" data-item-id="{{object.editoritem.pk}}">
+                    {% icon 'list' %}
+                    &nbsp;
+                    Add to a queue
+                </a>
+            </li>
+
+            {% endblock admin_controls %}
+        </menu>
+
+        <button type="button" class="btn" id="download-dropdown" popovertarget="download-menu">
+            {% icon 'download' %}
+            &nbsp;
+            Download
+        </button>
+        <menu id="download-menu" popover="auto">
+            <li v-if="question.ready_to_download" class="alert success">
+                {% icon 'ok' %}
+                This {{item_type}} is ready to download.
+            </li>
+            <li v-else class="alert danger">
+                {% icon 'danger' %}
+                This {{item_type}} might need some attention: [[question.ready_to_download_reason]]
+            </li>
+
+            <li><a href="{% editoritem_url 'download' object %}{% querystring scorm="true" token=object.editoritem.share_uuid_view %}">SCORM package</a></li>
+            <li><a href="{% editoritem_url 'download' object %}{% querystring token=object.editoritem.share_uuid_view %}">standalone .zip (no SCORM)</a></li>
+            <li><a href="{% editoritem_url 'source' object %}{% querystring token=object.editoritem.share_uuid_view %}">source</a></li>
+        </menu>
+        <tab-list :tabs="tabs" v-model="current_tab" name="main"></tab-list>
     </nav>
-    <div class="row">
-        <div class="col-sm-12 editing">
-            <div class="tab-content">
-            {% block main_tab_content %}
-                <!-- Settings tab -->
-                {% include "editoritem/tabs/settings.html" %}
 
-                <!-- Editing history -->
-                {% include "editoritem/tabs/editing_history.html" %}
-
-                {% if editable %}
-                <!-- Access -->
-                {% include "editoritem/tabs/access.html" %}
-                {% endif %}
-
-                <!-- Other versions -->
-                {% include "editoritem/tabs/network.html" %}
-            {% endblock main_tab_content %}
-            </div>
-        </div>
-    </div>
+    {% block main_tab_content %}{% endblock %}
+</div>
 {% endblock content %}

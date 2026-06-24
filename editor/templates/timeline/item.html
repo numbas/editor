@@ -1,19 +1,37 @@
 {% load humanize %}
 {% load timeline %}
-<div class="media timeline-item {% block timelineitem_class %}{% endblock %}">
-    <div class="media-left">
+{% load icons %}
+
+<article class="{% block timelineitem_class %}timeline-item {% endblock %}">
+    <header>
         {% block thumbnail %}{% endblock %}
-    </div>
-    <div class="media-body">
-        {% block hide_item %}<a class="btn btn-sm btn-link hide-item pull-right" title="Hide this item" href="{% url 'timelineitem_hide' item.pk %}">○</a>{% endblock hide_item %}
-        {% if request.user|can_delete_timeline_item:item %}<a class="btn btn-sm btn-link delete pull-right" href="{% block delete_url %}{% url 'timelineitem_delete' item.pk %}{% endblock %}" title="{% block delete_text %}Delete this item{% endblock %}"><span class="glyphicon glyphicon-trash text-danger"></span></a>{% endif %}
         {% block item_heading_container %}
-        <h4 class="media-heading">
             {% block heading %}{% endblock %} 
-            {% if include_object_link %}{% block on_object %}on <a href="{{item.timeline.get_absolute_url}}"><span class="glyphicon glyphicon-{{item.timeline.icon}}"></span> {{item.timeline.name}}</a>{% endblock on_object %}{% endif %}
-            <small>{{item.date|naturaltime}}</small>
-        </h4>
+            <time datetime="{{item.date}}">{{item.date|naturaltime}}</time>
         {% endblock item_heading_container %}
+    </header>
+
+    <div>
+        {% if include_object_link %}
+            {% block on_object %}
+                on
+                <a href="{{item.timeline.get_absolute_url}}">
+                    {% icon item.timeline.icon %}
+                    {{item.timeline.name}}
+                </a>
+            {% endblock on_object %}
+        {% endif %}
         {% block content %}{% endblock %}
     </div>
-</div>
+
+    {% block hide_item %}
+        <form method="POST" action="{% url 'timelineitem_hide' item.pk %}">
+            <button class="btn sm">Hide this item</button>
+        </form>
+    {% endblock hide_item %}
+    {% if request.user|can_delete_timeline_item:item %}
+        <form method="POST" action="{% block delete_url %}{% url 'timelineitem_delete' item.pk %}{% endblock %}">
+            <button class="btn sm">{% block delete_text %}Delete this item{% endblock %}</button>
+        </form>
+    {% endif %}
+</article>

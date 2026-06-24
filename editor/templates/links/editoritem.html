@@ -1,4 +1,5 @@
+{% load icons %}
 <a href="{{item.get_absolute_url}}"{% if new_tab %} target="_blank"{% endif %}>
-    {% if show_icon %}<span class="glyphicon glyphicon-{{item.icon}}"></span>{% endif %}
+    {% if show_icon %}{% icon item.icon %}{% endif %}
     {{item.editoritem.name}}
 </a>

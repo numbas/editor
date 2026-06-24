@@ -1,9 +1,9 @@
 var tryLoad,slugify;
-if(!window.Editor)
+if(!window.Editor) {
     window.Editor = {};
+}
 
-$(document).ready(function() {
-    
+document.addEventListener('ready', () => {
     /** 
      * @typedef noty_options
      * @property {string} text

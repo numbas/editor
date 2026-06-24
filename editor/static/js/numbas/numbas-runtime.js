@@ -31870,7 +31870,8 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
             scope,
             notation
         );
-        settings.mustMatchPattern = notation.treeToJME(notation.subvars(settings.mustMatchPatternString || '', scope), {}, scope);
+        const pattern_notation = jme.notations.pattern_matching;
+        settings.mustMatchPattern = pattern_notation.treeToJME(pattern_notation.subvars(settings.mustMatchPatternString || '', scope), {}, scope);
         this.markingScope = new jme.Scope(this.getScope());
         this.markingScope.variables = {};
         return settings.correctAnswer;

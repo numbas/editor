@@ -9,7 +9,7 @@ update_scripts: update_from_runtime update_from_docs
 update_from_runtime: runtime marking_scripts diagnostic_scripts locales extensions
 
 # Update the JME function hints from the documentation
-update_from_docs: jme_function_hints
+update_from_docs: jme_function_hints numbas_docs_mapping
 
 SCRIPTS_DIR = runtime/scripts
 RUNTIME_SOURCES = numbas.js jme.js jme-builtins.js jme-display.js jme-notations.js jme-rules.js jme-variables.js jme-calculus.js localisation.js part.js question.js schedule.js diagnostic.js marking.js math.js util.js csv.js i18next/i18next.js json.js decimal/decimal.js evaluate-settings.js unicode-mappings.js parsel/parsel.js seedrandom/seedrandom.js
@@ -41,7 +41,11 @@ $(NUMBAS_SCRIPT_DIR)/numbas-runtime.js: $(patsubst %, $(NUMBAS_RUNTIME_PATH)/%, 
 	@for p in $^; do cat $$p >> $@; echo "" >> $@; done
 	$(created)
 
-runtime: $(NUMBAS_SCRIPT_DIR)/numbas-runtime.js
+$(NUMBAS_SCRIPT_DIR)/exam_schema.json: $(NUMBAS_RUNTIME_PATH)/schema/exam_schema.json
+	@cp $< $@
+	$(created)
+
+runtime: $(NUMBAS_SCRIPT_DIR)/numbas-runtime.js $(NUMBAS_SCRIPT_DIR)/exam_schema.json
 
 MARKING_SCRIPTS=$(wildcard $(NUMBAS_RUNTIME_PATH)/marking_scripts/*.jme)
 
@@ -110,7 +114,7 @@ locales: $(EDITOR_LOCALES)
 
 # Wrap the Makefile for the documentation
 # use `make docs_html` to make the HTML version of the docs
-docs_%:
+docs_%: 
 	$(MAKE) -f docs.mk $*
 
 check_help_links:
@@ -123,3 +127,12 @@ editor/static/js/numbas/jme_function_hints.js: $(wildcard docs/*.rst) $(wildcard
 	$(created)
 
 jme_function_hints: editor/static/js/numbas/jme_function_hints.js
+
+editor/static/js/numbas/docs_mapping.json: $(shell find docs/ -type f -name '*.rst')
+	@python make_docs_mapping.py > $@
+	$(created)
+
+numbas_docs_mapping : editor/static/js/numbas/docs_mapping.json
+
+elm_%:
+	@$(MAKE) --no-print-directory -C elm_components $*

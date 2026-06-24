@@ -1,10 +1,11 @@
 {% extends "timeline/item.html" %}
 {% load sanitizer %}
+{% load icons %}
 
 {% block timelineitem_class %}alert alert-info tip{% endblock %}
 
 {% block thumbnail %}
-    <span class="glyphicon glyphicon-hand-right" style="font-size: 36px"></span>
+{% icon 'tip' %}
 {% endblock thumbnail %}
 
 {% block heading %}<strong>Tip:</strong> {{tip.title|strip_html|safe}}{% endblock %}

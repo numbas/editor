@@ -7,9 +7,6 @@
         var HELP_URL = '{{HELP_URL}}';
     </script>
 
-    <script src="{% sstatic 'tiny_mce/jquery.tinymce.min.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'tiny_mce/tinymce.min.js' %}" type="text/javascript"></script>
-
     <script src="{% sstatic 'codemirror/lib/codemirror.js' %}" type="text/javascript"></script>
     <script src="{% sstatic 'codemirror/mode/css/css.js' %}" type="text/javascript"></script>
     <script src="{% sstatic 'codemirror/mode/xml/xml.js' %}" type="text/javascript"></script>
@@ -30,17 +27,28 @@
     <script src="{% sstatic 'codemirror/addon/search/searchcursor.js' %}" type="text/javascript"></script>
     <script src="{% sstatic 'codemirror/addon/search/jump-to-line.js' %}" type="text/javascript"></script>
     <script src="{% sstatic 'codemirror/addon/dialog/dialog.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/jquery.ui.widget.js' %}"></script>
     <script src="{% sstatic 'js/Sortable.min.js' %}"></script>
-    <script src="{% sstatic 'js/knockout-sortable.js' %}"></script>
+
+    <script>
+      var tinymceConfig = {
+        license_key: 'gpl',
+        promotion: false,
+        onboarding: false,
+        branding: false
+      }
+      function setupTinyMCE(editor) {
+          editor.on('input', e => {
+              const el = editor.container.getRootNode().host;
+              el.dispatchEvent(new CustomEvent('input', {detail: editor.getContent()}));
+          })
+      }
+    </script>
+    <script src="{% sstatic 'tiny_mce/tinymce.min.js' %}"></script>
+    <script src="{% sstatic 'tiny_mce/tinymce-webcomponent.js' %}"></script>
 
     <!-- write maths, see maths -->
     <script type="text/javascript" src="{% sstatic 'js/rangy-core.js' %}"></script>
-    <script type="text/javascript" src="{% sstatic 'js/textinputs_jquery.js' %}"></script>
     <script type="text/javascript" src="{% sstatic 'js/writemaths.js' %}"></script>
-
-    <!-- HTML parser -->
-    <script type="text/javascript" src="{% sstatic 'js/htmlparser.js' %}"></script>
 {% endblock javascripts %}
 
 {% block stylesheets %}

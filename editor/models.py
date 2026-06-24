@@ -24,6 +24,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.staticfiles import finders
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
+from django.core.paginator import Paginator
 from django.urls import reverse
 from django.db import models, transaction
 from django.db.models import signals, Max, Min, Exists, OuterRef
@@ -216,7 +217,7 @@ class Project(models.Model, ControlledObject):
     watching_non_members = models.ManyToManyField(User, related_name='watched_projects')
     unwatching_members = models.ManyToManyField(User, related_name='unwatched_projects')
 
-    icon = 'briefcase'
+    icon = 'project'
 
     description = models.TextField(blank=True)
     default_locale = models.CharField(max_length=10, editable=True, default='en-GB')
@@ -1541,7 +1542,7 @@ class PullRequest(models.Model, ControlledObject, TimelineMixin):
         self.closed_by = user
 
 class Timeline(object):
-    def __init__(self, items, viewing_user):
+    def __init__(self, items, viewing_user, items_per_page):
         self.viewing_user = viewing_user
         items = items.prefetch_related('object')
 
@@ -1568,6 +1569,8 @@ class Timeline(object):
         if not self.viewing_user.is_anonymous:
             filtered_items = filtered_items.exclude(hidden_by=self.viewing_user)
         self.filtered_items = filtered_items
+
+        self.pages = Paginator(self.filtered_items, items_per_page)
 
     def __getitem__(self, index):
         return self.filtered_items.__getitem__(index)
@@ -1773,7 +1776,7 @@ class NewQuestion(models.Model):
 
     theme_path = os.path.join(NUMBAS_PATH, 'themes', 'question')
 
-    icon = 'file'
+    icon = 'question'
 
     class Meta:
         verbose_name = 'question'
@@ -1890,7 +1893,7 @@ class NewExam(models.Model):
     custom_theme = models.ForeignKey(Theme, null=True, blank=True, on_delete=models.SET_NULL, related_name='used_in_newexams')
     locale = models.CharField(max_length=200, default='en-GB')
 
-    icon = 'book'
+    icon = 'exam'
 
     class Meta:
         verbose_name = 'exam'

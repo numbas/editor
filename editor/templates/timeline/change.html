@@ -1,21 +1,28 @@
 {% extends "timeline/item.html" %}
 {% load user_link %}
+{% load icons %}
 
 {% block thumbnail %}
 {% endblock thumbnail %}
 
-{% block heading %}<span class="glyphicon glyphicon-{{item.object.icon}}"></span> {% user_link item.object.user %}{% endblock %}
+{% block heading %}
+    {% icon item.object.icon %}
+{% endblock %}
 
 {% block on_object %}
-{% if item.object.verb == "created" and item.timeline.copy_of %}
-copied <a href="{{item.timeline.copy_of.get_absolute_url}}">{{item.timeline.copy_of.name}}</a> to 
-{% else %}
-{{item.object.verb}} 
-{% endif %}
-<a href="{{item.timeline.get_absolute_url}}"><span class="glyphicon glyphicon-{{item.timeline.icon}}"></span> {{item.timeline.name}}</a>
+    {% user_link item.object.user %}
+    {% if item.object.verb == "created" and item.timeline.copy_of %}
+        copied <a href="{{item.timeline.copy_of.get_absolute_url}}">{{item.timeline.copy_of.name}}</a> to 
+    {% else %}
+        {{item.object.verb}} 
+    {% endif %}
+    <a href="{{item.timeline.get_absolute_url}}">
+        {% icon item.timeline.icon %}
+        {{item.timeline.name}}
+    </a>
 {% endblock on_object %}
 
-{% block timelineitem_class %}less-important{% endblock %}
+{% block timelineitem_class %}less-important {{block.super}}{% endblock %}
 
 {% block content %}
 {% if item.object.verb == "created" and item.timeline.copy_of %}

@@ -1,7 +1,25 @@
-{% load el_pagination_tags %}
-
-{% lazy_paginate timeline_items_per_page timeline as items %}
-{% for item in items %}
+{% for item in page %}
     {% include item.object.timelineitem_template %}
 {% endfor %}
-{% show_more "Earlier activity →" "" "btn btn-info btn-lg timeline-more" %}
+
+{% if page.paginator.num_pages > 1 %}
+<menu class="pager">
+    {% if page.has_previous %}
+    <li class="prev">
+        <a rel="prev" href="?page={{page.previous_page_number}}">
+            ← Later activity
+        </a>
+    </li>
+    {% endif %}
+    <li class="current-page">
+        Page {{page.number}} / {{page.paginator.num_pages}}
+    </li>
+    {% if page.has_next %}
+    <li class="next">
+        <a rel="next" href="?page={{page.next_page_number}}">
+            Earlier activity →
+        </a>
+    </li>
+    {% endif %}
+</menu>
+{% endif %}

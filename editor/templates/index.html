@@ -2,20 +2,14 @@
 {% load timeline %}
 {% load sstatic %}
 {% load links %}
+{% load icons %}
+
+{% block body_classes %}index padded-main {{block.super}}{% endblock %}
 
 {% block javascripts %}
 {{block.super}}
     <script src="{% sstatic 'js/index.js' %}" type="text/javascript"></script>
 {% endblock %}
-
-{% block stylesheets %}
-{{block.super}}
-<style type="text/css">
-    .jumbotron .btn {
-        white-space: normal;
-    }
-</style>
-{% endblock stylesheets %}
 
 {% block content %}
 {% if request.user.is_anonymous %}
@@ -54,72 +48,79 @@
 {% endif %}
 
 {% if not request.user.is_anonymous %}
-<div class="row">
-    <div class="col-sm-8">
-        <div id="personal-timeline">
-            <div class="timeline">
-                {% with timeline=request.user.userprofile.all_timeline %}
-                    {% if not timeline.exists %}
-                        {% with include_object_link=False %}
-                        {% include "timeline/welcome.html" %}
-                        {% endwith %}
-                    {% endif %}
-
-                    {% for broadcast in sticky_broadcasts %}
-                        {% with item=broadcast.timelineitem %}
-                            {% include item.object.timelineitem_template %}
-                        {% endwith %}
-                    {% endfor %}
-
-                    {% if tip %}
-                        {% include "timeline/tip.html" %}
-                    {% endif %}
-
-                    {% with include_object_link=True %}
-                        {% if timeline.exists %}
-                            {% timeline timeline per_page=20 %}
-                        {% endif %}
-                    {% endwith %}
+    <section class="timeline">
+        <h1>Recent activity</h1>
+        {% with timeline=request.user.userprofile.all_timeline %}
+            {% if not timeline.exists %}
+                {% with include_object_link=False %}
+                {% include "timeline/welcome.html" %}
                 {% endwith %}
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-4">
-        <div class="panel panel-primary">
-            <div class="panel-heading">
-                <h2 class="panel-title"><span class="glyphicon glyphicon-plus"></span> Create</h2>
-            </div>
-            <div class="panel-body create">
-                <a href="{% url 'question_new' %}" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-file"></span> Question</a> 
-                <a href="{% url 'exam_new' %}" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-book"></span> Exam</a> 
-            </div>
-        </div>
+            {% endif %}
+
+            {% for broadcast in sticky_broadcasts %}
+                {% with item=broadcast.timelineitem %}
+                    {% include item.object.timelineitem_template %}
+                {% endwith %}
+            {% endfor %}
+
+            {% if tip %}
+                {% include "timeline/tip.html" %}
+            {% endif %}
+
+            {% with include_object_link=True %}
+                {% if timeline.exists %}
+                    {% timeline timeline per_page=20 %}
+                {% endif %}
+            {% endwith %}
+        {% endwith %}
+    </section>
+    <nav id="sidebar">
+        <section id="create">
+            <h2 class="panel-title">
+                {% icon 'plus' %}
+                Create
+            </h2>
+            <menu>
+                <li>
+                    <a href="{% url 'question_new' %}">
+                        {% icon "📄" %}
+                        Question
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'exam_new' %}">
+                        {% icon "📔" %}
+                        Exam
+                    </a>
+                </li>
+            </menu>
+        </section>
 
         {% if request.user.userprofile.last_viewed_items.exists %}
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h2 class="panel-title"><span class="glyphicon glyphicon-eye-open"></span> Recently viewed items</h2>
-            </div>
-            <ul class="list-group">
+        <section id="recent-items">
+            <h2>
+                {% icon 'eye-open' %}
+                Recently viewed items
+            </h2>
+            <menu>
                 {% for itemview in request.user.userprofile.last_viewed_items.all %}
-                <li class="list-group-item">
+                <li>
                     {% editoritem_link itemview.item.rel_obj show_icon=True %}
                 </li>
                 {% endfor %}
-            </ul>
-        </div>
+            </menu>
+        </section>
         {% endif %}
 
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h2 class="panel-title"><span class="glyphicon glyphicon-briefcase"></span> Your projects</h2>
-            </div>
-            <div class="panel-heading">
-                <div class="has-feedback">
-                    <input id="project_filter" type="text" class="input-sm form-control" placeholder="Search projects">
-                    <span class="glyphicon glyphicon-search form-control-feedback"></span>
-                </div>
-            </div>
+        <section id="projects">
+            <h2>
+                {% icon 'project' %}
+                Your projects
+            </h2>
+            <search>
+                <label for="project_filter">Search projects</label>
+                <input id="project_filter" type="search">
+            </search>
             <ul class="projects list-group">
                 {% for project in request.user.userprofile.projects.distinct %}
                 <li class="list-group-item" data-name="{{project.name|escape}}"><a href="{% url 'project_index' project.pk %}">{{project.name}}</a></li>

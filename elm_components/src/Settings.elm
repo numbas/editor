@@ -1,6 +1,7 @@
 module Settings exposing
     ( Settings
     , Address
+    , AddressItem(..)
     , Value
     , Getter
     , Getters
@@ -10,6 +11,7 @@ module Settings exposing
     , fromValue
     , index
     , field
+    , key
     , indexWhere
     , indexWhereName
     , at
@@ -42,6 +44,7 @@ type AddressItem
     = Index Int
     | Field String
     | IndexWhere (JD.Decoder Bool) Value
+    | Key String
 
 type alias Address = List AddressItem
 
@@ -64,6 +67,9 @@ at at_ s = { s | at = s.at ++ at_ }
 
 field : String -> AddressItem
 field = Field
+
+key : String -> AddressItem
+key = Key
 
 index : Int -> AddressItem
 index = Index
@@ -92,6 +98,11 @@ maybe_get decoder settings =
             [] -> decoder
             (Index i)::rest -> JD.index i (reach rest)
             (Field k)::rest -> JD.field k (reach rest)
+            (Key k)::[] -> JE.string k |> JD.decodeValue decoder |> \r -> case r of
+                Ok a -> JD.succeed a
+                Err _ -> JD.fail ""
+
+            (Key k)::rest -> JD.field k (reach rest)
             (IndexWhere prop _)::rest ->
                 (decode_index_where prop)
                 |> JD.andThen (\i -> JD.index i (reach rest))
@@ -178,6 +189,24 @@ setAt at_ v settings =
                 |> JE.list identity
 
             (Field k)::rest -> 
+                JD.decodeValue (JD.dict JD.value) ss
+                |> Result.withDefault (Dict.fromList [])
+                |> Dict.update k (Maybe.withDefault (JE.object []) >> setValue rest >> Just)
+                |> JE.dict identity identity
+
+            (Key k)::[] ->
+                let
+                    nk = JD.decodeValue JD.string v |> Result.withDefault k
+                in
+                    JD.decodeValue (JD.dict JD.value) ss
+                    |> Result.withDefault (Dict.fromList [])
+                    |> Dict.toList
+                    |> (\l -> if List.member k (List.map first l) then l else l++[(k, JE.null)])
+                    |> List.map (\(k2, v2) -> (if k2==k then nk else k2, v2))
+                    |> Dict.fromList
+                    |> JE.dict identity identity
+
+            (Key k)::rest -> 
                 JD.decodeValue (JD.dict JD.value) ss
                 |> Result.withDefault (Dict.fromList [])
                 |> Dict.update k (Maybe.withDefault (JE.object []) >> setValue rest >> Just)

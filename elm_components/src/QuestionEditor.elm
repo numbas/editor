@@ -126,6 +126,16 @@ type alias Part =
     , settings : Settings
     , computed : Settings
     , children : PartContainer
+    , marking_algorithm : MarkingAlgorithm
+    }
+
+type alias Note =
+  { settings : Settings
+  }
+
+type alias MarkingAlgorithm = 
+    { notes : List Note
+    , base_notes : List Note
     }
 
 type alias Monad a b = (a, b)
@@ -189,6 +199,41 @@ main = Browser.element
     , update = update
     , subscriptions = subscriptions
     }
+
+parse_note : P.Parser Note
+parse_note =
+  P.succeed (\name description definition -> 
+      {settings = S.fromValue (JE.object [("name", JE.string name), ("description", JE.string description), ("definition", JE.string definition)]) JE.null}
+    )
+    |. P.spaces
+    |= (P.getChompedString <|
+          P.succeed ()
+          |. P.chompWhile (\c -> c /= '\n' && c /= '\r' && c /= ' ' && c /= ':' && c /= '(')
+        )
+    |. P.spaces
+    |= P.oneOf
+      [ P.succeed identity
+        |. P.symbol "("
+        |= (P.getChompedString <|
+              P.succeed ()
+              |. P.chompWhile (\c -> c /= ')') 
+           )
+        |. P.symbol ")"
+      , P.succeed ""
+      ]
+    |. P.symbol ":"
+    |= (P.getChompedString <| P.succeed () |. P.chompUntilEndOr "\n\n")
+
+parse_notes : P.Parser (List Note)
+parse_notes = P.sequence
+  { start = ""
+  , separator = "\n\n"
+  , end = ""
+  , item = parse_note
+  , spaces = P.succeed ()
+  , trailing = P.Optional
+  }
+
 
 
 empty_part_container =
@@ -492,6 +537,8 @@ part_name path part = case S.getters.string (S.atField "customName" part.setting
 
     name -> name
 
+blank_note = { settings = S.empty }
+
 new_part : JE.Value -> PartType -> JE.Value -> PartContainer -> Part
 new_part default_settings type_ settings children =
     let
@@ -503,6 +550,25 @@ new_part default_settings type_ settings children =
         standard_defaults = get_default_settings ["part"] default_settings
 
         type_defaults = get_default_settings ["part_types", type_.name] default_settings
+
+        decode_notes = 
+               Result.mapError (\_ -> ())
+            >> Result.andThen (P.run parse_notes >> Result.mapError (\_ -> ()))
+            >> Result.withDefault []
+
+        base_notes = 
+            get_default_settings ["marking_algorithms", type_.name] default_settings
+            |> JD.decodeValue JD.string
+            |> decode_notes
+
+        notes = 
+            JD.decodeValue (JD.field "customMarkingAlgorithm" JD.string) settings
+            |> decode_notes
+
+        marking_algorithm =
+            { notes = notes
+            , base_notes = base_notes
+            }
 
         defaults = 
             Result.map2 (Dict.union)
@@ -517,6 +583,7 @@ new_part default_settings type_ settings children =
         , settings = nsettings
         , computed = S.empty
         , children = children
+        , marking_algorithm = marking_algorithm
         }
 
 get_default_settings : List String -> JE.Value -> JE.Value
@@ -654,9 +721,29 @@ encode_part part =
     JE.object
         (( S.get (JD.dict JD.value |> JD.map Dict.toList) [] part.settings)
         ++ [ ("type", JE.string part.type_.name)
+           , ("customMarkingAlgorithm", encode_marking_algorithm part.marking_algorithm)
            ]
         ++ (encode_part_container part.children)
         )
+
+note_toString : Note -> String
+note_toString note =
+    let
+        nfield k = S.atField k note.settings
+        nstring = nfield >> S.getters.string
+
+        name = nstring "name"
+        description = nstring "description"
+        definition = nstring "definition"
+    in
+        name ++ (if description /= "" then " ("++description++")" else "") ++ ":\n" ++ definition
+
+encode_marking_algorithm : MarkingAlgorithm -> JE.Value
+encode_marking_algorithm =
+    .notes
+    >> List.map note_toString
+    >> String.join "\n\n"
+    >> JE.string
 
 init : JE.Value -> (Model, Cmd Msg)
 init flags =
@@ -700,6 +787,8 @@ type QuestionMsg
 type PartMsg
     = ChangePartSetting (JE.Value, S.Address)
     | ChangePartComputed String JE.Value
+    | ChangeMarkingAlgorithmNote Int (JE.Value, S.Address)
+    | AddMarkingAlgorithmNote
 
 update msg model = case model of
     ActiveModel active -> update_active msg active |> mapFirst ActiveModel
@@ -789,12 +878,27 @@ update_part msg path part = case msg of
     ChangePartSetting (v, at) -> 
         let
             cmds = 
-                part_setting_computed
-                |> List.filterMap (\(ats, f) -> if (S.at ats S.empty).at == at then f path part v else Nothing )
-                |> Cmd.batch
+                  (part_setting_computed
+                    |> List.filterMap (\(ats, f) -> if (S.at ats S.empty).at == at then f path part v else Nothing )
+                   )
+                |> List.filter ((/=) Cmd.none) 
+
             nsettings = S.setAt at v part.settings
         in
-            ({ part | settings = nsettings }, (Just False, Just cmds))
+            ({ part | settings = nsettings }, (Just False, Just <| Cmd.batch cmds))
+
+    ChangeMarkingAlgorithmNote i (v, at) -> 
+        let
+            marking_algorithm = part.marking_algorithm
+            nnotes = LE.updateAt i (\note -> { note | settings = S.setAt at v note.settings }) marking_algorithm.notes
+        in
+            ({ part | marking_algorithm = { marking_algorithm | notes = nnotes } }, (Just False, Nothing))
+
+    AddMarkingAlgorithmNote ->
+        let
+            marking_algorithm = part.marking_algorithm
+        in
+            ({ part | marking_algorithm = { marking_algorithm | notes = marking_algorithm.notes ++ [blank_note] } }, (Just False, Nothing))
 
     ChangePartComputed key v -> ({ part | computed = S.insert key v part.computed }, (Nothing, Nothing))
 
@@ -892,16 +996,19 @@ boolean_property _ o =
         []
     ]
 
-text_property : PropertyWidget
-text_property _ o =
+custom_text_property : List (H.Attribute Msg) -> PropertyWidget
+custom_text_property attrs _ o =
     [ H.input
-        [ HA.value <| S.getters.string o.settings
+        ([ HA.value <| S.getters.string o.settings
         , HE.onInput <| (S.setters o.settings o.setter).string
         , HA.id o.id
         , HA.class "monospace"
-        ]
+        ]++attrs)
         []
     ]
+
+text_property : PropertyWidget
+text_property = custom_text_property []
 
 code_property : PropertyWidget
 code_property _ o =
@@ -1912,16 +2019,28 @@ view_active model =
                                     , H.table [] <| List.concat
                                             [ [H.thead
                                                 []
-                                                [ H.tr [] <| (H.td [] [])::(answers |> List.map (\answer -> 
-                                                    H.th [] [mathjax_span answer]
+                                                [ H.tr [] <| (H.td [] [])::(answers |> List.indexedMap (\i answer -> 
+                                                    H.th 
+                                                        [ HA.id <| prefix_id <| "mcq-matrix-answer-"++(fi i)
+                                                        , HA.scope "row"
+                                                        ]
+                                                        [mathjax_span answer]
                                                   ))
                                                 ]
                                               ]
                                             , choices |> List.indexedMap (\i choice ->
                                                 H.tr [] <| List.concat
-                                                    [ [H.th [] [mathjax_span choice] ]
+                                                    [ [H.th 
+                                                        [ HA.id <| prefix_id <| "mcq-matrix-choice-"++(fi i)
+                                                        , HA.scope "row"
+                                                        ]
+                                                        [mathjax_span choice]
+                                                      ]
                                                     , answers |> List.indexedMap (\j _ ->
-                                                        H.td [] (text_property ui
+                                                        H.td [] (custom_text_property
+                                                            [ HA.attribute "aria-labelledby" <| (prefix_id <| "mcq-matrix-answer-"++(fi j))++" "++(prefix_id <| "mcq-matrix-choice-"++(fi i))
+                                                            ]
+                                                            ui
                                                             { id = "matrix-"++(fi i)++"-"++(fi j)
                                                             , label = "Choice "++(fi i)++", answer "++(fi j)
                                                             , help = Nothing
@@ -2678,7 +2797,65 @@ view_active model =
                                             ]
                                         ]
                                     ]
-                            _ -> [] -- TODO
+
+                            "patternmatch" ->
+                                let
+                                    showCorrectAnswer = pbool "showCorrectAnswer"
+
+                                    matchMode = pstring "matchMode"
+                                in
+                                    [ H.fieldset [] <| List.concat
+                                        [ marks_field
+                                        , part_field
+                                            { id = "matchMode"
+                                            , label = "Match test"
+                                            , help = Just "match test"
+                                            }
+                                            (select_property
+                                                [ ("regex", "Regular expression")
+                                                , ("exact", "Exact match")
+                                                ]
+                                            )
+                                        , part_field
+                                            { id = "answer"
+                                            , label = "Answer pattern"
+                                            , help = Just "answer pattern"
+                                            }
+                                            text_property
+                                        , part_field
+                                            { id = "allowEmpty"
+                                            , label = "Allow the student to submit an empty answer?"
+                                            , help = Just "empty answers"
+                                            }
+                                            boolean_property
+                                        , visibleIf (showCorrectAnswer && matchMode == "regex") <|
+                                            part_field
+                                                { id = "displayAnswer"
+                                                , label = "Display answer"
+                                                , help = Just "display answer"
+                                                }
+                                                text_property
+                                        ]
+                                    , H.fieldset [] show_feedback_fields
+                                    , H.fieldset [] <| List.concat
+                                        [ [H.legend [] [H.text "Advanced settings"] ]
+                                        , part_field
+                                            { id = "caseSensitive"
+                                            , label = "Must the answer be in the correct case?"
+                                            , help = Just "case sensitivity"
+                                            }
+                                            boolean_property
+                                        , visibleIf (pbool "caseSensitive") <| part_field
+                                            { id = "partialCredit"
+                                            , label = "Partial credit for answer not matching case"
+                                            , help = Nothing
+                                            }
+                                            percent_property
+                                        ]
+                                    ]
+
+
+                            _ -> [] -- TODO: custom
                         , attributes = []
                         }
                     }
@@ -2688,20 +2865,111 @@ view_active model =
                     , label = SimpleLabel "Feedback message"
                     , icon = Just "feedback"
                     , view =
-                        { contents = [] -- TODO
+                        { contents = 
+                            [ H.fieldset [] <| List.concat
+                                [ part_field
+                                    { id = "useAlternativeFeedback"
+                                    , label = "Show all feedback?"
+                                    , help = Just "using all alternative feedback"
+                                    }
+                                    boolean_property
+                                , part_field
+                                    { id = "alternativeFeedbackMessage"
+                                    , label = "Message if this alternative is used"
+                                    , help = Just "alternative feedback message"
+                                    }
+                                    content_property
+                                ]
+                            ] 
                         , attributes = []
                         }
                     }
 
                 marking_algorithm_tab =
-                    { id = "marking-algorithm"
-                    , label = SimpleLabel "Marking algorithm"
-                    , icon = Just "ok"
-                    , view =
-                        { contents = [] -- TODO
-                        , attributes = []
+                    let
+                        marking_algorithm = part.marking_algorithm
+
+                        notes = marking_algorithm.notes
+
+                        note_tabs = notes |> List.indexedMap (\i note ->
+                            let
+                                nfield k = S.atField k note.settings
+                                nstring = nfield >> S.getters.string
+                                name = nstring "name"
+
+                                nset = ChangeMarkingAlgorithmNote i >> UpdatePart path >> UpdateQuestion
+
+                                note_field o = labelled_field
+                                    ui
+                                    { id = prefix_id <| "note-"++(fi i)
+                                    , label = o.label
+                                    , help = Nothing
+                                    , settings = note.settings
+                                    , setter = nset
+                                    }
+
+                            in
+                                { id = fi i
+                                , label = SimpleLabel name
+                                , icon = Nothing
+                                , view =
+                                    { contents = 
+                                        [ H.fieldset [] <| List.concat
+                                            [ note_field
+                                                { id = "name"
+                                                , label = "Name"
+                                                }
+                                                text_property
+                                            , note_field
+                                                { id = "definition"
+                                                , label = "Definition"
+                                                }
+                                                code_property
+                                            , note_field
+                                                { id = "description"
+                                                , label = "Description"
+                                                }
+                                                content_property
+                                            ]
+                                        ]
+                                        , attributes = []
+                                    }
+                                }
+                            )
+
+                        notes_tabber = 
+                            { name = prefix_id "marking-algorithm-notes"
+                            , allow_empty = True
+                            , tabs = note_tabs
+                            }
+
+                        add_note = AddMarkingAlgorithmNote |> UpdatePart path |> UpdateQuestion
+                    in
+                        { id = "marking-algorithm"
+                        , label = SimpleLabel "Marking algorithm"
+                        , icon = Just "ok"
+                        , view =
+                            { contents =
+                                [ H.fieldset [] <| List.concat
+                                    [ visibleIf (part.type_.name /= "extension") <| part_field
+                                        { id = "extendBaseMarkingAlgorithm"
+                                        , label = "Extend base marking algorithm?"
+                                        , help = Just "extending the base marking algorithm"
+                                        }
+                                        boolean_property
+                                    ]
+                                , view_tablist notes_tabber [ HA.class "vertical" ]
+                                , H.button
+                                  [ HA.type_ "button"
+                                  , HE.onClick add_note
+                                  ]
+                                  [ H.text "Add a note"
+                                  ]
+                                , view_tabpanel notes_tabber 
+                                ]
+                            , attributes = []
+                            }
                         }
-                    }
 
                 testing_tab =
                     { id = "testing"
@@ -2785,7 +3053,20 @@ view_active model =
                       )
                     , (part.type_.has_marks && not is_alternative, H.button
                         [ HA.class "btn xs"
-                        , HE.onClick (AddChildPart path Alternative)
+                        , HE.onClick (
+                            let
+                                settings = part.settings
+
+                                nsettings =
+                                    settings
+                                    |> S.setAt [S.field "marks"] (JE.string "")
+                                    |> S.setAt [S.field "customName"] (JE.string "")
+
+                                npart = 
+                                    { part | settings = nsettings }
+                            in
+                                UpdateQuestion <| AddPart path Alternative npart
+                          )
                         ]
                         [ H.text "Add an alternative"
                         ]

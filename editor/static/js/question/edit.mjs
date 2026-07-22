@@ -41,6 +41,25 @@ default_settings.part_types = Object.fromEntries(defs.part.anyOf.map(d => [d.pro
 
 default_settings.part_types.numberentry.notationStyles = Numbas.locale.default_number_notation;
 
+default_settings.marking_algorithms = Object.fromEntries(Object.entries(Numbas.partConstructors).map(([k,v]) => {
+    let script = v.prototype.baseMarkingScript();
+    if(!script) {
+        return [k, null];
+    }
+    return [
+        k,
+        Object.fromEntries(Object.entries(script.notes).map(([name,note]) => {
+            return [name, {
+                name: note.name,
+                definition: note.expr,
+                description: note.description
+            }]
+        }))
+    ]
+}));
+
+
+
 window.default_settings = default_settings;
 
 const tab_state = history_state.get('tabs');
@@ -53,8 +72,9 @@ const flags = {
     CSRFToken: getCSRFtoken(),
     Numbas,
     default_settings,
-    docs_mapping
+    docs_mapping,
 };
+console.log(flags);
 
 const app = Elm.QuestionEditor.init({
     node: document.querySelector('main'), 

@@ -56,7 +56,7 @@ empty =
     }
 
 fromValue : JE.Value -> JE.Value -> Settings
-fromValue value defaults = 
+fromValue defaults value = 
     { value = value
     , defaults = defaults
     , at = []

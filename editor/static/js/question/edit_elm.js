@@ -6105,9 +6105,9 @@ var $author$project$QuestionEditor$decode_project = A2(
 			$elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
 			$elm$json$Json$Decode$succeed($author$project$QuestionEditor$Project))));
-var $author$project$QuestionEditor$Question = F2(
-	function (settings, parts) {
-		return {parts: parts, settings: settings};
+var $author$project$QuestionEditor$Question = F3(
+	function (settings, parts, variable_groups) {
+		return {parts: parts, settings: settings, variable_groups: variable_groups};
 	});
 var $author$project$QuestionEditor$PartContainer = function (a) {
 	return {$: 'PartContainer', a: a};
@@ -6123,16 +6123,24 @@ var $elm$json$Json$Decode$lazy = function (thunk) {
 		thunk,
 		$elm$json$Json$Decode$succeed(_Utils_Tuple0));
 };
-var $elm$core$Result$andThen = F2(
-	function (callback, result) {
-		if (result.$ === 'Ok') {
-			var value = result.a;
-			return callback(value);
-		} else {
-			var msg = result.a;
-			return $elm$core$Result$Err(msg);
-		}
+var $author$project$QuestionEditor$Note = F2(
+	function (settings, changed) {
+		return {changed: changed, settings: settings};
 	});
+var $author$project$Settings$fromValue = F2(
+	function (defaults, value) {
+		return {at: _List_Nil, defaults: defaults, value: value};
+	});
+var $author$project$QuestionEditor$decode_note = A2(
+	$elm_community$json_extra$Json$Decode$Extra$andMap,
+	$elm$json$Json$Decode$succeed(false),
+	A2(
+		$elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(
+			$elm$json$Json$Decode$map,
+			$author$project$Settings$fromValue($elm$json$Json$Encode$null),
+			$elm$json$Json$Decode$value),
+		$elm$json$Json$Decode$succeed($author$project$QuestionEditor$Note)));
 var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
 var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
 var $elm$core$Dict$Black = {$: 'Black'};
@@ -6309,10 +6317,6 @@ var $author$project$Settings$empty = {
 	defaults: $elm$json$Json$Encode$object(_List_Nil),
 	value: $elm$json$Json$Encode$object(_List_Nil)
 };
-var $author$project$Settings$fromValue = F2(
-	function (value, defaults) {
-		return {at: _List_Nil, defaults: defaults, value: value};
-	});
 var $elm$core$Result$withDefault = F2(
 	function (def, result) {
 		if (result.$ === 'Ok') {
@@ -6357,742 +6361,6 @@ var $elm$core$Result$map2 = F3(
 			}
 		}
 	});
-var $elm$core$Result$mapError = F2(
-	function (f, result) {
-		if (result.$ === 'Ok') {
-			var v = result.a;
-			return $elm$core$Result$Ok(v);
-		} else {
-			var e = result.a;
-			return $elm$core$Result$Err(
-				f(e));
-		}
-	});
-var $elm$parser$Parser$Optional = {$: 'Optional'};
-var $elm$parser$Parser$Advanced$Good = F3(
-	function (a, b, c) {
-		return {$: 'Good', a: a, b: b, c: c};
-	});
-var $elm$parser$Parser$Advanced$Parser = function (a) {
-	return {$: 'Parser', a: a};
-};
-var $elm$parser$Parser$Advanced$chompUntilEndOr = function (str) {
-	return $elm$parser$Parser$Advanced$Parser(
-		function (s) {
-			var _v0 = A5(_Parser_findSubString, str, s.offset, s.row, s.col, s.src);
-			var newOffset = _v0.a;
-			var newRow = _v0.b;
-			var newCol = _v0.c;
-			var adjustedOffset = (newOffset < 0) ? $elm$core$String$length(s.src) : newOffset;
-			return A3(
-				$elm$parser$Parser$Advanced$Good,
-				_Utils_cmp(s.offset, adjustedOffset) < 0,
-				_Utils_Tuple0,
-				{col: newCol, context: s.context, indent: s.indent, offset: adjustedOffset, row: newRow, src: s.src});
-		});
-};
-var $elm$parser$Parser$chompUntilEndOr = $elm$parser$Parser$Advanced$chompUntilEndOr;
-var $elm$parser$Parser$Advanced$isSubChar = _Parser_isSubChar;
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
-var $elm$parser$Parser$Advanced$chompWhileHelp = F5(
-	function (isGood, offset, row, col, s0) {
-		chompWhileHelp:
-		while (true) {
-			var newOffset = A3($elm$parser$Parser$Advanced$isSubChar, isGood, offset, s0.src);
-			if (_Utils_eq(newOffset, -1)) {
-				return A3(
-					$elm$parser$Parser$Advanced$Good,
-					_Utils_cmp(s0.offset, offset) < 0,
-					_Utils_Tuple0,
-					{col: col, context: s0.context, indent: s0.indent, offset: offset, row: row, src: s0.src});
-			} else {
-				if (_Utils_eq(newOffset, -2)) {
-					var $temp$isGood = isGood,
-						$temp$offset = offset + 1,
-						$temp$row = row + 1,
-						$temp$col = 1,
-						$temp$s0 = s0;
-					isGood = $temp$isGood;
-					offset = $temp$offset;
-					row = $temp$row;
-					col = $temp$col;
-					s0 = $temp$s0;
-					continue chompWhileHelp;
-				} else {
-					var $temp$isGood = isGood,
-						$temp$offset = newOffset,
-						$temp$row = row,
-						$temp$col = col + 1,
-						$temp$s0 = s0;
-					isGood = $temp$isGood;
-					offset = $temp$offset;
-					row = $temp$row;
-					col = $temp$col;
-					s0 = $temp$s0;
-					continue chompWhileHelp;
-				}
-			}
-		}
-	});
-var $elm$parser$Parser$Advanced$chompWhile = function (isGood) {
-	return $elm$parser$Parser$Advanced$Parser(
-		function (s) {
-			return A5($elm$parser$Parser$Advanced$chompWhileHelp, isGood, s.offset, s.row, s.col, s);
-		});
-};
-var $elm$parser$Parser$chompWhile = $elm$parser$Parser$Advanced$chompWhile;
-var $elm$core$Basics$always = F2(
-	function (a, _v0) {
-		return a;
-	});
-var $elm$parser$Parser$Advanced$Bad = F2(
-	function (a, b) {
-		return {$: 'Bad', a: a, b: b};
-	});
-var $elm$parser$Parser$Advanced$mapChompedString = F2(
-	function (func, _v0) {
-		var parse = _v0.a;
-		return $elm$parser$Parser$Advanced$Parser(
-			function (s0) {
-				var _v1 = parse(s0);
-				if (_v1.$ === 'Bad') {
-					var p = _v1.a;
-					var x = _v1.b;
-					return A2($elm$parser$Parser$Advanced$Bad, p, x);
-				} else {
-					var p = _v1.a;
-					var a = _v1.b;
-					var s1 = _v1.c;
-					return A3(
-						$elm$parser$Parser$Advanced$Good,
-						p,
-						A2(
-							func,
-							A3($elm$core$String$slice, s0.offset, s1.offset, s0.src),
-							a),
-						s1);
-				}
-			});
-	});
-var $elm$parser$Parser$Advanced$getChompedString = function (parser) {
-	return A2($elm$parser$Parser$Advanced$mapChompedString, $elm$core$Basics$always, parser);
-};
-var $elm$parser$Parser$getChompedString = $elm$parser$Parser$Advanced$getChompedString;
-var $elm$parser$Parser$Advanced$map2 = F3(
-	function (func, _v0, _v1) {
-		var parseA = _v0.a;
-		var parseB = _v1.a;
-		return $elm$parser$Parser$Advanced$Parser(
-			function (s0) {
-				var _v2 = parseA(s0);
-				if (_v2.$ === 'Bad') {
-					var p = _v2.a;
-					var x = _v2.b;
-					return A2($elm$parser$Parser$Advanced$Bad, p, x);
-				} else {
-					var p1 = _v2.a;
-					var a = _v2.b;
-					var s1 = _v2.c;
-					var _v3 = parseB(s1);
-					if (_v3.$ === 'Bad') {
-						var p2 = _v3.a;
-						var x = _v3.b;
-						return A2($elm$parser$Parser$Advanced$Bad, p1 || p2, x);
-					} else {
-						var p2 = _v3.a;
-						var b = _v3.b;
-						var s2 = _v3.c;
-						return A3(
-							$elm$parser$Parser$Advanced$Good,
-							p1 || p2,
-							A2(func, a, b),
-							s2);
-					}
-				}
-			});
-	});
-var $elm$parser$Parser$Advanced$ignorer = F2(
-	function (keepParser, ignoreParser) {
-		return A3($elm$parser$Parser$Advanced$map2, $elm$core$Basics$always, keepParser, ignoreParser);
-	});
-var $elm$parser$Parser$ignorer = $elm$parser$Parser$Advanced$ignorer;
-var $elm$parser$Parser$Advanced$keeper = F2(
-	function (parseFunc, parseArg) {
-		return A3($elm$parser$Parser$Advanced$map2, $elm$core$Basics$apL, parseFunc, parseArg);
-	});
-var $elm$parser$Parser$keeper = $elm$parser$Parser$Advanced$keeper;
-var $elm$core$Basics$neq = _Utils_notEqual;
-var $elm$parser$Parser$Advanced$Empty = {$: 'Empty'};
-var $elm$parser$Parser$Advanced$Append = F2(
-	function (a, b) {
-		return {$: 'Append', a: a, b: b};
-	});
-var $elm$parser$Parser$Advanced$oneOfHelp = F3(
-	function (s0, bag, parsers) {
-		oneOfHelp:
-		while (true) {
-			if (!parsers.b) {
-				return A2($elm$parser$Parser$Advanced$Bad, false, bag);
-			} else {
-				var parse = parsers.a.a;
-				var remainingParsers = parsers.b;
-				var _v1 = parse(s0);
-				if (_v1.$ === 'Good') {
-					var step = _v1;
-					return step;
-				} else {
-					var step = _v1;
-					var p = step.a;
-					var x = step.b;
-					if (p) {
-						return step;
-					} else {
-						var $temp$s0 = s0,
-							$temp$bag = A2($elm$parser$Parser$Advanced$Append, bag, x),
-							$temp$parsers = remainingParsers;
-						s0 = $temp$s0;
-						bag = $temp$bag;
-						parsers = $temp$parsers;
-						continue oneOfHelp;
-					}
-				}
-			}
-		}
-	});
-var $elm$parser$Parser$Advanced$oneOf = function (parsers) {
-	return $elm$parser$Parser$Advanced$Parser(
-		function (s) {
-			return A3($elm$parser$Parser$Advanced$oneOfHelp, s, $elm$parser$Parser$Advanced$Empty, parsers);
-		});
-};
-var $elm$parser$Parser$oneOf = $elm$parser$Parser$Advanced$oneOf;
-var $elm$parser$Parser$Advanced$spaces = $elm$parser$Parser$Advanced$chompWhile(
-	function (c) {
-		return _Utils_eq(
-			c,
-			_Utils_chr(' ')) || (_Utils_eq(
-			c,
-			_Utils_chr('\n')) || _Utils_eq(
-			c,
-			_Utils_chr('\r')));
-	});
-var $elm$parser$Parser$spaces = $elm$parser$Parser$Advanced$spaces;
-var $elm$parser$Parser$Advanced$succeed = function (a) {
-	return $elm$parser$Parser$Advanced$Parser(
-		function (s) {
-			return A3($elm$parser$Parser$Advanced$Good, false, a, s);
-		});
-};
-var $elm$parser$Parser$succeed = $elm$parser$Parser$Advanced$succeed;
-var $elm$parser$Parser$ExpectingSymbol = function (a) {
-	return {$: 'ExpectingSymbol', a: a};
-};
-var $elm$parser$Parser$Advanced$Token = F2(
-	function (a, b) {
-		return {$: 'Token', a: a, b: b};
-	});
-var $elm$parser$Parser$Advanced$AddRight = F2(
-	function (a, b) {
-		return {$: 'AddRight', a: a, b: b};
-	});
-var $elm$parser$Parser$Advanced$DeadEnd = F4(
-	function (row, col, problem, contextStack) {
-		return {col: col, contextStack: contextStack, problem: problem, row: row};
-	});
-var $elm$parser$Parser$Advanced$fromState = F2(
-	function (s, x) {
-		return A2(
-			$elm$parser$Parser$Advanced$AddRight,
-			$elm$parser$Parser$Advanced$Empty,
-			A4($elm$parser$Parser$Advanced$DeadEnd, s.row, s.col, x, s.context));
-	});
-var $elm$parser$Parser$Advanced$isSubString = _Parser_isSubString;
-var $elm$parser$Parser$Advanced$token = function (_v0) {
-	var str = _v0.a;
-	var expecting = _v0.b;
-	var progress = !$elm$core$String$isEmpty(str);
-	return $elm$parser$Parser$Advanced$Parser(
-		function (s) {
-			var _v1 = A5($elm$parser$Parser$Advanced$isSubString, str, s.offset, s.row, s.col, s.src);
-			var newOffset = _v1.a;
-			var newRow = _v1.b;
-			var newCol = _v1.c;
-			return _Utils_eq(newOffset, -1) ? A2(
-				$elm$parser$Parser$Advanced$Bad,
-				false,
-				A2($elm$parser$Parser$Advanced$fromState, s, expecting)) : A3(
-				$elm$parser$Parser$Advanced$Good,
-				progress,
-				_Utils_Tuple0,
-				{col: newCol, context: s.context, indent: s.indent, offset: newOffset, row: newRow, src: s.src});
-		});
-};
-var $elm$parser$Parser$Advanced$symbol = $elm$parser$Parser$Advanced$token;
-var $elm$parser$Parser$symbol = function (str) {
-	return $elm$parser$Parser$Advanced$symbol(
-		A2(
-			$elm$parser$Parser$Advanced$Token,
-			str,
-			$elm$parser$Parser$ExpectingSymbol(str)));
-};
-var $author$project$QuestionEditor$parse_note = A2(
-	$elm$parser$Parser$keeper,
-	A2(
-		$elm$parser$Parser$keeper,
-		A2(
-			$elm$parser$Parser$keeper,
-			A2(
-				$elm$parser$Parser$ignorer,
-				$elm$parser$Parser$succeed(
-					F3(
-						function (name, description, definition) {
-							return {
-								settings: A2(
-									$author$project$Settings$fromValue,
-									$elm$json$Json$Encode$object(
-										_List_fromArray(
-											[
-												_Utils_Tuple2(
-												'name',
-												$elm$json$Json$Encode$string(name)),
-												_Utils_Tuple2(
-												'description',
-												$elm$json$Json$Encode$string(description)),
-												_Utils_Tuple2(
-												'definition',
-												$elm$json$Json$Encode$string(definition))
-											])),
-									$elm$json$Json$Encode$null)
-							};
-						})),
-				$elm$parser$Parser$spaces),
-			A2(
-				$elm$parser$Parser$ignorer,
-				$elm$parser$Parser$getChompedString(
-					A2(
-						$elm$parser$Parser$ignorer,
-						$elm$parser$Parser$succeed(_Utils_Tuple0),
-						$elm$parser$Parser$chompWhile(
-							function (c) {
-								return (!_Utils_eq(
-									c,
-									_Utils_chr('\n'))) && ((!_Utils_eq(
-									c,
-									_Utils_chr('\r'))) && ((!_Utils_eq(
-									c,
-									_Utils_chr(' '))) && ((!_Utils_eq(
-									c,
-									_Utils_chr(':'))) && (!_Utils_eq(
-									c,
-									_Utils_chr('('))))));
-							}))),
-				$elm$parser$Parser$spaces)),
-		A2(
-			$elm$parser$Parser$ignorer,
-			$elm$parser$Parser$oneOf(
-				_List_fromArray(
-					[
-						A2(
-						$elm$parser$Parser$keeper,
-						A2(
-							$elm$parser$Parser$ignorer,
-							$elm$parser$Parser$succeed($elm$core$Basics$identity),
-							$elm$parser$Parser$symbol('(')),
-						A2(
-							$elm$parser$Parser$ignorer,
-							$elm$parser$Parser$getChompedString(
-								A2(
-									$elm$parser$Parser$ignorer,
-									$elm$parser$Parser$succeed(_Utils_Tuple0),
-									$elm$parser$Parser$chompWhile(
-										function (c) {
-											return !_Utils_eq(
-												c,
-												_Utils_chr(')'));
-										}))),
-							$elm$parser$Parser$symbol(')'))),
-						$elm$parser$Parser$succeed('')
-					])),
-			$elm$parser$Parser$symbol(':'))),
-	$elm$parser$Parser$getChompedString(
-		A2(
-			$elm$parser$Parser$ignorer,
-			$elm$parser$Parser$succeed(_Utils_Tuple0),
-			$elm$parser$Parser$chompUntilEndOr('\u000A\u000A'))));
-var $elm$parser$Parser$Advanced$andThen = F2(
-	function (callback, _v0) {
-		var parseA = _v0.a;
-		return $elm$parser$Parser$Advanced$Parser(
-			function (s0) {
-				var _v1 = parseA(s0);
-				if (_v1.$ === 'Bad') {
-					var p = _v1.a;
-					var x = _v1.b;
-					return A2($elm$parser$Parser$Advanced$Bad, p, x);
-				} else {
-					var p1 = _v1.a;
-					var a = _v1.b;
-					var s1 = _v1.c;
-					var _v2 = callback(a);
-					var parseB = _v2.a;
-					var _v3 = parseB(s1);
-					if (_v3.$ === 'Bad') {
-						var p2 = _v3.a;
-						var x = _v3.b;
-						return A2($elm$parser$Parser$Advanced$Bad, p1 || p2, x);
-					} else {
-						var p2 = _v3.a;
-						var b = _v3.b;
-						var s2 = _v3.c;
-						return A3($elm$parser$Parser$Advanced$Good, p1 || p2, b, s2);
-					}
-				}
-			});
-	});
-var $elm$parser$Parser$Advanced$loopHelp = F4(
-	function (p, state, callback, s0) {
-		loopHelp:
-		while (true) {
-			var _v0 = callback(state);
-			var parse = _v0.a;
-			var _v1 = parse(s0);
-			if (_v1.$ === 'Good') {
-				var p1 = _v1.a;
-				var step = _v1.b;
-				var s1 = _v1.c;
-				if (step.$ === 'Loop') {
-					var newState = step.a;
-					var $temp$p = p || p1,
-						$temp$state = newState,
-						$temp$callback = callback,
-						$temp$s0 = s1;
-					p = $temp$p;
-					state = $temp$state;
-					callback = $temp$callback;
-					s0 = $temp$s0;
-					continue loopHelp;
-				} else {
-					var result = step.a;
-					return A3($elm$parser$Parser$Advanced$Good, p || p1, result, s1);
-				}
-			} else {
-				var p1 = _v1.a;
-				var x = _v1.b;
-				return A2($elm$parser$Parser$Advanced$Bad, p || p1, x);
-			}
-		}
-	});
-var $elm$parser$Parser$Advanced$loop = F2(
-	function (state, callback) {
-		return $elm$parser$Parser$Advanced$Parser(
-			function (s) {
-				return A4($elm$parser$Parser$Advanced$loopHelp, false, state, callback, s);
-			});
-	});
-var $elm$parser$Parser$Advanced$map = F2(
-	function (func, _v0) {
-		var parse = _v0.a;
-		return $elm$parser$Parser$Advanced$Parser(
-			function (s0) {
-				var _v1 = parse(s0);
-				if (_v1.$ === 'Good') {
-					var p = _v1.a;
-					var a = _v1.b;
-					var s1 = _v1.c;
-					return A3(
-						$elm$parser$Parser$Advanced$Good,
-						p,
-						func(a),
-						s1);
-				} else {
-					var p = _v1.a;
-					var x = _v1.b;
-					return A2($elm$parser$Parser$Advanced$Bad, p, x);
-				}
-			});
-	});
-var $elm$parser$Parser$Advanced$Done = function (a) {
-	return {$: 'Done', a: a};
-};
-var $elm$parser$Parser$Advanced$Loop = function (a) {
-	return {$: 'Loop', a: a};
-};
-var $elm$parser$Parser$Advanced$revAlways = F2(
-	function (_v0, b) {
-		return b;
-	});
-var $elm$parser$Parser$Advanced$skip = F2(
-	function (iParser, kParser) {
-		return A3($elm$parser$Parser$Advanced$map2, $elm$parser$Parser$Advanced$revAlways, iParser, kParser);
-	});
-var $elm$parser$Parser$Advanced$sequenceEndForbidden = F5(
-	function (ender, ws, parseItem, sep, revItems) {
-		var chompRest = function (item) {
-			return A5(
-				$elm$parser$Parser$Advanced$sequenceEndForbidden,
-				ender,
-				ws,
-				parseItem,
-				sep,
-				A2($elm$core$List$cons, item, revItems));
-		};
-		return A2(
-			$elm$parser$Parser$Advanced$skip,
-			ws,
-			$elm$parser$Parser$Advanced$oneOf(
-				_List_fromArray(
-					[
-						A2(
-						$elm$parser$Parser$Advanced$skip,
-						sep,
-						A2(
-							$elm$parser$Parser$Advanced$skip,
-							ws,
-							A2(
-								$elm$parser$Parser$Advanced$map,
-								function (item) {
-									return $elm$parser$Parser$Advanced$Loop(
-										A2($elm$core$List$cons, item, revItems));
-								},
-								parseItem))),
-						A2(
-						$elm$parser$Parser$Advanced$map,
-						function (_v0) {
-							return $elm$parser$Parser$Advanced$Done(
-								$elm$core$List$reverse(revItems));
-						},
-						ender)
-					])));
-	});
-var $elm$parser$Parser$Advanced$sequenceEndMandatory = F4(
-	function (ws, parseItem, sep, revItems) {
-		return $elm$parser$Parser$Advanced$oneOf(
-			_List_fromArray(
-				[
-					A2(
-					$elm$parser$Parser$Advanced$map,
-					function (item) {
-						return $elm$parser$Parser$Advanced$Loop(
-							A2($elm$core$List$cons, item, revItems));
-					},
-					A2(
-						$elm$parser$Parser$Advanced$ignorer,
-						parseItem,
-						A2(
-							$elm$parser$Parser$Advanced$ignorer,
-							ws,
-							A2($elm$parser$Parser$Advanced$ignorer, sep, ws)))),
-					A2(
-					$elm$parser$Parser$Advanced$map,
-					function (_v0) {
-						return $elm$parser$Parser$Advanced$Done(
-							$elm$core$List$reverse(revItems));
-					},
-					$elm$parser$Parser$Advanced$succeed(_Utils_Tuple0))
-				]));
-	});
-var $elm$parser$Parser$Advanced$sequenceEndOptional = F5(
-	function (ender, ws, parseItem, sep, revItems) {
-		var parseEnd = A2(
-			$elm$parser$Parser$Advanced$map,
-			function (_v0) {
-				return $elm$parser$Parser$Advanced$Done(
-					$elm$core$List$reverse(revItems));
-			},
-			ender);
-		return A2(
-			$elm$parser$Parser$Advanced$skip,
-			ws,
-			$elm$parser$Parser$Advanced$oneOf(
-				_List_fromArray(
-					[
-						A2(
-						$elm$parser$Parser$Advanced$skip,
-						sep,
-						A2(
-							$elm$parser$Parser$Advanced$skip,
-							ws,
-							$elm$parser$Parser$Advanced$oneOf(
-								_List_fromArray(
-									[
-										A2(
-										$elm$parser$Parser$Advanced$map,
-										function (item) {
-											return $elm$parser$Parser$Advanced$Loop(
-												A2($elm$core$List$cons, item, revItems));
-										},
-										parseItem),
-										parseEnd
-									])))),
-						parseEnd
-					])));
-	});
-var $elm$parser$Parser$Advanced$sequenceEnd = F5(
-	function (ender, ws, parseItem, sep, trailing) {
-		var chompRest = function (item) {
-			switch (trailing.$) {
-				case 'Forbidden':
-					return A2(
-						$elm$parser$Parser$Advanced$loop,
-						_List_fromArray(
-							[item]),
-						A4($elm$parser$Parser$Advanced$sequenceEndForbidden, ender, ws, parseItem, sep));
-				case 'Optional':
-					return A2(
-						$elm$parser$Parser$Advanced$loop,
-						_List_fromArray(
-							[item]),
-						A4($elm$parser$Parser$Advanced$sequenceEndOptional, ender, ws, parseItem, sep));
-				default:
-					return A2(
-						$elm$parser$Parser$Advanced$ignorer,
-						A2(
-							$elm$parser$Parser$Advanced$skip,
-							ws,
-							A2(
-								$elm$parser$Parser$Advanced$skip,
-								sep,
-								A2(
-									$elm$parser$Parser$Advanced$skip,
-									ws,
-									A2(
-										$elm$parser$Parser$Advanced$loop,
-										_List_fromArray(
-											[item]),
-										A3($elm$parser$Parser$Advanced$sequenceEndMandatory, ws, parseItem, sep))))),
-						ender);
-			}
-		};
-		return $elm$parser$Parser$Advanced$oneOf(
-			_List_fromArray(
-				[
-					A2($elm$parser$Parser$Advanced$andThen, chompRest, parseItem),
-					A2(
-					$elm$parser$Parser$Advanced$map,
-					function (_v0) {
-						return _List_Nil;
-					},
-					ender)
-				]));
-	});
-var $elm$parser$Parser$Advanced$sequence = function (i) {
-	return A2(
-		$elm$parser$Parser$Advanced$skip,
-		$elm$parser$Parser$Advanced$token(i.start),
-		A2(
-			$elm$parser$Parser$Advanced$skip,
-			i.spaces,
-			A5(
-				$elm$parser$Parser$Advanced$sequenceEnd,
-				$elm$parser$Parser$Advanced$token(i.end),
-				i.spaces,
-				i.item,
-				$elm$parser$Parser$Advanced$token(i.separator),
-				i.trailing)));
-};
-var $elm$parser$Parser$Advanced$Forbidden = {$: 'Forbidden'};
-var $elm$parser$Parser$Advanced$Mandatory = {$: 'Mandatory'};
-var $elm$parser$Parser$Advanced$Optional = {$: 'Optional'};
-var $elm$parser$Parser$toAdvancedTrailing = function (trailing) {
-	switch (trailing.$) {
-		case 'Forbidden':
-			return $elm$parser$Parser$Advanced$Forbidden;
-		case 'Optional':
-			return $elm$parser$Parser$Advanced$Optional;
-		default:
-			return $elm$parser$Parser$Advanced$Mandatory;
-	}
-};
-var $elm$parser$Parser$Expecting = function (a) {
-	return {$: 'Expecting', a: a};
-};
-var $elm$parser$Parser$toToken = function (str) {
-	return A2(
-		$elm$parser$Parser$Advanced$Token,
-		str,
-		$elm$parser$Parser$Expecting(str));
-};
-var $elm$parser$Parser$sequence = function (i) {
-	return $elm$parser$Parser$Advanced$sequence(
-		{
-			end: $elm$parser$Parser$toToken(i.end),
-			item: i.item,
-			separator: $elm$parser$Parser$toToken(i.separator),
-			spaces: i.spaces,
-			start: $elm$parser$Parser$toToken(i.start),
-			trailing: $elm$parser$Parser$toAdvancedTrailing(i.trailing)
-		});
-};
-var $author$project$QuestionEditor$parse_notes = $elm$parser$Parser$sequence(
-	{
-		end: '',
-		item: $author$project$QuestionEditor$parse_note,
-		separator: '\u000A\u000A',
-		spaces: $elm$parser$Parser$succeed(_Utils_Tuple0),
-		start: '',
-		trailing: $elm$parser$Parser$Optional
-	});
-var $elm$parser$Parser$DeadEnd = F3(
-	function (row, col, problem) {
-		return {col: col, problem: problem, row: row};
-	});
-var $elm$parser$Parser$problemToDeadEnd = function (p) {
-	return A3($elm$parser$Parser$DeadEnd, p.row, p.col, p.problem);
-};
-var $elm$parser$Parser$Advanced$bagToList = F2(
-	function (bag, list) {
-		bagToList:
-		while (true) {
-			switch (bag.$) {
-				case 'Empty':
-					return list;
-				case 'AddRight':
-					var bag1 = bag.a;
-					var x = bag.b;
-					var $temp$bag = bag1,
-						$temp$list = A2($elm$core$List$cons, x, list);
-					bag = $temp$bag;
-					list = $temp$list;
-					continue bagToList;
-				default:
-					var bag1 = bag.a;
-					var bag2 = bag.b;
-					var $temp$bag = bag1,
-						$temp$list = A2($elm$parser$Parser$Advanced$bagToList, bag2, list);
-					bag = $temp$bag;
-					list = $temp$list;
-					continue bagToList;
-			}
-		}
-	});
-var $elm$parser$Parser$Advanced$run = F2(
-	function (_v0, src) {
-		var parse = _v0.a;
-		var _v1 = parse(
-			{col: 1, context: _List_Nil, indent: 1, offset: 0, row: 1, src: src});
-		if (_v1.$ === 'Good') {
-			var value = _v1.b;
-			return $elm$core$Result$Ok(value);
-		} else {
-			var bag = _v1.b;
-			return $elm$core$Result$Err(
-				A2($elm$parser$Parser$Advanced$bagToList, bag, _List_Nil));
-		}
-	});
-var $elm$parser$Parser$run = F2(
-	function (parser, source) {
-		var _v0 = A2($elm$parser$Parser$Advanced$run, parser, source);
-		if (_v0.$ === 'Ok') {
-			var a = _v0.a;
-			return $elm$core$Result$Ok(a);
-		} else {
-			var problems = _v0.a;
-			return $elm$core$Result$Err(
-				A2($elm$core$List$map, $elm$parser$Parser$problemToDeadEnd, problems));
-		}
-	});
 var $elm$core$Dict$union = F2(
 	function (t1, t2) {
 		return A3($elm$core$Dict$foldl, $elm$core$Dict$insert, t2, t1);
@@ -7111,6 +6379,24 @@ var $author$project$QuestionEditor$new_part = F4(
 			_List_fromArray(
 				['part']),
 			default_settings);
+		var notes = A2(
+			$elm$core$List$map,
+			function (n) {
+				return _Utils_update(
+					n,
+					{changed: true});
+			},
+			A2(
+				$elm$core$Result$withDefault,
+				_List_Nil,
+				A2(
+					$elm$json$Json$Decode$decodeValue,
+					A2(
+						$elm$json$Json$Decode$at,
+						_List_fromArray(
+							['customMarkingAlgorithm', 'notes']),
+						$elm$json$Json$Decode$list($author$project$QuestionEditor$decode_note)),
+					settings)));
 		var _float = A2($elm$core$Basics$composeR, $elm$core$String$fromFloat, $elm$json$Json$Encode$string);
 		var _false = $elm$json$Json$Encode$bool(false);
 		var defaults = A2(
@@ -7130,39 +6416,22 @@ var $author$project$QuestionEditor$new_part = F4(
 						$elm$json$Json$Decode$decodeValue,
 						$elm$json$Json$Decode$dict($elm$json$Json$Decode$value),
 						type_defaults))));
-		var nsettings = A2($author$project$Settings$fromValue, settings, defaults);
-		var decode_notes = A2(
-			$elm$core$Basics$composeR,
-			$elm$core$Result$mapError(
-				function (_v0) {
-					return _Utils_Tuple0;
-				}),
-			A2(
-				$elm$core$Basics$composeR,
-				$elm$core$Result$andThen(
-					A2(
-						$elm$core$Basics$composeR,
-						$elm$parser$Parser$run($author$project$QuestionEditor$parse_notes),
-						$elm$core$Result$mapError(
-							function (_v1) {
-								return _Utils_Tuple0;
-							}))),
-				$elm$core$Result$withDefault(_List_Nil)));
-		var notes = decode_notes(
+		var nsettings = A2($author$project$Settings$fromValue, defaults, settings);
+		var base_notes = A2(
+			$elm$core$Result$withDefault,
+			_List_Nil,
 			A2(
 				$elm$json$Json$Decode$decodeValue,
-				A2($elm$json$Json$Decode$field, 'customMarkingAlgorithm', $elm$json$Json$Decode$string),
-				settings));
-		var base_notes = decode_notes(
-			A2(
-				$elm$json$Json$Decode$decodeValue,
-				$elm$json$Json$Decode$string,
+				$elm$json$Json$Decode$list($author$project$QuestionEditor$decode_note),
 				A2(
 					$author$project$QuestionEditor$get_default_settings,
 					_List_fromArray(
 						['marking_algorithms', type_.name]),
 					default_settings)));
-		var marking_algorithm = {base_notes: base_notes, notes: notes};
+		var marking_algorithm = {
+			base_notes: base_notes,
+			notes: _Utils_ap(notes, base_notes)
+		};
 		return {children: children, computed: $author$project$Settings$empty, marking_algorithm: marking_algorithm, settings: nsettings, type_: type_};
 	});
 var $author$project$QuestionEditor$standard_part_type = F5(
@@ -7251,26 +6520,162 @@ var $author$project$QuestionEditor$decode_part = function (default_settings) {
 				$elm$json$Json$Decode$succeed(
 					$author$project$QuestionEditor$new_part(default_settings)))));
 };
-var $author$project$QuestionEditor$decode_question = function (default_settings) {
+var $author$project$QuestionEditor$Variable = F2(
+	function (settings, template) {
+		return {settings: settings, template: template};
+	});
+var $author$project$QuestionEditor$decode_variable = function (default_settings) {
+	var variable_defaults = A2(
+		$author$project$QuestionEditor$get_default_settings,
+		_List_fromArray(
+			['question', 'variables', 'additionalProperties']),
+		default_settings);
 	return A2(
 		$elm_community$json_extra$Json$Decode$Extra$andMap,
-		$author$project$QuestionEditor$decode_child_parts(default_settings),
+		$elm$json$Json$Decode$oneOf(
+			_List_fromArray(
+				[
+					A2($elm$json$Json$Decode$field, 'templateType', $elm$json$Json$Decode$string),
+					$elm$json$Json$Decode$succeed('anything')
+				])),
 		A2(
 			$elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2(
 				$elm$json$Json$Decode$map,
-				function (s) {
-					return A2(
-						$author$project$Settings$fromValue,
-						s,
+				$author$project$Settings$fromValue(variable_defaults),
+				$elm$json$Json$Decode$value),
+			$elm$json$Json$Decode$succeed($author$project$QuestionEditor$Variable)));
+};
+var $elm$core$Set$Set_elm_builtin = function (a) {
+	return {$: 'Set_elm_builtin', a: a};
+};
+var $elm$core$Set$empty = $elm$core$Set$Set_elm_builtin($elm$core$Dict$empty);
+var $elm$core$Set$insert = F2(
+	function (key, _v0) {
+		var dict = _v0.a;
+		return $elm$core$Set$Set_elm_builtin(
+			A3($elm$core$Dict$insert, key, _Utils_Tuple0, dict));
+	});
+var $elm$core$Set$fromList = function (list) {
+	return A3($elm$core$List$foldl, $elm$core$Set$insert, $elm$core$Set$empty, list);
+};
+var $elm$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
+				switch (_v1.$) {
+					case 'LT':
+						var $temp$targetKey = targetKey,
+							$temp$dict = left;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+					case 'EQ':
+						return $elm$core$Maybe$Just(value);
+					default:
+						var $temp$targetKey = targetKey,
+							$temp$dict = right;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+				}
+			}
+		}
+	});
+var $elm$core$Dict$member = F2(
+	function (key, dict) {
+		var _v0 = A2($elm$core$Dict$get, key, dict);
+		if (_v0.$ === 'Just') {
+			return true;
+		} else {
+			return false;
+		}
+	});
+var $elm$core$Set$member = F2(
+	function (key, _v0) {
+		var dict = _v0.a;
+		return A2($elm$core$Dict$member, key, dict);
+	});
+var $elm$core$Dict$values = function (dict) {
+	return A3(
+		$elm$core$Dict$foldr,
+		F3(
+			function (key, value, valueList) {
+				return A2($elm$core$List$cons, value, valueList);
+			}),
+		_List_Nil,
+		dict);
+};
+var $author$project$QuestionEditor$decode_question = function (default_settings) {
+	return A2(
+		$elm_community$json_extra$Json$Decode$Extra$andMap,
+		A3(
+			$elm$json$Json$Decode$map2,
+			F2(
+				function (group_defs, variable_dict) {
+					var groups = A2(
+						$elm$core$List$map,
+						function (_v0) {
+							var name = _v0.a;
+							var variable_names = _v0.b;
+							return {
+								name: name,
+								variables: A2(
+									$elm$core$List$filterMap,
+									function (n) {
+										return A2($elm$core$Dict$get, n, variable_dict);
+									},
+									variable_names)
+							};
+						},
+						group_defs);
+					var grouped_variables = $elm$core$Set$fromList(
+						$elm$core$List$concat(
+							A2($elm$core$List$map, $elm$core$Tuple$second, group_defs)));
+					var ungrouped_variables = A2(
+						$elm$core$List$filter,
+						function (v) {
+							var name = $author$project$Settings$getters.string(
+								A2($author$project$Settings$atField, 'name', v.settings));
+							return !A2($elm$core$Set$member, name, grouped_variables);
+						},
+						$elm$core$Dict$values(variable_dict));
+					var ungrouped = {name: '', variables: ungrouped_variables};
+					return A2($elm$core$List$cons, ungrouped, groups);
+				}),
+			$elm$json$Json$Decode$list(
+				A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
+					A2(
+						$elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
+						$elm$json$Json$Decode$succeed($elm$core$Tuple$pair)))),
+			$elm$json$Json$Decode$dict(
+				$author$project$QuestionEditor$decode_variable(default_settings))),
+		A2(
+			$elm_community$json_extra$Json$Decode$Extra$andMap,
+			$author$project$QuestionEditor$decode_child_parts(default_settings),
+			A2(
+				$elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2(
+					$elm$json$Json$Decode$map,
+					$author$project$Settings$fromValue(
 						A2(
 							$author$project$QuestionEditor$get_default_settings,
 							_List_fromArray(
 								['question']),
-							default_settings));
-				},
-				$elm$json$Json$Decode$value),
-			$elm$json$Json$Decode$succeed($author$project$QuestionEditor$Question)));
+							default_settings)),
+					$elm$json$Json$Decode$value),
+				$elm$json$Json$Decode$succeed($author$project$QuestionEditor$Question))));
 };
 var $author$project$QuestionEditor$ShareTokens = F2(
 	function (view, edit) {
@@ -7314,37 +6719,6 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$html$Html$div = _VirtualDom_node('div');
-var $elm$core$Dict$get = F2(
-	function (targetKey, dict) {
-		get:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return $elm$core$Maybe$Nothing;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
-				switch (_v1.$) {
-					case 'LT':
-						var $temp$targetKey = targetKey,
-							$temp$dict = left;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-					case 'EQ':
-						return $elm$core$Maybe$Just(value);
-					default:
-						var $temp$targetKey = targetKey,
-							$temp$dict = right;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-				}
-			}
-		}
-	});
 var $elm$html$Html$Attributes$href = function (url) {
 	return A2(
 		$elm$html$Html$Attributes$stringProperty,
@@ -7678,6 +7052,10 @@ var $author$project$History$big_change = F2(
 				small_change: false
 			});
 	});
+var $elm$core$Basics$always = F2(
+	function (a, _v0) {
+		return a;
+	});
 var $elm$core$Process$sleep = _Process_sleep;
 var $author$project$Util$delay = F2(
 	function (t, msg) {
@@ -7693,28 +7071,6 @@ var $author$project$QuestionEditor$child_part_kinds = _List_fromArray(
 		_Utils_Tuple2('steps', $author$project$QuestionEditor$Step),
 		_Utils_Tuple2('alternatives', $author$project$QuestionEditor$Alternative)
 	]);
-var $author$project$QuestionEditor$note_toString = function (note) {
-	var nfield = function (k) {
-		return A2($author$project$Settings$atField, k, note.settings);
-	};
-	var nstring = A2($elm$core$Basics$composeR, nfield, $author$project$Settings$getters.string);
-	var name = nstring('name');
-	var description = nstring('description');
-	var definition = nstring('definition');
-	return name + (((description !== '') ? (' (' + (description + ')')) : '') + (':\u000A' + definition));
-};
-var $author$project$QuestionEditor$encode_marking_algorithm = A2(
-	$elm$core$Basics$composeR,
-	function ($) {
-		return $.notes;
-	},
-	A2(
-		$elm$core$Basics$composeR,
-		$elm$core$List$map($author$project$QuestionEditor$note_toString),
-		A2(
-			$elm$core$Basics$composeR,
-			$elm$core$String$join('\u000A\u000A'),
-			$elm$json$Json$Encode$string)));
 var $elm$json$Json$Encode$list = F2(
 	function (func, entries) {
 		return _Json_wrap(
@@ -7724,6 +7080,35 @@ var $elm$json$Json$Encode$list = F2(
 				_Json_emptyArray(_Utils_Tuple0),
 				entries));
 	});
+var $author$project$QuestionEditor$encode_marking_algorithm = A2(
+	$elm$core$Basics$composeR,
+	function ($) {
+		return $.notes;
+	},
+	A2(
+		$elm$core$Basics$composeR,
+		$elm$core$List$filter(
+			function ($) {
+				return $.changed;
+			}),
+		A2(
+			$elm$core$Basics$composeR,
+			$elm$json$Json$Encode$list(
+				A2(
+					$elm$core$Basics$composeR,
+					function ($) {
+						return $.settings;
+					},
+					function ($) {
+						return $.value;
+					})),
+			function (n) {
+				return $elm$json$Json$Encode$object(
+					_List_fromArray(
+						[
+							_Utils_Tuple2('notes', n)
+						]));
+			})));
 var $elm$core$Tuple$mapSecond = F2(
 	function (func, _v0) {
 		var x = _v0.a;
@@ -7732,6 +7117,7 @@ var $elm$core$Tuple$mapSecond = F2(
 			x,
 			func(y));
 	});
+var $elm$core$Basics$neq = _Utils_notEqual;
 var $author$project$QuestionEditor$part_getter = function (kind) {
 	return $author$project$QuestionEditor$apply_part_container(
 		function () {
@@ -7833,14 +7219,28 @@ var $elm$parser$Parser$Loop = function (a) {
 	return {$: 'Loop', a: a};
 };
 var $elm$parser$Parser$ExpectingInt = {$: 'ExpectingInt'};
+var $elm$parser$Parser$Advanced$Parser = function (a) {
+	return {$: 'Parser', a: a};
+};
 var $elm$parser$Parser$Advanced$consumeBase = _Parser_consumeBase;
 var $elm$parser$Parser$Advanced$consumeBase16 = _Parser_consumeBase16;
+var $elm$parser$Parser$Advanced$Bad = F2(
+	function (a, b) {
+		return {$: 'Bad', a: a, b: b};
+	});
+var $elm$parser$Parser$Advanced$Good = F3(
+	function (a, b, c) {
+		return {$: 'Good', a: a, b: b, c: c};
+	});
 var $elm$parser$Parser$Advanced$bumpOffset = F2(
 	function (newOffset, s) {
 		return {col: s.col + (newOffset - s.offset), context: s.context, indent: s.indent, offset: newOffset, row: s.row, src: s.src};
 	});
 var $elm$parser$Parser$Advanced$chompBase10 = _Parser_chompBase10;
 var $elm$parser$Parser$Advanced$isAsciiCode = _Parser_isAsciiCode;
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
 var $elm$parser$Parser$Advanced$consumeExp = F2(
 	function (offset, src) {
 		if (A3($elm$parser$Parser$Advanced$isAsciiCode, 101, offset, src) || A3($elm$parser$Parser$Advanced$isAsciiCode, 69, offset, src)) {
@@ -7858,6 +7258,22 @@ var $elm$parser$Parser$Advanced$consumeDotAndExp = F2(
 			$elm$parser$Parser$Advanced$consumeExp,
 			A2($elm$parser$Parser$Advanced$chompBase10, offset + 1, src),
 			src) : A2($elm$parser$Parser$Advanced$consumeExp, offset, src);
+	});
+var $elm$parser$Parser$Advanced$AddRight = F2(
+	function (a, b) {
+		return {$: 'AddRight', a: a, b: b};
+	});
+var $elm$parser$Parser$Advanced$DeadEnd = F4(
+	function (row, col, problem, contextStack) {
+		return {col: col, contextStack: contextStack, problem: problem, row: row};
+	});
+var $elm$parser$Parser$Advanced$Empty = {$: 'Empty'};
+var $elm$parser$Parser$Advanced$fromState = F2(
+	function (s, x) {
+		return A2(
+			$elm$parser$Parser$Advanced$AddRight,
+			$elm$parser$Parser$Advanced$Empty,
+			A4($elm$parser$Parser$Advanced$DeadEnd, s.row, s.col, x, s.context));
 	});
 var $elm$parser$Parser$Advanced$finalizeInt = F5(
 	function (invalid, handler, startOffset, _v0, s) {
@@ -7994,7 +7410,113 @@ var $elm$parser$Parser$Advanced$int = F2(
 			});
 	});
 var $elm$parser$Parser$int = A2($elm$parser$Parser$Advanced$int, $elm$parser$Parser$ExpectingInt, $elm$parser$Parser$ExpectingInt);
+var $elm$parser$Parser$Advanced$map2 = F3(
+	function (func, _v0, _v1) {
+		var parseA = _v0.a;
+		var parseB = _v1.a;
+		return $elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _v2 = parseA(s0);
+				if (_v2.$ === 'Bad') {
+					var p = _v2.a;
+					var x = _v2.b;
+					return A2($elm$parser$Parser$Advanced$Bad, p, x);
+				} else {
+					var p1 = _v2.a;
+					var a = _v2.b;
+					var s1 = _v2.c;
+					var _v3 = parseB(s1);
+					if (_v3.$ === 'Bad') {
+						var p2 = _v3.a;
+						var x = _v3.b;
+						return A2($elm$parser$Parser$Advanced$Bad, p1 || p2, x);
+					} else {
+						var p2 = _v3.a;
+						var b = _v3.b;
+						var s2 = _v3.c;
+						return A3(
+							$elm$parser$Parser$Advanced$Good,
+							p1 || p2,
+							A2(func, a, b),
+							s2);
+					}
+				}
+			});
+	});
+var $elm$parser$Parser$Advanced$keeper = F2(
+	function (parseFunc, parseArg) {
+		return A3($elm$parser$Parser$Advanced$map2, $elm$core$Basics$apL, parseFunc, parseArg);
+	});
+var $elm$parser$Parser$keeper = $elm$parser$Parser$Advanced$keeper;
+var $elm$parser$Parser$Advanced$loopHelp = F4(
+	function (p, state, callback, s0) {
+		loopHelp:
+		while (true) {
+			var _v0 = callback(state);
+			var parse = _v0.a;
+			var _v1 = parse(s0);
+			if (_v1.$ === 'Good') {
+				var p1 = _v1.a;
+				var step = _v1.b;
+				var s1 = _v1.c;
+				if (step.$ === 'Loop') {
+					var newState = step.a;
+					var $temp$p = p || p1,
+						$temp$state = newState,
+						$temp$callback = callback,
+						$temp$s0 = s1;
+					p = $temp$p;
+					state = $temp$state;
+					callback = $temp$callback;
+					s0 = $temp$s0;
+					continue loopHelp;
+				} else {
+					var result = step.a;
+					return A3($elm$parser$Parser$Advanced$Good, p || p1, result, s1);
+				}
+			} else {
+				var p1 = _v1.a;
+				var x = _v1.b;
+				return A2($elm$parser$Parser$Advanced$Bad, p || p1, x);
+			}
+		}
+	});
+var $elm$parser$Parser$Advanced$loop = F2(
+	function (state, callback) {
+		return $elm$parser$Parser$Advanced$Parser(
+			function (s) {
+				return A4($elm$parser$Parser$Advanced$loopHelp, false, state, callback, s);
+			});
+	});
+var $elm$parser$Parser$Advanced$map = F2(
+	function (func, _v0) {
+		var parse = _v0.a;
+		return $elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _v1 = parse(s0);
+				if (_v1.$ === 'Good') {
+					var p = _v1.a;
+					var a = _v1.b;
+					var s1 = _v1.c;
+					return A3(
+						$elm$parser$Parser$Advanced$Good,
+						p,
+						func(a),
+						s1);
+				} else {
+					var p = _v1.a;
+					var x = _v1.b;
+					return A2($elm$parser$Parser$Advanced$Bad, p, x);
+				}
+			});
+	});
 var $elm$parser$Parser$map = $elm$parser$Parser$Advanced$map;
+var $elm$parser$Parser$Advanced$Done = function (a) {
+	return {$: 'Done', a: a};
+};
+var $elm$parser$Parser$Advanced$Loop = function (a) {
+	return {$: 'Loop', a: a};
+};
 var $elm$parser$Parser$toAdvancedStep = function (step) {
 	if (step.$ === 'Loop') {
 		var s = step.a;
@@ -8016,6 +7538,151 @@ var $elm$parser$Parser$loop = F2(
 					callback(s));
 			});
 	});
+var $elm$parser$Parser$Advanced$Append = F2(
+	function (a, b) {
+		return {$: 'Append', a: a, b: b};
+	});
+var $elm$parser$Parser$Advanced$oneOfHelp = F3(
+	function (s0, bag, parsers) {
+		oneOfHelp:
+		while (true) {
+			if (!parsers.b) {
+				return A2($elm$parser$Parser$Advanced$Bad, false, bag);
+			} else {
+				var parse = parsers.a.a;
+				var remainingParsers = parsers.b;
+				var _v1 = parse(s0);
+				if (_v1.$ === 'Good') {
+					var step = _v1;
+					return step;
+				} else {
+					var step = _v1;
+					var p = step.a;
+					var x = step.b;
+					if (p) {
+						return step;
+					} else {
+						var $temp$s0 = s0,
+							$temp$bag = A2($elm$parser$Parser$Advanced$Append, bag, x),
+							$temp$parsers = remainingParsers;
+						s0 = $temp$s0;
+						bag = $temp$bag;
+						parsers = $temp$parsers;
+						continue oneOfHelp;
+					}
+				}
+			}
+		}
+	});
+var $elm$parser$Parser$Advanced$oneOf = function (parsers) {
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A3($elm$parser$Parser$Advanced$oneOfHelp, s, $elm$parser$Parser$Advanced$Empty, parsers);
+		});
+};
+var $elm$parser$Parser$oneOf = $elm$parser$Parser$Advanced$oneOf;
+var $elm$parser$Parser$DeadEnd = F3(
+	function (row, col, problem) {
+		return {col: col, problem: problem, row: row};
+	});
+var $elm$parser$Parser$problemToDeadEnd = function (p) {
+	return A3($elm$parser$Parser$DeadEnd, p.row, p.col, p.problem);
+};
+var $elm$parser$Parser$Advanced$bagToList = F2(
+	function (bag, list) {
+		bagToList:
+		while (true) {
+			switch (bag.$) {
+				case 'Empty':
+					return list;
+				case 'AddRight':
+					var bag1 = bag.a;
+					var x = bag.b;
+					var $temp$bag = bag1,
+						$temp$list = A2($elm$core$List$cons, x, list);
+					bag = $temp$bag;
+					list = $temp$list;
+					continue bagToList;
+				default:
+					var bag1 = bag.a;
+					var bag2 = bag.b;
+					var $temp$bag = bag1,
+						$temp$list = A2($elm$parser$Parser$Advanced$bagToList, bag2, list);
+					bag = $temp$bag;
+					list = $temp$list;
+					continue bagToList;
+			}
+		}
+	});
+var $elm$parser$Parser$Advanced$run = F2(
+	function (_v0, src) {
+		var parse = _v0.a;
+		var _v1 = parse(
+			{col: 1, context: _List_Nil, indent: 1, offset: 0, row: 1, src: src});
+		if (_v1.$ === 'Good') {
+			var value = _v1.b;
+			return $elm$core$Result$Ok(value);
+		} else {
+			var bag = _v1.b;
+			return $elm$core$Result$Err(
+				A2($elm$parser$Parser$Advanced$bagToList, bag, _List_Nil));
+		}
+	});
+var $elm$parser$Parser$run = F2(
+	function (parser, source) {
+		var _v0 = A2($elm$parser$Parser$Advanced$run, parser, source);
+		if (_v0.$ === 'Ok') {
+			var a = _v0.a;
+			return $elm$core$Result$Ok(a);
+		} else {
+			var problems = _v0.a;
+			return $elm$core$Result$Err(
+				A2($elm$core$List$map, $elm$parser$Parser$problemToDeadEnd, problems));
+		}
+	});
+var $elm$parser$Parser$Advanced$succeed = function (a) {
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A3($elm$parser$Parser$Advanced$Good, false, a, s);
+		});
+};
+var $elm$parser$Parser$succeed = $elm$parser$Parser$Advanced$succeed;
+var $elm$parser$Parser$ExpectingSymbol = function (a) {
+	return {$: 'ExpectingSymbol', a: a};
+};
+var $elm$parser$Parser$Advanced$Token = F2(
+	function (a, b) {
+		return {$: 'Token', a: a, b: b};
+	});
+var $elm$parser$Parser$Advanced$isSubString = _Parser_isSubString;
+var $elm$parser$Parser$Advanced$token = function (_v0) {
+	var str = _v0.a;
+	var expecting = _v0.b;
+	var progress = !$elm$core$String$isEmpty(str);
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			var _v1 = A5($elm$parser$Parser$Advanced$isSubString, str, s.offset, s.row, s.col, s.src);
+			var newOffset = _v1.a;
+			var newRow = _v1.b;
+			var newCol = _v1.c;
+			return _Utils_eq(newOffset, -1) ? A2(
+				$elm$parser$Parser$Advanced$Bad,
+				false,
+				A2($elm$parser$Parser$Advanced$fromState, s, expecting)) : A3(
+				$elm$parser$Parser$Advanced$Good,
+				progress,
+				_Utils_Tuple0,
+				{col: newCol, context: s.context, indent: s.indent, offset: newOffset, row: newRow, src: s.src});
+		});
+};
+var $elm$parser$Parser$Advanced$symbol = $elm$parser$Parser$Advanced$token;
+var $elm$parser$Parser$symbol = function (str) {
+	return $elm$parser$Parser$Advanced$symbol(
+		A2(
+			$elm$parser$Parser$Advanced$Token,
+			str,
+			$elm$parser$Parser$ExpectingSymbol(str)));
+};
 var $author$project$QuestionEditor$parse_part_path = function () {
 	var part_path_parser_help = function (path) {
 		return $elm$parser$Parser$oneOf(
@@ -8509,6 +8176,17 @@ var $elm$http$Http$BadUrl = function (a) {
 };
 var $elm$http$Http$NetworkError = {$: 'NetworkError'};
 var $elm$http$Http$Timeout = {$: 'Timeout'};
+var $elm$core$Result$mapError = F2(
+	function (f, result) {
+		if (result.$ === 'Ok') {
+			var v = result.a;
+			return $elm$core$Result$Ok(v);
+		} else {
+			var e = result.a;
+			return $elm$core$Result$Err(
+				f(e));
+		}
+	});
 var $elm$http$Http$resolve = F2(
 	function (toResult, response) {
 		switch (response.$) {
@@ -8552,6 +8230,7 @@ var $elm$http$Http$jsonBody = function (value) {
 		'application/json',
 		A2($elm$json$Json$Encode$encode, 0, value));
 };
+var $elm$core$Debug$log = _Debug_log;
 var $author$project$QuestionEditor$numbas_version = 'finer_feedback_settings';
 var $elm$http$Http$Request = function (a) {
 	return {$: 'Request', a: a};
@@ -8705,6 +8384,10 @@ var $elm$http$Http$request = function (r) {
 };
 var $author$project$QuestionEditor$save_question = function (model) {
 	var eq = $author$project$QuestionEditor$encode_question(model.history.current);
+	var z = A2(
+		$elm$core$Debug$log,
+		'save',
+		A2($elm$json$Json$Encode$encode, 0, eq));
 	var body = $elm$json$Json$Encode$object(
 		_List_fromArray(
 			[
@@ -9382,7 +9065,6 @@ var $author$project$Tabber$set_tab = F2(
 		return $elm$core$Task$succeed(
 			A2($author$project$Tabber$SetTab, tabber, tab));
 	});
-var $author$project$QuestionEditor$blank_note = {settings: $author$project$Settings$empty};
 var $author$project$Settings$insert = F3(
 	function (k, v, s) {
 		var dict = A2(
@@ -9398,6 +9080,81 @@ var $author$project$Settings$insert = F3(
 			{
 				value: A3($elm$json$Json$Encode$dict, $elm$core$Basics$identity, $elm$core$Basics$identity, ndict)
 			});
+	});
+var $author$project$QuestionEditor$blank_note = {changed: true, settings: $author$project$Settings$empty};
+var $author$project$QuestionEditor$update_marking_algorithm = F3(
+	function (msg, path, part) {
+		var path_string = $author$project$QuestionEditor$part_path_toString(path);
+		var marking_algorithm = part.marking_algorithm;
+		var _v0 = function () {
+			switch (msg.$) {
+				case 'ChangeMarkingAlgorithmNote':
+					var i = msg.a;
+					var _v2 = msg.b;
+					var v = _v2.a;
+					var at = _v2.b;
+					var nnotes = A3(
+						$elm_community$list_extra$List$Extra$updateAt,
+						i,
+						function (note) {
+							return _Utils_update(
+								note,
+								{
+									changed: true,
+									settings: A3($author$project$Settings$setAt, at, v, note.settings)
+								});
+						},
+						marking_algorithm.notes);
+					return _Utils_Tuple2(
+						_Utils_update(
+							marking_algorithm,
+							{notes: nnotes}),
+						_Utils_Tuple2(
+							$elm$core$Maybe$Just(false),
+							$elm$core$Maybe$Nothing));
+				case 'AddMarkingAlgorithmNote':
+					var set_tab = $author$project$QuestionEditor$UpdateTab(
+						A2(
+							$author$project$Tabber$SetTab,
+							path_string + '-marking-algorithm-notes',
+							$author$project$Util$fi(
+								$elm$core$List$length(marking_algorithm.notes))));
+					return _Utils_Tuple2(
+						_Utils_update(
+							marking_algorithm,
+							{
+								notes: _Utils_ap(
+									marking_algorithm.notes,
+									_List_fromArray(
+										[$author$project$QuestionEditor$blank_note]))
+							}),
+						_Utils_Tuple2(
+							$elm$core$Maybe$Just(false),
+							$elm$core$Maybe$Just(
+								A2(
+									$elm$core$Task$perform,
+									$elm$core$Basics$identity,
+									$elm$core$Task$succeed(set_tab)))));
+				default:
+					var i = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							marking_algorithm,
+							{
+								notes: A2($elm_community$list_extra$List$Extra$removeAt, i, marking_algorithm.notes)
+							}),
+						_Utils_Tuple2(
+							$elm$core$Maybe$Just(true),
+							$elm$core$Maybe$Nothing));
+			}
+		}();
+		var nalgo = _v0.a;
+		var mcmd = _v0.b;
+		return _Utils_Tuple2(
+			_Utils_update(
+				part,
+				{marking_algorithm: nalgo}),
+			mcmd);
 	});
 var $author$project$QuestionEditor$update_part = F3(
 	function (msg, path, part) {
@@ -9428,53 +9185,7 @@ var $author$project$QuestionEditor$update_part = F3(
 						$elm$core$Maybe$Just(false),
 						$elm$core$Maybe$Just(
 							$elm$core$Platform$Cmd$batch(cmds))));
-			case 'ChangeMarkingAlgorithmNote':
-				var i = msg.a;
-				var _v3 = msg.b;
-				var v = _v3.a;
-				var at = _v3.b;
-				var marking_algorithm = part.marking_algorithm;
-				var nnotes = A3(
-					$elm_community$list_extra$List$Extra$updateAt,
-					i,
-					function (note) {
-						return _Utils_update(
-							note,
-							{
-								settings: A3($author$project$Settings$setAt, at, v, note.settings)
-							});
-					},
-					marking_algorithm.notes);
-				return _Utils_Tuple2(
-					_Utils_update(
-						part,
-						{
-							marking_algorithm: _Utils_update(
-								marking_algorithm,
-								{notes: nnotes})
-						}),
-					_Utils_Tuple2(
-						$elm$core$Maybe$Just(false),
-						$elm$core$Maybe$Nothing));
-			case 'AddMarkingAlgorithmNote':
-				var marking_algorithm = part.marking_algorithm;
-				return _Utils_Tuple2(
-					_Utils_update(
-						part,
-						{
-							marking_algorithm: _Utils_update(
-								marking_algorithm,
-								{
-									notes: _Utils_ap(
-										marking_algorithm.notes,
-										_List_fromArray(
-											[$author$project$QuestionEditor$blank_note]))
-								})
-						}),
-					_Utils_Tuple2(
-						$elm$core$Maybe$Just(false),
-						$elm$core$Maybe$Nothing));
-			default:
+			case 'ChangePartComputed':
 				var key = msg.a;
 				var v = msg.b;
 				return _Utils_Tuple2(
@@ -9484,6 +9195,9 @@ var $author$project$QuestionEditor$update_part = F3(
 							computed: A3($author$project$Settings$insert, key, v, part.computed)
 						}),
 					_Utils_Tuple2($elm$core$Maybe$Nothing, $elm$core$Maybe$Nothing));
+			default:
+				var mmsg = msg.a;
+				return A3($author$project$QuestionEditor$update_marking_algorithm, mmsg, path, part);
 		}
 	});
 var $author$project$QuestionEditor$m_updateAt = F2(
@@ -9818,6 +9532,9 @@ var $author$project$QuestionEditor$ChangePartSetting = function (a) {
 var $author$project$QuestionEditor$ChangeQuestionSetting = function (a) {
 	return {$: 'ChangeQuestionSetting', a: a};
 };
+var $author$project$QuestionEditor$DeleteMarkingAlgorithmNote = function (a) {
+	return {$: 'DeleteMarkingAlgorithmNote', a: a};
+};
 var $author$project$QuestionEditor$DeletePart = function (a) {
 	return {$: 'DeletePart', a: a};
 };
@@ -9831,6 +9548,9 @@ var $author$project$Tabber$SimpleLabel = function (a) {
 	return {$: 'SimpleLabel', a: a};
 };
 var $author$project$QuestionEditor$Undo = {$: 'Undo'};
+var $author$project$QuestionEditor$UpdateMarkingAlgorithm = function (a) {
+	return {$: 'UpdateMarkingAlgorithm', a: a};
+};
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
 		return A2(
@@ -9925,6 +9645,11 @@ var $elm$html$Html$Attributes$classList = function (classes) {
 				$elm$core$Tuple$first,
 				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
 };
+var $elm$virtual_dom$VirtualDom$node = function (tag) {
+	return _VirtualDom_node(
+		_VirtualDom_noScript(tag));
+};
+var $elm$html$Html$node = $elm$virtual_dom$VirtualDom$node;
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
 };
@@ -9952,31 +9677,25 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 			$elm$html$Html$Events$alwaysStop,
 			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
 };
-var $elm$html$Html$textarea = _VirtualDom_node('textarea');
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$QuestionEditor$code_property = F2(
 	function (_v0, o) {
 		return _List_fromArray(
 			[
-				A2(
-				$elm$html$Html$textarea,
+				A3(
+				$elm$html$Html$node,
+				'code-editor',
 				_List_fromArray(
 					[
 						$elm$html$Html$Attributes$value(
 						$author$project$Settings$getters.string(o.settings)),
 						$elm$html$Html$Events$onInput(
 						A2($author$project$Settings$setters, o.settings, o.setter).string),
-						$elm$html$Html$Attributes$id(o.id),
-						$elm$html$Html$Attributes$class('monospace')
+						$elm$html$Html$Attributes$id(o.id)
 					]),
 				_List_Nil)
 			]);
 	});
-var $elm$virtual_dom$VirtualDom$node = function (tag) {
-	return _VirtualDom_node(
-		_VirtualDom_noScript(tag));
-};
-var $elm$html$Html$node = $elm$virtual_dom$VirtualDom$node;
 var $author$project$QuestionEditor$content_property = F2(
 	function (_v0, o) {
 		return _List_fromArray(
@@ -10006,6 +9725,46 @@ var $author$project$QuestionEditor$content_property = F2(
 					]))
 			]);
 	});
+var $elm$html$Html$option = _VirtualDom_node('option');
+var $elm$html$Html$select = _VirtualDom_node('select');
+var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
+var $author$project$QuestionEditor$custom_select_property = F4(
+	function (attrs, options, _v0, o) {
+		return _List_fromArray(
+			[
+				A2(
+				$elm$html$Html$select,
+				_Utils_ap(
+					_List_fromArray(
+						[
+							$elm$html$Html$Events$onInput(
+							A2($author$project$Settings$setters, o.settings, o.setter).string),
+							$elm$html$Html$Attributes$id(o.id)
+						]),
+					attrs),
+				A2(
+					$elm$core$List$map,
+					function (_v1) {
+						var value = _v1.a;
+						var label = _v1.b;
+						return A2(
+							$elm$html$Html$option,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$value(value),
+									$elm$html$Html$Attributes$selected(
+									_Utils_eq(
+										value,
+										$author$project$Settings$getters.string(o.settings)))
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(label)
+								]));
+					},
+					options))
+			]);
+	});
 var $author$project$QuestionEditor$custom_text_property = F3(
 	function (attrs, _v0, o) {
 		return _List_fromArray(
@@ -10032,19 +9791,6 @@ var $author$project$QuestionEditor$empty_part_container = $author$project$Questi
 	{alternatives: _List_Nil, gaps: _List_Nil, parts: _List_Nil, steps: _List_Nil});
 var $elm$html$Html$fieldset = _VirtualDom_node('fieldset');
 var $elm$html$Html$form = _VirtualDom_node('form');
-var $elm$core$Set$Set_elm_builtin = function (a) {
-	return {$: 'Set_elm_builtin', a: a};
-};
-var $elm$core$Set$empty = $elm$core$Set$Set_elm_builtin($elm$core$Dict$empty);
-var $elm$core$Set$insert = F2(
-	function (key, _v0) {
-		var dict = _v0.a;
-		return $elm$core$Set$Set_elm_builtin(
-			A3($elm$core$Dict$insert, key, _Utils_Tuple0, dict));
-	});
-var $elm$core$Set$fromList = function (list) {
-	return A3($elm$core$List$foldl, $elm$core$Set$insert, $elm$core$Set$empty, list);
-};
 var $elm$core$Basics$ge = _Utils_ge;
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$h2 = _VirtualDom_node('h2');
@@ -10165,20 +9911,6 @@ var $elm$json$Json$Decode$maybe = function (decoder) {
 				$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
 			]));
 };
-var $elm$core$Dict$member = F2(
-	function (key, dict) {
-		var _v0 = A2($elm$core$Dict$get, key, dict);
-		if (_v0.$ === 'Just') {
-			return true;
-		} else {
-			return false;
-		}
-	});
-var $elm$core$Set$member = F2(
-	function (key, _v0) {
-		var dict = _v0.a;
-		return A2($elm$core$Dict$member, key, dict);
-	});
 var $elm$html$Html$Attributes$name = $elm$html$Html$Attributes$stringProperty('name');
 var $elm$core$Set$remove = F2(
 	function (key, _v0) {
@@ -10376,44 +10108,8 @@ var $elm$core$String$replace = F3(
 			A2($elm$core$String$split, before, string));
 	});
 var $elm$html$Html$Attributes$scope = $elm$html$Html$Attributes$stringProperty('scope');
-var $elm$html$Html$option = _VirtualDom_node('option');
-var $elm$html$Html$select = _VirtualDom_node('select');
-var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
-var $author$project$QuestionEditor$select_property = F3(
-	function (options, _v0, o) {
-		return _List_fromArray(
-			[
-				A2(
-				$elm$html$Html$select,
-				_List_fromArray(
-					[
-						$elm$html$Html$Events$onInput(
-						A2($author$project$Settings$setters, o.settings, o.setter).string),
-						$elm$html$Html$Attributes$id(o.id)
-					]),
-				A2(
-					$elm$core$List$map,
-					function (_v1) {
-						var value = _v1.a;
-						var label = _v1.b;
-						return A2(
-							$elm$html$Html$option,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$value(value),
-									$elm$html$Html$Attributes$selected(
-									_Utils_eq(
-										value,
-										$author$project$Settings$getters.string(o.settings)))
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text(label)
-								]));
-					},
-					options))
-			]);
-	});
+var $elm$html$Html$section = _VirtualDom_node('section');
+var $author$project$QuestionEditor$select_property = $author$project$QuestionEditor$custom_select_property(_List_Nil);
 var $elm$core$Dict$sizeHelp = F2(
 	function (n, dict) {
 		sizeHelp:
@@ -10459,6 +10155,7 @@ var $elm$html$Html$td = _VirtualDom_node('td');
 var $elm$html$Html$th = _VirtualDom_node('th');
 var $elm$html$Html$thead = _VirtualDom_node('thead');
 var $elm$html$Html$tr = _VirtualDom_node('tr');
+var $elm$core$String$trim = _String_trim;
 var $author$project$Aria$controls = $elm$html$Html$Attributes$attribute('aria-controls');
 var $author$project$Tabber$current_tab = F2(
 	function (state, tabber) {
@@ -10637,7 +10334,6 @@ var $author$project$Tabber$view_tablist = F5(
 				tabber.tabs));
 	});
 var $author$project$Aria$labelledBy = $elm$html$Html$Attributes$attribute('aria-labelledby');
-var $elm$html$Html$section = _VirtualDom_node('section');
 var $author$project$Tabber$view_tabpanel = F3(
 	function (ui, state, tabber) {
 		var _v0 = A2($author$project$Tabber$current_tab, state, tabber);
@@ -10670,8 +10366,8 @@ var $author$project$QuestionEditor$view_active = function (model) {
 	var view_tablist = A3($author$project$Tabber$view_tablist, ui, $author$project$QuestionEditor$UpdateTab, model.tab_state);
 	var view_tabpanel = A2($author$project$Tabber$view_tabpanel, ui, model.tab_state);
 	var saving_class = function () {
-		var _v23 = model.saving;
-		switch (_v23.$) {
+		var _v25 = model.saving;
+		switch (_v25.$) {
 			case 'Saved':
 				return 'saved';
 			case 'Changed':
@@ -10754,9 +10450,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 					$elm$json$Json$Decode$dict(
 						A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string)))),
 			model.numbas));
-	var part_tab = function (_v21) {
-		var path = _v21.a;
-		var part = _v21.b;
+	var part_tab = function (_v23) {
+		var path = _v23.a;
+		var part = _v23.b;
 		var testing_tab = {
 			icon: $elm$core$Maybe$Just('check'),
 			id: 'testing',
@@ -10764,12 +10460,6 @@ var $author$project$QuestionEditor$view_active = function (model) {
 			view: {attributes: _List_Nil, contents: _List_Nil}
 		};
 		var term_to_url = A2($elm$core$String$replace, ' ', '-');
-		var scripts_tab = {
-			icon: $elm$core$Maybe$Just('file'),
-			id: 'scripts',
-			label: $author$project$Tabber$SimpleLabel('Scripts'),
-			view: {attributes: _List_Nil, contents: _List_Nil}
-		};
 		var pset = A2(
 			$elm$core$Basics$composeR,
 			$author$project$QuestionEditor$ChangePartSetting,
@@ -10793,6 +10483,116 @@ var $author$project$QuestionEditor$view_active = function (model) {
 		var prefix_id = function (id) {
 			return path_string + ('-' + id);
 		};
+		var scripts_tab = function () {
+			var script_setting = F2(
+				function (script, field) {
+					return A2(
+						$author$project$Settings$at,
+						_List_fromArray(
+							[
+								$author$project$Settings$field('scripts'),
+								$author$project$Settings$field(script),
+								$author$project$Settings$field(field)
+							]),
+						part.settings);
+				});
+			var when_run = F2(
+				function (script, label) {
+					return _List_fromArray(
+						[
+							A2(
+							$elm$html$Html$p,
+							_List_Nil,
+							$elm$core$List$concat(
+								_List_fromArray(
+									[
+										_List_fromArray(
+										[
+											$elm$html$Html$text('Run the ' + (label + ' script '))
+										]),
+										A4(
+										$author$project$QuestionEditor$custom_select_property,
+										_List_fromArray(
+											[
+												A2($elm$html$Html$Attributes$attribute, 'aria-label', 'When to run the ' + (label + ' script')),
+												$elm$html$Html$Attributes$class('inline')
+											]),
+										_List_fromArray(
+											[
+												_Utils_Tuple2('instead', 'instead of'),
+												_Utils_Tuple2('after', 'after'),
+												_Utils_Tuple2('before', 'before')
+											]),
+										ui,
+										{
+											help: $elm$core$Maybe$Nothing,
+											id: prefix_id('mark-order'),
+											label: '',
+											setter: pset,
+											settings: A2(script_setting, script, 'order')
+										}),
+										_List_fromArray(
+										[
+											$elm$html$Html$text(' the built-in script.')
+										])
+									])))
+						]);
+				});
+			var script_field = F2(
+				function (script, o) {
+					return A2(
+						$author$project$QuestionEditor$labelled_field,
+						ui,
+						{
+							help: $elm$core$Maybe$Nothing,
+							id: prefix_id(script + ('-' + o.id)),
+							label: o.label,
+							setter: pset,
+							settings: A2(script_setting, script, o.id)
+						});
+				});
+			return {
+				icon: $elm$core$Maybe$Just('file'),
+				id: 'scripts',
+				label: $author$project$Tabber$SimpleLabel('Scripts'),
+				view: {
+					attributes: _List_Nil,
+					contents: _List_fromArray(
+						[
+							ui.help_block(
+							_List_fromArray(
+								[
+									A2(ui.helplink, 'part-scripts', 'part scripts'),
+									$elm$html$Html$text('When you need to change the way this part works beyond the available options, you can write JavaScript code to be executed at the times described below.')
+								])),
+							A2(
+							$elm$html$Html$fieldset,
+							_List_Nil,
+							$elm$core$List$concat(
+								_List_fromArray(
+									[
+										A3(
+										script_field,
+										'constructor',
+										{id: 'script', label: 'When the part is created'},
+										$author$project$QuestionEditor$code_property),
+										A3(
+										script_field,
+										'mark',
+										{id: 'script', label: 'Mark student\u0027s answer'},
+										$author$project$QuestionEditor$code_property),
+										A2(when_run, 'mark', 'marking'),
+										A3(
+										script_field,
+										'validate',
+										{id: 'script', label: 'Validate student\u0027s answer'},
+										$author$project$QuestionEditor$code_property),
+										A2(when_run, 'validate', 'validation')
+									])))
+						])
+				}
+			};
+		}();
 		var part_type_help = function (term) {
 			var filename = A2(
 				$elm$core$Maybe$withDefault,
@@ -10887,76 +10687,107 @@ var $author$project$QuestionEditor$view_active = function (model) {
 			},
 			$author$project$QuestionEditor$text_property);
 		var marking_algorithm_tab = function () {
+			var update_algo = A2(
+				$elm$core$Basics$composeR,
+				$author$project$QuestionEditor$UpdateMarkingAlgorithm,
+				A2(
+					$elm$core$Basics$composeR,
+					$author$project$QuestionEditor$UpdatePart(path),
+					$author$project$QuestionEditor$UpdateQuestion));
 			var marking_algorithm = part.marking_algorithm;
 			var notes = marking_algorithm.notes;
+			var extendBaseMarkingAlgorithm = pbool('extendBaseMarkingAlgorithm');
 			var note_tabs = A2(
-				$elm$core$List$indexedMap,
-				F2(
-					function (i, note) {
-						var nset = A2(
-							$elm$core$Basics$composeR,
-							$author$project$QuestionEditor$ChangeMarkingAlgorithmNote(i),
-							A2(
-								$elm$core$Basics$composeR,
-								$author$project$QuestionEditor$UpdatePart(path),
-								$author$project$QuestionEditor$UpdateQuestion));
-						var note_field = function (o) {
-							return A2(
-								$author$project$QuestionEditor$labelled_field,
-								ui,
-								{
-									help: $elm$core$Maybe$Nothing,
-									id: prefix_id(
-										'note-' + $author$project$Util$fi(i)),
-									label: o.label,
-									setter: nset,
-									settings: note.settings
-								});
-						};
-						var nfield = function (k) {
-							return A2($author$project$Settings$atField, k, note.settings);
-						};
-						var nstring = A2($elm$core$Basics$composeR, nfield, $author$project$Settings$getters.string);
-						var name = nstring('name');
-						return {
-							icon: $elm$core$Maybe$Nothing,
-							id: $author$project$Util$fi(i),
-							label: $author$project$Tabber$SimpleLabel(name),
-							view: {
-								attributes: _List_Nil,
-								contents: _List_fromArray(
-									[
-										A2(
-										$elm$html$Html$fieldset,
-										_List_Nil,
-										$elm$core$List$concat(
-											_List_fromArray(
+				$elm$core$List$map,
+				function (_v22) {
+					var i = _v22.a;
+					var note = _v22.b;
+					var nset = A2(
+						$elm$core$Basics$composeR,
+						$author$project$QuestionEditor$ChangeMarkingAlgorithmNote(i),
+						update_algo);
+					var nfield = function (k) {
+						return A2($author$project$Settings$atField, k, note.settings);
+					};
+					var note_field = function (o) {
+						return A2(
+							$author$project$QuestionEditor$labelled_field,
+							ui,
+							{
+								help: $elm$core$Maybe$Nothing,
+								id: prefix_id(
+									'note-' + $author$project$Util$fi(i)),
+								label: o.label,
+								setter: nset,
+								settings: nfield(o.id)
+							});
+					};
+					var nstring = A2($elm$core$Basics$composeR, nfield, $author$project$Settings$getters.string);
+					var name = nstring('name');
+					return {
+						icon: $elm$core$Maybe$Nothing,
+						id: $author$project$Util$fi(i),
+						label: $author$project$Tabber$SimpleLabel(
+							($elm$core$String$trim(name) !== '') ? name : 'Unnamed note'),
+						view: {
+							attributes: _List_Nil,
+							contents: _List_fromArray(
+								[
+									A2(
+									$elm$html$Html$fieldset,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('vertical')
+										]),
+									$elm$core$List$concat(
+										_List_fromArray(
+											[
+												_List_fromArray(
 												[
 													A2(
-													note_field,
-													{id: 'name', label: 'Name'},
-													$author$project$QuestionEditor$text_property),
-													A2(
-													note_field,
-													{id: 'definition', label: 'Definition'},
-													$author$project$QuestionEditor$code_property),
-													A2(
-													note_field,
-													{id: 'description', label: 'Description'},
-													$author$project$QuestionEditor$content_property)
-												])))
-									])
-							}
-						};
-					}),
-				notes);
+													$elm$html$Html$button,
+													_List_fromArray(
+														[
+															$elm$html$Html$Events$onClick(
+															update_algo(
+																$author$project$QuestionEditor$DeleteMarkingAlgorithmNote(i)))
+														]),
+													_List_fromArray(
+														[
+															ui.icon('remove'),
+															$elm$html$Html$text('Delete this note')
+														]))
+												]),
+												A2(
+												note_field,
+												{id: 'name', label: 'Name'},
+												$author$project$QuestionEditor$text_property),
+												A2(
+												note_field,
+												{id: 'definition', label: 'Definition'},
+												$author$project$QuestionEditor$code_property),
+												A2(
+												note_field,
+												{id: 'description', label: 'Description'},
+												$author$project$QuestionEditor$content_property)
+											])))
+								])
+						}
+					};
+				},
+				A2(
+					$elm$core$List$filter,
+					function (_v21) {
+						var note = _v21.b;
+						return note.changed || extendBaseMarkingAlgorithm;
+					},
+					A2($elm$core$List$indexedMap, $elm$core$Tuple$pair, notes)));
 			var notes_tabber = {
-				allow_empty: true,
+				allow_empty: false,
 				name: prefix_id('marking-algorithm-notes'),
 				tabs: note_tabs
 			};
-			var add_note = $author$project$QuestionEditor$UpdateQuestion(
-				A2($author$project$QuestionEditor$UpdatePart, path, $author$project$QuestionEditor$AddMarkingAlgorithmNote));
+			var add_note = update_algo($author$project$QuestionEditor$AddMarkingAlgorithmNote);
 			return {
 				icon: $elm$core$Maybe$Just('ok'),
 				id: 'marking-algorithm',
@@ -10984,24 +10815,41 @@ var $author$project$QuestionEditor$view_active = function (model) {
 											$author$project$QuestionEditor$boolean_property))
 									]))),
 							A2(
-							view_tablist,
-							notes_tabber,
+							$elm$html$Html$section,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('vertical')
-								])),
-							A2(
-							$elm$html$Html$button,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$type_('button'),
-									$elm$html$Html$Events$onClick(add_note)
+									$elm$html$Html$Attributes$class('tabbed-sidebar')
 								]),
 							_List_fromArray(
 								[
-									$elm$html$Html$text('Add a note')
-								])),
-							view_tabpanel(notes_tabber)
+									A2(
+									$elm$html$Html$nav,
+									_List_Nil,
+									_List_fromArray(
+										[
+											A2(
+											view_tablist,
+											notes_tabber,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('vertical')
+												])),
+											A2(
+											$elm$html$Html$button,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$type_('button'),
+													$elm$html$Html$Events$onClick(add_note),
+													$elm$html$Html$Attributes$class('primary')
+												]),
+											_List_fromArray(
+												[
+													ui.icon('add'),
+													$elm$html$Html$text('Add a note')
+												]))
+										])),
+									view_tabpanel(notes_tabber)
+								]))
 						])
 				}
 			};

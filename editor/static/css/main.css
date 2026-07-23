@@ -29,6 +29,10 @@
             margin-right: var(--spacing);
             display: inline-block;
             justify-self: start;
+            
+            &.inline {
+                margin-inline: var(--half-space);
+            }
         }
 
         & input[type="range"] {

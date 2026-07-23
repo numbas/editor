@@ -23,6 +23,9 @@ import Util exposing (fi, ff, letter_ordinal, delay)
 port ask_numbas : JE.Value -> Cmd msg
 port answer_numbas : (JE.Value -> msg) -> Sub msg
 
+type alias Monad a b = (a, b)
+type alias ChangeSideEffect x = Monad x (Maybe Bool, Maybe (Cmd Msg))
+
 type alias NumbasQuery =
     { command : String
     , key : JE.Value
@@ -84,6 +87,7 @@ type Model
 type alias Question =
     { settings : Settings
     , parts : PartContainer
+    , variable_groups : List VariableGroup
     }
 
 type PartsMode
@@ -131,6 +135,7 @@ type alias Part =
 
 type alias Note =
   { settings : Settings
+  , changed : Bool
   }
 
 type alias MarkingAlgorithm = 
@@ -138,8 +143,15 @@ type alias MarkingAlgorithm =
     , base_notes : List Note
     }
 
-type alias Monad a b = (a, b)
-type alias ChangeSideEffect x = Monad x (Maybe Bool, Maybe (Cmd Msg))
+type alias VariableGroup =
+    { name : String
+    , variables : List Variable
+    }
+
+type alias Variable =
+    { settings : Settings
+    , template : String
+    }
 
 do_ask_numbas : NumbasQuery -> Cmd msg
 do_ask_numbas q =
@@ -165,6 +177,7 @@ save_question : ActiveModelRecord -> Cmd Msg
 save_question model =
     let
         eq = encode_question model.history.current
+        z = Debug.log "save" (JE.encode 0 eq)
         body = 
             JE.object
                 [ ("content", JE.string <| "// Numbas version: "++numbas_version++"\n"++(JE.encode 0 eq))
@@ -203,7 +216,7 @@ main = Browser.element
 parse_note : P.Parser Note
 parse_note =
   P.succeed (\name description definition -> 
-      {settings = S.fromValue (JE.object [("name", JE.string name), ("description", JE.string description), ("definition", JE.string definition)]) JE.null}
+      {changed = False, settings = S.fromValue JE.null (JE.object [("name", JE.string name), ("description", JE.string description), ("definition", JE.string definition)])}
     )
     |. P.spaces
     |= (P.getChompedString <|
@@ -537,7 +550,7 @@ part_name path part = case S.getters.string (S.atField "customName" part.setting
 
     name -> name
 
-blank_note = { settings = S.empty }
+blank_note = { settings = S.empty, changed = True }
 
 new_part : JE.Value -> PartType -> JE.Value -> PartContainer -> Part
 new_part default_settings type_ settings children =
@@ -551,22 +564,18 @@ new_part default_settings type_ settings children =
 
         type_defaults = get_default_settings ["part_types", type_.name] default_settings
 
-        decode_notes = 
-               Result.mapError (\_ -> ())
-            >> Result.andThen (P.run parse_notes >> Result.mapError (\_ -> ()))
-            >> Result.withDefault []
-
         base_notes = 
             get_default_settings ["marking_algorithms", type_.name] default_settings
-            |> JD.decodeValue JD.string
-            |> decode_notes
+            |> JD.decodeValue (JD.list decode_note)
+            |> Result.withDefault []
 
         notes = 
-            JD.decodeValue (JD.field "customMarkingAlgorithm" JD.string) settings
-            |> decode_notes
+            JD.decodeValue (JD.at ["customMarkingAlgorithm", "notes"] (JD.list decode_note) ) settings
+            |> Result.withDefault []
+            |> List.map (\n -> {n | changed = True})
 
         marking_algorithm =
-            { notes = notes
+            { notes = notes ++ base_notes
             , base_notes = base_notes
             }
 
@@ -577,7 +586,7 @@ new_part default_settings type_ settings children =
             |> Result.map (JE.dict identity identity)
             |> Result.withDefault JE.null
 
-        nsettings = S.fromValue settings defaults
+        nsettings = S.fromValue defaults settings
     in
         { type_ = type_
         , settings = nsettings
@@ -594,9 +603,37 @@ get_default_settings at =
 decode_question : JE.Value -> JD.Decoder Question
 decode_question default_settings =
     JD.succeed Question
-    |> andMap (JD.value |> JD.map (\s -> S.fromValue s (get_default_settings ["question"] default_settings)
-       ))
+    |> andMap (JD.value |> JD.map (S.fromValue (get_default_settings ["question"] default_settings)))
     |> andMap (decode_child_parts default_settings)
+    |> andMap (
+        JD.map2 (\group_defs variable_dict ->
+            let
+                ungrouped = { name = "", variables = ungrouped_variables }
+
+                grouped_variables = group_defs |> List.map second |> List.concat |> Set.fromList
+
+                ungrouped_variables = Dict.values variable_dict |> List.filter (\v -> 
+                    let
+                        name = S.getters.string (S.atField "name" v.settings)
+                    in
+                        not (Set.member name grouped_variables))
+
+                groups : List VariableGroup
+                groups = group_defs |> List.map (\(name, variable_names) ->
+                    { name = name
+                    , variables = variable_names |> List.filterMap (\n -> Dict.get n variable_dict)
+                    }
+                    )
+            in
+                ungrouped :: groups
+                
+        )
+        (JD.list (JD.succeed pair
+            |> andMap (JD.field "name" JD.string)
+            |> andMap (JD.list JD.string)
+        ))
+        (JD.dict <| decode_variable default_settings)
+       )
 
 decode_part : JE.Value -> JD.Decoder Part
 decode_part default_settings = 
@@ -632,6 +669,16 @@ child_part_kinds =
     , ("steps", Step)
     , ("alternatives", Alternative)
     ]
+
+decode_variable : JE.Value -> JD.Decoder Variable
+decode_variable default_settings =
+    let
+        variable_defaults = get_default_settings ["question", "variables", "additionalProperties"] default_settings
+    in
+        JD.succeed Variable
+        |> andMap (JD.value |> JD.map (S.fromValue variable_defaults))
+        |> andMap (JD.oneOf [JD.field "templateType" JD.string, JD.succeed "anything"])
+
 
 decode_project: JD.Decoder Project
 decode_project =
@@ -673,6 +720,11 @@ decode_ui =
     |> andMap (JD.at ["item_json", "helpURL"] JD.string)
     |> andMap (JD.field "docs_mapping" (JD.dict JD.string |> JD.map (Dict.toList >> List.map (Tuple.mapFirst String.toLower) >> Dict.fromList)))
     |> JD.map Ui.ui
+
+decode_note =
+    JD.succeed Note
+    |> andMap (JD.value |> JD.map (S.fromValue JE.null))
+    |> andMap (JD.succeed False)
 
 andThen2 : (a -> b -> JD.Decoder c) -> JD.Decoder a -> JD.Decoder b -> JD.Decoder c
 andThen2 fn a b = JD.map2 fn a b |> JD.andThen identity
@@ -733,7 +785,7 @@ note_toString note =
         nstring = nfield >> S.getters.string
 
         name = nstring "name"
-        description = nstring "description"
+        description = nstring "description" |> String.replace "(" "" |> String.replace ")" ""
         definition = nstring "definition"
     in
         name ++ (if description /= "" then " ("++description++")" else "") ++ ":\n" ++ definition
@@ -741,9 +793,9 @@ note_toString note =
 encode_marking_algorithm : MarkingAlgorithm -> JE.Value
 encode_marking_algorithm =
     .notes
-    >> List.map note_toString
-    >> String.join "\n\n"
-    >> JE.string
+    >> List.filter (.changed)
+    >> JE.list (.settings >> .value)
+    >> (\n -> JE.object [("notes", n)])
 
 init : JE.Value -> (Model, Cmd Msg)
 init flags =
@@ -787,8 +839,12 @@ type QuestionMsg
 type PartMsg
     = ChangePartSetting (JE.Value, S.Address)
     | ChangePartComputed String JE.Value
-    | ChangeMarkingAlgorithmNote Int (JE.Value, S.Address)
+    | UpdateMarkingAlgorithm MarkingAlgorithmMsg
+
+type MarkingAlgorithmMsg
+    = ChangeMarkingAlgorithmNote Int (JE.Value, S.Address)
     | AddMarkingAlgorithmNote
+    | DeleteMarkingAlgorithmNote Int
 
 update msg model = case model of
     ActiveModel active -> update_active msg active |> mapFirst ActiveModel
@@ -887,20 +943,37 @@ update_part msg path part = case msg of
         in
             ({ part | settings = nsettings }, (Just False, Just <| Cmd.batch cmds))
 
-    ChangeMarkingAlgorithmNote i (v, at) -> 
-        let
-            marking_algorithm = part.marking_algorithm
-            nnotes = LE.updateAt i (\note -> { note | settings = S.setAt at v note.settings }) marking_algorithm.notes
-        in
-            ({ part | marking_algorithm = { marking_algorithm | notes = nnotes } }, (Just False, Nothing))
-
-    AddMarkingAlgorithmNote ->
-        let
-            marking_algorithm = part.marking_algorithm
-        in
-            ({ part | marking_algorithm = { marking_algorithm | notes = marking_algorithm.notes ++ [blank_note] } }, (Just False, Nothing))
-
     ChangePartComputed key v -> ({ part | computed = S.insert key v part.computed }, (Nothing, Nothing))
+
+    UpdateMarkingAlgorithm mmsg -> update_marking_algorithm mmsg path part
+
+update_marking_algorithm : MarkingAlgorithmMsg -> PartPath -> Part -> ChangeSideEffect Part
+update_marking_algorithm msg path part =
+    let
+        marking_algorithm = part.marking_algorithm
+
+        path_string = part_path_toString path
+        (nalgo, mcmd) = case msg of
+            ChangeMarkingAlgorithmNote i (v, at) -> 
+                let
+                    nnotes = LE.updateAt i (\note -> { note | changed = True, settings = S.setAt at v note.settings }) marking_algorithm.notes
+                in
+                    ({ marking_algorithm | notes = nnotes }, (Just False, Nothing))
+
+            AddMarkingAlgorithmNote ->
+                let
+                    set_tab = 
+                        SetTab (path_string++"-marking-algorithm-notes") (fi <| List.length marking_algorithm.notes)
+                        |> UpdateTab
+                in
+                    ({ marking_algorithm | notes = marking_algorithm.notes ++ [blank_note] }, (Just False, Just (Task.perform identity (Task.succeed set_tab))))
+
+            DeleteMarkingAlgorithmNote i -> ({ marking_algorithm | notes = LE.removeAt i marking_algorithm.notes }, (Just True, Nothing))
+                
+    in
+        ({ part | marking_algorithm = nalgo }, mcmd)
+            
+
 
 part_setting_computed : List (S.Address, PartPath -> Part -> JE.Value -> Maybe (Cmd Msg))
 part_setting_computed =
@@ -1012,11 +1085,10 @@ text_property = custom_text_property []
 
 code_property : PropertyWidget
 code_property _ o =
-    [ H.textarea -- TODO: make this a codemirror editor
+    [ H.node "code-editor"
         [ HA.value <| S.getters.string o.settings
         , HE.onInput <| (S.setters o.settings o.setter).string
         , HA.id o.id
-        , HA.class "monospace"
         ]
         []
     ]
@@ -1049,12 +1121,12 @@ jme_property eo ui o =
             }
        ]
 
-select_property : List (String, String) -> PropertyWidget
-select_property options _ o =
+custom_select_property : List (H.Attribute Msg) -> List (String, String) -> PropertyWidget
+custom_select_property attrs options _ o =
     [ H.select
-        [ HE.onInput <| (S.setters o.settings o.setter).string
+        ([ HE.onInput <| (S.setters o.settings o.setter).string
         , HA.id o.id
-        ]
+        ]++attrs)
         (options |> List.map (\(value, label) -> 
             H.option 
                 [ HA.value value
@@ -1063,6 +1135,8 @@ select_property options _ o =
                 [H.text label]
         ))
     ]
+
+select_property = custom_select_property []
 
 content_property : PropertyWidget
 content_property _ o =
@@ -2891,31 +2965,36 @@ view_active model =
 
                         notes = marking_algorithm.notes
 
-                        note_tabs = notes |> List.indexedMap (\i note ->
+                        extendBaseMarkingAlgorithm = pbool "extendBaseMarkingAlgorithm"
+
+                        update_algo = UpdateMarkingAlgorithm >> UpdatePart path >> UpdateQuestion
+
+                        note_tabs = notes |> List.indexedMap pair |> List.filter (\(_,note) -> note.changed || extendBaseMarkingAlgorithm) |> List.map (\(i, note) ->
                             let
                                 nfield k = S.atField k note.settings
                                 nstring = nfield >> S.getters.string
                                 name = nstring "name"
 
-                                nset = ChangeMarkingAlgorithmNote i >> UpdatePart path >> UpdateQuestion
+                                nset = ChangeMarkingAlgorithmNote i >> update_algo
 
                                 note_field o = labelled_field
                                     ui
                                     { id = prefix_id <| "note-"++(fi i)
                                     , label = o.label
                                     , help = Nothing
-                                    , settings = note.settings
+                                    , settings = nfield o.id
                                     , setter = nset
                                     }
 
                             in
                                 { id = fi i
-                                , label = SimpleLabel name
+                                , label = SimpleLabel <| if String.trim name /= "" then name else "Unnamed note"
                                 , icon = Nothing
                                 , view =
                                     { contents = 
-                                        [ H.fieldset [] <| List.concat
-                                            [ note_field
+                                        [ H.fieldset [ HA.class "vertical" ] <| List.concat
+                                            [ [ H.button [ HE.onClick <| update_algo <| DeleteMarkingAlgorithmNote i ] [ ui.icon "remove", H.text "Delete this note" ] ]
+                                            , note_field
                                                 { id = "name"
                                                 , label = "Name"
                                                 }
@@ -2939,11 +3018,11 @@ view_active model =
 
                         notes_tabber = 
                             { name = prefix_id "marking-algorithm-notes"
-                            , allow_empty = True
+                            , allow_empty = False
                             , tabs = note_tabs
                             }
 
-                        add_note = AddMarkingAlgorithmNote |> UpdatePart path |> UpdateQuestion
+                        add_note = AddMarkingAlgorithmNote |> update_algo
                     in
                         { id = "marking-algorithm"
                         , label = SimpleLabel "Marking algorithm"
@@ -2958,14 +3037,20 @@ view_active model =
                                         }
                                         boolean_property
                                     ]
-                                , view_tablist notes_tabber [ HA.class "vertical" ]
-                                , H.button
-                                  [ HA.type_ "button"
-                                  , HE.onClick add_note
-                                  ]
-                                  [ H.text "Add a note"
-                                  ]
-                                , view_tabpanel notes_tabber 
+                                , H.section [HA.class "tabbed-sidebar"]
+                                    [ H.nav []
+                                        [ view_tablist notes_tabber [ HA.class "vertical" ]
+                                        , H.button
+                                          [ HA.type_ "button"
+                                          , HE.onClick add_note
+                                          , HA.class "primary"
+                                          ]
+                                          [ ui.icon "add"
+                                          , H.text "Add a note"
+                                          ]
+                                        ]
+                                    , view_tabpanel notes_tabber 
+                                    ]
                                 ]
                             , attributes = []
                             }
@@ -2982,14 +3067,73 @@ view_active model =
                     }
 
                 scripts_tab =
-                    { id = "scripts"
-                    , label = SimpleLabel "Scripts"
-                    , icon = Just "file"
-                    , view =
-                        { contents = [] -- TODO
-                        , attributes = []
+                    let
+                        script_setting script field = S.at [S.field "scripts", S.field script, S.field field] part.settings
+
+                        script_field script o = labelled_field
+                            ui
+                            { id = prefix_id <| script++"-"++o.id
+                            , label = o.label
+                            , help = Nothing
+                            , settings = script_setting script o.id
+                            , setter = pset
+                            }
+
+                        when_run script label = 
+                            [H.p [] <| List.concat
+                                [ [H.text <| "Run the "++label++" script "]
+                                , custom_select_property
+                                    [ HA.attribute "aria-label" <| "When to run the "++label++" script"
+                                    , HA.class "inline"
+                                    ]
+                                    [ ("instead", "instead of")
+                                    , ("after", "after")
+                                    , ("before", "before")
+                                    ]
+                                    ui
+                                    { id = prefix_id "mark-order"
+                                    , settings = script_setting script "order"
+                                    , setter = pset
+                                    , label = ""
+                                    , help = Nothing
+                                    }
+                                , [H.text " the built-in script."]
+                                ]
+                            ]
+                    in
+                        { id = "scripts"
+                        , label = SimpleLabel "Scripts"
+                        , icon = Just "file"
+                        , view =
+                            { contents = 
+                                [ ui.help_block 
+                                    [ ui.helplink "part-scripts" "part scripts"
+                                    , H.text "When you need to change the way this part works beyond the available options, you can write JavaScript code to be executed at the times described below." 
+                                    ]
+                                , H.fieldset [] <| List.concat
+                                    [ script_field "constructor"
+                                        { id = "script"
+                                        , label = "When the part is created"
+                                        }
+                                        code_property
+                                    , script_field "mark"
+                                        { id = "script"
+                                        , label = "Mark student's answer"
+                                        }
+                                        code_property
+                                    , when_run "mark" "marking"
+                                    , script_field "validate"
+                                        { id = "script"
+                                        , label = "Validate student's answer"
+                                        }
+                                        code_property
+                                    , when_run "validate" "validation"
+                                    ]
+
+                                ]
+                            , attributes = []
+                            }
                         }
-                    }
 
                 adaptive_marking_tab =
                     { id = "adaptive-marking"

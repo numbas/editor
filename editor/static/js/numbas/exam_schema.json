@@ -732,11 +732,13 @@
                             },
                             "definition": {
                                 "title": "Definition",
-                                "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme"
+                                "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
+                                "default": ""
                             },
                             "description": {
                                 "title": "Description",
-                                "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html"
+                                "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html",
+                                "default": ""
                             },
                             "group": {
                                 "oneOf": [
@@ -752,7 +754,8 @@
                             },
                             "name": {
                                 "title": "Name, or comma-separated list of names",
-                                "type": "string"
+                                "type": "string",
+                                "default": ""
                             },
                             "templateType": {
                                 "title": "Data type template",
@@ -1018,7 +1021,7 @@
                 "extendBaseMarkingAlgorithm": {
                     "type": "boolean",
                     "title": "Extend base marking algorithm?",
-                    "default": false
+                    "default": true
                 },
                 "unitTests": {
                     "type": "array",

@@ -10,6 +10,13 @@ window.docs_mapping = docs_mapping;
 
 window.defs = defs;
 
+class DefaultsArray extends Array {
+    constructor(contents, items) {
+        super(...contents);
+        this.items = items;
+    }
+}
+
 function make_default(obj) {
     if(obj.default !== undefined) {
         return obj.default;
@@ -24,16 +31,23 @@ function make_default(obj) {
         Object.assign(o, Object.fromEntries(Object.entries(obj.properties).map(([k,v]) => [k, make_default(v)])));
         return o;
     }
+    if(obj.additionalProperties) {
+        return {additionalProperties: make_default(obj.additionalProperties)};
+    }
+    if(obj.oneOf) {
+        return make_default(obj.oneOf[0]);
+    }
     switch(obj.type) {
         case 'array':
-            if(obj.prefixItems) {
-                return obj.prefixItems.map(make_default);
-            }
-            return [];
+            const arr = obj.prefixItems ? obj.prefixItems.map(make_default) : [];
+            const items = obj.items ? make_default(obj.items) : [];
+            return new DefaultsArray(arr, items);
+
         case 'string':
             return '';
     }
 }
+window.make_default = make_default;
 
 const default_settings = Object.fromEntries(['question', 'part'].map(k => [k, make_default(defs[k])]));
 
@@ -41,20 +55,20 @@ default_settings.part_types = Object.fromEntries(defs.part.anyOf.map(d => [d.pro
 
 default_settings.part_types.numberentry.notationStyles = Numbas.locale.default_number_notation;
 
-default_settings.marking_algorithms = Object.fromEntries(Object.entries(Numbas.partConstructors).map(([k,v]) => {
+default_settings.marking_algorithms = Object.fromEntries(Object.entries(Numbas.partConstructors).map(([type,v]) => {
     let script = v.prototype.baseMarkingScript();
     if(!script) {
-        return [k, null];
+        return [type, null];
     }
     return [
-        k,
-        Object.fromEntries(Object.entries(script.notes).map(([name,note]) => {
-            return [name, {
+        type,
+        Object.entries(script.notes).map(([name,note]) => {
+            return {
                 name: note.name,
                 definition: note.expr,
                 description: note.description
-            }]
-        }))
+            }
+        })
     ]
 }));
 

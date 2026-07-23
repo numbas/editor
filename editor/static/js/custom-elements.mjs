@@ -1,3 +1,5 @@
+import './code-editor.js';
+
 let mj_promise = MathJax.startup.promise;
 
 /** Set the content of the given element to `html`, and then typeset it with MathJax.
@@ -122,3 +124,11 @@ customElements.define('jme-preview', JMEPreviewElement);
 export class RawHTMLElement extends HTMLElement {
 }
 customElements.define('raw-html', RawHTMLElement);
+
+
+class ChangeEvent extends Event {
+    constructor(target) {
+        super('change');
+        this.target = target;
+    }
+}

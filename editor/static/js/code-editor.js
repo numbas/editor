@@ -27987,8 +27987,6 @@ const autoCloseTags = /*@__PURE__*/EditorView.inputHandler.of((view, from, to, t
     return true;
 });
 
-window.EditorView = EditorView;
-
 const languages = {
     'python': python,
     'r': r,
@@ -28109,7 +28107,7 @@ class CodeEditorElement extends HTMLElement {
     }
 
     onChange() {
-        this.dispatchEvent(new CustomEvent('change'));
+        this.dispatchEvent(new CustomEvent('input'));
     }
 
     onSubmit() {

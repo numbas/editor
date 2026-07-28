@@ -10,6 +10,7 @@ port module Tabber exposing
     , set_tab
     , tab_link
     , view_tablist
+    , tab_button
     , view_tabpanel
     , initial_state
     )
@@ -75,7 +76,7 @@ decode_state = JD.oneOf
     ]
 
 update : Msg -> State -> (State, Cmd Msg)
-update msg state = case msg of
+update msg state = case (Debug.log "update tab" msg) of
     SetTab key id -> 
         let
             nstate = Dict.insert key id state
@@ -121,26 +122,6 @@ view_tablist ui wrap_msg state tabber tabber_attrs =
             let
                 selected = (==) (Just tab.id) <| Maybe.map .id <| current_tab state tabber
 
-                nth_tab i = LE.getAt i tabber.tabs
-
-                move_to_tab i =
-                    nth_tab i
-                    |> Maybe.map (\ntab -> SetTab tabber.name ntab.id)
-                    |> Maybe.map JD.succeed
-                    |> Maybe.withDefault (JD.fail "that tab doesn't exist")
-
-                handle_keypress =
-                    JD.field "key" JD.string
-                    |> JD.andThen (\key -> case key of
-                        "ArrowUp" -> move_to_tab (index - 1)
-                        "ArrowLeft" -> move_to_tab (index - 1)
-                        "ArrowRight" -> move_to_tab (index + 1)
-                        "ArrowDown" -> move_to_tab (index + 1)
-                        "Home" -> move_to_tab 0
-                        "End" -> move_to_tab <| (List.length tabber.tabs) - 1
-                        _ -> JD.fail "unhandled key"
-                       )
-
                 extra_contents = case (selected, tab.label) of
                     (True, HtmlLabel o) -> o.extra_contents
                     _ -> []
@@ -148,31 +129,60 @@ view_tablist ui wrap_msg state tabber tabber_attrs =
                 extra_attributes = case tab.label of
                     HtmlLabel o -> o.button_attributes
                     _ -> []
+
+                tb = tab_button ui wrap_msg state tabber tab
             in
                 H.li
                     extra_attributes
-                    ([  H.button
-                        [ HA.type_ "button"
-                        , HA.class "btn"
-                        , Aria.role "tab"
-                        , HA.id <| tab_id tabber tab
-                        , HA.tabindex <| if selected then 0 else -1
-                        , Aria.selected <| selected
-                        , Aria.controls <| tabpanel_id tabber tab
-                        , HE.onClick <| wrap_msg <| SetTab tabber.name tab.id
-                        , HE.on "keyup" (handle_keypress |> JD.map wrap_msg)
-                        ]
-                        (case tab.label of
-                            SimpleLabel label -> 
-                                [ tab.icon |> Maybe.map (ui.icon) |> Maybe.withDefault (H.text "")
-                                , H.text label
-                                ]
-
-                            HtmlLabel o -> o.button_contents
-                        )
-                    ]++extra_contents)
+                    ((tb index) :: extra_contents)
             )
         )
+
+tab_button : Ui msg -> (Msg -> msg) -> State -> Tabber msg -> Tab msg -> Int -> Html msg
+tab_button ui wrap_msg state tabber tab index =
+    let
+        selected = (==) (Just tab.id) <| Maybe.map .id <| current_tab state tabber
+
+        nth_tab i = LE.getAt i tabber.tabs
+
+        move_to_tab i =
+            nth_tab i
+            |> Maybe.map (\ntab -> SetTab tabber.name ntab.id)
+            |> Maybe.map JD.succeed
+            |> Maybe.withDefault (JD.fail "that tab doesn't exist")
+
+        handle_keypress =
+            JD.field "key" JD.string
+            |> JD.andThen (\key -> case key of
+                "ArrowUp" -> move_to_tab (index - 1)
+                "ArrowLeft" -> move_to_tab (index - 1)
+                "ArrowRight" -> move_to_tab (index + 1)
+                "ArrowDown" -> move_to_tab (index + 1)
+                "Home" -> move_to_tab 0
+                "End" -> move_to_tab <| (List.length tabber.tabs) - 1
+                _ -> JD.fail "unhandled key"
+               )
+
+    in
+        H.button
+            [ HA.type_ "button"
+            , HA.class "btn"
+            , Aria.role "tab"
+            , HA.id <| tab_id tabber tab
+            , HA.tabindex <| if selected then 0 else -1
+            , Aria.selected <| selected
+            , Aria.controls <| tabpanel_id tabber tab
+            , HE.onClick <| wrap_msg <| SetTab tabber.name tab.id
+            , HE.on "keyup" (handle_keypress |> JD.map wrap_msg)
+            ]
+            (case tab.label of
+                SimpleLabel label -> 
+                    [ tab.icon |> Maybe.map (ui.icon) |> Maybe.withDefault (H.text "")
+                    , H.text label
+                    ]
+
+                HtmlLabel o -> o.button_contents
+            )
 
 view_tabpanel : Ui msg -> State -> Tabber msg -> Html msg
 view_tabpanel ui state tabber = case current_tab state tabber of

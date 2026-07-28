@@ -21,6 +21,7 @@ module Settings exposing
     , get
     , getters
     , insert
+    , merge
     , set
     , setters
     , setAt
@@ -47,6 +48,22 @@ type AddressItem
     | Key String
 
 type alias Address = List AddressItem
+
+type alias Getter a = Settings -> a
+
+type alias Setter a msg = a -> msg
+
+type alias Getters =
+    { string : Getter String
+    , bool : Getter Bool
+    , value : Getter Value
+    }
+
+type alias Setters msg =
+    { string : Setter String msg
+    , bool : Setter Bool msg
+    , value : Setter Value msg
+    }
 
 empty : Settings
 empty =
@@ -124,16 +141,6 @@ get decoder default settings =
     maybe_get decoder settings
     |> Maybe.withDefault default
 
-type alias Getter a = Settings -> a
-
-type alias Setter a msg = a -> msg
-
-type alias Getters =
-    { string : Getter String
-    , bool : Getter Bool
-    , value : Getter Value
-    }
-
 getters : Getters
 getters =
     { string = get (JD.oneOf [JD.string, JD.float |> JD.map String.fromFloat]) ""
@@ -149,14 +156,15 @@ insert k v s =
     in
         {s | value = JE.dict identity identity ndict }
 
+merge : Dict String Value -> Settings -> Settings
+merge more s = 
+    let
+        value = JD.decodeValue (JD.dict JD.value) s.value |> Result.withDefault Dict.empty
+    in
+        { s | value = JE.dict identity identity (Dict.union value more) }
+
 set : ((Value, Address) -> msg) -> Address -> (a -> Value) -> Setter a msg
 set msg at_ encoder a = msg (encoder a, at_)
-
-type alias Setters msg =
-    { string : Setter String msg
-    , bool : Setter Bool msg
-    , value : Setter Value msg
-    }
 
 setters : Settings -> ((Value,Address) -> msg) -> Setters msg
 setters settings msg =

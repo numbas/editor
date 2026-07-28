@@ -3,6 +3,7 @@ module Util exposing
     , ff
     , letter_ordinal
     , delay
+    , first_two
     )
 
 import Process
@@ -31,3 +32,8 @@ letter_ordinal n =
 delay : Float -> msg -> Cmd msg
 delay t msg = Process.sleep t |> Task.perform (always msg)
 
+{- The first two elements of a list as a pair, maybe -}
+first_two : List a -> Maybe (a, a)
+first_two l = case l of
+    a::b::_ -> Just (a,b)
+    _ -> Nothing

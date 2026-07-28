@@ -5,12 +5,14 @@ module Ui exposing
     , visibleIf
     , raw_html
     , jme_preview
+    , jme_value
     )
 
 import Aria
 import Dict exposing (Dict)
 import Html as H exposing (Html)
 import Html.Attributes as HA
+import Json.Encode as JE
 
 type alias Ui msg =
     { icon : String -> Html msg
@@ -95,7 +97,11 @@ ui config =
 visibleIf : Bool -> List (Html msg) -> List (Html msg)
 visibleIf prop content = if prop then content else []
 
-raw_html content = H.node "raw-html" [HA.attribute "html" content] []
+raw_html : JE.Value -> Html msg
+raw_html content = 
+    H.node "raw-html" 
+        [HA.property "html" content]
+        []
 
 jme_preview : { expression : String, notation : String, for : String} -> Html msg
 jme_preview o = 
@@ -107,3 +113,10 @@ jme_preview o =
         ]
         []
 
+jme_value : { value : JE.Value, abbreviate : Bool } -> Html msg
+jme_value o =
+    H.node "jme-value"
+        [ HA.property "value" o.value
+        , HA.attribute "abbreviate" <| if o.abbreviate then "true" else "false"
+        ]
+        []

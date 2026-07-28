@@ -75,7 +75,7 @@ function texJMEBit(expr, rules, scope, notation) {
  *
  * Attributes:
  *
- * `expresssion` {JME}
+ * `expression` {JME}
  * `notation` {string} - the name of the notation to use.
  */
 export class JMEPreviewElement extends HTMLElement {
@@ -116,12 +116,206 @@ export class JMEPreviewElement extends HTMLElement {
 
 customElements.define('jme-preview', JMEPreviewElement);
 
+function displayJMEValue(v, abbreviate, scope) {
+    var code = Numbas.jme.display.treeToJME({tok:v}, undefined, scope);
+    var description;
+    switch(v.type) {
+        case 'nothing':
+            return {description: 'Nothing'};
+        case 'string':
+            code = Numbas.util.escapeHTML(v.value);
+            description = Numbas.util.escapeHTML(v.value.slice(0,30));
+            break;
+        case 'set':
+            description = 'Set of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
+            break;
+        case 'matrix':
+            description = 'Matrix of size '+v.value.rows+'×'+v.value.columns;
+            break;
+        case 'vector':
+            description = 'Vector with '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'component','components');
+            break;
+        case 'range':
+            if(v.step == 0) {
+                description = `Continuous interval between ${v.start} and ${v.end}`;
+            } else {
+                description = `Numbers between ${v.start} and ${v.end}, with step size ${v.step}`;
+            }
+            break;
+        case 'list':
+            function get_nested_layers() {
+                const layer_lengths = [];
+
+                function get_deepest_layer(v, depth) {
+                    // depth is the current layer depth, lowest_depth is the lowest depth
+                    // achieved so far through recursive calls.
+                    lowest_depth = Infinity;
+
+                    if (v.type !== "list") {
+                        return depth - 1;
+                    } else if (v.value.length === 0) {
+                        layer_lengths[depth - 1] = 0;
+                        return depth - 1;
+                    } else if (layer_lengths[depth - 1] === undefined && v.value[0].type === "list") {
+                        layer_lengths[depth - 1] = v.value[0].value.length;
+                    }
+
+                    for (const item of v.value) {
+                        if (item.type !== 'list' || item.value.length !== layer_lengths[depth - 1]) {
+                            return depth - 1;
+                        }
+
+                        next_layer_depth = get_deepest_layer(item, depth + 1);
+                        if (next_layer_depth < lowest_depth) {
+                            lowest_depth = next_layer_depth;
+                        } 
+                    }
+                    return lowest_depth;
+                }
+                return layer_lengths.slice(0, get_deepest_layer(v, 1));
+            }
+
+            const nested_layers = get_nested_layers();
+            if (nested_layers.length > 0) {
+                nested_layers.unshift(v.value.length);
+                description = `Nested ${nested_layers.join("×")} list`;
+            } else {
+                description = 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
+            }
+            break;
+        case 'dict':
+            const num_keys = Object.keys(v.value).length;
+            description = 'Dictionary with '+num_keys+" "+Numbas.util.pluralise(num_keys, 'entry', 'entries');
+            break;
+        case 'html':
+            if(v.value.length==1 && v.value[0].tagName=='IMG') {
+                var src = v.value[0].getAttribute('src');
+                return {value: '<img src="'+src+'" title="'+src+'">'};
+            }
+            description = 'HTML node';
+            if(!abbreviate) {
+                code = v.value;
+            }
+            break;
+        default:
+            var preferred_types = ['html', 'dict', 'list'];
+            for(let type of preferred_types) {
+                if(Numbas.jme.isType(v, type)) {
+                    return displayJMEValue(Numbas.jme.castToType(v,type), abbreviate);
+                }
+            }
+    }
+    if(abbreviate && code.length > 30 && description) {
+        return {description: description};
+    }
+    return {value: code};
+}
+/**
+ * Show a JME token value.
+ *
+ * Attributes:
+ *
+ * `abbreviate` {true|false} - Should long values be abbreviated?
+ *
+ * Properties:
+ *
+ * `value` {Numbas.jme.token}
+ */
+export class JMEValueElement extends HTMLElement {
+    static observedAttributes = ['abbreviate'];
+
+    connectedCallback() {
+        console.log('shadow');
+        this.attachShadow({mode: 'open'});
+        this.display();
+    }
+
+    get value() {
+        return this._value;
+    }
+
+    set value(value) {
+        console.log('???');
+        this._value = value;
+        this.display();
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        this.display();
+    }
+
+    display() {
+        if(!this.shadowRoot) {
+            return;
+        }
+        const abbreviate = this.getAttribute('abbreviate') == 'true';
+
+        const value = this.value;
+
+        if(!value) {
+            this.shadowRoot.innerHTML = '';
+            return;
+        }
+
+        const scope = Numbas.jme.builtinScope; // TODO - scope property
+
+        // TODO show errors
+
+        let display = '';
+        let type = '';
+        try {
+            display = displayJMEValue(value, abbreviate, scope);
+            type = value.type;
+        } catch(e) {
+            display = {description: e.message};
+            type = 'error';
+        }
+
+        this.setAttribute('data-jme-value-type',type);
+        if(display.value !== undefined) {
+            this.shadowRoot.innerHTML = '';
+            if(Array.isArray(display.value)) {
+                for(let el of display.value) {
+                    this.shadowRoot.append(el);
+                }
+            } else {
+                this.shadowRoot.innerHTML = display.value;
+            }
+            this.setAttribute('data-jme-value-display','value');
+        } else if(display.description !== undefined) {
+            this.shadowRoot.innerHTML = display.description;
+            this.setAttribute('data-jme-value-display','description');
+        }
+    }
+}
+customElements.define('jme-value', JMEValueElement);
+
 /**
  * A way of displaying raw HTML inside an Elm app.
  * 
  * The `value` attribute should be the HTML code you want to display.
  */
 export class RawHTMLElement extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({mode:'open'});
+    }
+    static get observedAttributes() { return ['html'] };
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if(name == 'html') {
+            this.html = newValue;
+        }
+    }
+
+    set html(value) {
+        if(value instanceof String) {
+            this.shadowRoot.innerHTML = value;
+        } else {
+            this.shadowRoot.innerHTML = '';
+            this.shadowRoot.append(value);
+        }
+    }
 }
 customElements.define('raw-html', RawHTMLElement);
 

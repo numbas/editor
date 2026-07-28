@@ -48,6 +48,7 @@ icon_map = {
     'next': '→',
     'scale': '⚖️',
     'grid': '▩',
+    'regenerate': '⟳',
 }
 
 @register.inclusion_tag('icon.html')

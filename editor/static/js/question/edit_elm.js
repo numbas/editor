@@ -5487,6 +5487,64 @@ var $elm$core$Maybe$andThen = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
+var $author$project$QuestionEditor$ask_numbas = _Platform_outgoingPort('ask_numbas', $elm$core$Basics$identity);
+var $elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v0, obj) {
+					var k = _v0.a;
+					var v = _v0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $author$project$QuestionEditor$do_ask_numbas = function (q) {
+	return $author$project$QuestionEditor$ask_numbas(
+		$elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'command',
+					$elm$json$Json$Encode$string(q.command)),
+					_Utils_Tuple2('key', q.key),
+					_Utils_Tuple2('param', q.param)
+				])));
+};
+var $elm$json$Json$Encode$int = _Json_wrap;
+var $elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				$elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
+	});
+var $author$project$QuestionEditor$ask_numbas_about_variable = F3(
+	function (_v0, command, param) {
+		var gi = _v0.a;
+		var vi = _v0.b;
+		return $author$project$QuestionEditor$do_ask_numbas(
+			{
+				command: command,
+				key: $elm$json$Json$Encode$object(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'variable',
+							A2(
+								$elm$json$Json$Encode$list,
+								$elm$json$Json$Encode$int,
+								_List_fromArray(
+									[gi, vi])))
+						])),
+				param: param
+			});
+	});
 var $author$project$Settings$at = F2(
 	function (at_, s) {
 		return _Utils_update(
@@ -5495,6 +5553,16 @@ var $author$project$Settings$at = F2(
 				at: _Utils_ap(s.at, at_)
 			});
 	});
+var $author$project$Settings$Field = function (a) {
+	return {$: 'Field', a: a};
+};
+var $author$project$Settings$atField = function (k) {
+	return $author$project$Settings$at(
+		_List_fromArray(
+			[
+				$author$project$Settings$Field(k)
+			]));
+};
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$List$append = F2(
 	function (xs, ys) {
@@ -5530,6 +5598,9 @@ var $elm$core$List$filterMap = F2(
 			_List_Nil,
 			xs);
 	});
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
+var $elm$json$Json$Decode$float = _Json_decodeFloat;
+var $elm$core$String$fromFloat = _String_fromNumber;
 var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $elm$json$Json$Decode$decodeValue = _Json_run;
 var $elm$core$Basics$composeR = F3(
@@ -5596,7 +5667,6 @@ var $author$project$Settings$decode_index_where = function (prop) {
 var $elm$json$Json$Decode$fail = _Json_fail;
 var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$json$Json$Decode$index = _Json_decodeIndex;
-var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$core$Result$toMaybe = function (result) {
 	if (result.$ === 'Ok') {
 		var v = result.a;
@@ -5677,31 +5747,29 @@ var $author$project$Settings$maybe_get = F2(
 			}(
 				A2($elm$json$Json$Decode$decodeValue, d, settings.value)));
 	});
-var $author$project$QuestionEditor$ask_numbas = _Platform_outgoingPort('ask_numbas', $elm$core$Basics$identity);
-var $elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			$elm$core$List$foldl,
-			F2(
-				function (_v0, obj) {
-					var k = _v0.a;
-					var v = _v0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
-};
-var $author$project$QuestionEditor$do_ask_numbas = function (q) {
-	return $author$project$QuestionEditor$ask_numbas(
-		$elm$json$Json$Encode$object(
+var $author$project$Settings$get = F3(
+	function (decoder, _default, settings) {
+		return A2(
+			$elm$core$Maybe$withDefault,
+			_default,
+			A2($author$project$Settings$maybe_get, decoder, settings));
+	});
+var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $elm$json$Json$Decode$oneOf = _Json_oneOf;
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $author$project$Settings$getters = {
+	bool: A2($author$project$Settings$get, $elm$json$Json$Decode$bool, false),
+	string: A2(
+		$author$project$Settings$get,
+		$elm$json$Json$Decode$oneOf(
 			_List_fromArray(
 				[
-					_Utils_Tuple2(
-					'command',
-					$elm$json$Json$Encode$string(q.command)),
-					_Utils_Tuple2('key', q.key),
-					_Utils_Tuple2('param', q.param)
-				])));
+					$elm$json$Json$Decode$string,
+					A2($elm$json$Json$Decode$map, $elm$core$String$fromFloat, $elm$json$Json$Decode$float)
+				])),
+		''),
+	value: A2($author$project$Settings$get, $elm$json$Json$Decode$value, $elm$json$Json$Encode$null)
 };
 var $author$project$QuestionEditor$child_part_name = function (kind) {
 	switch (kind.$) {
@@ -5743,45 +5811,8 @@ var $author$project$QuestionEditor$ask_numbas_about_part = F3(
 				param: param
 			});
 	});
-var $author$project$Settings$Field = function (a) {
-	return {$: 'Field', a: a};
-};
-var $author$project$Settings$atField = function (k) {
-	return $author$project$Settings$at(
-		_List_fromArray(
-			[
-				$author$project$Settings$Field(k)
-			]));
-};
 var $elm$json$Json$Encode$bool = _Json_wrap;
 var $author$project$Settings$field = $author$project$Settings$Field;
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
-var $elm$json$Json$Decode$float = _Json_decodeFloat;
-var $elm$core$String$fromFloat = _String_fromNumber;
-var $author$project$Settings$get = F3(
-	function (decoder, _default, settings) {
-		return A2(
-			$elm$core$Maybe$withDefault,
-			_default,
-			A2($author$project$Settings$maybe_get, decoder, settings));
-	});
-var $elm$json$Json$Encode$null = _Json_encodeNull;
-var $elm$json$Json$Decode$oneOf = _Json_oneOf;
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $elm$json$Json$Decode$value = _Json_decodeValue;
-var $author$project$Settings$getters = {
-	bool: A2($author$project$Settings$get, $elm$json$Json$Decode$bool, false),
-	string: A2(
-		$author$project$Settings$get,
-		$elm$json$Json$Decode$oneOf(
-			_List_fromArray(
-				[
-					$elm$json$Json$Decode$string,
-					A2($elm$json$Json$Decode$map, $elm$core$String$fromFloat, $elm$json$Json$Decode$float)
-				])),
-		''),
-	value: A2($author$project$Settings$get, $elm$json$Json$Decode$value, $elm$json$Json$Encode$null)
-};
 var $elm$core$Maybe$map = F2(
 	function (f, maybe) {
 		if (maybe.$ === 'Just') {
@@ -5998,8 +6029,66 @@ try {
 	};
 } catch ($) {
 	throw 'Some top-level definitions from `QuestionEditor` are causing infinite recursion:\n\n  ┌─────┐\n  │    unwrap_part_container\n  └─────┘\n\nThese errors are very tricky, so read https://elm-lang.org/0.19.2/bad-recursion to learn how to fix it!';}
+var $author$project$QuestionEditor$variable_setting_computed = _List_Nil;
 var $author$project$QuestionEditor$compute_all = function (model) {
 	var question = model.history.current;
+	var all_variables = $elm$core$List$concat(
+		A2(
+			$elm$core$List$indexedMap,
+			F2(
+				function (gi, group) {
+					return A2(
+						$elm$core$List$indexedMap,
+						F2(
+							function (vi, variable) {
+								return _Utils_Tuple2(
+									_Utils_Tuple2(gi, vi),
+									variable);
+							}),
+						group.variables);
+				}),
+			question.variable_groups));
+	var variable_cmds = A2(
+		$elm$core$List$concatMap,
+		function (_v3) {
+			var path = _v3.a;
+			var variable = _v3.b;
+			return A2(
+				$elm$core$List$filterMap,
+				function (_v4) {
+					var ats = _v4.a;
+					var fn = _v4.b;
+					return A2(
+						$elm$core$Maybe$andThen,
+						A2(fn, path, variable),
+						A2(
+							$author$project$Settings$maybe_get,
+							$elm$json$Json$Decode$value,
+							A2($author$project$Settings$at, ats, variable.settings)));
+				},
+				$author$project$QuestionEditor$variable_setting_computed);
+		},
+		all_variables);
+	var variable_def_cmds = A2(
+		$elm$core$List$map,
+		function (_v2) {
+			var path = _v2.a;
+			var variable = _v2.b;
+			var definition = $author$project$Settings$getters.string(
+				A2($author$project$Settings$atField, 'definition', variable.settings));
+			return A3(
+				$author$project$QuestionEditor$ask_numbas_about_variable,
+				path,
+				'parse_templateType',
+				$elm$json$Json$Encode$object(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'definition',
+							$elm$json$Json$Encode$string(definition))
+						])));
+		},
+		all_variables);
 	var all_parts = $author$project$QuestionEditor$unwrap_part_container(question.parts);
 	var part_cmds = A2(
 		$elm$core$List$concatMap,
@@ -6022,23 +6111,28 @@ var $author$project$QuestionEditor$compute_all = function (model) {
 				$author$project$QuestionEditor$part_setting_computed);
 		},
 		all_parts);
+	var cmds = _Utils_ap(
+		part_cmds,
+		_Utils_ap(variable_cmds, variable_def_cmds));
 	return _Utils_Tuple2(
 		model,
-		$elm$core$Platform$Cmd$batch(part_cmds));
+		$elm$core$Platform$Cmd$batch(cmds));
 };
 var $author$project$QuestionEditor$ActiveModelRecord = function (saving) {
-	return function (adding_part) {
-		return function (tab_state) {
-			return function (pk) {
-				return function (preview) {
-					return function (project) {
-						return function (urls) {
-							return function (share) {
-								return function (ui) {
-									return function (numbas) {
-										return function (default_settings) {
-											return function (history) {
-												return {adding_part: adding_part, default_settings: default_settings, history: history, numbas: numbas, pk: pk, preview: preview, project: project, saving: saving, share: share, tab_state: tab_state, ui: ui, urls: urls};
+	return function (last_saved) {
+		return function (adding_part) {
+			return function (tab_state) {
+				return function (pk) {
+					return function (preview) {
+						return function (project) {
+							return function (urls) {
+								return function (share) {
+									return function (ui) {
+										return function (numbas) {
+											return function (default_settings) {
+												return function (history) {
+													return {adding_part: adding_part, default_settings: default_settings, history: history, last_saved: last_saved, numbas: numbas, pk: pk, preview: preview, project: project, saving: saving, share: share, tab_state: tab_state, ui: ui, urls: urls};
+												};
 											};
 										};
 									};
@@ -6520,9 +6614,9 @@ var $author$project$QuestionEditor$decode_part = function (default_settings) {
 				$elm$json$Json$Decode$succeed(
 					$author$project$QuestionEditor$new_part(default_settings)))));
 };
-var $author$project$QuestionEditor$Variable = F2(
-	function (settings, template) {
-		return {settings: settings, template: template};
+var $author$project$QuestionEditor$Variable = F3(
+	function (computed, settings, template) {
+		return {computed: computed, settings: settings, template: template};
 	});
 var $author$project$QuestionEditor$decode_variable = function (default_settings) {
 	var variable_defaults = A2(
@@ -6544,7 +6638,10 @@ var $author$project$QuestionEditor$decode_variable = function (default_settings)
 				$elm$json$Json$Decode$map,
 				$author$project$Settings$fromValue(variable_defaults),
 				$elm$json$Json$Decode$value),
-			$elm$json$Json$Decode$succeed($author$project$QuestionEditor$Variable)));
+			A2(
+				$elm_community$json_extra$Json$Decode$Extra$andMap,
+				$elm$json$Json$Decode$succeed($author$project$Settings$empty),
+				$elm$json$Json$Decode$succeed($author$project$QuestionEditor$Variable))));
 };
 var $elm$core$Set$Set_elm_builtin = function (a) {
 	return {$: 'Set_elm_builtin', a: a};
@@ -6651,16 +6748,32 @@ var $author$project$QuestionEditor$decode_question = function (default_settings)
 					var ungrouped = {name: '', variables: ungrouped_variables};
 					return A2($elm$core$List$cons, ungrouped, groups);
 				}),
-			$elm$json$Json$Decode$list(
-				A2(
-					$elm_community$json_extra$Json$Decode$Extra$andMap,
-					$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
-					A2(
-						$elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
-						$elm$json$Json$Decode$succeed($elm$core$Tuple$pair)))),
-			$elm$json$Json$Decode$dict(
-				$author$project$QuestionEditor$decode_variable(default_settings))),
+			$elm$json$Json$Decode$oneOf(
+				_List_fromArray(
+					[
+						A2(
+						$elm$json$Json$Decode$field,
+						'variable_groups',
+						$elm$json$Json$Decode$list(
+							A2(
+								$elm_community$json_extra$Json$Decode$Extra$andMap,
+								$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
+								A2(
+									$elm_community$json_extra$Json$Decode$Extra$andMap,
+									A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
+									$elm$json$Json$Decode$succeed($elm$core$Tuple$pair))))),
+						$elm$json$Json$Decode$succeed(_List_Nil)
+					])),
+			$elm$json$Json$Decode$oneOf(
+				_List_fromArray(
+					[
+						A2(
+						$elm$json$Json$Decode$field,
+						'variables',
+						$elm$json$Json$Decode$dict(
+							$author$project$QuestionEditor$decode_variable(default_settings))),
+						$elm$json$Json$Decode$succeed($elm$core$Dict$empty)
+					]))),
 		A2(
 			$elm_community$json_extra$Json$Decode$Extra$andMap,
 			$author$project$QuestionEditor$decode_child_parts(default_settings),
@@ -6981,10 +7094,11 @@ var $author$project$QuestionEditor$decode_flags = A2(
 								$elm_community$json_extra$Json$Decode$Extra$andMap,
 								A2($elm$json$Json$Decode$field, 'tab_state', $author$project$Tabber$decode_state),
 								$elm$json$Json$Decode$succeed(
-									A2(
+									A3(
 										$author$project$QuestionEditor$ActiveModelRecord,
 										$author$project$QuestionEditor$Saved(
 											$elm$core$Result$Ok(_Utils_Tuple0)),
+										$elm$core$Maybe$Nothing,
 										_Utils_Tuple2(_List_Nil, $author$project$QuestionEditor$TopPart)))))))))));
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$QuestionEditor$nocmd = function (model) {
@@ -7022,11 +7136,21 @@ var $author$project$QuestionEditor$ChangePartComputed = F2(
 	function (a, b) {
 		return {$: 'ChangePartComputed', a: a, b: b};
 	});
+var $author$project$QuestionEditor$ChangeQuestionComputed = F2(
+	function (a, b) {
+		return {$: 'ChangeQuestionComputed', a: a, b: b};
+	});
+var $author$project$QuestionEditor$ChangeVariableComputed = F2(
+	function (a, b) {
+		return {$: 'ChangeVariableComputed', a: a, b: b};
+	});
 var $author$project$QuestionEditor$Changed = {$: 'Changed'};
 var $author$project$QuestionEditor$Save = function (a) {
 	return {$: 'Save', a: a};
 };
-var $author$project$QuestionEditor$Saving = {$: 'Saving'};
+var $author$project$QuestionEditor$Saving = function (a) {
+	return {$: 'Saving', a: a};
+};
 var $author$project$Tabber$SetTab = F2(
 	function (a, b) {
 		return {$: 'SetTab', a: a, b: b};
@@ -7041,6 +7165,10 @@ var $author$project$QuestionEditor$UpdateQuestion = function (a) {
 var $author$project$QuestionEditor$UpdateTab = function (a) {
 	return {$: 'UpdateTab', a: a};
 };
+var $author$project$QuestionEditor$UpdateVariable = F2(
+	function (a, b) {
+		return {$: 'UpdateVariable', a: a, b: b};
+	});
 var $author$project$History$big_change = F2(
 	function (state, history) {
 		return _Utils_update(
@@ -7071,15 +7199,6 @@ var $author$project$QuestionEditor$child_part_kinds = _List_fromArray(
 		_Utils_Tuple2('steps', $author$project$QuestionEditor$Step),
 		_Utils_Tuple2('alternatives', $author$project$QuestionEditor$Alternative)
 	]);
-var $elm$json$Json$Encode$list = F2(
-	function (func, entries) {
-		return _Json_wrap(
-			A3(
-				$elm$core$List$foldl,
-				_Json_addEntry(func),
-				_Json_emptyArray(_Utils_Tuple0),
-				entries));
-	});
 var $author$project$QuestionEditor$encode_marking_algorithm = A2(
 	$elm$core$Basics$composeR,
 	function ($) {
@@ -7183,6 +7302,17 @@ var $author$project$QuestionEditor$encode_part_container = function (pc) {
 					}),
 				$author$project$QuestionEditor$child_part_kinds)));
 };
+var $author$project$QuestionEditor$encode_variable = function (variable) {
+	return $elm$json$Json$Encode$object(
+		A3(
+			$author$project$Settings$get,
+			A2(
+				$elm$json$Json$Decode$map,
+				$elm$core$Dict$toList,
+				$elm$json$Json$Decode$dict($elm$json$Json$Decode$value)),
+			_List_Nil,
+			variable.settings));
+};
 var $author$project$QuestionEditor$encode_question = function (question) {
 	return $elm$json$Json$Encode$object(
 		_Utils_ap(
@@ -7194,7 +7324,78 @@ var $author$project$QuestionEditor$encode_question = function (question) {
 					$elm$json$Json$Decode$dict($elm$json$Json$Decode$value)),
 				_List_Nil,
 				question.settings),
-			$author$project$QuestionEditor$encode_part_container(question.parts)));
+			_Utils_ap(
+				$author$project$QuestionEditor$encode_part_container(question.parts),
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'variables',
+						$elm$json$Json$Encode$object(
+							A2(
+								$elm$core$List$map,
+								function (v) {
+									return _Utils_Tuple2(
+										$author$project$Settings$getters.string(
+											A2($author$project$Settings$atField, 'name', v.settings)),
+										$author$project$QuestionEditor$encode_variable(v));
+								},
+								A2(
+									$elm$core$List$concatMap,
+									function ($) {
+										return $.variables;
+									},
+									question.variable_groups))))
+					]))));
+};
+var $author$project$QuestionEditor$numbas_version = 'finer_feedback_settings';
+var $author$project$QuestionEditor$encode_model = function (model) {
+	var eq = $author$project$QuestionEditor$encode_question(model.history.current);
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'content',
+				$elm$json$Json$Encode$string(
+					'// Numbas version: ' + ($author$project$QuestionEditor$numbas_version + ('\u000A' + A2($elm$json$Json$Encode$encode, 0, eq))))),
+				_Utils_Tuple2(
+				'ability_levels',
+				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, _List_Nil)),
+				_Utils_Tuple2(
+				'extensions',
+				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, _List_Nil)),
+				_Utils_Tuple2(
+				'metadata',
+				$elm$json$Json$Encode$object(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'description',
+							$elm$json$Json$Encode$string('')),
+							_Utils_Tuple2(
+							'licence',
+							$elm$json$Json$Encode$string('None specified'))
+						]))),
+				_Utils_Tuple2(
+				'resources',
+				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, _List_Nil)),
+				_Utils_Tuple2(
+				'tags',
+				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, _List_Nil)),
+				_Utils_Tuple2(
+				'taxonomy_nodes',
+				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, _List_Nil))
+			]));
+};
+var $author$project$Util$first_two = function (l) {
+	if (l.b && l.b.b) {
+		var a = l.a;
+		var _v1 = l.b;
+		var b = _v1.a;
+		return $elm$core$Maybe$Just(
+			_Utils_Tuple2(a, b));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
 };
 var $elm_community$json_extra$Json$Decode$Extra$fromMaybe = F2(
 	function (error, val) {
@@ -8230,8 +8431,6 @@ var $elm$http$Http$jsonBody = function (value) {
 		'application/json',
 		A2($elm$json$Json$Encode$encode, 0, value));
 };
-var $elm$core$Debug$log = _Debug_log;
-var $author$project$QuestionEditor$numbas_version = 'finer_feedback_settings';
 var $elm$http$Http$Request = function (a) {
 	return {$: 'Request', a: a};
 };
@@ -8382,61 +8581,22 @@ var $elm$http$Http$request = function (r) {
 		$elm$http$Http$Request(
 			{allowCookiesFromOtherDomains: false, body: r.body, expect: r.expect, headers: r.headers, method: r.method, timeout: r.timeout, tracker: r.tracker, url: r.url}));
 };
-var $author$project$QuestionEditor$save_question = function (model) {
-	var eq = $author$project$QuestionEditor$encode_question(model.history.current);
-	var z = A2(
-		$elm$core$Debug$log,
-		'save',
-		A2($elm$json$Json$Encode$encode, 0, eq));
-	var body = $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'content',
-				$elm$json$Json$Encode$string(
-					'// Numbas version: ' + ($author$project$QuestionEditor$numbas_version + ('\u000A' + A2($elm$json$Json$Encode$encode, 0, eq))))),
-				_Utils_Tuple2(
-				'ability_levels',
-				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, _List_Nil)),
-				_Utils_Tuple2(
-				'extensions',
-				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, _List_Nil)),
-				_Utils_Tuple2(
-				'metadata',
-				$elm$json$Json$Encode$object(
-					_List_fromArray(
-						[
-							_Utils_Tuple2(
-							'description',
-							$elm$json$Json$Encode$string('')),
-							_Utils_Tuple2(
-							'licence',
-							$elm$json$Json$Encode$string('None specified'))
-						]))),
-				_Utils_Tuple2(
-				'resources',
-				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, _List_Nil)),
-				_Utils_Tuple2(
-				'tags',
-				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, _List_Nil)),
-				_Utils_Tuple2(
-				'taxonomy_nodes',
-				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, _List_Nil))
-			]));
-	return $elm$http$Http$request(
-		{
-			body: $elm$http$Http$jsonBody(body),
-			expect: $elm$http$Http$expectWhatever($author$project$QuestionEditor$FinishedSaving),
-			headers: _List_fromArray(
-				[
-					A2($elm$http$Http$header, 'X-CSRFToken', model.ui.config.csrf_token)
-				]),
-			method: 'POST',
-			timeout: $elm$core$Maybe$Just(5000),
-			tracker: $elm$core$Maybe$Nothing,
-			url: ''
-		});
-};
+var $author$project$QuestionEditor$save_question = F2(
+	function (encoded_model, model) {
+		return $elm$http$Http$request(
+			{
+				body: $elm$http$Http$jsonBody(encoded_model),
+				expect: $elm$http$Http$expectWhatever($author$project$QuestionEditor$FinishedSaving),
+				headers: _List_fromArray(
+					[
+						A2($elm$http$Http$header, 'X-CSRFToken', model.ui.config.csrf_token)
+					]),
+				method: 'POST',
+				timeout: $elm$core$Maybe$Just(5000),
+				tracker: $elm$core$Maybe$Nothing,
+				url: ''
+			});
+	});
 var $author$project$History$small_change = F2(
 	function (state, history) {
 		return history.small_change ? _Utils_update(
@@ -8493,12 +8653,14 @@ var $elm$core$Task$attempt = F2(
 						task))));
 	});
 var $elm$browser$Browser$Dom$focus = _Browser_call('focus');
+var $elm$core$Debug$log = _Debug_log;
 var $author$project$Tabber$save_tab_state = _Platform_outgoingPort('save_tab_state', $elm$core$Basics$identity);
 var $author$project$Tabber$update = F2(
 	function (msg, state) {
-		if (msg.$ === 'SetTab') {
-			var key = msg.a;
-			var id = msg.b;
+		var _v0 = A2($elm$core$Debug$log, 'update tab', msg);
+		if (_v0.$ === 'SetTab') {
+			var key = _v0.a;
+			var id = _v0.b;
 			var nstate = A3($elm$core$Dict$insert, key, id, state);
 			return _Utils_Tuple2(
 				nstate,
@@ -8517,6 +8679,10 @@ var $author$project$Tabber$update = F2(
 		} else {
 			return _Utils_Tuple2(state, $elm$core$Platform$Cmd$none);
 		}
+	});
+var $author$project$QuestionEditor$VariableGenerationResult = F2(
+	function (conditionSatisfied, variables) {
+		return {conditionSatisfied: conditionSatisfied, variables: variables};
 	});
 var $author$project$QuestionEditor$map_part_container = function (fn) {
 	return $author$project$QuestionEditor$apply_part_container(
@@ -8756,6 +8922,7 @@ var $author$project$QuestionEditor$add_part_at = F3(
 			path,
 			A2($author$project$QuestionEditor$add_part, kind, part));
 	});
+var $author$project$QuestionEditor$blank_variable = {computed: $author$project$Settings$empty, settings: $author$project$Settings$empty, template: 'anything'};
 var $elm_community$list_extra$List$Extra$removeAt = F2(
 	function (index, l) {
 		if (index < 0) {
@@ -8797,6 +8964,22 @@ var $author$project$QuestionEditor$delete_part_at = F2(
 				A2($author$project$QuestionEditor$delete_part, kind, i),
 				pc);
 		}
+	});
+var $author$project$Settings$insert = F3(
+	function (k, v, s) {
+		var dict = A2(
+			$elm$core$Result$withDefault,
+			$elm$core$Dict$empty,
+			A2(
+				$elm$json$Json$Decode$decodeValue,
+				$elm$json$Json$Decode$dict($elm$json$Json$Decode$value),
+				s.value));
+		var ndict = A3($elm$core$Dict$insert, k, v, dict);
+		return _Utils_update(
+			s,
+			{
+				value: A3($elm$json$Json$Encode$dict, $elm$core$Basics$identity, $elm$core$Basics$identity, ndict)
+			});
 	});
 var $elm_community$list_extra$List$Extra$getAt = F2(
 	function (idx, xs) {
@@ -9065,22 +9248,6 @@ var $author$project$Tabber$set_tab = F2(
 		return $elm$core$Task$succeed(
 			A2($author$project$Tabber$SetTab, tabber, tab));
 	});
-var $author$project$Settings$insert = F3(
-	function (k, v, s) {
-		var dict = A2(
-			$elm$core$Result$withDefault,
-			$elm$core$Dict$empty,
-			A2(
-				$elm$json$Json$Decode$decodeValue,
-				$elm$json$Json$Decode$dict($elm$json$Json$Decode$value),
-				s.value));
-		var ndict = A3($elm$core$Dict$insert, k, v, dict);
-		return _Utils_update(
-			s,
-			{
-				value: A3($elm$json$Json$Encode$dict, $elm$core$Basics$identity, $elm$core$Basics$identity, ndict)
-			});
-	});
 var $author$project$QuestionEditor$blank_note = {changed: true, settings: $author$project$Settings$empty};
 var $author$project$QuestionEditor$update_marking_algorithm = F3(
 	function (msg, path, part) {
@@ -9271,6 +9438,150 @@ var $author$project$QuestionEditor$update_part_at = F3(
 				A3($author$project$QuestionEditor$m_updateAt, i, up, parts));
 		}
 	});
+var $author$project$QuestionEditor$ChangeVariableSetting = function (a) {
+	return {$: 'ChangeVariableSetting', a: a};
+};
+var $author$project$Settings$merge = F2(
+	function (more, s) {
+		var value = A2(
+			$elm$core$Result$withDefault,
+			$elm$core$Dict$empty,
+			A2(
+				$elm$json$Json$Decode$decodeValue,
+				$elm$json$Json$Decode$dict($elm$json$Json$Decode$value),
+				s.value));
+		return _Utils_update(
+			s,
+			{
+				value: A3(
+					$elm$json$Json$Encode$dict,
+					$elm$core$Basics$identity,
+					$elm$core$Basics$identity,
+					A2($elm$core$Dict$union, value, more))
+			});
+	});
+var $author$project$QuestionEditor$update_variable = F3(
+	function (msg, path, variable) {
+		update_variable:
+		while (true) {
+			switch (msg.$) {
+				case 'ChangeVariableSetting':
+					var _v1 = msg.a;
+					var v = _v1.a;
+					var at = _v1.b;
+					var nsettings = A3($author$project$Settings$setAt, at, v, variable.settings);
+					var cmds = _List_Nil;
+					return _Utils_Tuple2(
+						_Utils_update(
+							variable,
+							{settings: nsettings}),
+						_Utils_Tuple2(
+							$elm$core$Maybe$Just(false),
+							$elm$core$Maybe$Just(
+								$elm$core$Platform$Cmd$batch(cmds))));
+				case 'ChangeVariableTemplateSetting':
+					var _v2 = msg.a;
+					var v = _v2.a;
+					var at = _v2.b;
+					var ncomputed = A3($author$project$Settings$setAt, at, v, variable.computed);
+					var cmds = _List_Nil;
+					var cfield = function (k) {
+						return A2($author$project$Settings$atField, k, ncomputed);
+					};
+					var cstring = A2($elm$core$Basics$composeR, cfield, $author$project$Settings$getters.string);
+					var cfloat = A2(
+						$elm$core$Basics$composeR,
+						cstring,
+						A2(
+							$elm$core$Basics$composeR,
+							$elm$core$String$toFloat,
+							$elm$core$Maybe$withDefault(0)));
+					var ndefinition = function () {
+						var _v3 = $author$project$Settings$getters.string(
+							A2($author$project$Settings$atField, 'templateType', variable.settings));
+						if (_v3 === 'anything') {
+							return cstring('code');
+						} else {
+							var x = _v3;
+							return '??? x';
+						}
+					}();
+					var cbool = A2($elm$core$Basics$composeR, cfield, $author$project$Settings$getters.bool);
+					var $temp$msg = $author$project$QuestionEditor$ChangeVariableSetting(
+						_Utils_Tuple2(
+							$elm$json$Json$Encode$string(ndefinition),
+							_List_fromArray(
+								[
+									$author$project$Settings$field('definition')
+								]))),
+						$temp$path = path,
+						$temp$variable = _Utils_update(
+						variable,
+						{computed: ncomputed});
+					msg = $temp$msg;
+					path = $temp$path;
+					variable = $temp$variable;
+					continue update_variable;
+				default:
+					var command = msg.a;
+					var value = msg.b;
+					if (command === 'parse_templateType') {
+						return function (v) {
+							return _Utils_Tuple2(
+								v,
+								_Utils_Tuple2($elm$core$Maybe$Nothing, $elm$core$Maybe$Nothing));
+						}(
+							function (r) {
+								if (r.$ === 'Ok') {
+									var _v6 = r.a;
+									var templateType = _v6.a;
+									var template = _v6.b;
+									return _Utils_update(
+										variable,
+										{
+											computed: A2($author$project$Settings$merge, template, variable.computed)
+										});
+								} else {
+									return variable;
+								}
+							}(
+								A2(
+									$elm$json$Json$Decode$decodeValue,
+									A2(
+										$elm_community$json_extra$Json$Decode$Extra$andMap,
+										A2(
+											$elm$json$Json$Decode$field,
+											'template',
+											$elm$json$Json$Decode$dict($elm$json$Json$Decode$value)),
+										A2(
+											$elm_community$json_extra$Json$Decode$Extra$andMap,
+											A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string),
+											$elm$json$Json$Decode$succeed($elm$core$Tuple$pair))),
+									value)));
+					} else {
+						return _Utils_Tuple2(
+							variable,
+							_Utils_Tuple2($elm$core$Maybe$Nothing, $elm$core$Maybe$Nothing));
+					}
+			}
+		}
+	});
+var $author$project$QuestionEditor$update_variable_at = F3(
+	function (_v0, fn, groups) {
+		var gi = _v0.a;
+		var vi = _v0.b;
+		var do_group = function (group) {
+			var _v1 = A3($author$project$QuestionEditor$m_updateAt, vi, fn, group.variables);
+			var variables = _v1.a;
+			var mcmd = _v1.b;
+			return _Utils_Tuple2(
+				_Utils_update(
+					group,
+					{variables: variables}),
+				mcmd);
+		};
+		return A3($author$project$QuestionEditor$m_updateAt, gi, do_group, groups);
+	});
 var $author$project$QuestionEditor$update_question = F2(
 	function (msg, question) {
 		switch (msg.$) {
@@ -9328,7 +9639,7 @@ var $author$project$QuestionEditor$update_question = F2(
 						question,
 						{parts: parts}),
 					mcmd);
-			default:
+			case 'DeletePart':
 				var path = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -9339,7 +9650,139 @@ var $author$project$QuestionEditor$update_question = F2(
 					_Utils_Tuple2(
 						$elm$core$Maybe$Just(true),
 						$elm$core$Maybe$Just($elm$core$Platform$Cmd$none)));
+			case 'AddVariable':
+				var gi = msg.a;
+				var ngroups = A3(
+					$elm_community$list_extra$List$Extra$updateAt,
+					gi,
+					function (g) {
+						return _Utils_update(
+							g,
+							{
+								variables: _Utils_ap(
+									g.variables,
+									_List_fromArray(
+										[$author$project$QuestionEditor$blank_variable]))
+							});
+					},
+					question.variable_groups);
+				return _Utils_Tuple2(
+					_Utils_update(
+						question,
+						{variable_groups: ngroups}),
+					_Utils_Tuple2(
+						$elm$core$Maybe$Just(true),
+						$elm$core$Maybe$Just($elm$core$Platform$Cmd$none)));
+			case 'UpdateVariable':
+				var path = msg.a;
+				var vmsg = msg.b;
+				var _v3 = A3(
+					$author$project$QuestionEditor$update_variable_at,
+					path,
+					A2($author$project$QuestionEditor$update_variable, vmsg, path),
+					question.variable_groups);
+				var variable_groups = _v3.a;
+				var mcmd = _v3.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						question,
+						{variable_groups: variable_groups}),
+					mcmd);
+			case 'RegenerateVariables':
+				var cmd = $author$project$QuestionEditor$do_ask_numbas(
+					{
+						command: 'generateVariables',
+						key: $elm$json$Json$Encode$string('question'),
+						param: $elm$json$Json$Encode$object(
+							_List_fromArray(
+								[
+									_Utils_Tuple2(
+									'question',
+									$author$project$QuestionEditor$encode_question(question))
+								]))
+					});
+				return _Utils_Tuple2(
+					question,
+					_Utils_Tuple2(
+						$elm$core$Maybe$Nothing,
+						$elm$core$Maybe$Just(cmd)));
+			default:
+				var command = msg.a;
+				var value = msg.b;
+				if (command === 'generateVariables') {
+					var result = A2(
+						$elm$json$Json$Decode$decodeValue,
+						A2(
+							$elm_community$json_extra$Json$Decode$Extra$andMap,
+							A2(
+								$elm$json$Json$Decode$field,
+								'variables',
+								$elm$json$Json$Decode$dict(
+									A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$value))),
+							A2(
+								$elm_community$json_extra$Json$Decode$Extra$andMap,
+								A2($elm$json$Json$Decode$field, 'conditionSatisfied', $elm$json$Json$Decode$bool),
+								$elm$json$Json$Decode$succeed($author$project$QuestionEditor$VariableGenerationResult))),
+						value);
+					var q = A2($elm$core$Debug$log, 'got', value);
+					var nvariable_groups = A2(
+						$elm$core$Result$withDefault,
+						question.variable_groups,
+						A2(
+							$elm$core$Result$map,
+							function (r) {
+								return A2(
+									$elm$core$List$indexedMap,
+									F2(
+										function (gi, group) {
+											var nvariables = A2(
+												$elm$core$List$indexedMap,
+												F2(
+													function (vi, variable) {
+														var _v5 = A2(
+															$elm$core$Dict$get,
+															$author$project$Settings$getters.string(
+																A2($author$project$Settings$atField, 'name', variable.settings)),
+															r.variables);
+														if (_v5.$ === 'Just') {
+															var vvalue = _v5.a;
+															return _Utils_update(
+																variable,
+																{
+																	computed: A3($author$project$Settings$insert, 'value', vvalue, variable.computed)
+																});
+														} else {
+															return variable;
+														}
+													}),
+												group.variables);
+											return _Utils_update(
+												group,
+												{variables: nvariables});
+										}),
+									question.variable_groups);
+							},
+							result));
+					return _Utils_Tuple2(
+						_Utils_update(
+							question,
+							{variable_groups: nvariable_groups}),
+						_Utils_Tuple2($elm$core$Maybe$Nothing, $elm$core$Maybe$Nothing));
+				} else {
+					return _Utils_Tuple2(
+						question,
+						_Utils_Tuple2($elm$core$Maybe$Nothing, $elm$core$Maybe$Nothing));
+				}
 		}
+	});
+var $elm_community$json_extra$Json$Decode$Extra$when = F3(
+	function (checkDecoder, check, passDecoder) {
+		return A2(
+			$elm$json$Json$Decode$andThen,
+			function (checkVal) {
+				return check(checkVal) ? passDecoder : $elm$json$Json$Decode$fail('Check failed with input');
+			},
+			checkDecoder);
 	});
 var $author$project$QuestionEditor$update_active = F2(
 	function (msg, model) {
@@ -9406,65 +9849,105 @@ var $author$project$QuestionEditor$update_active = F2(
 					_Utils_Tuple2(model, $elm$core$Platform$Cmd$none),
 					A2(
 						$elm$json$Json$Decode$decodeValue,
-						$elm$json$Json$Decode$oneOf(
-							_List_fromArray(
-								[
-									A2(
-									$elm$json$Json$Decode$andThen,
-									function (path) {
-										return A2(
-											$elm$json$Json$Decode$andThen,
-											function (command) {
-												return A2(
+						A2(
+							$elm$json$Json$Decode$map,
+							function (mm) {
+								return A2($author$project$QuestionEditor$update_active, mm, model);
+							},
+							A2(
+								$elm$json$Json$Decode$andThen,
+								function (_v6) {
+									var command = _v6.a;
+									var value = _v6.b;
+									return A2(
+										$elm$json$Json$Decode$field,
+										'key',
+										$elm$json$Json$Decode$oneOf(
+											_List_fromArray(
+												[
+													A2(
 													$elm$json$Json$Decode$map,
-													function (v) {
-														return A2(
-															$author$project$QuestionEditor$update_active,
-															$author$project$QuestionEditor$UpdateQuestion(
-																A2(
-																	$author$project$QuestionEditor$UpdatePart,
-																	path,
-																	A2($author$project$QuestionEditor$ChangePartComputed, command, v))),
-															model);
+													function (path) {
+														return $author$project$QuestionEditor$UpdateQuestion(
+															A2(
+																$author$project$QuestionEditor$UpdatePart,
+																path,
+																A2($author$project$QuestionEditor$ChangePartComputed, command, value)));
 													},
-													A2($elm$json$Json$Decode$field, 'result', $elm$json$Json$Decode$value));
-											},
-											A2($elm$json$Json$Decode$field, 'command', $elm$json$Json$Decode$string));
-									},
-									A2(
-										$elm$json$Json$Decode$at,
-										_List_fromArray(
-											['key', 'part']),
-										A2(
-											$elm$json$Json$Decode$andThen,
-											A2(
-												$elm$core$Basics$composeR,
-												$author$project$QuestionEditor$parse_part_path,
-												$elm_community$json_extra$Json$Decode$Extra$fromMaybe('Bad part path')),
-											$elm$json$Json$Decode$string)))
-								])),
+													A2(
+														$elm$json$Json$Decode$field,
+														'part',
+														A2(
+															$elm$json$Json$Decode$andThen,
+															A2(
+																$elm$core$Basics$composeR,
+																$author$project$QuestionEditor$parse_part_path,
+																$elm_community$json_extra$Json$Decode$Extra$fromMaybe('Bad part path')),
+															$elm$json$Json$Decode$string))),
+													A2(
+													$elm$json$Json$Decode$map,
+													function (path) {
+														return $author$project$QuestionEditor$UpdateQuestion(
+															A2(
+																$author$project$QuestionEditor$UpdateVariable,
+																path,
+																A2($author$project$QuestionEditor$ChangeVariableComputed, command, value)));
+													},
+													A2(
+														$elm$json$Json$Decode$field,
+														'variable',
+														A2(
+															$elm$json$Json$Decode$andThen,
+															A2(
+																$elm$core$Basics$composeR,
+																$author$project$Util$first_two,
+																$elm_community$json_extra$Json$Decode$Extra$fromMaybe('Bad variable path')),
+															$elm$json$Json$Decode$list($elm$json$Json$Decode$int)))),
+													A3(
+													$elm_community$json_extra$Json$Decode$Extra$when,
+													$elm$json$Json$Decode$string,
+													$elm$core$Basics$eq('question'),
+													$elm$json$Json$Decode$succeed(
+														$author$project$QuestionEditor$UpdateQuestion(
+															A2($author$project$QuestionEditor$ChangeQuestionComputed, command, value))))
+												])));
+								},
+								A3(
+									$elm$json$Json$Decode$map2,
+									$elm$core$Tuple$pair,
+									A2($elm$json$Json$Decode$field, 'command', $elm$json$Json$Decode$string),
+									A2($elm$json$Json$Decode$field, 'result', $elm$json$Json$Decode$value)))),
 						res));
 			case 'Save':
 				var q = msg.a;
-				var encode = A2(
-					$elm$core$Basics$composeR,
-					$author$project$QuestionEditor$encode_question,
-					$elm$json$Json$Encode$encode(0));
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{saving: $author$project$QuestionEditor$Saving}),
-					_Utils_eq(
-						encode(q),
-						encode(model.history.current)) ? $author$project$QuestionEditor$save_question(model) : $elm$core$Platform$Cmd$none);
-			case 'FinishedSaving':
-				var res = msg.a;
-				return $author$project$QuestionEditor$nocmd(
+				var encoded_model = $author$project$QuestionEditor$encode_model(model);
+				var encoded_model_string = A2($elm$json$Json$Encode$encode, 0, encoded_model);
+				return ((!_Utils_eq(
+					model.last_saved,
+					$elm$core$Maybe$Just(encoded_model_string))) && (!_Utils_eq(
+					model.saving,
+					$author$project$QuestionEditor$Saving(encoded_model_string)))) ? _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
-							saving: _Utils_eq(model.saving, $author$project$QuestionEditor$Saving) ? $author$project$QuestionEditor$Saved(res) : model.saving
-						}));
+							saving: $author$project$QuestionEditor$Saving(encoded_model_string)
+						}),
+					A2($author$project$QuestionEditor$save_question, encoded_model, model)) : _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			case 'FinishedSaving':
+				var res = msg.a;
+				var _v7 = model.saving;
+				if (_v7.$ === 'Saving') {
+					var str = _v7.a;
+					return $author$project$QuestionEditor$nocmd(
+						_Utils_update(
+							model,
+							{
+								last_saved: $elm$core$Maybe$Just(str),
+								saving: $author$project$QuestionEditor$Saved(res)
+							}));
+				} else {
+					return $author$project$QuestionEditor$nocmd(model);
+				}
 			case 'AddChildPart':
 				var path = msg.a;
 				var kind = msg.b;
@@ -9521,6 +10004,9 @@ var $author$project$QuestionEditor$AddPart = F3(
 	function (a, b, c) {
 		return {$: 'AddPart', a: a, b: b, c: c};
 	});
+var $author$project$QuestionEditor$AddVariable = function (a) {
+	return {$: 'AddVariable', a: a};
+};
 var $author$project$QuestionEditor$AllPartsMode = {$: 'AllPartsMode'};
 var $author$project$QuestionEditor$ChangeMarkingAlgorithmNote = F2(
 	function (a, b) {
@@ -9531,6 +10017,9 @@ var $author$project$QuestionEditor$ChangePartSetting = function (a) {
 };
 var $author$project$QuestionEditor$ChangeQuestionSetting = function (a) {
 	return {$: 'ChangeQuestionSetting', a: a};
+};
+var $author$project$QuestionEditor$ChangeVariableTemplateSetting = function (a) {
+	return {$: 'ChangeVariableTemplateSetting', a: a};
 };
 var $author$project$QuestionEditor$DeleteMarkingAlgorithmNote = function (a) {
 	return {$: 'DeleteMarkingAlgorithmNote', a: a};
@@ -9544,6 +10033,7 @@ var $author$project$Tabber$HtmlLabel = function (a) {
 };
 var $author$project$QuestionEditor$NoOp = {$: 'NoOp'};
 var $author$project$QuestionEditor$Redo = {$: 'Redo'};
+var $author$project$QuestionEditor$RegenerateVariables = {$: 'RegenerateVariables'};
 var $author$project$Tabber$SimpleLabel = function (a) {
 	return {$: 'SimpleLabel', a: a};
 };
@@ -9551,6 +10041,16 @@ var $author$project$QuestionEditor$Undo = {$: 'Undo'};
 var $author$project$QuestionEditor$UpdateMarkingAlgorithm = function (a) {
 	return {$: 'UpdateMarkingAlgorithm', a: a};
 };
+var $elm$core$Result$andThen = F2(
+	function (callback, result) {
+		if (result.$ === 'Ok') {
+			var value = result.a;
+			return callback(value);
+		} else {
+			var msg = result.a;
+			return $elm$core$Result$Err(msg);
+		}
+	});
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
 		return A2(
@@ -9790,6 +10290,27 @@ var $elm$html$Html$em = _VirtualDom_node('em');
 var $author$project$QuestionEditor$empty_part_container = $author$project$QuestionEditor$PartContainer(
 	{alternatives: _List_Nil, gaps: _List_Nil, parts: _List_Nil, steps: _List_Nil});
 var $elm$html$Html$fieldset = _VirtualDom_node('fieldset');
+var $elm_community$list_extra$List$Extra$find = F2(
+	function (predicate, list) {
+		find:
+		while (true) {
+			if (!list.b) {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var first = list.a;
+				var rest = list.b;
+				if (predicate(first)) {
+					return $elm$core$Maybe$Just(first);
+				} else {
+					var $temp$predicate = predicate,
+						$temp$list = rest;
+					predicate = $temp$predicate;
+					list = $temp$list;
+					continue find;
+				}
+			}
+		}
+	});
 var $elm$html$Html$form = _VirtualDom_node('form');
 var $elm$core$Basics$ge = _Utils_ge;
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
@@ -9846,6 +10367,28 @@ var $author$project$QuestionEditor$jme_property = F3(
 					})
 				]));
 	});
+var $elm$virtual_dom$VirtualDom$property = F2(
+	function (key, value) {
+		return A2(
+			_VirtualDom_property,
+			_VirtualDom_noInnerHtmlOrFormAction(key),
+			_VirtualDom_noJavaScriptOrHtmlJson(value));
+	});
+var $elm$html$Html$Attributes$property = $elm$virtual_dom$VirtualDom$property;
+var $author$project$Ui$jme_value = function (o) {
+	return A3(
+		$elm$html$Html$node,
+		'jme-value',
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$property, 'value', o.value),
+				A2(
+				$elm$html$Html$Attributes$attribute,
+				'abbreviate',
+				o.abbreviate ? 'true' : 'false')
+			]),
+		_List_Nil);
+};
 var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
 var $elm$html$Html$label = _VirtualDom_node('label');
 var $author$project$QuestionEditor$labelled_field = F3(
@@ -10100,6 +10643,7 @@ var $author$project$QuestionEditor$percent_property = F2(
 			]);
 	});
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
+var $elm$html$Html$pre = _VirtualDom_node('pre');
 var $elm$core$String$replace = F3(
 	function (before, after, string) {
 		return A2(
@@ -10135,27 +10679,6 @@ var $elm$core$Set$size = function (_v0) {
 	return $elm$core$Dict$size(dict);
 };
 var $elm$html$Html$small = _VirtualDom_node('small');
-var $author$project$Tabber$tab_link = F3(
-	function (tabber, tab, text) {
-		return A2(
-			$elm$html$Html$a,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$href('#'),
-					$elm$html$Html$Events$onClick(
-					A2($author$project$Tabber$SetTab, tabber, tab))
-				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text(text)
-				]));
-	});
-var $elm$html$Html$table = _VirtualDom_node('table');
-var $elm$html$Html$td = _VirtualDom_node('td');
-var $elm$html$Html$th = _VirtualDom_node('th');
-var $elm$html$Html$thead = _VirtualDom_node('thead');
-var $elm$html$Html$tr = _VirtualDom_node('tr');
-var $elm$core$String$trim = _String_trim;
 var $author$project$Aria$controls = $elm$html$Html$Attributes$attribute('aria-controls');
 var $author$project$Tabber$current_tab = F2(
 	function (state, tabber) {
@@ -10204,6 +10727,126 @@ var $author$project$Tabber$tabpanel_id = F2(
 	function (tabber, tab) {
 		return tabber.name + ('-tabpanel-' + tab.id);
 	});
+var $author$project$Tabber$tab_button = F6(
+	function (ui, wrap_msg, state, tabber, tab, index) {
+		var selected = _Utils_eq(
+			$elm$core$Maybe$Just(tab.id),
+			A2(
+				$elm$core$Maybe$map,
+				function ($) {
+					return $.id;
+				},
+				A2($author$project$Tabber$current_tab, state, tabber)));
+		var nth_tab = function (i) {
+			return A2($elm_community$list_extra$List$Extra$getAt, i, tabber.tabs);
+		};
+		var move_to_tab = function (i) {
+			return A2(
+				$elm$core$Maybe$withDefault,
+				$elm$json$Json$Decode$fail('that tab doesn\u0027t exist'),
+				A2(
+					$elm$core$Maybe$map,
+					$elm$json$Json$Decode$succeed,
+					A2(
+						$elm$core$Maybe$map,
+						function (ntab) {
+							return A2($author$project$Tabber$SetTab, tabber.name, ntab.id);
+						},
+						nth_tab(i))));
+		};
+		var handle_keypress = A2(
+			$elm$json$Json$Decode$andThen,
+			function (key) {
+				switch (key) {
+					case 'ArrowUp':
+						return move_to_tab(index - 1);
+					case 'ArrowLeft':
+						return move_to_tab(index - 1);
+					case 'ArrowRight':
+						return move_to_tab(index + 1);
+					case 'ArrowDown':
+						return move_to_tab(index + 1);
+					case 'Home':
+						return move_to_tab(0);
+					case 'End':
+						return move_to_tab(
+							$elm$core$List$length(tabber.tabs) - 1);
+					default:
+						return $elm$json$Json$Decode$fail('unhandled key');
+				}
+			},
+			A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string));
+		return A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$type_('button'),
+					$elm$html$Html$Attributes$class('btn'),
+					$author$project$Aria$role('tab'),
+					$elm$html$Html$Attributes$id(
+					A2($author$project$Tabber$tab_id, tabber, tab)),
+					$elm$html$Html$Attributes$tabindex(
+					selected ? 0 : (-1)),
+					$author$project$Aria$selected(selected),
+					$author$project$Aria$controls(
+					A2($author$project$Tabber$tabpanel_id, tabber, tab)),
+					$elm$html$Html$Events$onClick(
+					wrap_msg(
+						A2($author$project$Tabber$SetTab, tabber.name, tab.id))),
+					A2(
+					$elm$html$Html$Events$on,
+					'keyup',
+					A2($elm$json$Json$Decode$map, wrap_msg, handle_keypress))
+				]),
+			function () {
+				var _v0 = tab.label;
+				if (_v0.$ === 'SimpleLabel') {
+					var label = _v0.a;
+					return _List_fromArray(
+						[
+							A2(
+							$elm$core$Maybe$withDefault,
+							$elm$html$Html$text(''),
+							A2($elm$core$Maybe$map, ui.icon, tab.icon)),
+							$elm$html$Html$text(label)
+						]);
+				} else {
+					var o = _v0.a;
+					return o.button_contents;
+				}
+			}());
+	});
+var $author$project$Tabber$tab_link = F3(
+	function (tabber, tab, text) {
+		return A2(
+			$elm$html$Html$a,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$href('#'),
+					$elm$html$Html$Events$onClick(
+					A2($author$project$Tabber$SetTab, tabber, tab))
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text(text)
+				]));
+	});
+var $elm$html$Html$table = _VirtualDom_node('table');
+var $elm$html$Html$tbody = _VirtualDom_node('tbody');
+var $elm$html$Html$td = _VirtualDom_node('td');
+var $elm$html$Html$th = _VirtualDom_node('th');
+var $elm$html$Html$thead = _VirtualDom_node('thead');
+var $elm$core$Debug$toString = _Debug_toString;
+var $elm$html$Html$tr = _VirtualDom_node('tr');
+var $elm$core$String$trim = _String_trim;
+var $author$project$QuestionEditor$variable_path_to_id = function (_v0) {
+	var g = _v0.a;
+	var v = _v0.b;
+	return $author$project$Util$fi(g) + ('-' + $author$project$Util$fi(v));
+};
+var $author$project$QuestionEditor$variable_tab_id = function (path) {
+	return 'variable-' + $author$project$QuestionEditor$variable_path_to_id(path);
+};
 var $author$project$Tabber$view_tablist = F5(
 	function (ui, wrap_msg, state, tabber, tabber_attrs) {
 		return A2(
@@ -10218,6 +10861,7 @@ var $author$project$Tabber$view_tablist = F5(
 				$elm$core$List$indexedMap,
 				F2(
 					function (index, tab) {
+						var tb = A5($author$project$Tabber$tab_button, ui, wrap_msg, state, tabber, tab);
 						var selected = _Utils_eq(
 							$elm$core$Maybe$Just(tab.id),
 							A2(
@@ -10226,58 +10870,19 @@ var $author$project$Tabber$view_tablist = F5(
 									return $.id;
 								},
 								A2($author$project$Tabber$current_tab, state, tabber)));
-						var nth_tab = function (i) {
-							return A2($elm_community$list_extra$List$Extra$getAt, i, tabber.tabs);
-						};
-						var move_to_tab = function (i) {
-							return A2(
-								$elm$core$Maybe$withDefault,
-								$elm$json$Json$Decode$fail('that tab doesn\u0027t exist'),
-								A2(
-									$elm$core$Maybe$map,
-									$elm$json$Json$Decode$succeed,
-									A2(
-										$elm$core$Maybe$map,
-										function (ntab) {
-											return A2($author$project$Tabber$SetTab, tabber.name, ntab.id);
-										},
-										nth_tab(i))));
-						};
-						var handle_keypress = A2(
-							$elm$json$Json$Decode$andThen,
-							function (key) {
-								switch (key) {
-									case 'ArrowUp':
-										return move_to_tab(index - 1);
-									case 'ArrowLeft':
-										return move_to_tab(index - 1);
-									case 'ArrowRight':
-										return move_to_tab(index + 1);
-									case 'ArrowDown':
-										return move_to_tab(index + 1);
-									case 'Home':
-										return move_to_tab(0);
-									case 'End':
-										return move_to_tab(
-											$elm$core$List$length(tabber.tabs) - 1);
-									default:
-										return $elm$json$Json$Decode$fail('unhandled key');
-								}
-							},
-							A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string));
 						var extra_contents = function () {
-							var _v2 = _Utils_Tuple2(selected, tab.label);
-							if (_v2.a && (_v2.b.$ === 'HtmlLabel')) {
-								var o = _v2.b.a;
+							var _v1 = _Utils_Tuple2(selected, tab.label);
+							if (_v1.a && (_v1.b.$ === 'HtmlLabel')) {
+								var o = _v1.b.a;
 								return o.extra_contents;
 							} else {
 								return _List_Nil;
 							}
 						}();
 						var extra_attributes = function () {
-							var _v1 = tab.label;
-							if (_v1.$ === 'HtmlLabel') {
-								var o = _v1.a;
+							var _v0 = tab.label;
+							if (_v0.$ === 'HtmlLabel') {
+								var o = _v0.a;
 								return o.button_attributes;
 							} else {
 								return _List_Nil;
@@ -10286,49 +10891,9 @@ var $author$project$Tabber$view_tablist = F5(
 						return A2(
 							$elm$html$Html$li,
 							extra_attributes,
-							_Utils_ap(
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$button,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$type_('button'),
-												$elm$html$Html$Attributes$class('btn'),
-												$author$project$Aria$role('tab'),
-												$elm$html$Html$Attributes$id(
-												A2($author$project$Tabber$tab_id, tabber, tab)),
-												$elm$html$Html$Attributes$tabindex(
-												selected ? 0 : (-1)),
-												$author$project$Aria$selected(selected),
-												$author$project$Aria$controls(
-												A2($author$project$Tabber$tabpanel_id, tabber, tab)),
-												$elm$html$Html$Events$onClick(
-												wrap_msg(
-													A2($author$project$Tabber$SetTab, tabber.name, tab.id))),
-												A2(
-												$elm$html$Html$Events$on,
-												'keyup',
-												A2($elm$json$Json$Decode$map, wrap_msg, handle_keypress))
-											]),
-										function () {
-											var _v0 = tab.label;
-											if (_v0.$ === 'SimpleLabel') {
-												var label = _v0.a;
-												return _List_fromArray(
-													[
-														A2(
-														$elm$core$Maybe$withDefault,
-														$elm$html$Html$text(''),
-														A2($elm$core$Maybe$map, ui.icon, tab.icon)),
-														$elm$html$Html$text(label)
-													]);
-											} else {
-												var o = _v0.a;
-												return o.button_contents;
-											}
-										}())
-									]),
+							A2(
+								$elm$core$List$cons,
+								tb(index),
 								extra_contents));
 					}),
 				tabber.tabs));
@@ -10363,11 +10928,235 @@ var $author$project$Ui$visibleIf = F2(
 	});
 var $author$project$QuestionEditor$view_active = function (model) {
 	var ui = model.ui;
+	var variable_tab = F2(
+		function (path, variable) {
+			var vset = A2(
+				$elm$core$Basics$composeR,
+				$author$project$QuestionEditor$ChangeVariableSetting,
+				A2(
+					$elm$core$Basics$composeR,
+					$author$project$QuestionEditor$UpdateVariable(path),
+					$author$project$QuestionEditor$UpdateQuestion));
+			var vfield = function (k) {
+				return A2($author$project$Settings$atField, k, variable.settings);
+			};
+			var vstring = A2($elm$core$Basics$composeR, vfield, $author$project$Settings$getters.string);
+			var vfloat = A2(
+				$elm$core$Basics$composeR,
+				vstring,
+				A2(
+					$elm$core$Basics$composeR,
+					$elm$core$String$toFloat,
+					$elm$core$Maybe$withDefault(0)));
+			var vbool = A2($elm$core$Basics$composeR, vfield, $author$project$Settings$getters.bool);
+			var tset = A2(
+				$elm$core$Basics$composeR,
+				$author$project$QuestionEditor$ChangeVariableTemplateSetting,
+				A2(
+					$elm$core$Basics$composeR,
+					$author$project$QuestionEditor$UpdateVariable(path),
+					$author$project$QuestionEditor$UpdateQuestion));
+			var rvalue = A2(
+				$elm$json$Json$Decode$decodeValue,
+				A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$value),
+				variable.computed.value);
+			var type_ = A2(
+				$elm$core$Result$withDefault,
+				'unknown type',
+				A2(
+					$elm$core$Result$andThen,
+					$elm$json$Json$Decode$decodeValue(
+						A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string)),
+					rvalue));
+			var prefix_id = function (s) {
+				return 'variable-' + ($author$project$QuestionEditor$variable_path_to_id(path) + ('-' + s));
+			};
+			var variable_field = function (o) {
+				return A2(
+					$author$project$QuestionEditor$labelled_field,
+					ui,
+					{
+						help: o.help,
+						id: prefix_id(o.id),
+						label: o.label,
+						setter: vset,
+						settings: vfield(o.id)
+					});
+			};
+			var cfield = function (k) {
+				return A2($author$project$Settings$atField, k, variable.computed);
+			};
+			var template_field = function (o) {
+				return A2(
+					$author$project$QuestionEditor$labelled_field,
+					ui,
+					{
+						help: o.help,
+						id: prefix_id('-template-' + o.id),
+						label: o.label,
+						setter: tset,
+						settings: cfield(o.id)
+					});
+			};
+			var jme_template = {
+				id: 'anything',
+				label: 'JME code',
+				view: $elm$core$List$concat(
+					_List_fromArray(
+						[
+							A2(
+							template_field,
+							{help: $elm$core$Maybe$Nothing, id: 'code', label: 'Definition'},
+							$author$project$QuestionEditor$code_property)
+						]))
+			};
+			var builtin_templateTypes = A2($elm$core$List$cons, jme_template, _List_Nil);
+			var templateTypes = builtin_templateTypes;
+			var templateType = A2(
+				$elm$core$Maybe$withDefault,
+				jme_template,
+				A2(
+					$elm_community$list_extra$List$Extra$find,
+					A2(
+						$elm$core$Basics$composeR,
+						function ($) {
+							return $.id;
+						},
+						$elm$core$Basics$eq(
+							vstring('templateType'))),
+					templateTypes));
+			var vview = {
+				attributes: _List_Nil,
+				contents: _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$fieldset,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('vertical')
+							]),
+						$elm$core$List$concat(
+							_List_fromArray(
+								[
+									A2(
+									variable_field,
+									{help: $elm$core$Maybe$Nothing, id: 'name', label: 'Name'},
+									$author$project$QuestionEditor$text_property),
+									A2(
+									variable_field,
+									{
+										help: $elm$core$Maybe$Just('data type'),
+										id: 'templateType',
+										label: 'Data type'
+									},
+									$author$project$QuestionEditor$select_property(
+										A2(
+											$elm$core$List$map,
+											function (t) {
+												return _Utils_Tuple2(t.id, t.label);
+											},
+											templateTypes))),
+									templateType.view,
+									A2(
+									variable_field,
+									{help: $elm$core$Maybe$Nothing, id: 'description', label: 'Description'},
+									$author$project$QuestionEditor$content_property),
+									A2(
+									variable_field,
+									{
+										help: $elm$core$Maybe$Just('exams overriding variable values'),
+										id: 'can_override',
+										label: 'Can an exam override the value of this variable?'
+									},
+									$author$project$QuestionEditor$boolean_property),
+									function () {
+									if (rvalue.$ === 'Ok') {
+										var value = rvalue.a;
+										return _List_fromArray(
+											[
+												A2(
+												$elm$html$Html$section,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('generated-value')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$h3,
+														_List_Nil,
+														_List_fromArray(
+															[
+																$elm$html$Html$text('Generated value'),
+																A2(
+																$elm$html$Html$small,
+																_List_Nil,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text(type_)
+																	]))
+															])),
+														$author$project$Ui$jme_value(
+														{abbreviate: false, value: value})
+													]))
+											]);
+									} else {
+										return _List_Nil;
+									}
+								}(),
+									_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$h4,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Settings')
+											])),
+										A2(
+										$elm$html$Html$pre,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text(
+												A2($elm$json$Json$Encode$encode, 4, variable.settings.value))
+											])),
+										A2(
+										$elm$html$Html$h4,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Computed')
+											])),
+										A2(
+										$elm$html$Html$pre,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text(
+												$elm$core$Debug$toString(
+													A2(
+														$elm$json$Json$Decode$decodeValue,
+														$elm$json$Json$Decode$dict($elm$json$Json$Decode$value),
+														variable.computed.value)))
+											]))
+									])
+								])))
+					])
+			};
+			return {
+				icon: $elm$core$Maybe$Nothing,
+				id: $author$project$QuestionEditor$variable_tab_id(path),
+				label: $author$project$Tabber$SimpleLabel(
+					vstring('name')),
+				view: vview
+			};
+		});
 	var view_tablist = A3($author$project$Tabber$view_tablist, ui, $author$project$QuestionEditor$UpdateTab, model.tab_state);
 	var view_tabpanel = A2($author$project$Tabber$view_tabpanel, ui, model.tab_state);
 	var saving_class = function () {
-		var _v25 = model.saving;
-		switch (_v25.$) {
+		var _v32 = model.saving;
+		switch (_v32.$) {
 			case 'Saved':
 				return 'saved';
 			case 'Changed':
@@ -10450,9 +11239,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 					$elm$json$Json$Decode$dict(
 						A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string)))),
 			model.numbas));
-	var part_tab = function (_v23) {
-		var path = _v23.a;
-		var part = _v23.b;
+	var part_tab = function (_v30) {
+		var path = _v30.a;
+		var part = _v30.b;
 		var testing_tab = {
 			icon: $elm$core$Maybe$Just('check'),
 			id: 'testing',
@@ -10699,9 +11488,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 			var extendBaseMarkingAlgorithm = pbool('extendBaseMarkingAlgorithm');
 			var note_tabs = A2(
 				$elm$core$List$map,
-				function (_v22) {
-					var i = _v22.a;
-					var note = _v22.b;
+				function (_v29) {
+					var i = _v29.a;
+					var note = _v29.b;
 					var nset = A2(
 						$elm$core$Basics$composeR,
 						$author$project$QuestionEditor$ChangeMarkingAlgorithmNote(i),
@@ -10777,8 +11566,8 @@ var $author$project$QuestionEditor$view_active = function (model) {
 				},
 				A2(
 					$elm$core$List$filter,
-					function (_v21) {
-						var note = _v21.b;
+					function (_v28) {
+						var note = _v28.b;
 						return note.changed || extendBaseMarkingAlgorithm;
 					},
 					A2($elm$core$List$indexedMap, $elm$core$Tuple$pair, notes)));
@@ -10881,7 +11670,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 				ui,
 				{help: eo.help, id: eo.id, label: eo.label, setter: pset, settings: part.settings},
 				F2(
-					function (_v20, o) {
+					function (_v27, o) {
 						return _List_fromArray(
 							[
 								A2(
@@ -11087,8 +11876,8 @@ var $author$project$QuestionEditor$view_active = function (model) {
 										_List_fromArray(
 											[
 												function () {
-												var _v18 = part.type_.name;
-												if (_v18 === 'm_n_2') {
+												var _v25 = part.type_.name;
+												if (_v25 === 'm_n_2') {
 													return _Utils_ap(
 														A2(
 															part_field,
@@ -11332,8 +12121,8 @@ var $author$project$QuestionEditor$view_active = function (model) {
 			view: {
 				attributes: _List_Nil,
 				contents: function () {
-					var _v13 = part.type_.name;
-					switch (_v13) {
+					var _v20 = part.type_.name;
+					switch (_v20) {
 						case 'jme':
 							return _List_fromArray(
 								[
@@ -11500,7 +12289,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 													label: 'Display answer'
 												},
 												F2(
-													function (_v14, o) {
+													function (_v21, o) {
 														return $elm$core$List$concat(
 															_List_fromArray(
 																[
@@ -11870,7 +12659,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 													settings: part.settings
 												},
 												F2(
-													function (_v16, o) {
+													function (_v23, o) {
 														return _List_fromArray(
 															[
 																A2(
@@ -12474,8 +13263,8 @@ var $author$project$QuestionEditor$view_active = function (model) {
 			}
 		};
 		var type_tabs = function () {
-			var _v5 = part.type_.name;
-			switch (_v5) {
+			var _v12 = part.type_.name;
+			switch (_v12) {
 				case 'jme':
 					var notation = pstring('notation');
 					var notation_name = A2(
@@ -12559,7 +13348,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 															part.settings)
 													},
 													F2(
-														function (_v6, o) {
+														function (_v13, o) {
 															return $elm$core$List$concat(
 																_List_fromArray(
 																	[
@@ -12868,9 +13657,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 														cfield('findvars'));
 													return A2(
 														$elm$core$List$concatMap,
-														function (_v7) {
-															var name = _v7.a;
-															var minferredType = _v7.b;
+														function (_v14) {
+															var name = _v14.a;
+															var minferredType = _v14.b;
 															return $elm$core$List$concat(
 																_List_fromArray(
 																	[
@@ -12893,7 +13682,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 																				part.settings)
 																		},
 																		F2(
-																			function (_v8, o) {
+																			function (_v15, o) {
 																				return _Utils_ap(
 																					A2($author$project$QuestionEditor$text_property, ui, o),
 																					function () {
@@ -13274,7 +14063,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 															A2(
 															$elm$core$List$indexedMap,
 															F2(
-																function (i, _v10) {
+																function (i, _v17) {
 																	return A2(
 																		$elm$html$Html$fieldset,
 																		_List_fromArray(
@@ -13423,7 +14212,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 																settings: part.settings
 															},
 															F2(
-																function (_v11, o) {
+																function (_v18, o) {
 																	return _List_fromArray(
 																		[
 																			A2(
@@ -13561,7 +14350,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 																								A2(
 																								$elm$core$List$indexedMap,
 																								F2(
-																									function (j, _v12) {
+																									function (j, _v19) {
 																										return A2(
 																											$elm$html$Html$td,
 																											_List_Nil,
@@ -13768,7 +14557,268 @@ var $author$project$QuestionEditor$view_active = function (model) {
 			view: pview
 		};
 	};
+	var nested_count = function (list) {
+		return A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v8, _v9) {
+					var a = _v8.a;
+					var bs = _v8.b;
+					var n = _v9.a;
+					var oas = _v9.b;
+					var _v10 = A3(
+						$elm$core$List$foldl,
+						F2(
+							function (b, _v11) {
+								var nb = _v11.a;
+								var obs = _v11.b;
+								return _Utils_Tuple2(
+									nb + 1,
+									_Utils_ap(
+										obs,
+										_List_fromArray(
+											[
+												_Utils_Tuple2(nb, b)
+											])));
+							}),
+						_Utils_Tuple2(n, _List_Nil),
+						bs);
+					var nn = _v10.a;
+					var nbs = _v10.b;
+					return _Utils_Tuple2(
+						nn,
+						_Utils_ap(
+							oas,
+							_List_fromArray(
+								[
+									_Utils_Tuple2(a, nbs)
+								])));
+				}),
+			_Utils_Tuple2(0, _List_Nil),
+			list).b;
+	};
 	var icon = ui.icon;
+	var grouped_variable_tabs = function () {
+		var groups_with_tabs = A2(
+			$elm$core$List$indexedMap,
+			F2(
+				function (gi, group) {
+					return _Utils_Tuple2(
+						group,
+						A2(
+							$elm$core$List$indexedMap,
+							F2(
+								function (vi, variable) {
+									return _Utils_Tuple2(
+										variable,
+										A2(
+											variable_tab,
+											_Utils_Tuple2(gi, vi),
+											variable));
+								}),
+							group.variables));
+				}),
+			question.variable_groups);
+		return nested_count(groups_with_tabs);
+	}();
+	var variables_tabber = {
+		allow_empty: true,
+		name: 'variables',
+		tabs: A2(
+			$elm$core$List$map,
+			A2($elm$core$Basics$composeR, $elm$core$Tuple$second, $elm$core$Tuple$second),
+			$elm$core$List$concat(
+				A2($elm$core$List$map, $elm$core$Tuple$second, grouped_variable_tabs)))
+	};
+	var variables_tab = {
+		attributes: _List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('tabbed-sidebar')
+			]),
+		contents: _List_fromArray(
+			[
+				A2(
+				$elm$html$Html$nav,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$h2,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Variables')
+							])),
+						A2(
+						$elm$html$Html$menu,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('list-unstyled')
+							]),
+						$elm$core$List$concat(
+							_List_fromArray(
+								[
+									A2(
+									$elm$core$List$indexedMap,
+									F2(
+										function (gi, _v5) {
+											var group = _v5.a;
+											var variable_tabs = _v5.b;
+											return A2(
+												$elm$html$Html$li,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('variable-group')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$header,
+														_List_Nil,
+														_List_fromArray(
+															[
+																A2(
+																$elm$html$Html$h3,
+																_List_Nil,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text(group.name)
+																	]))
+															])),
+														A2(
+														$elm$html$Html$table,
+														_List_Nil,
+														_List_fromArray(
+															[
+																A2(
+																$elm$html$Html$thead,
+																_List_Nil,
+																_List_fromArray(
+																	[
+																		A2(
+																		$elm$html$Html$tr,
+																		_List_Nil,
+																		_List_fromArray(
+																			[
+																				A2(
+																				$elm$html$Html$th,
+																				_List_Nil,
+																				_List_fromArray(
+																					[
+																						$elm$html$Html$text('Name')
+																					])),
+																				A2(
+																				$elm$html$Html$th,
+																				_List_Nil,
+																				_List_fromArray(
+																					[
+																						$elm$html$Html$text('Type')
+																					])),
+																				A2(
+																				$elm$html$Html$th,
+																				_List_Nil,
+																				_List_fromArray(
+																					[
+																						$elm$html$Html$text('Generated Value')
+																					]))
+																			]))
+																	])),
+																A2(
+																$elm$html$Html$tbody,
+																_List_Nil,
+																A2(
+																	$elm$core$List$indexedMap,
+																	F2(
+																		function (vi, _v6) {
+																			var tab_index = _v6.a;
+																			var _v7 = _v6.b;
+																			var variable = _v7.a;
+																			var vtab = _v7.b;
+																			var vfield = function (k) {
+																				return A2($author$project$Settings$atField, k, variable.settings);
+																			};
+																			var cfield = function (k) {
+																				return A2($author$project$Settings$atField, k, variable.computed);
+																			};
+																			return A2(
+																				$elm$html$Html$tr,
+																				_List_Nil,
+																				_List_fromArray(
+																					[
+																						A2(
+																						$elm$html$Html$td,
+																						_List_Nil,
+																						_List_fromArray(
+																							[
+																								A6($author$project$Tabber$tab_button, ui, $author$project$QuestionEditor$UpdateTab, model.tab_state, variables_tabber, vtab, tab_index)
+																							])),
+																						A2(
+																						$elm$html$Html$td,
+																						_List_Nil,
+																						_List_fromArray(
+																							[
+																								$elm$html$Html$text(
+																								$author$project$Settings$getters.string(
+																									cfield('type')))
+																							])),
+																						A2(
+																						$elm$html$Html$td,
+																						_List_Nil,
+																						_List_fromArray(
+																							[
+																								$elm$html$Html$text(
+																								$author$project$Settings$getters.string(
+																									cfield('valueString')))
+																							]))
+																					]));
+																		}),
+																	variable_tabs))
+															])),
+														A2(
+														$elm$html$Html$button,
+														_List_fromArray(
+															[
+																$elm$html$Html$Events$onClick(
+																$author$project$QuestionEditor$UpdateQuestion(
+																	$author$project$QuestionEditor$AddVariable(gi))),
+																$elm$html$Html$Attributes$class('btn')
+															]),
+														_List_fromArray(
+															[
+																ui.icon('add'),
+																$elm$html$Html$text(
+																_Utils_eq(group.variables, _List_Nil) ? 'Add a variable' : 'Add another variable')
+															]))
+													]));
+										}),
+									grouped_variable_tabs),
+									_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$button,
+										_List_fromArray(
+											[
+												$elm$html$Html$Events$onClick(
+												$author$project$QuestionEditor$UpdateQuestion($author$project$QuestionEditor$RegenerateVariables)),
+												$elm$html$Html$Attributes$class('btn primary')
+											]),
+										_List_fromArray(
+											[
+												ui.icon('regenerate'),
+												$elm$html$Html$text('Regenerate values')
+											]))
+									])
+								])))
+					])),
+				view_tabpanel(variables_tabber)
+			])
+	};
+	var all_variables = A2(
+		$elm$core$List$concatMap,
+		function ($) {
+			return $.variables;
+		},
+		question.variable_groups);
 	var all_parts = $author$project$QuestionEditor$unwrap_part_container(question.parts);
 	var _v0 = model.adding_part;
 	var add_part_path = _v0.a;
@@ -13921,6 +14971,12 @@ var $author$project$QuestionEditor$view_active = function (model) {
 				id: 'statement',
 				label: $author$project$Tabber$SimpleLabel('Statement'),
 				view: statement_tab
+			},
+				{
+				icon: $elm$core$Maybe$Just('list'),
+				id: 'variables',
+				label: $author$project$Tabber$SimpleLabel('Variables'),
+				view: variables_tab
 			},
 				{
 				icon: $elm$core$Maybe$Just('correct'),

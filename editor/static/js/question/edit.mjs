@@ -88,7 +88,7 @@ const flags = {
     default_settings,
     docs_mapping,
 };
-console.log(flags);
+//console.log(flags);
 
 const app = Elm.QuestionEditor.init({
     node: document.querySelector('main'), 
@@ -98,6 +98,67 @@ const app = Elm.QuestionEditor.init({
 app.ports.save_tab_state.subscribe(state => {
     history_state.save('tabs', state);
 });
+
+let variable_generation_run_number = 0;
+async function computeVariables(prep) {
+    const result = {variables: {}, conditionSatisfied: true};
+    
+    const scope = new jme.Scope([prep.scope]);
+
+    const {todo, condition} = prep;
+
+    const random_int_string = () => new Numbas.jme.types.TString(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)+'');
+    Object.entries({
+        'initial_seed': random_int_string,
+        'student_id': random_int_string,
+        'variable_generation_run_number': () => new Numbas.jme.types.TString((variable_generation_run_number++).toString()),
+    }).forEach(([name, value_generator]) => {
+        scope.setVariable(name, value_generator());
+    });
+
+    const errors = [];
+
+    async function computeVariable(name,todo,scope,path,computeFn) {
+        scope.editor_evaluation_warnings = [];
+        let value;
+        try {
+            value = await jme.variables.computeVariablePromise.apply(jme.variables, arguments);
+        }
+        catch(e) {
+            name = todo[name]?.originalName || name;
+            if(!result.variables[name]) {
+                result.variables[name] = {error: e.message};
+            }
+            result.error = true;
+            errors.push(e);
+        }
+        if(scope.editor_evaluation_warnings.length) {
+            if(!result.variables[name]) {
+                result.variables[name] = {};
+            }
+            result.variables[name].warnings = scope.editor_evaluation_warnings;
+        }
+        return value;
+    }
+
+    try {
+        const vresult = await Numbas.jme.variables.makeVariablesPromise(todo, scope, condition, computeVariable);
+        result.conditionSatisfied = vresult.conditionSatisfied;
+        Object.entries(vresult.variables).forEach(([name,value]) => {
+            result.variables[name] = result.variables[name] || {};
+            if(value) {
+                result.variables[name].value = value;
+            }
+        });
+    } catch(err) {
+        const e = errors[0] || err;
+        console.error(e);
+        result.conditionError = e.message;
+        result.conditionSatisfied = false;
+    }
+
+    return result;
+}
 
 const ask_numbas_handlers = {
     is_equation({expression, notation}) { // -> boolean
@@ -138,17 +199,47 @@ const ask_numbas_handlers = {
             return [];
         }
         return jme.rules.findCapturedNames(expr);
+    },
+    parse_templateType({definition}) {
+        return {
+            type: 'anything',
+            template: {
+                code: definition
+            }
+        };
+    },
+    async generateVariables({question}) {
+        const scope_variable_names = Object.keys(question.variables);
+
+        const scope = new jme.Scope([jme.builtinScope]); // TODO extensions etc.
+
+        const todo = Object.fromEntries(Object.values(question.variables).map(v => {
+            const tree = jme.compile(v.definition);
+            const vars = jme.findvars(tree, scope_variable_names, scope);
+
+            return [v.name, {tree, vars}];
+        }));
+
+        const condition = null; // TODO
+
+        const prep = {scope, todo, condition};
+
+        const result = await computeVariables(prep);
+
+        console.log(result);
+
+        return result;
     }
 };
 
 
-app.ports.ask_numbas.subscribe(({command, key, param}) => {
+app.ports.ask_numbas.subscribe(async ({command, key, param}) => {
     const handler = ask_numbas_handlers[command];
 
     if(!handler) {
         console.error(`No ask_numbas handler for ${command}`);
     }
 
-    const result = handler(param);
+    const result = await handler(param);
     app.ports.answer_numbas.send({command, key, result});
 });

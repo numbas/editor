@@ -760,7 +760,19 @@
                             "templateType": {
                                 "title": "Data type template",
                                 "type": "string",
-                                "default": "anything"
+                                "default": "anything",
+                                "enum": [
+                                    "anything",
+                                    "number",
+                                    "range",
+                                    "randrange",
+                                    "string",
+                                    "long plain string",
+                                    "long string",
+                                    "list of numbers",
+                                    "list of strings",
+                                    "json"
+                                ]
                             }
                         }
                     }

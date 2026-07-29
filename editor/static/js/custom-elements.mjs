@@ -235,7 +235,6 @@ export class JMEValueElement extends HTMLElement {
     }
 
     set value(value) {
-        console.log('???');
         this._value = value;
         this.display();
     }

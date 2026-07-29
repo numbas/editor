@@ -189,6 +189,7 @@ type QuestionMsg
     | AddPart PartPath ChildPart Part
     | DeletePart PartPath
     | AddVariable Int
+    | DeleteVariable VariablePath
     | UpdateVariable VariablePath VariableMsg
     | RegenerateVariables
     | ChangeQuestionComputed String JE.Value
@@ -202,6 +203,7 @@ type VariableMsg
     = ChangeVariableSetting (JE.Value, S.Address)
     | ChangeVariableTemplateSetting (JE.Value, S.Address)
     | ChangeVariableComputed String JE.Value
+    | PrettyPrintJSON
 
 type MarkingAlgorithmMsg
     = ChangeMarkingAlgorithmNote Int (JE.Value, S.Address)
@@ -232,6 +234,9 @@ ask_numbas_about_variable (gi,vi) command param = do_ask_numbas
     }
 
 nocmd model = (model, Cmd.none)
+
+set_tab : String -> String -> Cmd Msg
+set_tab tabber_id tab_id = Tabber.set_tab tabber_id tab_id |> Task.perform UpdateTab
 
 numbas_version = "finer_feedback_settings"
 
@@ -435,6 +440,9 @@ delete_part_at : PartPath -> PartContainer -> PartContainer
 delete_part_at path pc = case List.reverse path of
     [] -> pc
     (kind, i)::rest -> update_part_container (List.reverse rest) (delete_part kind i) pc
+
+delete_variable_at : VariablePath -> List VariableGroup -> List VariableGroup
+delete_variable_at (gi, vi) = LE.updateAt gi (\g -> { g | variables = LE.removeAt vi g.variables })
 
 pullout : (a -> (a, x)) -> (b -> a) -> (a -> b -> b) -> b -> (b, x)
 pullout fn get set container =
@@ -942,7 +950,7 @@ compute_all model =
                 in
                     ask_numbas_about_variable path "parse_templateType" <|
                         JE.object
-                            [ ("definition", JE.string definition)
+                            [ ("variable", variable.settings.value)
                             ]
                )
 
@@ -965,6 +973,8 @@ update_active msg model = case msg of
                 Nothing -> History.no_change
                 Just True -> History.big_change 
                 Just False -> History.small_change
+
+            q = if mchange == Nothing then msg else Debug.log "change" msg
             cmd = Maybe.withDefault Cmd.none mcmd
             history = change nq model.history
         in
@@ -1032,7 +1042,7 @@ update_question msg question = case msg of
             npath = parent_path++[(kind, index)]
             tab_id = part_tab_id npath
         in
-            ({ question | parts = add_part_at parent_path kind part question.parts }, (Just True, Tabber.set_tab "parts" tab_id |> Task.perform UpdateTab |> Just))
+            ({ question | parts = add_part_at parent_path kind part question.parts }, (Just True, set_tab "parts" tab_id |> Just))
 
     UpdatePart path pmsg -> 
         let
@@ -1040,15 +1050,26 @@ update_question msg question = case msg of
         in
             ({ question | parts = parts }, mcmd)
 
-    DeletePart path -> ({ question | parts = delete_part_at path question.parts }, (Just True, Just Cmd.none))
+    DeletePart path -> ({ question | parts = delete_part_at path question.parts }, (Just True, Nothing))
 
     AddVariable gi -> 
         let
             ngroups =
                 question.variable_groups
                 |> LE.updateAt gi (\g -> { g | variables = g.variables ++ [blank_variable] })
+
+            vi = 
+                question.variable_groups
+                |> LE.getAt gi
+                |> Maybe.map (.variables >> List.length)
+                |> Maybe.withDefault 0
+
+            tab_id = variable_tab_id (gi, vi)
+
         in
-            ({ question | variable_groups = ngroups }, (Just True, Just Cmd.none))
+            ({ question | variable_groups = ngroups }, (Just True, set_tab "variables" tab_id |> Just))
+
+    DeleteVariable path ->({ question | variable_groups = delete_variable_at path question.variable_groups }, (Just True, Nothing))
 
     UpdateVariable path vmsg ->
         let
@@ -1069,8 +1090,6 @@ update_question msg question = case msg of
     ChangeQuestionComputed command value -> case command of
         "generateVariables" ->
             let
-                q = Debug.log "got" <| value
-
                 result = 
                     value
                     |> JD.decodeValue
@@ -1135,11 +1154,9 @@ update_marking_algorithm msg path part =
 
             AddMarkingAlgorithmNote ->
                 let
-                    set_tab = 
-                        SetTab (path_string++"-marking-algorithm-notes") (fi <| List.length marking_algorithm.notes)
-                        |> UpdateTab
+                    cmd = set_tab (path_string++"-marking-algorithm-notes") (fi <| List.length marking_algorithm.notes)
                 in
-                    ({ marking_algorithm | notes = marking_algorithm.notes ++ [blank_note] }, (Just False, Just (Task.perform identity (Task.succeed set_tab))))
+                    ({ marking_algorithm | notes = marking_algorithm.notes ++ [blank_note] }, (Just False, Just cmd))
 
             DeleteMarkingAlgorithmNote i -> ({ marking_algorithm | notes = LE.removeAt i marking_algorithm.notes }, (Just True, Nothing))
                 
@@ -1200,17 +1217,30 @@ part_setting_computed =
 
 variable_setting_computed : List (S.Address, VariablePath -> Variable -> JE.Value -> Maybe (Cmd Msg))
 variable_setting_computed =
-    []
+    [ -- work out template again after changing template type
+      ([S.field "templateType"], \path variable _ ->
+          Just <| ask_numbas_about_variable path "parse_templateType" <|
+            JE.object
+                [ ("variable", variable.settings.value)
+                ]
+      )
+    ]
 
 update_variable : VariableMsg -> VariablePath -> Variable -> ChangeSideEffect Variable
 update_variable msg path variable = case msg of
     ChangeVariableSetting (v, at) ->
         let
-            cmds = []
-        
             nsettings = S.setAt at v variable.settings
+
+            nvariable = { variable | settings = nsettings }
+
+            cmds = 
+                  (variable_setting_computed
+                    |> List.filterMap (\(ats, f) -> if (S.at ats S.empty).at == at then f path nvariable v else Nothing )
+                   )
+                |> List.filter ((/=) Cmd.none) 
         in
-            ({ variable | settings = nsettings }, (Just False, Just <| Cmd.batch cmds))
+            (nvariable, (Just False, Just <| Cmd.batch cmds))
 
     ChangeVariableTemplateSetting (v, at) ->
         let
@@ -1221,32 +1251,50 @@ update_variable msg path variable = case msg of
             cfield k = S.atField k ncomputed
             cstring = cfield >> S.getters.string
             cbool = cfield >> S.getters.bool
+            cvalue = cfield >> S.getters.value
             cfloat = cstring >> String.toFloat >> Maybe.withDefault 0
 
-            ndefinition = case S.getters.string (S.atField "templateType" variable.settings) of
-                "anything" -> cstring "code"
-                x -> "??? x"
-
+            cmd = ask_numbas_about_variable path "variable_template_to_definition" <|
+                JE.object
+                    [ ("template", cvalue "template")
+                    , ("templateType", S.getters.value (S.atField "templateType" variable.settings))
+                    ]
         in
-            update_variable (ChangeVariableSetting (JE.string ndefinition, [S.field "definition"])) path { variable | computed = ncomputed }
-            --({ variable | computed = ncomputed }, (Just False, Nothing))
+            ({ variable | computed = ncomputed }, (Just False, Just cmd))
 
     ChangeVariableComputed command value -> case command of
         "parse_templateType" ->
-            value
-            |> JD.decodeValue
-                (JD.succeed pair
-                    |> andMap (JD.field "type" JD.string)
-                    |> andMap (JD.field "template" (JD.dict JD.value))
-                )
-            |> (\r -> case r of
-                Ok (templateType, template) -> { variable | computed = S.merge template variable.computed }
-                Err _ -> variable
-               )
-            |> (\v -> (v, (Nothing, Nothing)))
+            ({ variable | computed = S.insert "template" value variable.computed }
+            , (Nothing, Nothing)
+            )
+
+        "variable_template_to_definition" ->
+            let
+                rdefinition = JD.decodeValue (JD.field "definition" JD.string) value
+            in
+                case rdefinition of
+                    Ok definition ->
+                        ( { variable | settings = S.insert "definition" (JE.string definition) variable.settings }, (Nothing, Nothing))
+                    Err _ ->
+                        (variable, (Nothing, Nothing))
                 
         _ -> (variable, (Nothing, Nothing))
 
+    PrettyPrintJSON ->
+        let
+            at = [S.field "template", S.field "json"]
+            json = S.getters.string (S.at at variable.computed)
+
+            pretty_json =
+                json
+                |> JD.decodeString JD.value
+                |> Result.map (JE.encode 4)
+                |> Result.withDefault json
+
+            ncomputed = S.setAt at (JE.string pretty_json) variable.computed
+        in
+            ({ variable | computed = ncomputed }, (Nothing, Nothing))
+            
 
 labelled_field : LabelledField
 labelled_field ui o make_input =
@@ -1576,26 +1624,227 @@ view_active model =
                     { id = prefix_id <| "-template-"++o.id
                     , label = o.label
                     , help = o.help
-                    , settings = cfield o.id
+                    , settings = S.at [S.field "template", S.field o.id] variable.computed
                     , setter = tset
                     }
+
+                inline_text_field : { id : String, label : String, help : Maybe String } -> List (Html Msg)
+                inline_text_field o = 
+                    custom_text_property
+                        [ HA.attribute "aria-label" o.label ]
+                        ui
+                        { id = o.id
+                        , label = o.label
+                        , help = o.help
+                        , settings = S.at [S.field "template", S.field o.id] variable.computed
+                        , setter = tset
+                        }
+
 
                 jme_template =
                     { id = "anything"
                     , label = "JME code"
                     , view = List.concat
                         [ template_field
-                        { id = "code"
-                        , label = "Definition"
-                        , help = Nothing
-                        }
-                        code_property
+                            { id = "code"
+                            , label = "Value"
+                            , help = Nothing
+                            }
+                            code_property
+                        , [ui.labelled_helplink "jme-functions" "JME function reference"]
                         ]
                     }
 
                 builtin_templateTypes =
                     jme_template ::
-                    []
+                    [ { id = "range"
+                      , label = "Range of numbers"
+                      , view = 
+                            [ H.p [HA.class "inline-fields"] <| List.concat
+                                [ [H.text "Numbers between "]
+                                , inline_text_field
+                                    { id = "min"
+                                    , label = "Minimum"
+                                    , help = Nothing
+                                    }
+                                , [H.text " and "]
+                                , inline_text_field
+                                    { id = "max"
+                                    , label = "Maximum"
+                                    , help = Nothing
+                                    }
+                                , [H.text " (inclusive) with step size "]
+                                , inline_text_field
+                                    { id = "step"
+                                    , label = "Step size"
+                                    , help = Nothing
+                                    }
+                                ]
+                            ]
+                      }
+                    , { id = "randrange"
+                      , label = "Random number from a range"
+                      , view = 
+                            [ H.p [HA.class "inline-fields"] <| List.concat
+                                [ [H.text "A random number between "]
+                                , inline_text_field
+                                    { id = "min"
+                                    , label = "Minimum"
+                                    , help = Nothing
+                                    }
+                                , [H.text " and "]
+                                , inline_text_field
+                                    { id = "max"
+                                    , label = "Maximum"
+                                    , help = Nothing
+                                    }
+                                , [H.text " (inclusive) with step size "]
+                                , inline_text_field
+                                    { id = "step"
+                                    , label = "Step size"
+                                    , help = Nothing
+                                    }
+                                ]
+                            ]
+                      }
+                    , { id = "string"
+                      , label = "Short text string"
+                      , view = List.concat
+                        [ template_field
+                            { id = "string"
+                            , label = "Value"
+                            , help = Nothing
+                            }
+                            text_property
+                        , [ui.help_block [H.text "(text string)"]]
+                        , template_field
+                            { id = "isTemplate"
+                            , label = "Is this a template?"
+                            , help = Nothing
+                            }
+                            boolean_property
+                        ]
+                      }
+                    , { id = "long plain string"
+                      , label = "Long plain text string"
+                      , view = List.concat
+                        [ template_field
+                            { id = "string"
+                            , label = "Value"
+                            , help = Nothing
+                            }
+                            code_property
+                        , [ui.help_block [H.text "(text string)"]]
+                        , template_field
+                            { id = "isTemplate"
+                            , label = "Is this a template?"
+                            , help = Nothing
+                            }
+                            boolean_property
+                        ]
+                      }
+                    , { id = "long string"
+                      , label = "Formatted text"
+                      , view = List.concat
+                        [ template_field
+                            { id = "string"
+                            , label = "Value"
+                            , help = Nothing
+                            }
+                            content_property
+                        , [ui.help_block [H.text "(text string)"]]
+                        , template_field
+                            { id = "isTemplate"
+                            , label = "Is this a template?"
+                            , help = Nothing
+                            }
+                            boolean_property
+                        ]
+                      }
+                    , { id = "mathematical expression"
+                      , label = "Abstract mathematical expression"
+                      , view = List.concat
+                        [ template_field
+                            { id = "expression"
+                            , label = "Expression"
+                            , help = Nothing
+                            }
+                            code_property
+                        ]
+                      }
+                    , { id = "list of numbers"
+                      , label = "List of numbers"
+                      , view =
+                          let
+                              stored_values = S.get (JD.list JD.string) [] (S.at [S.field "template", S.field "values"] variable.computed)
+
+                              last_thing = stored_values |> List.reverse |> List.head |> Maybe.withDefault ""
+
+                              values = stored_values ++ (if last_thing == "" then [] else [""])
+                          in
+                            List.concat
+                                [ [H.label [] [H.text "Value"]]
+                                , values |> List.indexedMap (\i v ->
+                                    custom_text_property
+                                        [ HA.attribute "aria-label" <| "Number "++(fi i) ]
+                                        ui
+                                        { id = "value-"++(fi i)
+                                        , label = "Number "++(fi i)
+                                        , help = Nothing
+                                        , settings = S.at [S.field "template", S.field "values", S.index i] variable.computed
+                                        , setter = tset
+                                        }
+                                  )
+                                  |> List.concat
+                                ] 
+                        }
+                    , { id = "list of strings"
+                      , label = "List of short text strings"
+                      , view =
+                          let
+                              stored_values = 
+                                  S.get (JD.list JD.string) [] (S.at [S.field "template", S.field "values"] variable.computed)
+                                  |> List.reverse
+                                  |> LE.dropWhile ((==) "")
+                                  |> List.reverse
+
+                              values = stored_values ++ [""]
+                          in
+                            List.concat
+                                [ [H.label [] [H.text "Value"]]
+                                , values |> List.indexedMap (\i v ->
+                                    custom_text_property
+                                        [ HA.attribute "aria-label" <| "Number "++(fi i) ]
+                                        ui
+                                        { id = "value-"++(fi i)
+                                        , label = "Number "++(fi i)
+                                        , help = Nothing
+                                        , settings = S.at [S.field "template", S.field "values", S.index i] variable.computed
+                                        , setter = tset
+                                        }
+                                  )
+                                  |> List.concat
+                                ] 
+                        }
+                    , { id = "json"
+                      , label = "JSON data"
+                      , view = List.concat
+                            [ template_field
+                                { id = "json"
+                                , label = "Value"
+                                , help = Nothing
+                                }
+                                code_property
+                            , [ H.button
+                                [ HA.type_ "button"
+                                , HA.class "btn"
+                                , HE.onClick <| UpdateQuestion <| UpdateVariable path <| PrettyPrintJSON
+                                ]
+                                [ H.text "Clean up formatting" ]
+                              ]
+                            ]
+                      }
+                    ]
                     
 
                 templateTypes = builtin_templateTypes
@@ -1611,7 +1860,16 @@ view_active model =
                 vview =
                     { contents =
                         [ H.fieldset [ HA.class "vertical" ] <| List.concat
-                            [ variable_field
+                            [ [ H.button
+                                [ HA.type_ "button"
+                                , HA.class "btn danger"
+                                , HE.onClick <| UpdateQuestion <| DeleteVariable path
+                                ]
+                                [ ui.icon "remove"
+                                , H.text "Delete this variable"
+                                ]
+                              ]
+                            , variable_field
                                 { id = "name"
                                 , label = "Name"
                                 , help = Nothing
@@ -1652,7 +1910,7 @@ view_active model =
                             , [H.h4 [] [H.text "Settings"]
                               , H.pre [] [H.text <| JE.encode 4 variable.settings.value]
                               , H.h4 [] [H.text "Computed"]
-                              , H.pre [] [H.text <| Debug.toString <| JD.decodeValue (JD.dict JD.value) variable.computed.value]
+                              , H.pre [] [H.text <| Debug.toString <| Result.map (Dict.map (\_ v -> JE.encode 0 v)) <| JD.decodeValue (JD.field "template" <| JD.dict JD.value) variable.computed.value]
                               ]
                             ]
                         ]
@@ -1724,14 +1982,20 @@ view_active model =
                                         let
                                             vfield k = S.atField k variable.settings
                                             cfield k = S.atField k variable.computed
+
+                                            path = (gi, vi)
+
+                                            value = S.getters.value <| cfield "value"
+
+                                            type_ = S.getters.string <| S.at [S.field "value", S.field "type"] variable.computed
                                         in
                                             H.tr
-                                                []
+                                                [ HE.onClick <| UpdateTab <| Tabber.SetTab "variables" <| variable_tab_id path ]
                                                 [ H.td [] 
                                                     [ tab_button ui UpdateTab model.tab_state variables_tabber vtab tab_index
                                                     ]
-                                                , H.td [] [H.text <| S.getters.string <| cfield "type"]
-                                                , H.td [] [H.text <| S.getters.string <| cfield "valueString"]
+                                                , H.td [HA.class "monospace"] [H.text <| type_]
+                                                , H.td [] [Ui.jme_value { value = value, abbreviate = True }]
                                                 ]
                                       ))
                                     ]

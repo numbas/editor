@@ -17,6 +17,7 @@ import Json.Encode as JE
 type alias Ui msg =
     { icon : String -> Html msg
     , helplink : String -> String -> Html msg
+    , labelled_helplink : String -> String -> Html msg
     , dropdown : String -> List (Html msg) -> List (Html msg) -> List (Html msg)
     , help_block : List (Html msg) -> Html msg
     , inline_help_block : List (Html msg) -> Html msg
@@ -46,9 +47,9 @@ ui config =
             An icon link to the documentation.
         -}
 
-        helplink term subject =
+        helplink labelled term subject =
             let
-                hint = "Help with " ++ subject
+                hint = if labelled then subject else "Help with " ++ subject
             in
                 case Dict.get (String.toLower term) config.docs_mapping of
                     Just term_url -> 
@@ -59,8 +60,15 @@ ui config =
                             , Aria.label <| hint
                             , HA.title hint
                             ]
-                            [ icon "help"
-                            ]
+                            ( if labelled then
+                                [ H.text hint 
+                                , H.text " "
+                                , icon "help"
+                                ]
+                              else
+                                [ icon "help"
+                                ]
+                            )
                     Nothing ->
                         H.span [ HA.class "warning" ] [H.text <| "Unknown docs term: "++term]
 
@@ -86,7 +94,8 @@ ui config =
         alert kind content = H.div [HA.class <| "alert "++kind] content
     in
         { icon = icon
-        , helplink = helplink
+        , helplink = helplink False
+        , labelled_helplink = helplink True
         , dropdown = dropdown
         , help_block = help_block
         , inline_help_block = inline_help_block

@@ -107,11 +107,11 @@ async function computeVariables(prep) {
 
     const {todo, condition} = prep;
 
-    const random_int_string = () => new Numbas.jme.types.TString(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)+'');
+    const random_int_string = () => new jme.types.TString(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)+'');
     Object.entries({
         'initial_seed': random_int_string,
         'student_id': random_int_string,
-        'variable_generation_run_number': () => new Numbas.jme.types.TString((variable_generation_run_number++).toString()),
+        'variable_generation_run_number': () => new jme.types.TString((variable_generation_run_number++).toString()),
     }).forEach(([name, value_generator]) => {
         scope.setVariable(name, value_generator());
     });
@@ -142,7 +142,7 @@ async function computeVariables(prep) {
     }
 
     try {
-        const vresult = await Numbas.jme.variables.makeVariablesPromise(todo, scope, condition, computeVariable);
+        const vresult = await jme.variables.makeVariablesPromise(todo, scope, condition, computeVariable);
         result.conditionSatisfied = vresult.conditionSatisfied;
         Object.entries(vresult.variables).forEach(([name,value]) => {
             result.variables[name] = result.variables[name] || {};
@@ -160,20 +160,218 @@ async function computeVariables(prep) {
     return result;
 }
 
+const {wrapValue} = jme;
+const {treeToJME} = jme.display;
+function wrapExpression(expr) {
+    return new jme.types.TExpression(jme.compile(expr));
+}
+
+const builtin_templateTypes = {
+    anything: {
+        load(definition) {
+            return {
+                code: definition
+            };
+        },
+        toJME({code}) {
+            return code;
+        }
+    },
+
+    range: {
+        load(definition) {
+            const tree = jme.compile(definition);
+            const rule = new jme.display.Rule('?;min..?;max#?;step',[]);
+            const scope = jme.builtinScope;
+            const m = rule.match(tree, scope);
+            return {
+                min: scope.evaluate(m.min).value,
+                max: scope.evaluate(m.max).value,
+                step: scope.evaluate(m.step).value,
+            };
+        },
+        toJME({min,max,step}) {
+            let tree = jme.compile('min..max#step');
+            const s = new jme.Scope([{variables: {
+                min: wrapExpression(min),
+                max: wrapExpression(max),
+                step: wrapExpression(step)
+            }}]);
+            tree = jme.substituteTree(tree, s);
+            return treeToJME(tree);
+        }
+    },
+    randrange: {
+        load(definition) {
+            const tree = jme.compile(definition);
+            const rule = new jme.display.Rule('random(?;min..?;max#?;step)',[]);
+            const scope = jme.builtinScope;
+            const m = rule.match(tree, scope);
+            return {
+                min: scope.evaluate(m.min).value,
+                max: scope.evaluate(m.max).value,
+                step: scope.evaluate(m.step).value,
+            };
+        },
+        toJME({min,max,step}) {
+            let tree = jme.compile('random(min..max#step)');
+            const s = new jme.Scope([{variables: {
+                min: wrapExpression(min),
+                max: wrapExpression(max),
+                step: wrapExpression(step)
+            }}]);
+            tree = jme.substituteTree(tree, s);
+            return treeToJME(tree);
+        }
+    },
+    string: {
+        load(definition) {
+            var tree = jme.compile(definition);
+            let isTemplate = false;
+            while(jme.isFunction(tree.tok,'safe')) {
+                isTemplate = true;
+                tree = tree.args[0];
+            }
+            return {
+                string: tree.tok.value,
+                isTemplate
+            };
+        },
+        toJME({string, isTemplate}) {
+            var tok = wrapValue(string);
+            tok.safe = isTemplate;
+            var s = treeToJME({tok: tok});
+            return s;
+        }
+    },
+    'long plain string': {
+        load(definition) {
+            var tree = jme.compile(definition);
+            let isTemplate = false;
+            while(jme.isFunction(tree.tok,'safe')) {
+                isTemplate = true;
+                tree = tree.args[0];
+            }
+            return {
+                string: tree.tok.value,
+                isTemplate
+            };
+        },
+        toJME({string, isTemplate}) {
+            var tok = wrapValue(string);
+            tok.safe = isTemplate;
+            var s = treeToJME({tok: tok});
+            return s;
+        }
+    },
+    'long string': {
+        load(definition) {
+            var tree = jme.compile(definition);
+            let isTemplate = false;
+            while(jme.isFunction(tree.tok,'safe')) {
+                isTemplate = true;
+                tree = tree.args[0];
+            }
+            return {
+                string: tree.tok.value,
+                isTemplate
+            };
+        },
+        toJME({string, isTemplate}) {
+            var tok = wrapValue(string);
+            tok.safe = isTemplate;
+            var s = treeToJME({tok: tok});
+            return s;
+        }
+    },
+    'mathematical expression': {
+        load(definition) {
+            let tree = jme.compile(definition);
+            tree = tree.args[0];
+            while(jme.isFunction(tree.tok,'safe')) {
+                tree = tree.args[0];
+            }
+            return {expression: tree.tok.value};
+        },
+        toJME({expression}) {
+            const tok = wrapValue(expression);
+            const tree = jme.compile('expression(x)');
+            tree.args[0] = {tok: tok};
+            return treeToJME(tree);
+        }
+    },
+    'list of numbers': {
+        load(definition) {
+            var tree = jme.compile(definition);
+            return {values: tree.args.map(function(t){return jme.display.treeToJME(t);})};
+        },
+        toJME({values}) {
+            const numbers = values.filter(function(n){return n.trim() != ''});
+            if(!numbers.every(function(n){return Numbas.util.isNumber(n,true)})) {
+                throw("One of the values is not a number");
+            }
+            return treeToJME(jme.compile('['+numbers.join(',')+']'));
+        }
+    },
+    'list of strings': {
+        load(definition) {
+            const tree = jme.compile(definition);
+            const values = tree.args.map(function(t){
+                while(jme.isFunction(t.tok,'safe')) {
+                    t = t.args[0];
+                }
+                return t.tok.value + '';
+            });
+            return {values};
+        },
+        toJME({values}) {
+            var strings = values.map(function(s) {
+                var tok = wrapValue(s);
+                tok.safe = false;
+                return tok;
+            });
+            return treeToJME({tok: new jme.types.TList(strings)});
+        }
+    },
+    'json': {
+        load(definition) {
+            let tree = jme.compile(definition);
+            tree = tree.args[0];
+            while(jme.isFunction(tree.tok,'safe')) {
+                tree = tree.args[0];
+            }
+            return {json: tree.tok.value};
+        },
+        toJME({json}) {
+            JSON.parse(json || '');
+            var json = treeToJME({tok: wrapValue(json)});
+            return 'json_decode('+json+')';
+        }
+    }
+};
+
+function get_variable_template(templateType) {
+    const handler = builtin_templateTypes[templateType];
+    if(!handler) {
+        throw(new Error(`Unknown variable data type ${templateType}`));
+    }
+    return handler;
+}
+
 const ask_numbas_handlers = {
     is_equation({expression, notation}) { // -> boolean
-        notation = Numbas.jme.notations[notation];
+        notation = jme.notations[notation];
         try {
             var answer = notation.compile(expression);
-            return Numbas.jme.isOp(answer.tok,'=');
+            return jme.isOp(answer.tok,'=');
         } catch(e) {
             return false;
         }
     },
     findvars({expression, notation, expandJuxtapositionsSettings}) { // -> list of {name: string, inferredType: string}
         try {
-            notation = Numbas.jme.notations[notation];
-            var scope = Numbas.jme.builtinScope; //this.scope(); TODO
+            notation = jme.notations[notation];
+            var scope = jme.builtinScope; //this.scope(); TODO
             var bits = Numbas.util.splitbrackets(expression,'{','}','(',')');
             for(var i=1;i<bits.length;i+=2) {
                 bits[i] = '1';
@@ -200,18 +398,27 @@ const ask_numbas_handlers = {
         }
         return jme.rules.findCapturedNames(expr);
     },
-    parse_templateType({definition}) {
-        return {
-            type: 'anything',
-            template: {
-                code: definition
-            }
-        };
+    parse_templateType({variable: {definition, templateType}}) {
+        templateType = templateType || 'anything';
+        try {
+            const handler = get_variable_template(templateType);
+
+            return handler.load(definition);
+        } catch(e) {
+            return {};
+        }
+
+    },
+    variable_template_to_definition({template, templateType}) {
+        const handler = get_variable_template(templateType);
+
+        const definition = handler.toJME(template);
+        return {definition};
     },
     async generateVariables({question}) {
-        const scope_variable_names = Object.keys(question.variables);
-
         const scope = new jme.Scope([jme.builtinScope]); // TODO extensions etc.
+
+        const scope_variable_names = Object.keys(scope.allVariables());
 
         const todo = Object.fromEntries(Object.values(question.variables).map(v => {
             const tree = jme.compile(v.definition);
@@ -225,8 +432,6 @@ const ask_numbas_handlers = {
         const prep = {scope, todo, condition};
 
         const result = await computeVariables(prep);
-
-        console.log(result);
 
         return result;
     }

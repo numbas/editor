@@ -28092,6 +28092,7 @@ class CodeEditorElement extends HTMLElement {
                 selection: {anchor: 0}
             }));
         });
+        this.value_just_set = true;
     }
 
     get disabled() {
@@ -28107,6 +28108,10 @@ class CodeEditorElement extends HTMLElement {
     }
 
     onChange() {
+        if(this.value_just_set) {
+            this.value_just_set = false;
+            return;
+        }
         this.dispatchEvent(new CustomEvent('input'));
     }
 

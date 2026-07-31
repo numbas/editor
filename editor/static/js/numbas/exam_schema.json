@@ -6,8 +6,7 @@
     "properties": {
         "allowPrinting": {
             "title": "Allow students to print question content?",
-            "type": "boolean",
-            "default": true
+            "type": "boolean"
         },
         "contributors": {
             "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/contributors"
@@ -111,8 +110,7 @@
             "properties": {
                 "customScript": {
                     "title": "Custom diagnostic algorithm",
-                    "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme_script",
-                    "default": ""
+                    "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme_script"
                 },
                 "knowledge_graph": {
                     "title": "Knowledge graph",
@@ -170,16 +168,14 @@
                 },
                 "script": {
                     "title": "Diagnostic algorithm",
-                    "type": "string",
-                    "default": "diagnosys"
+                    "type": "string"
                 }
             },
             "type": "object"
         },
         "duration": {
             "title": "The duration of the exam, in seconds",
-            "type": "number",
-            "default": 0
+            "type": "number"
         },
         "extensions": {
             "title": "Extensions required by this exam",
@@ -199,20 +195,17 @@
                     "properties": {
                         "printquestions": {
                             "title": "Show questions in printed results summary?",
-                            "type": "boolean",
-                            "default": true
+                            "type": "boolean"
                         },
                         "printadvice": {
                             "title": "Show advice in printed results summary?",
-                            "type": "boolean",
-                            "default": true
+                            "type": "boolean"
                         }
                     }
                 },
                 "allowrevealanswer": {
                     "title": "Allow reveal answer?",
-                    "type": "boolean",
-                    "default": true
+                    "type": "boolean"
                 },
                 "feedbackmessages": {
                     "title": "Feedback messages",
@@ -224,7 +217,7 @@
                             },
                             "threshold": {
                                 "title": "Percentage score (0-100) above which this message is shown.",
-                                "type": "number"
+                                "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme"
                             }
                         },
                         "type": "object"
@@ -233,13 +226,7 @@
                 },
                 "intro": {
                     "title": "Introduction",
-                    "type": "string",
-                    "default": ""
-                },
-                "end_message": {
-                    "title": "End message",
-                    "type": "string",
-                    "default": ""
+                    "type": "string"
                 },
                 "showadvicewhen": {
                     "title": "When to show question advice",
@@ -247,8 +234,7 @@
                         "inreview",
                         "never"
                     ],
-                    "type": "string",
-                    "default": "inreview"
+                    "type": "string"
                 },
                 "showexpectedanswerswhen": {
                     "title": "When to reveal expected answers",
@@ -256,8 +242,7 @@
                         "inreview",
                         "never"
                     ],
-                    "type": "string",
-                    "default": "inreview"
+                    "type": "string"
                 },
                 "showactualmarkwhen": {
                     "title": "When to show the current score",
@@ -267,8 +252,7 @@
                         "inreview",
                         "never"
                     ],
-                    "type": "string",
-                    "default": "always"
+                    "type": "string"
                 },
                 "showanswerstatewhen": {
                     "title": "When to show answer state",
@@ -278,8 +262,7 @@
                         "inreview",
                         "never"
                     ],
-                    "type": "string",
-                    "default": "always"
+                    "type": "string"
                 },
                 "showtotalmarkwhen": {
                     "title": "When to show the maximum score",
@@ -289,8 +272,7 @@
                         "inreview",
                         "never"
                     ],
-                    "type": "string",
-                    "default": "always"
+                    "type": "string"
                 },
                 "showpartfeedbackmessageswhen": {
                     "title": "When to show part feedback messages",
@@ -300,8 +282,7 @@
                         "inreview",
                         "never"
                     ],
-                    "type": "string",
-                    "default": "always"
+                    "type": "string"
                 }
             }
         },
@@ -317,18 +298,15 @@
             "properties": {
                 "allowregen": {
                     "title": "Allow user to regenerate questions?",
-                    "type": "boolean",
-                    "default": false
+                    "type": "boolean"
                 },
                 "allowsteps": {
                     "title": "Enable steps?",
-                    "type": "boolean",
-                    "default": true
+                    "type": "boolean"
                 },
                 "browse": {
                     "title": "Allow jump to any question?",
-                    "type": "boolean",
-                    "default": true
+                    "type": "boolean"
                 },
                 "navigatemode": {
                     "title": "Question navigation mode",
@@ -337,8 +315,7 @@
                         "menu",
                         "diagnostic"
                     ],
-                    "type": "string",
-                    "default": "sequence"
+                    "type": "string"
                 },
                 "onleave": {
                     "title": "On leaving a question",
@@ -350,69 +327,57 @@
                                 "warnifunattempted",
                                 "preventifunattempted"
                             ],
-                            "type": "string",
-                            "default": "none"
+                            "type": "string"
                         },
                         "message": {
                             "title": "Message",
-                            "type": "string",
-                            "default": "You have not finished the current question."
+                            "type": "string"
                         }
                     },
                     "type": "object"
                 },
                 "preventleave": {
                     "title": "Confirm before leaving the exam while it's running?",
-                    "type": "boolean",
-                    "default": true
+                    "type": "boolean"
                 },
                 "typeendtoleave": {
                     "title": "Require written confirmation before leaving the exam",
-                    "type": "boolean",
-                    "default": false
+                    "type": "boolean"
                 },
                 "reverse": {
                     "title": "Allow move to previous question?",
-                    "type": "boolean",
-                    "default": true
+                    "type": "boolean"
                 },
                 "showfrontpage": {
                     "title": "Show front page?",
-                    "type": "boolean",
-                    "default": true
+                    "type": "boolean"
                 },
                 "enterreviewmodeimmediately": {
                     "title": "Enter review mode immediately after ending the exam?",
-                    "type": "boolean",
-                    "default": true
+                    "type": "boolean"
                 },
                 "startpassword": {
                     "title": "Password to begin the exam",
-                    "type": "string",
-                    "default": ""
+                    "type": "string"
                 },
                 "allowAttemptDownload": {
                     "title": "Allow the student to download their attempt data?",
-                    "type": "boolean",
-                    "default": false
+                    "type": "boolean"
                 },
                 "downloadEncryptionKey": {
                     "title": "Key for encrypting student data downloads",
-                    "type": "string",
-                    "default": ""
+                    "type": "string"
                 },
                 "autoSubmit": {
                     "title": "Automatically submit answers?",
-                    "type": "boolean",
-                    "default": true
+                    "type": "boolean"
                 }
             },
             "type": "object"
         },
         "percentPass": {
             "title": "The pass/fail threshold for the student's total score, as a percentage of the available marks.",
-            "type": "number",
-            "default": 0
+            "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme"
         },
         "question_groups": {
             "title": "Question groups",
@@ -424,8 +389,7 @@
                     },
                     "pickQuestions": {
                         "title": "Number of questions to choose",
-                        "type": "number",
-                        "default": 1
+                        "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme"
                     },
                     "pickingStrategy": {
                         "title": "Questions to use",
@@ -434,8 +398,7 @@
                             "all-shuffled",
                             "random-subset"
                         ],
-                        "type": "string",
-                        "default": "all-ordered"
+                        "type": "string"
                     },
                     "questionNames": {
                         "title": "Override question names",
@@ -495,26 +458,22 @@
         },
         "showQuestionGroupNames": {
             "title": "Should the names of question groups be shown to the student?",
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
         },
         "showstudentname": {
             "title": "Show the student's name?",
-            "type": "boolean",
-            "default": true
+            "type": "boolean"
         },
         "shuffleQuestionGroups": {
             "title": "If true, the question groups appear in random order.",
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
         },
         "timing": {
             "title": "Timing settings",
             "properties": {
                 "allowPause": {
                     "title": "Allow pausing?",
-                    "type": "boolean",
-                    "default": true
+                    "type": "boolean"
                 },
                 "timedwarning": {
                     "title": "5 minutes before timeout",
@@ -525,8 +484,7 @@
                                 "none",
                                 "warn"
                             ],
-                            "type": "string",
-                            "default": "none"
+                            "type": "string"
                         },
                         "message": {
                             "title": "Message",
@@ -544,8 +502,7 @@
                                 "none",
                                 "warn"
                             ],
-                            "type": "string",
-                            "default": "none"
+                            "type": "string"
                         },
                         "message": {
                             "title": "Message",
@@ -596,8 +553,7 @@
                         {
                             "type": "null"
                         }
-                    ],
-                    "default": null
+                    ]
                 }
             },
             "type": "object"
@@ -635,8 +591,7 @@
             "properties": {
                 "advice": {
                     "title": "Advice",
-                    "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html",
-                    "default": ""
+                    "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html"
                 },
                 "builtin_constants": {
                     "additionalProperties": {
@@ -672,8 +627,7 @@
                         "title": "The name of an extension",
                         "type": "string"
                     },
-                    "type": "array",
-                    "default": []
+                    "type": "array"
                 },
                 "metadata": {
                     "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/item_metadata"
@@ -709,8 +663,7 @@
                 },
                 "statement": {
                     "title": "Statement",
-                    "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html",
-                    "default": ""
+                    "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html"
                 },
                 "tags": {
                     "title": "Tags",
@@ -727,18 +680,15 @@
                         "properties": {
                             "can_override": {
                                 "title": "Can an exam override the value of this variable?",
-                                "type": "boolean",
-                                "default": false
+                                "type": "boolean"
                             },
                             "definition": {
                                 "title": "Definition",
-                                "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
-                                "default": ""
+                                "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme"
                             },
                             "description": {
                                 "title": "Description",
-                                "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html",
-                                "default": ""
+                                "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html"
                             },
                             "group": {
                                 "oneOf": [
@@ -749,30 +699,15 @@
                                         "type": "null"
                                     }
                                 ],
-                                "title": "Group",
-                                "default": null
+                                "title": "Group"
                             },
                             "name": {
                                 "title": "Name, or comma-separated list of names",
-                                "type": "string",
-                                "default": ""
+                                "type": "string"
                             },
                             "templateType": {
                                 "title": "Data type template",
-                                "type": "string",
-                                "default": "anything",
-                                "enum": [
-                                    "anything",
-                                    "number",
-                                    "range",
-                                    "randrange",
-                                    "string",
-                                    "long plain string",
-                                    "long string",
-                                    "list of numbers",
-                                    "list of strings",
-                                    "json"
-                                ]
+                                "type": "string"
                             }
                         }
                     }
@@ -783,13 +718,11 @@
                     "properties": {
                         "condition": {
                             "type": "string",
-                            "title": "Condition",
-                            "default": ""
+                            "title": "Condition"
                         },
                         "maxRuns": {
-                            "type": "number",
-                            "title": "Maximum number of runs",
-                            "default": 100
+                            "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
+                            "title": "Maximum number of runs"
                         }
                     }
                 },
@@ -838,16 +771,14 @@
                                         },
                                         {
                                             "type": "string",
-                                            "title": "Type signature",
-                                            "default": "anything"
+                                            "title": "Type signature"
                                         }
                                     ]
                                 }
                             },
                             "type": {
                                 "type": "string",
-                                "title": "Type",
-                                "default": "anything"
+                                "title": "Type"
                             },
                             "language": {
                                 "type": "string",
@@ -855,8 +786,7 @@
                                 "enum": [
                                     "jme",
                                     "javascript"
-                                ],
-                                "default": "jme"
+                                ]
                             },
                             "definition": {
                                 "type": "string",
@@ -892,13 +822,11 @@
                     "enum": [
                         "all",
                         "explore"
-                    ],
-                    "default": "all"
+                    ]
                 },
                 "maxMarks": {
-                    "type": "number",
-                    "title": "Maximum mark",
-                    "default": 0
+                    "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
+                    "title": "Maximum mark"
                 },
                 "objectives": {
                     "type": "array",
@@ -920,8 +848,7 @@
                     "enum": [
                         "always",
                         "when-active"
-                    ],
-                    "default": "always"
+                    ]
                 },
                 "penaltyVisibility": {
                     "type": "string",
@@ -929,8 +856,7 @@
                     "enum": [
                         "always",
                         "when-active"
-                    ],
-                    "default": "always"
+                    ]
                 }
             }
         },
@@ -943,9 +869,8 @@
                     "title": "Name"
                 },
                 "limit": {
-                    "type": "number",
-                    "title": "Limit",
-                    "default": 0
+                    "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
+                    "title": "Limit"
                 }
             }
         },
@@ -955,15 +880,14 @@
             "properties": {
                 "useCustomName": {
                     "type": "boolean",
-                    "title": "Use a custom name?",
-                    "default": false
+                    "title": "Use a custom name?"
                 },
                 "customName": {
                     "type": "string",
                     "title": "Custom name"
                 },
                 "marks": {
-                    "type": "number",
+                    "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
                     "title": "Marks"
                 },
                 "scripts": {
@@ -999,8 +923,7 @@
                                         "instead",
                                         "after",
                                         "before"
-                                    ],
-                                    "default": "instead"
+                                    ]
                                 }
                             }
                         },
@@ -1016,11 +939,10 @@
                                     "type": "string",
                                     "title": "This script runs...",
                                     "enum": [
-                                        "instead",
+                                        "instead of",
                                         "after",
                                         "before"
-                                    ],
-                                    "default": "instead"
+                                    ]
                                 }
                             }
                         }
@@ -1032,8 +954,7 @@
                 },
                 "extendBaseMarkingAlgorithm": {
                     "type": "boolean",
-                    "title": "Extend base marking algorithm?",
-                    "default": true
+                    "title": "Extend base marking algorithm?"
                 },
                 "unitTests": {
                     "type": "array",
@@ -1169,13 +1090,11 @@
                 },
                 "showCorrectAnswer": {
                     "type": "boolean",
-                    "title": "Show correct answer on reveal?",
-                    "default": true
+                    "title": "Show correct answer on reveal?"
                 },
                 "showFeedbackIcon": {
                     "type": "boolean",
-                    "title": "Show score feedback icon?",
-                    "default": true
+                    "title": "Show score feedback icon?"
                 },
                 "variableReplacements": {
                     "type": "array",
@@ -1193,8 +1112,7 @@
                             },
                             "must_go_first": {
                                 "type": "boolean",
-                                "title": "Must be answered?",
-                                "default": false
+                                "title": "Must be answered?"
                             }
                         }
                     }
@@ -1205,8 +1123,7 @@
                     "enum": [
                         "originalfirst",
                         "alwaysreplace"
-                    ],
-                    "default": "originalfirst"
+                    ]
                 },
                 "nextParts": {
                     "type": "array",
@@ -1257,21 +1174,18 @@
                             },
                             "lockAfterLeaving": {
                                 "type": "boolean",
-                                "title": "Lock this part?",
-                                "default": false
+                                "title": "Lock this part?"
                             }
                         }
                     }
                 },
                 "suggestGoingBack": {
                     "type": "boolean",
-                    "title": "Suggest going back to the previous part?",
-                    "default": false
+                    "title": "Suggest going back to the previous part?"
                 },
                 "adaptiveMarkingPenalty": {
-                    "$ref": "number",
-                    "title": "Penalty when adaptive marking is used",
-                    "default": 0
+                    "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
+                    "title": "Penalty when adaptive marking is used"
                 },
                 "exploreObjective": {
                     "oneOf": [
@@ -1282,17 +1196,22 @@
                             "type": "null"
                         }
                     ],
-                    "title": "Score counts towards objective",
-                    "default": null
+                    "title": "Score counts towards objective"
                 },
                 "prompt": {
                     "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html",
                     "title": "Prompt"
                 },
                 "stepsPenalty": {
-                    "type": "number",
-                    "title": "Penalty for revealing steps",
-                    "default": 0
+                    "oneOf": [
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "title": "Penalty for revealing steps"
                 },
                 "steps": {
                     "type": "array",
@@ -1314,8 +1233,7 @@
                 },
                 "useAlternativeFeedback": {
                     "type": "boolean",
-                    "title": "Show all feedback?",
-                    "default": false
+                    "title": "Show all feedback?"
                 }
             },
             "anyOf": [
@@ -1335,13 +1253,7 @@
                         },
                         "sortAnswers": {
                             "type": "boolean",
-                            "title": "Sort student's answers before marking?",
-                            "default": false
-                        },
-                        "inlineCorrectAnswer": {
-                            "type": "boolean",
-                            "title": "Show expected answers inline?",
-                            "default": true
+                            "title": "Sort student's answers before marking?"
                         }
                     }
                 },
@@ -1376,8 +1288,7 @@
                         },
                         "showPreview": {
                             "type": "boolean",
-                            "title": "Show preview of student's answer?",
-                            "default": true
+                            "title": "Show preview of student's answer?"
                         },
                         "checkingType": {
                             "type": "string",
@@ -1387,23 +1298,19 @@
                                 "reldiff",
                                 "dp",
                                 "sigfig"
-                            ],
-                            "default": "absdiff"
+                            ]
                         },
                         "checkingAccuracy": {
                             "type": "number",
-                            "title": "Checking accuracy",
-                            "default": 0.001
+                            "title": "Checking accuracy"
                         },
                         "failureRate": {
                             "type": "number",
-                            "title": "Maximum no. of failures",
-                            "default": 1
+                            "title": "Maximum no. of failures"
                         },
                         "vsetRangePoints": {
                             "type": "number",
-                            "title": "Points to check",
-                            "default": 5
+                            "title": "Points to check"
                         },
                         "vsetRange": {
                             "type": "array",
@@ -1411,40 +1318,33 @@
                             "prefixItems": [
                                 {
                                     "type": "number",
-                                    "title": "Start",
-                                    "default": 0
+                                    "title": "Start"
                                 },
                                 {
                                     "type": "number",
-                                    "title": "End",
-                                    "default": 1
+                                    "title": "End"
                                 }
                             ]
                         },
                         "checkVariableNames": {
                             "type": "boolean",
-                            "title": "Warn if student uses an unexpected variable name?",
-                            "default": false
+                            "title": "Warn if student uses an unexpected variable name?"
                         },
                         "singleLetterVariables": {
                             "type": "boolean",
-                            "title": "Force single letter variable names?",
-                            "default": false
+                            "title": "Force single letter variable names?"
                         },
                         "allowUnknownFunctions": {
                             "type": "boolean",
-                            "title": "Allow unknown function names?",
-                            "default": true
+                            "title": "Allow unknown function names?"
                         },
                         "implicitFunctionComposition": {
                             "type": "boolean",
-                            "title": "Use implicit function composition?",
-                            "default": false
+                            "title": "Use implicit function composition?"
                         },
                         "caseSensitive": {
                             "type": "boolean",
-                            "title": "Expression is case-sensitive?",
-                            "default": false
+                            "title": "Expression is case-sensitive?"
                         },
                         "maxlength": {
                             "type": "object",
@@ -1452,13 +1352,11 @@
                             "properties": {
                                 "length": {
                                     "type": "number",
-                                    "title": "Maximum length",
-                                    "default": 0
+                                    "title": "Maximum length"
                                 },
                                 "partialCredit": {
                                     "type": "number",
-                                    "title": "Partial credit for long answer",
-                                    "default": 0
+                                    "title": "Partial credit for long answer"
                                 },
                                 "message": {
                                     "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html",
@@ -1472,13 +1370,11 @@
                             "properties": {
                                 "length": {
                                     "type": "number",
-                                    "title": "Minimum length",
-                                    "default": 0
+                                    "title": "Minimum length"
                                 },
                                 "partialCredit": {
                                     "type": "number",
-                                    "title": "Partial credit for short answer",
-                                    "default": 0
+                                    "title": "Partial credit for short answer"
                                 },
                                 "message": {
                                     "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html",
@@ -1499,13 +1395,11 @@
                                 },
                                 "showStrings": {
                                     "type": "boolean",
-                                    "title": "Show required strings?",
-                                    "default": false
+                                    "title": "Show required strings?"
                                 },
                                 "partialCredit": {
                                     "type": "number",
-                                    "title": "Partial credit for not using all required strings",
-                                    "default": 0
+                                    "title": "Partial credit for not using all required strings"
                                 },
                                 "message": {
                                     "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html",
@@ -1526,13 +1420,11 @@
                                 },
                                 "showStrings": {
                                     "type": "boolean",
-                                    "title": "Show forbidden strings?",
-                                    "default": false
+                                    "title": "Show forbidden strings?"
                                 },
                                 "partialCredit": {
                                     "type": "number",
-                                    "title": "Partial credit for using any forbidden string",
-                                    "default": 0
+                                    "title": "Partial credit for using any forbidden string"
                                 },
                                 "message": {
                                     "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html",
@@ -1550,8 +1442,7 @@
                                 },
                                 "partialCredit": {
                                     "type": "number",
-                                    "title": "Partial credit for not matching pattern",
-                                    "default": 0
+                                    "title": "Partial credit for not matching pattern"
                                 },
                                 "message": {
                                     "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html",
@@ -1560,16 +1451,6 @@
                                 "nameToCompare": {
                                     "type": "string",
                                     "title": "Part of expression to mark"
-                                },
-                                "warningTime": {
-                                    "type": "string",
-                                    "title": "When to warn the student if their answer does not match the pattern",
-                                    "enum": [
-                                        "submission",
-                                        "input",
-                                        "prevent"
-                                    ],
-                                    "default": "submission"
                                 }
                             }
                         },
@@ -1592,8 +1473,7 @@
                         },
                         "notation": {
                             "type": "string",
-                            "title": "Notation",
-                            "default": "standard"
+                            "title": "Notation"
                         },
                         "enabledFunctions": {
                             "type": "array",
@@ -1635,23 +1515,19 @@
                         },
                         "correctAnswerFraction": {
                             "type": "boolean",
-                            "title": "Display the correct answer as a fraction?",
-                            "default": false
+                            "title": "Display the correct answer as a fraction?"
                         },
                         "allowFractions": {
                             "type": "boolean",
-                            "title": "Allow the student to enter a fraction?",
-                            "default": false
+                            "title": "Allow the student to enter a fraction?"
                         },
                         "mustBeReduced": {
                             "type": "boolean",
-                            "title": "Must the fraction be reduced?",
-                            "default": false
+                            "title": "Must the fraction be reduced?"
                         },
                         "mustBeReducedPC": {
-                            "type": "number",
-                            "title": "Partial credit for unreduced fraction",
-                            "default": 0
+                            "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
+                            "title": "Partial credit for unreduced fraction"
                         },
                         "precisionType": {
                             "type": "string",
@@ -1660,33 +1536,27 @@
                                 "none",
                                 "dp",
                                 "sigfig"
-                            ],
-                            "default": "none"
+                            ]
                         },
                         "precision": {
-                            "type": "number",
-                            "title": "Precision",
-                            "default": 0
+                            "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
+                            "title": "Precision"
                         },
                         "precisionPartialCredit": {
                             "type": "number",
-                            "title": "Partial credit for wrong precision",
-                            "default": 0
+                            "title": "Partial credit for wrong precision"
                         },
                         "strictPrecision": {
                             "type": "boolean",
-                            "title": "Require trailing zeros?",
-                            "default": true
+                            "title": "Require trailing zeros?"
                         },
                         "showPrecisionHint": {
                             "type": "boolean",
-                            "title": "Show precision restriction hint?",
-                            "default": true
+                            "title": "Show precision restriction hint?"
                         },
                         "showFractionHint": {
                             "type": "boolean",
-                            "title": "Show fraction input hint?",
-                            "default": true
+                            "title": "Show fraction input hint?"
                         },
                         "notationStyles": {
                             "type": "array",
@@ -1697,8 +1567,7 @@
                         },
                         "correctAnswerStyle": {
                             "type": "string",
-                            "title": "Correct answer style",
-                            "default": "plain"
+                            "title": "Correct answer style"
                         },
                         "displayAnswer": {
                             "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
@@ -1719,58 +1588,47 @@
                         },
                         "correctAnswerFractions": {
                             "type": "boolean",
-                            "title": "Display numbers in the correct answer as fractions?",
-                            "default": false
+                            "title": "Display numbers in the correct answer as fractions?"
                         },
                         "numRows": {
                             "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
-                            "title": "Number of rows",
-                            "default": 1
+                            "title": "Number of rows"
                         },
                         "numColumns": {
                             "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
-                            "title": "Number of columns",
-                            "default": 1
+                            "title": "Number of columns"
                         },
                         "allowResize": {
                             "type": "boolean",
-                            "title": "Allow student to change size of matrix?",
-                            "default": true
+                            "title": "Allow student to change size of matrix?"
                         },
                         "tolerance": {
                             "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
-                            "title": "Margin of error allowed in each cell",
-                            "default": 0
+                            "title": "Margin of error allowed in each cell"
                         },
                         "markPerCell": {
                             "type": "boolean",
-                            "title": "Gain marks for each correct cell?",
-                            "default": false
+                            "title": "Gain marks for each correct cell?"
                         },
                         "allowFractions": {
                             "type": "boolean",
-                            "title": "Allow the student to enter fractions?",
-                            "default": false
+                            "title": "Allow the student to enter fractions?"
                         },
                         "minColumns": {
                             "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
-                            "title": "Minimum number of columns",
-                            "default": 1
+                            "title": "Minimum number of columns"
                         },
                         "maxColumns": {
                             "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
-                            "title": "Maximum number of columns",
-                            "default": 0
+                            "title": "Maximum number of columns"
                         },
                         "minRows": {
                             "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
-                            "title": "Minimum number of rows",
-                            "default": 1
+                            "title": "Minimum number of rows"
                         },
                         "maxRows": {
                             "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
-                            "title": "Maximum number of rows",
-                            "default": 0
+                            "title": "Maximum number of rows"
                         },
                         "precisionType": {
                             "type": "string",
@@ -1779,46 +1637,19 @@
                                 "none",
                                 "dp",
                                 "sigfig"
-                            ],
-                            "default": "none"
+                            ]
                         },
                         "precision": {
                             "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
-                            "title": "Precision",
-                            "default": 0
+                            "title": "Precision"
                         },
                         "precisionPartialCredit": {
                             "type": "number",
-                            "title": "Partial credit for wrong precision",
-                            "default": 0
+                            "title": "Partial credit for wrong precision"
                         },
                         "strictPrecision": {
                             "type": "boolean",
-                            "title": "Require trailing zeros?",
-                            "default": true
-                        },
-                        "gridlines": {
-                            "type": "string",
-                            "title": "Grid lines",
-                            "enum": [
-                                "none",
-                                "afterFirstRow",
-                                "beforeLastRow",
-                                "afterFirstColumn",
-                                "beforeLastColumn",
-                                "custom"
-                            ],
-                            "default": "none"
-                        },
-                        "gridlinesCustomColumns": {
-                            "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
-                            "title": "Custom expression for column lines",
-                            "default": ""
-                        },
-                        "gridlinesCustomRows": {
-                            "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
-                            "title": "Custom expression for row lines",
-                            "default": ""
+                            "title": "Require trailing zeros?"
                         }
                     }
                 },
@@ -1839,18 +1670,15 @@
                         },
                         "caseSensitive": {
                             "type": "boolean",
-                            "title": "Must the answer be in the correct case?",
-                            "default": false
+                            "title": "Must the answer be in the correct case?"
                         },
                         "allowEmpty": {
                             "type": "boolean",
-                            "title": "Allow the student to submit an empty answer?",
-                            "default": false
+                            "title": "Allow the student to submit an empty answer?"
                         },
                         "partialCredit": {
                             "type": "number",
-                            "title": "Partial credit for answer not matching case",
-                            "default": 0
+                            "title": "Partial credit for answer not matching case"
                         },
                         "matchMode": {
                             "type": "string",
@@ -1858,8 +1686,7 @@
                             "enum": [
                                 "regex",
                                 "exact"
-                            ],
-                            "default": "regex"
+                            ]
                         }
                     }
                 },
@@ -1872,8 +1699,7 @@
                         },
                         "shuffleChoices": {
                             "type": "boolean",
-                            "title": "Shuffle order of choices?",
-                            "default": false
+                            "title": "Shuffle order of choices?"
                         },
                         "displayType": {
                             "type": "string",
@@ -1881,18 +1707,15 @@
                             "enum": [
                                 "radiogroup",
                                 "dropdownlist"
-                            ],
-                            "default": "radiogroup"
+                            ]
                         },
                         "displayColumns": {
-                            "type": "number",
-                            "title": "Number of display columns",
-                            "default": 0
+                            "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
+                            "title": "Number of display columns"
                         },
                         "showCellAnswerState": {
                             "type": "boolean",
-                            "title": "Show choice feedback state?",
-                            "default": true
+                            "title": "Show choice feedback state?"
                         },
                         "choices": {
                             "title": "Choices",
@@ -1928,21 +1751,6 @@
                             "items": {
                                 "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html"
                             }
-                        },
-                        "interpretedAnswerForm": {
-                            "type": "string",
-                            "title": "Form of the interpreted answer",
-                            "enum": [
-                                "list of list of boolean",
-                                "index of choice",
-                                "text of choice"
-                            ],
-                            "default": "list of list of boolean"
-                        },
-                        "showBlankOption": {
-                            "type": "boolean",
-                            "title": "Show a blank choice?",
-                            "default": true
                         }
                     }
                 },
@@ -1954,19 +1762,16 @@
                             "const": "m_n_2"
                         },
                         "minMarks": {
-                            "type": "number",
-                            "title": "Minimum marks",
-                            "default": 0
+                            "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
+                            "title": "Minimum marks"
                         },
                         "maxMarks": {
-                            "type": "number",
-                            "title": "Maximum marks",
-                            "default": 0
+                            "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
+                            "title": "Maximum marks"
                         },
                         "shuffleChoices": {
                             "type": "boolean",
-                            "title": "Shuffle order of choices?",
-                            "default": false
+                            "title": "Shuffle order of choices?"
                         },
                         "displayType": {
                             "type": "string",
@@ -1974,19 +1779,16 @@
                             "const": "checkbox"
                         },
                         "displayColumns": {
-                            "type": "number",
-                            "title": "Number of display columns",
-                            "default": 0
+                            "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
+                            "title": "Number of display columns"
                         },
                         "minAnswers": {
                             "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
-                            "title": "Minimum answers",
-                            "default": 0
+                            "title": "Minimum answers"
                         },
                         "maxAnswers": {
                             "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
-                            "title": "Maximum answers",
-                            "default": 0
+                            "title": "Maximum answers"
                         },
                         "warningType": {
                             "type": "string",
@@ -1995,13 +1797,11 @@
                                 "none",
                                 "warn",
                                 "prevent"
-                            ],
-                            "default": "none"
+                            ]
                         },
                         "showCellAnswerState": {
                             "type": "boolean",
-                            "title": "Show choice feedback state?",
-                            "default": true
+                            "title": "Show choice feedback state?"
                         },
                         "markingMethod": {
                             "type": "string",
@@ -2010,8 +1810,7 @@
                                 "sum ticked cells",
                                 "score per matched cell",
                                 "all-or-nothing"
-                            ],
-                            "default": "sum ticked cells"
+                            ]
                         },
                         "choices": {
                             "title": "Choices",
@@ -2047,17 +1846,6 @@
                             "items": {
                                 "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html"
                             }
-                        },
-                        "interpretedAnswerForm": {
-                            "type": "string",
-                            "title": "Form of the interpreted answer",
-                            "enum": [
-                                "list of list of boolean",
-                                "list of boolean",
-                                "indices of choices",
-                                "text of choices"
-                            ],
-                            "default": "list of list of boolean"
                         }
                     }
                 },
@@ -2069,24 +1857,20 @@
                             "const": "m_n_x"
                         },
                         "minMarks": {
-                            "type": "number",
-                            "title": "Minimum marks",
-                            "default": 0
+                            "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
+                            "title": "Minimum marks"
                         },
                         "maxMarks": {
-                            "type": "number",
-                            "title": "Maximum marks",
-                            "default": 0
+                            "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
+                            "title": "Maximum marks"
                         },
                         "shuffleChoices": {
                             "type": "boolean",
-                            "title": "Shuffle order of choices?",
-                            "default": false
+                            "title": "Shuffle order of choices?"
                         },
                         "shuffleAnswers": {
                             "type": "boolean",
-                            "title": "Shuffle order of answers?",
-                            "default": false
+                            "title": "Shuffle order of answers?"
                         },
                         "displayType": {
                             "type": "string",
@@ -2094,23 +1878,19 @@
                             "enum": [
                                 "radiogroup",
                                 "checkbox"
-                            ],
-                            "default": "radiogroup"
+                            ]
                         },
                         "displayColumns": {
-                            "type": "number",
-                            "title": "Number of display columns",
-                            "default": 0
+                            "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
+                            "title": "Number of display columns"
                         },
                         "minAnswers": {
                             "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
-                            "title": "Minimum answers",
-                            "default": 0
+                            "title": "Minimum answers"
                         },
                         "maxAnswers": {
                             "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
-                            "title": "Maximum answers",
-                            "default": 0
+                            "title": "Maximum answers"
                         },
                         "warningType": {
                             "type": "string",
@@ -2119,13 +1899,11 @@
                                 "none",
                                 "warn",
                                 "prevent"
-                            ],
-                            "default": "none"
+                            ]
                         },
                         "showCellAnswerState": {
                             "type": "boolean",
-                            "title": "Show choice feedback state?",
-                            "default": true
+                            "title": "Show choice feedback state?"
                         },
                         "markingMethod": {
                             "type": "string",
@@ -2134,8 +1912,7 @@
                                 "sum ticked cells",
                                 "score per matched cell",
                                 "all-or-nothing"
-                            ],
-                            "default": "sum ticked cells"
+                            ]
                         },
                         "choices": {
                             "title": "Choices",
@@ -2201,24 +1978,13 @@
                                         "uppertriangle",
                                         "strictuppertriangle",
                                         "expression"
-                                    ],
-                                    "default": "all"
+                                    ]
                                 },
                                 "expression": {
                                     "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
                                     "title": "Custom layout expression"
                                 }
                             }
-                        },
-                        "interpretedAnswerForm": {
-                            "type": "string",
-                            "title": "Form of the interpreted answer",
-                            "enum": [
-                                "list of list of boolean",
-                                "indices of pairs",
-                                "text of pairs"
-                            ],
-                            "default": "list of list of boolean"
                         }
                     }
                 },

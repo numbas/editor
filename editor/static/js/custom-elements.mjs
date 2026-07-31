@@ -149,7 +149,7 @@ function displayJMEValue(v, abbreviate, scope) {
                 function get_deepest_layer(v, depth) {
                     // depth is the current layer depth, lowest_depth is the lowest depth
                     // achieved so far through recursive calls.
-                    lowest_depth = Infinity;
+                    let lowest_depth = Infinity;
 
                     if (v.type !== "list") {
                         return depth - 1;
@@ -165,7 +165,7 @@ function displayJMEValue(v, abbreviate, scope) {
                             return depth - 1;
                         }
 
-                        next_layer_depth = get_deepest_layer(item, depth + 1);
+                        const next_layer_depth = get_deepest_layer(item, depth + 1);
                         if (next_layer_depth < lowest_depth) {
                             lowest_depth = next_layer_depth;
                         } 
@@ -225,7 +225,6 @@ export class JMEValueElement extends HTMLElement {
     static observedAttributes = ['abbreviate'];
 
     connectedCallback() {
-        console.log('shadow');
         this.attachShadow({mode: 'open'});
         this.display();
     }
@@ -308,7 +307,7 @@ export class RawHTMLElement extends HTMLElement {
     }
 
     set html(value) {
-        if(value instanceof String) {
+        if(typeof value == 'string') {
             this.shadowRoot.innerHTML = value;
         } else {
             this.shadowRoot.innerHTML = '';

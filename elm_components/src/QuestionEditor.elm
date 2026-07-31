@@ -1,6 +1,8 @@
 port module QuestionEditor exposing (main)
 
+import Aria
 import Browser
+import Debouncer.Messages as Debouncer exposing (Debouncer, toDebouncer)
 import Dict exposing (Dict)
 import Html as H exposing (Html)
 import Html.Attributes as HA
@@ -24,7 +26,12 @@ port ask_numbas : JE.Value -> Cmd msg
 port answer_numbas : (JE.Value -> msg) -> Sub msg
 
 type alias Monad a b = (a, b)
-type alias ChangeSideEffect x = Monad x (Maybe Bool, Maybe (Cmd Msg))
+type ChangeAmount
+    = NoChange
+    | SmallChange
+    | BigChange
+
+type alias ChangeSideEffect x = Monad x (ChangeAmount, Cmd Msg)
 
 type alias NumbasQuery =
     { command : String
@@ -49,9 +56,10 @@ type alias Preview =
     }
 
 type alias ActiveModelRecord = 
-    { saving : Saving
+    { generate_variables_debouncer : Debouncer Msg
+    , saving : Saving
     , last_saved : Maybe String
-    , adding_part : (PartPath, ChildPart)
+    , adding_part : Maybe (PartPath, ChildPart)
     , tab_state : Tabber.State
     , pk : Int
     , preview : Preview
@@ -152,14 +160,20 @@ type alias VariableGroup =
     }
 
 type alias Variable =
-    { computed : Settings
+    { value : Maybe (Result String JE.Value)
+    , computed : Settings
     , settings : Settings
     , template : String
     }
 
-type alias VariableGenerationResult =
+type alias VariablesGenerationResult =
     { conditionSatisfied : Bool
-    , variables : Dict String JE.Value
+    , variables : Dict String VariableGenerationResult
+    }
+
+type alias VariableGenerationResult =
+    { value : Result String JE.Value
+    , result : Dict String JE.Value
     }
 
 type alias PropertyOptions =
@@ -180,19 +194,22 @@ type Msg
     | NoOp
     | Save Question
     | FinishedSaving (Result Http.Error ())
-    | AddChildPart PartPath ChildPart
+    | StartAddingPart PartPath ChildPart
     | AnswerNumbas JE.Value
+    | GenerateVariableDebouncer (Debouncer.Msg Msg)
 
 type QuestionMsg
     = ChangeQuestionSetting (JE.Value, S.Address)
     | UpdatePart PartPath PartMsg
     | AddPart PartPath ChildPart Part
     | DeletePart PartPath
+    | AddVariableGroup
     | AddVariable Int
     | DeleteVariable VariablePath
     | UpdateVariable VariablePath VariableMsg
     | RegenerateVariables
     | ChangeQuestionComputed String JE.Value
+    | ShowVariable String
 
 type PartMsg
     = ChangePartSetting (JE.Value, S.Address)
@@ -242,7 +259,8 @@ numbas_version = "finer_feedback_settings"
 
 blank_variable : Variable
 blank_variable =
-    { computed = S.empty
+    { value = Nothing
+    , computed = S.empty
     , settings = S.empty
     , template = "anything"
     }
@@ -465,7 +483,7 @@ m_updateAt i fn =
         else
             (ol++[a], mm)
         )
-        ([], (Nothing, Nothing))
+        ([], nocmd NoChange)
 
 mapMonad : (a -> b) -> Monad a x -> Monad b x
 mapMonad = Tuple.mapFirst
@@ -475,9 +493,9 @@ update_variable_at (gi,vi) fn groups =
     let
         do_group group = 
             let
-                (variables, mcmd) = m_updateAt vi fn group.variables
+                (variables, cmd) = m_updateAt vi fn group.variables
             in
-                ({group | variables = variables}, mcmd)
+                ({group | variables = variables}, cmd)
     in
         groups
         |> m_updateAt gi do_group
@@ -485,7 +503,7 @@ update_variable_at (gi,vi) fn groups =
 update_part_at : PartPath -> (Part -> ChangeSideEffect Part) -> PartContainer -> ChangeSideEffect PartContainer
 update_part_at path fn c = 
     case path of
-        [] -> (c, (Nothing, Nothing))
+        [] -> (c, nocmd NoChange)
         (kind, i)::rest ->
             let
                 parts : List Part
@@ -514,6 +532,9 @@ unwrap_part_container = apply_part_container (\c ->
         ]
         |> List.concatMap (\(kind, getter) -> getter c |> List.indexedMap (handle kind) |> List.concatMap identity)
     )
+
+variable_type : Variable -> Maybe String
+variable_type = .value >> Maybe.andThen (Result.andThen (JD.decodeValue (JD.field "type" JD.string) >> Result.mapError JD.errorToString) >> Result.toMaybe)
 
 standard_part_type : String -> String -> String -> String -> String -> PartType
 standard_part_type name nice_name description help_page widget =
@@ -698,7 +719,7 @@ decode_question default_settings =
     |> andMap (
         JD.map2 (\group_defs variable_dict ->
             let
-                ungrouped = { name = "", variables = ungrouped_variables }
+                ungrouped = { name = "Ungrouped variables", variables = ungrouped_variables }
 
                 grouped_variables = group_defs |> List.map second |> List.concat |> Set.fromList
 
@@ -709,9 +730,9 @@ decode_question default_settings =
                         not (Set.member name grouped_variables))
 
                 groups : List VariableGroup
-                groups = group_defs |> List.map (\(name, variable_names) ->
+                groups = group_defs |> List.map (\(name, vnames) ->
                     { name = name
-                    , variables = variable_names |> List.filterMap (\n -> Dict.get n variable_dict)
+                    , variables = vnames |> List.filterMap (\n -> Dict.get n variable_dict)
                     }
                     )
             in
@@ -773,8 +794,7 @@ decode_variable default_settings =
     let
         variable_defaults = get_default_settings ["question", "variables", "additionalProperties"] default_settings
     in
-        JD.succeed Variable
-        |> andMap (JD.succeed S.empty)
+        JD.succeed (Variable Nothing S.empty)
         |> andMap (JD.value |> JD.map (S.fromValue variable_defaults))
         |> andMap (JD.oneOf [JD.field "templateType" JD.string, JD.succeed "anything"])
 
@@ -832,9 +852,10 @@ decode_flags : JD.Decoder ActiveModelRecord
 decode_flags =
     JD.succeed ( 
         ActiveModelRecord 
+            (Debouncer.debounce 500 |> toDebouncer)
             (Saved (Ok ()))
             Nothing
-            ([], TopPart)
+            Nothing
     )
     |> andMap (JD.field "tab_state" Tabber.decode_state)
     |> andMap (JD.at ["item_json", "itemJSON", "id"] JD.int)
@@ -873,7 +894,6 @@ encode_part_container : PartContainer -> List (String, JE.Value)
 encode_part_container pc = 
     ( child_part_kinds
     |> List.map (Tuple.mapSecond (\k -> part_getter k pc))
-    |> List.filter (second >> (/=) [])
     |> List.map (Tuple.mapSecond (JE.list encode_part))
     )
 
@@ -958,6 +978,23 @@ compute_all model =
     in
         (model, Cmd.batch cmds)
 
+variable_debouncer_config : Debouncer.UpdateConfig Msg ActiveModelRecord
+variable_debouncer_config =
+    { mapMsg = GenerateVariableDebouncer
+    , getDebouncer = .generate_variables_debouncer
+    , setDebouncer = \d m -> { m | generate_variables_debouncer = d }
+    }
+
+variables_changed : Cmd Msg
+variables_changed = 
+    Task.perform 
+        (  RegenerateVariables
+        |> UpdateQuestion
+        |> Debouncer.provideInput
+        |> GenerateVariableDebouncer
+        |> always
+        )
+        (Task.succeed ())
 
 update msg model = case model of
     ActiveModel active -> update_active msg active |> mapFirst ActiveModel
@@ -968,27 +1005,24 @@ update_active msg model = case msg of
     UpdateQuestion qmsg -> 
         let
             oq = model.history.current
-            (nq, (mchange, mcmd)) = update_question qmsg oq
+            (nq, (mchange, cmd)) = update_question qmsg oq
             change = case mchange of
-                Nothing -> History.no_change
-                Just True -> History.big_change 
-                Just False -> History.small_change
+                NoChange -> History.no_change
+                SmallChange -> History.small_change
+                BigChange -> History.big_change 
 
-            q = if mchange == Nothing then msg else Debug.log "change" msg
-            cmd = Maybe.withDefault Cmd.none mcmd
             history = change nq model.history
         in
-            ({ model | history = history, saving = Changed }, Cmd.batch [cmd, if mchange /= Nothing then delay 2000 (Save nq) else Cmd.none])
+            ({ model | history = history, saving = Changed }, Cmd.batch [cmd, if mchange /= NoChange then delay 2000 (Save nq) else Cmd.none])
+
+    GenerateVariableDebouncer dmsg ->
+        Debouncer.update update_active variable_debouncer_config dmsg model
 
     UpdateTab tab_msg -> 
         let
             (state, tabcmd) = Tabber.update tab_msg model.tab_state
-
-            nmodel = case tab_msg of
-                SetTab "parts" "add-part" -> { model | adding_part = ([], TopPart) }
-                _ -> model
         in
-            ({nmodel | tab_state = state}, Cmd.map UpdateTab tabcmd)
+            ({model | tab_state = state}, Cmd.map UpdateTab tabcmd)
 
     AnswerNumbas res -> 
         JD.decodeValue 
@@ -1022,7 +1056,7 @@ update_active msg model = case msg of
         Saving str -> { model | saving = Saved res, last_saved = Just str } |> nocmd
         _ -> model |> nocmd
 
-    AddChildPart path kind -> update_active (UpdateTab (SetTab "parts" "add-part")) model |> Tuple.mapFirst (\m -> { m | adding_part = (path, kind) })
+    StartAddingPart path kind -> { model | adding_part = Just (path, kind) } |> nocmd
 
     Undo -> { model | history = History.undo model.history } |> compute_all
 
@@ -1033,7 +1067,7 @@ update_active msg model = case msg of
 update_question : QuestionMsg -> Question -> ChangeSideEffect Question
 update_question msg question = case msg of
     ChangeQuestionSetting (v,at) -> 
-        ({ question | settings = S.setAt at v question.settings }, (Just False, Nothing))
+        ({ question | settings = S.setAt at v question.settings }, nocmd SmallChange)
 
     AddPart parent_path kind part -> 
         let
@@ -1042,15 +1076,18 @@ update_question msg question = case msg of
             npath = parent_path++[(kind, index)]
             tab_id = part_tab_id npath
         in
-            ({ question | parts = add_part_at parent_path kind part question.parts }, (Just True, set_tab "parts" tab_id |> Just))
+            ({ question | parts = add_part_at parent_path kind part question.parts }, (BigChange, set_tab "parts" tab_id))
 
     UpdatePart path pmsg -> 
         let
-            (parts, mcmd) = update_part_at path (update_part pmsg path) question.parts
+            (parts, cmd) = update_part_at path (update_part pmsg path) question.parts
         in
-            ({ question | parts = parts }, mcmd)
+            ({ question | parts = parts }, cmd)
 
-    DeletePart path -> ({ question | parts = delete_part_at path question.parts }, (Just True, Nothing))
+    DeletePart path -> ({ question | parts = delete_part_at path question.parts }, nocmd BigChange)
+
+    AddVariableGroup ->
+        ({ question | variable_groups = { name = "", variables = [] }::question.variable_groups }, nocmd BigChange)
 
     AddVariable gi -> 
         let
@@ -1067,15 +1104,15 @@ update_question msg question = case msg of
             tab_id = variable_tab_id (gi, vi)
 
         in
-            ({ question | variable_groups = ngroups }, (Just True, set_tab "variables" tab_id |> Just))
+            ({ question | variable_groups = ngroups }, (BigChange, Cmd.batch [variables_changed, set_tab "variables" tab_id]))
 
-    DeleteVariable path ->({ question | variable_groups = delete_variable_at path question.variable_groups }, (Just True, Nothing))
+    DeleteVariable path ->({ question | variable_groups = delete_variable_at path question.variable_groups }, (BigChange, variables_changed))
 
     UpdateVariable path vmsg ->
         let
-            (variable_groups, mcmd) = update_variable_at path (update_variable vmsg path) question.variable_groups
+            (variable_groups, (change, cmd)) = update_variable_at path (update_variable vmsg path) question.variable_groups
         in
-            ({ question | variable_groups = variable_groups }, mcmd)
+            ({ question | variable_groups = variable_groups }, (change, Cmd.batch [cmd, variables_changed]))
 
     RegenerateVariables ->
         let
@@ -1085,7 +1122,29 @@ update_question msg question = case msg of
                 , param = JE.object [("question", encode_question question)]
                 }
         in
-            (question, (Nothing, Just cmd))
+            (question, (NoChange, cmd))
+
+    ShowVariable name ->
+        let
+            all_variables : Dict String VariablePath
+            all_variables =
+                question.variable_groups
+                |> List.indexedMap (\gi g -> 
+                    g.variables 
+                    |> List.indexedMap (\vi ->
+                        variable_names
+                        >> List.map (\n -> (n, (gi,vi)))
+                    )
+                    |> List.concat
+                )
+                |> List.concat
+                |> Dict.fromList
+
+            mpath = Dict.get name all_variables
+        in
+            case mpath of
+                Just path -> (question, (NoChange, Cmd.batch [set_tab "main" "variables", set_tab "variables" (variable_tab_id path)]))
+                Nothing -> (question, nocmd NoChange)
 
     ChangeQuestionComputed command value -> case command of
         "generateVariables" ->
@@ -1093,9 +1152,17 @@ update_question msg question = case msg of
                 result = 
                     value
                     |> JD.decodeValue
-                        (JD.succeed VariableGenerationResult
+                        (JD.succeed VariablesGenerationResult
                         |> andMap (JD.field "conditionSatisfied" JD.bool)
-                        |> andMap (JD.field "variables" <| JD.dict (JD.field "value" JD.value))
+                        |> andMap (JD.field "variables" <| JD.dict (
+                            JD.succeed VariableGenerationResult
+                                |> andMap (JD.oneOf
+                                    [ JD.field "value" JD.value |> JD.map Ok
+                                    , JD.field "error" JD.string |> JD.map Err
+                                    ]
+                                  )
+                                |> andMap (JD.dict JD.value)
+                            ))
                         )
 
                 nvariable_groups = 
@@ -1108,7 +1175,11 @@ update_question msg question = case msg of
                                     group.variables
                                     |> List.indexedMap (\vi variable ->
                                         case Dict.get (S.getters.string (S.atField "name" variable.settings)) r.variables of
-                                            Just vvalue -> { variable | computed = S.insert "value" vvalue variable.computed }
+                                            Just vvalue -> 
+                                                let
+                                                    ncomputed = S.merge vvalue.result variable.computed
+                                                in
+                                                    { variable | computed = ncomputed, value = Just vvalue.value }
                                             Nothing -> variable
                                        )
                             in
@@ -1117,9 +1188,9 @@ update_question msg question = case msg of
                        )
                     |> Result.withDefault question.variable_groups
             in
-                ({ question | variable_groups = nvariable_groups }, (Nothing, Nothing))
+                ({ question | variable_groups = nvariable_groups }, nocmd NoChange)
         
-        _ -> (question, (Nothing, Nothing))
+        _ -> (question, nocmd NoChange)
 
 update_part : PartMsg -> PartPath -> Part -> ChangeSideEffect Part
 update_part msg path part = case msg of
@@ -1133,9 +1204,9 @@ update_part msg path part = case msg of
 
             nsettings = S.setAt at v part.settings
         in
-            ({ part | settings = nsettings }, (Just False, Just <| Cmd.batch cmds))
+            ({ part | settings = nsettings }, (SmallChange, Cmd.batch cmds))
 
-    ChangePartComputed key v -> ({ part | computed = S.insert key v part.computed }, (Nothing, Nothing))
+    ChangePartComputed key v -> ({ part | computed = S.insert key v part.computed }, nocmd NoChange)
 
     UpdateMarkingAlgorithm mmsg -> update_marking_algorithm mmsg path part
 
@@ -1145,23 +1216,23 @@ update_marking_algorithm msg path part =
         marking_algorithm = part.marking_algorithm
 
         path_string = part_path_toString path
-        (nalgo, mcmd) = case msg of
+        (nalgo, cmd) = case msg of
             ChangeMarkingAlgorithmNote i (v, at) -> 
                 let
                     nnotes = LE.updateAt i (\note -> { note | changed = True, settings = S.setAt at v note.settings }) marking_algorithm.notes
                 in
-                    ({ marking_algorithm | notes = nnotes }, (Just False, Nothing))
+                    ({ marking_algorithm | notes = nnotes }, (SmallChange, Cmd.none))
 
             AddMarkingAlgorithmNote ->
                 let
-                    cmd = set_tab (path_string++"-marking-algorithm-notes") (fi <| List.length marking_algorithm.notes)
+                    set_tab_cmd = set_tab (path_string++"-marking-algorithm-notes") (fi <| List.length marking_algorithm.notes)
                 in
-                    ({ marking_algorithm | notes = marking_algorithm.notes ++ [blank_note] }, (Just False, Just cmd))
+                    ({ marking_algorithm | notes = marking_algorithm.notes ++ [blank_note] }, (SmallChange, set_tab_cmd))
 
-            DeleteMarkingAlgorithmNote i -> ({ marking_algorithm | notes = LE.removeAt i marking_algorithm.notes }, (Just True, Nothing))
+            DeleteMarkingAlgorithmNote i -> ({ marking_algorithm | notes = LE.removeAt i marking_algorithm.notes }, (BigChange, Cmd.none))
                 
     in
-        ({ part | marking_algorithm = nalgo }, mcmd)
+        ({ part | marking_algorithm = nalgo }, cmd)
             
 
 
@@ -1240,7 +1311,7 @@ update_variable msg path variable = case msg of
                    )
                 |> List.filter ((/=) Cmd.none) 
         in
-            (nvariable, (Just False, Just <| Cmd.batch cmds))
+            (nvariable, (SmallChange, Cmd.batch cmds))
 
     ChangeVariableTemplateSetting (v, at) ->
         let
@@ -1260,12 +1331,12 @@ update_variable msg path variable = case msg of
                     , ("templateType", S.getters.value (S.atField "templateType" variable.settings))
                     ]
         in
-            ({ variable | computed = ncomputed }, (Just False, Just cmd))
+            ({ variable | computed = ncomputed }, (SmallChange, cmd))
 
     ChangeVariableComputed command value -> case command of
         "parse_templateType" ->
             ({ variable | computed = S.insert "template" value variable.computed }
-            , (Nothing, Nothing)
+            , nocmd NoChange
             )
 
         "variable_template_to_definition" ->
@@ -1274,11 +1345,11 @@ update_variable msg path variable = case msg of
             in
                 case rdefinition of
                     Ok definition ->
-                        ( { variable | settings = S.insert "definition" (JE.string definition) variable.settings }, (Nothing, Nothing))
+                        ({ variable | settings = S.insert "definition" (JE.string definition) variable.settings }, nocmd NoChange)
                     Err _ ->
-                        (variable, (Nothing, Nothing))
+                        (variable, nocmd NoChange)
                 
-        _ -> (variable, (Nothing, Nothing))
+        _ -> (variable, nocmd NoChange)
 
     PrettyPrintJSON ->
         let
@@ -1293,7 +1364,7 @@ update_variable msg path variable = case msg of
 
             ncomputed = S.setAt at (JE.string pretty_json) variable.computed
         in
-            ({ variable | computed = ncomputed }, (Nothing, Nothing))
+            ({ variable | computed = ncomputed }, nocmd NoChange)
             
 
 labelled_field : LabelledField
@@ -1474,6 +1545,22 @@ variable_path_to_id (g, v) = (fi g)++"-"++(fi v)
 variable_tab_id : VariablePath -> String
 variable_tab_id path = "variable-" ++ (variable_path_to_id path)
 
+{- Get the list of individual names for a variable. -}
+variable_names : Variable -> List String
+variable_names v =
+    let
+        computed_names = S.get (JD.maybe <| JD.list JD.string) Nothing (S.atField "names" v.computed)
+        name_input = S.getters.string (S.atField "name" v.settings)
+    in
+        computed_names
+        |> Maybe.withDefault (name_input |> String.split "," |> List.map String.trim)
+
+dependencies_of : Variable -> List String
+dependencies_of =
+    .computed
+    >> S.atField "dependencies"
+    >> S.get (JD.list JD.string) []
+
 numberNotationStyles : List {value : String, label : String, description : String}
 numberNotationStyles =
     [ { value = "plain"
@@ -1608,6 +1695,17 @@ view_active model =
                 tset : (JE.Value, S.Address) -> Msg
                 tset = ChangeVariableTemplateSetting >> UpdateVariable path >> UpdateQuestion
 
+                dependencies : List String
+                dependencies = dependencies_of variable
+
+                names = variable_names variable |> Set.fromList
+
+                used_by : List String
+                used_by =
+                    all_variables
+                    |> List.filter (dependencies_of >> Set.fromList >> Set.intersect names >> (/=) Set.empty)
+                    |> List.map (variable_names >> String.join ", ")
+
                 variable_field : { id : String, label : String, help : Maybe String } -> PropertyWidget -> List (Html Msg)
                 variable_field o = labelled_field
                     ui
@@ -1631,7 +1729,7 @@ view_active model =
                 inline_text_field : { id : String, label : String, help : Maybe String } -> List (Html Msg)
                 inline_text_field o = 
                     custom_text_property
-                        [ HA.attribute "aria-label" o.label ]
+                        [ Aria.label o.label ]
                         ui
                         { id = o.id
                         , label = o.label
@@ -1786,7 +1884,7 @@ view_active model =
                                 [ [H.label [] [H.text "Value"]]
                                 , values |> List.indexedMap (\i v ->
                                     custom_text_property
-                                        [ HA.attribute "aria-label" <| "Number "++(fi i) ]
+                                        [ Aria.label <| "Number "++(fi i) ]
                                         ui
                                         { id = "value-"++(fi i)
                                         , label = "Number "++(fi i)
@@ -1814,7 +1912,7 @@ view_active model =
                                 [ [H.label [] [H.text "Value"]]
                                 , values |> List.indexedMap (\i v ->
                                     custom_text_property
-                                        [ HA.attribute "aria-label" <| "Number "++(fi i) ]
+                                        [ Aria.label <| "Number "++(fi i) ]
                                         ui
                                         { id = "value-"++(fi i)
                                         , label = "Number "++(fi i)
@@ -1853,13 +1951,12 @@ view_active model =
                     LE.find (.id >> (==) (vstring "templateType")) templateTypes
                     |> Maybe.withDefault jme_template
 
-                rvalue = JD.decodeValue (JD.field "value" JD.value) variable.computed.value
+                mvalue = variable.value
 
-                type_ = rvalue |> Result.andThen (JD.decodeValue (JD.field "type" JD.string)) |> Result.withDefault "unknown type"
 
                 vview =
-                    { contents =
-                        [ H.fieldset [ HA.class "vertical" ] <| List.concat
+                    { contents = List.concat
+                        [ [H.fieldset [ HA.class "vertical" ] <| List.concat
                             [ [ H.button
                                 [ HA.type_ "button"
                                 , HA.class "btn danger"
@@ -1894,25 +1991,75 @@ view_active model =
                                 , help = Just "exams overriding variable values"
                                 }
                                 boolean_property
-                            , case rvalue of
-                                Ok value -> 
+                          ]
+                        ]
+                        , case mvalue of
+                                Just (Ok value) -> 
                                     [H.section
-                                        [ HA.class "generated-value" ]
+                                        [ HA.class "generated-value well" ]
                                         [ H.h3 [] 
                                             [ H.text "Generated value"
-                                            , H.small [] [H.text <| type_]
+                                            , H.text " "
+                                            , H.small [ HA.class "datatype" ] <| case variable_type variable of
+                                                Just type_ -> [H.text <| type_]
+                                                Nothing -> [H.text "Unknown type"]
                                             ]
                                         , Ui.jme_value { value = value, abbreviate = False }
                                         ]
                                     ]
 
-                                Err _ -> []
-                            , [H.h4 [] [H.text "Settings"]
-                              , H.pre [] [H.text <| JE.encode 4 variable.settings.value]
-                              , H.h4 [] [H.text "Computed"]
-                              , H.pre [] [H.text <| Debug.toString <| Result.map (Dict.map (\_ v -> JE.encode 0 v)) <| JD.decodeValue (JD.field "template" <| JD.dict JD.value) variable.computed.value]
-                              ]
-                            ]
+                                Just (Err err) -> 
+                                    [ ui.alert "warning"
+                                        [ H.h4 [] [H.text "Error"]
+                                        , Ui.raw_html_string err
+                                        ]
+                                    ]
+
+                                Nothing -> []
+                        , case dependencies of
+                                [] -> []
+                                _ -> [H.section
+                                        [ HA.class "dependencies" ]
+                                        [ H.h3 [] 
+                                            [ ui.icon "from"
+                                            , H.text "Depends on"
+                                            ]
+                                        , H.ul
+                                            [ HA.class "list-inline" ]
+                                            (dependencies |> List.map (\d -> 
+                                                H.li [] 
+                                                    [ H.a
+                                                        [ HA.href "#"
+                                                        , HE.onClick (ShowVariable d |> UpdateQuestion)
+                                                        , HA.class "monospace btn info"
+                                                        ]
+                                                        [ H.text d ]
+                                                    ]
+                                            ))
+                                        ]
+                                     ]
+                        , case used_by of
+                                [] -> []
+                                _ -> [H.section
+                                        [ HA.class "used-by" ]
+                                        [ H.h3 [] 
+                                            [ H.text "Used by"
+                                            , ui.icon "to"
+                                            ]
+                                        , H.ul
+                                            [ HA.class "list-inline" ]
+                                            (used_by |> List.map (\d -> 
+                                                H.li [] 
+                                                    [ H.a
+                                                        [ HA.href "#"
+                                                        , HE.onClick (ShowVariable d |> UpdateQuestion)
+                                                        , HA.class "monospace btn info"
+                                                        ]
+                                                        [ H.text d ]
+                                                    ]
+                                            ))
+                                        ]
+                                     ]
                         ]
                     , attributes = []
                     }
@@ -1963,7 +2110,7 @@ view_active model =
         variables_tab =
             { contents =
                 [ H.nav
-                    []
+                    [ HA.id "variables" ]
                     [ H.h2 [] [ H.text "Variables" ]
                     , H.menu [ HA.class "list-unstyled" ] <| List.concat
                         [ (grouped_variable_tabs |> List.indexedMap (\gi (group, variable_tabs) ->
@@ -1985,17 +2132,22 @@ view_active model =
 
                                             path = (gi, vi)
 
-                                            value = S.getters.value <| cfield "value"
-
-                                            type_ = S.getters.string <| S.at [S.field "value", S.field "type"] variable.computed
+                                            mtype = variable_type variable
                                         in
                                             H.tr
                                                 [ HE.onClick <| UpdateTab <| Tabber.SetTab "variables" <| variable_tab_id path ]
-                                                [ H.td [] 
+                                                [ H.td [ HA.class "name" ] 
                                                     [ tab_button ui UpdateTab model.tab_state variables_tabber vtab tab_index
                                                     ]
-                                                , H.td [HA.class "monospace"] [H.text <| type_]
-                                                , H.td [] [Ui.jme_value { value = value, abbreviate = True }]
+                                                , H.td [HA.class "type"] (case mtype of 
+                                                    Just type_ -> [H.text <| type_]
+                                                    Nothing -> []
+                                                  )
+                                                , H.td [HA.class "value"] (case variable.value of
+                                                    Just (Ok value) -> [Ui.jme_value { value = value, abbreviate = True }]
+                                                    Just (Err err) -> [H.span [HA.class "truncate warning"] [Ui.raw_html_string err]]
+                                                    Nothing -> []
+                                                  )
                                                 ]
                                       ))
                                     ]
@@ -2009,14 +2161,21 @@ view_active model =
                                 ]
 
                           ))
-                        , [ H.button
-                                [ HE.onClick (RegenerateVariables |> UpdateQuestion)
-                                , HA.class "btn primary"
-                                ]
-                                [ ui.icon "regenerate"
-                                , H.text "Regenerate values"
-                                ]
-                          ]
+                        ]
+                    , H.button
+                        [ HE.onClick (RegenerateVariables |> UpdateQuestion)
+                        , HA.class "btn primary"
+                        ]
+                        [ ui.icon "regenerate"
+                        , H.text "Regenerate values"
+                        ]
+                    , H.button
+                        [ HA.type_ "button"
+                        , HA.class "btn"
+                        , HE.onClick (AddVariableGroup |> UpdateQuestion)
+                        ]
+                        [ ui.icon "add"
+                        , H.text "New variable group"
                         ]
                     ]
                 , view_tabpanel variables_tabber
@@ -2041,19 +2200,12 @@ view_active model =
         all_parts : List (PartPath, Part)
         all_parts = unwrap_part_container question.parts
 
-        (add_part_path, add_part_kind) = model.adding_part
+        (add_part_path, add_part_kind) = model.adding_part |> Maybe.withDefault ([], TopPart)
 
         parts_tabber =
             { name = "parts"
             , allow_empty = True
-            , tabs = 
-                ( all_parts |> List.map part_tab )
-                ++ [ { id = "add-part"
-                     , label = SimpleLabel <| if all_parts == [] then "Add a part" else "Add another part"
-                     , icon = Just "add"
-                     , view = add_part_tab
-                     }
-                   ]
+            , tabs = all_parts |> List.map part_tab
             }
 
         parts_tab =
@@ -2062,26 +2214,57 @@ view_active model =
                     []
                     [ H.h2 [] [ H.text "Parts" ]
                     , view_tablist parts_tabber [HA.class "vertical"]
+                    , H.button
+                        [ HA.class "btn"
+                        , HE.onClick <| StartAddingPart [] TopPart
+                        , HA.attribute "commandfor" "add-part"
+                        , HA.attribute "command" "show-modal"
+                        ]
+                        [ ui.icon "add"
+                        , H.text "Add a part"
+                        ]
+                    , add_part_modal
                     ]
                 , view_tabpanel parts_tabber
                 ]
             , attributes = [HA.class "tabbed-sidebar"]
             }
 
-        add_part_tab : TabView Msg
-        add_part_tab =
+        add_part_modal : Html Msg
+        add_part_modal =
             let
                 kind_label = child_part_label add_part_kind
             in
-                { contents =
-                    [ H.h2 
-                        [] 
-                        [ icon "add"
-                        , H.text <| case add_part_kind of
-                            TopPart -> "Add a part"
-                            Gap -> "Add a gap"
-                            Step -> "Add a step"
-                            Alternative -> "Add an alternative"
+                H.node "dialog"
+                    (List.concat
+                        [ [ HA.id "add-part"
+                          , HA.attribute "closedby" "any"
+                          ]
+                        , case model.adding_part of
+                            Just _ -> [HA.attribute "open" ""]
+                            Nothing -> []
+                        ]
+                    )
+                    [ H.header
+                        []
+                        [ H.h2 
+                            [] 
+                            [ icon "add"
+                            , H.text <| case add_part_kind of
+                                TopPart -> "Add a part"
+                                Gap -> "Add a gap"
+                                Step -> "Add a step"
+                                Alternative -> "Add an alternative"
+                            ]
+                        , H.button
+                            [ HA.type_ "button"
+                            , HA.class "btn xs"
+                            , HA.attribute "commandfor" "add-part"
+                            , HA.attribute "command" "close"
+                            ]
+                            [ ui.icon "close"
+                            , H.text "Cancel"
+                            ]
                         ]
                     , ui.help_block [H.text <| "Choose a type for this new "++kind_label++"."]
                     , H.form
@@ -2095,6 +2278,8 @@ view_active model =
                                         [ HE.onClick (UpdateQuestion <| AddPart add_part_path add_part_kind (new_part model.default_settings t (JE.object []) empty_part_container))
                                         , HA.class "btn primary"
                                         , HA.type_ "button"
+                                        , HA.attribute "commandfor" "add-part"
+                                        , HA.attribute "command" "close"
                                         ]
                                         [ icon "add"
                                         , H.text t.nice_name
@@ -2108,8 +2293,6 @@ view_active model =
                             ))
                         ]
                     ]
-                , attributes = []
-                }
 
         part_tab : (PartPath, Part) -> Tab Msg
         part_tab (path, part) =
@@ -3794,7 +3977,7 @@ view_active model =
                             [H.p [] <| List.concat
                                 [ [H.text <| "Run the "++label++" script "]
                                 , custom_select_property
-                                    [ HA.attribute "aria-label" <| "When to run the "++label++" script"
+                                    [ Aria.label <| "When to run the "++label++" script"
                                     , HA.class "inline"
                                     ]
                                     [ ("instead", "instead of")
@@ -3894,14 +4077,18 @@ view_active model =
                 control_buttons =
                     [ (part.type_.name == "gapfill", H.button
                         [ HA.class "btn xs"
-                        , HE.onClick (AddChildPart path Gap)
+                        , HE.onClick (StartAddingPart path Gap)
+                        , HA.attribute "commandfor" "add-part"
+                        , HA.attribute "command" "show-modal"
                         ]
                         [ H.text "Add a gap"
                         ]
                       )
                     , (parts_mode == AllPartsMode && is_top_level && part.type_.has_marks, H.button
                         [ HA.class "btn xs"
-                        , HE.onClick (AddChildPart path Step)
+                        , HE.onClick (StartAddingPart path Step)
+                        , HA.attribute "commandfor" "add-part"
+                        , HA.attribute "command" "show-modal"
                         ]
                         [ H.text "Add a step"
                         ]
@@ -3917,8 +4104,7 @@ view_active model =
                                     |> S.setAt [S.field "marks"] (JE.string "")
                                     |> S.setAt [S.field "customName"] (JE.string "")
 
-                                npart = 
-                                    { part | settings = nsettings }
+                                npart = { part | settings = nsettings, children = empty_part_container }
                             in
                                 UpdateQuestion <| AddPart path Alternative npart
                           )

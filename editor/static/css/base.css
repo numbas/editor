@@ -238,27 +238,27 @@
     }
 
     h1 {
-        font-size: calc(3 * var(--base-text-size));
+        font-size: calc(3 * var(--scaled-text-size));
     }
 
     h2 {
-        font-size: calc(2 * var(--base-text-size));
+        font-size: calc(2 * var(--scaled-text-size));
     }
 
     h3 {
-        font-size: calc(1.7 * var(--base-text-size));
+        font-size: calc(1.7 * var(--scaled-text-size));
     }
 
     h4 {
-        font-size: calc(1.4 * var(--base-text-size));
+        font-size: calc(1.4 * var(--scaled-text-size));
     }
 
     h5 {
-        font-size: calc(1 * var(--base-text-size));
+        font-size: calc(1 * var(--scaled-text-size));
     }
 
     h6 {
-        font-size: calc(0.9 * var(--base-text-size));
+        font-size: calc(0.9 * var(--scaled-text-size));
     }
 
     p {
@@ -637,36 +637,46 @@
     dialog {
         padding: var(--spacing);
         border-radius: var(--button-radius);
-    }
 
-    dialog::backdrop {
-        backdrop-filter: contrast(50%);
-    }
+        &::backdrop {
+            backdrop-filter: contrast(50%);
+        }
 
 
-    dialog > * {
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing);
-    }
-    dialog > * > header > h2 {
-        min-height: var(--spacing);
-        margin: 0;
-        font-size: calc(1.5 * var(--base-text-size));
-        line-height: var(--line-height);
-    }
-    dialog > * > footer {
-        padding-top: var(--spacing);
-        text-align: end;
-        border-top: thin solid var(--faint-line-color);
-    }
-    dialog > * > footer .btn + .btn {
-        margin-left: var(--third-space);
-        margin-bottom: 0;
-    }
+        & > header {
+            flex-direction: row;
+            align-items: baseline;
+            
+            & > h2 {
+                flex-grow: 1;
+            }
+        }
 
-    dialog hr {
-        margin: 0;
+
+        & > * {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing);
+        }
+        & > * > header > h2 {
+            min-height: var(--spacing);
+            margin: 0;
+            font-size: calc(1.5 * var(--base-text-size));
+            line-height: var(--line-height);
+        }
+        & > * > footer {
+            padding-top: var(--spacing);
+            text-align: end;
+            border-top: thin solid var(--faint-line-color);
+        }
+        & > * > footer .btn + .btn {
+            margin-left: var(--third-space);
+            margin-bottom: 0;
+        }
+
+        & hr {
+            margin: 0;
+        }
     }
 
     .center-block {

@@ -101,7 +101,7 @@ app.ports.save_tab_state.subscribe(state => {
 
 let variable_generation_run_number = 0;
 async function computeVariables(prep) {
-    const result = {variables: {}, conditionSatisfied: true};
+    const result = {variables: {}, conditionSatisfied: true, errors: []};
     
     const scope = new jme.Scope([prep.scope]);
 
@@ -116,8 +116,6 @@ async function computeVariables(prep) {
         scope.setVariable(name, value_generator());
     });
 
-    const errors = [];
-
     async function computeVariable(name,todo,scope,path,computeFn) {
         scope.editor_evaluation_warnings = [];
         let value;
@@ -130,7 +128,7 @@ async function computeVariables(prep) {
                 result.variables[name] = {error: e.message};
             }
             result.error = true;
-            errors.push(e);
+            result.errors.push(e);
         }
         if(scope.editor_evaluation_warnings.length) {
             if(!result.variables[name]) {
@@ -151,7 +149,7 @@ async function computeVariables(prep) {
             }
         });
     } catch(err) {
-        const e = errors[0] || err;
+        const e = result.errors[0] || err;
         console.error(e);
         result.conditionError = e.message;
         result.conditionSatisfied = false;
@@ -351,7 +349,7 @@ const builtin_templateTypes = {
 };
 
 function get_variable_template(templateType) {
-    const handler = builtin_templateTypes[templateType];
+    const handler = builtin_templateTypes[templateType || 'anything'];
     if(!handler) {
         throw(new Error(`Unknown variable data type ${templateType}`));
     }
@@ -420,18 +418,46 @@ const ask_numbas_handlers = {
 
         const scope_variable_names = Object.keys(scope.allVariables());
 
-        const todo = Object.fromEntries(Object.values(question.variables).map(v => {
-            const tree = jme.compile(v.definition);
-            const vars = jme.findvars(tree, scope_variable_names, scope);
+        const variable_definitions = Object.values(question.variables);
 
-            return [v.name, {tree, vars}];
-        }));
+        const result = {variables: Object.fromEntries(variable_definitions.map(v => [v.name, {}]))};
+
+        const todo = {};
+
+        variable_definitions.forEach(v => {
+            try {
+                const tree = jme.compile(v.definition);
+                const vars = jme.findvars(tree, scope_variable_names, scope);
+                todo[v.name] = {tree, vars};
+                Object.assign(result.variables[v.name],
+                    {
+                        dependencies: vars,
+                        names: jme.variables.splitVariableNames(v.name)
+                    }
+                );
+            } catch(error) {
+                console.error(error);
+                result.variables[v.name].error = error.message || error.toString();
+            }
+        });
 
         const condition = null; // TODO
 
         const prep = {scope, todo, condition};
 
-        const result = await computeVariables(prep);
+        const compute_result = await computeVariables(prep);
+
+        Object.entries(compute_result.variables).forEach(([name, res]) => {
+            if(!result.variables[name]) {
+                return;
+            }
+            Object.assign(result.variables[name], res);
+        });
+
+        result.conditionSatisfied = compute_result.conditionSatisfied;
+
+        console.log(result);
+
 
         return result;
     }

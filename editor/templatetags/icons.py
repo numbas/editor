@@ -46,9 +46,12 @@ icon_map = {
     'file': '🗏',
     'transfer': '⤏',
     'next': '→',
+    'from': '←',
+    'to': '→',
     'scale': '⚖️',
     'grid': '▩',
     'regenerate': '⟳',
+    'close': '❌',
 }
 
 @register.inclusion_tag('icon.html')

@@ -4,6 +4,7 @@ module Ui exposing
     , ui
     , visibleIf
     , raw_html
+    , raw_html_string
     , jme_preview
     , jme_value
     )
@@ -22,6 +23,7 @@ type alias Ui msg =
     , help_block : List (Html msg) -> Html msg
     , inline_help_block : List (Html msg) -> Html msg
     , alert : String -> List (Html msg) -> Html msg
+    , styled_text : String -> List (Html msg) -> Html msg
     , config : UiConfig
     }
 
@@ -92,6 +94,8 @@ ui config =
         inline_help_block content = H.span [ HA.class "help-block inline" ] content
 
         alert kind content = H.div [HA.class <| "alert "++kind] content
+
+        styled_text kind content = H.span [HA.class kind] content
     in
         { icon = icon
         , helplink = helplink False
@@ -100,6 +104,7 @@ ui config =
         , help_block = help_block
         , inline_help_block = inline_help_block
         , alert = alert
+        , styled_text = styled_text
         , config = config
         }
 
@@ -110,6 +115,12 @@ raw_html : JE.Value -> Html msg
 raw_html content = 
     H.node "raw-html" 
         [HA.property "html" content]
+        []
+
+raw_html_string : String -> Html msg
+raw_html_string content = 
+    H.node "raw-html" 
+        [HA.attribute "html" content]
         []
 
 jme_preview : { expression : String, notation : String, for : String} -> Html msg

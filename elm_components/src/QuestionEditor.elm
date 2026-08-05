@@ -20,7 +20,7 @@ import Task
 import Tuple exposing (pair, mapFirst, first, second)
 import Ui exposing (Ui, UiConfig, visibleIf, jme_preview, raw_html)
 import History exposing (History)
-import Util exposing (fi, ff, letter_ordinal, delay, first_two)
+import Util exposing (fi, ff, letter_ordinal, delay, first_two, dropRight, third)
 
 port ask_numbas : JE.Value -> Cmd msg
 port answer_numbas : (JE.Value -> msg) -> Sub msg
@@ -212,11 +212,13 @@ type QuestionMsg
     | RegenerateVariables
     | ChangeQuestionComputed String JE.Value
     | ShowVariable String
+    | ShowPart PartPath
 
 type PartMsg
     = ChangePartSetting (JE.Value, S.Address)
     | ChangePartComputed String JE.Value
     | UpdateMarkingAlgorithm MarkingAlgorithmMsg
+    | ChangeNextPartAvailabilityCondition Int (JE.Value, S.Address)
 
 type VariableMsg
     = ChangeVariableSetting (JE.Value, S.Address)
@@ -727,7 +729,7 @@ decode_question default_settings =
 
                 ungrouped_variables = Dict.values variable_dict |> List.filter (\v -> 
                     let
-                        name = S.getters.string (S.atField "name" v.settings)
+                        name = name_of v
                     in
                         not (Set.member name grouped_variables))
 
@@ -882,7 +884,7 @@ encode_question question =
         (( S.get (JD.dict JD.value |> JD.map Dict.toList) [] question.settings)
         ++ (encode_part_container question.parts)
         ++ [ ("variables", question.variable_groups |> List.concatMap (.variables) |> List.map (\v ->
-                (S.getters.string (S.atField "name" v.settings), encode_variable v)
+                (name_of v, encode_variable v)
                 ) |> JE.object
              )
            ]
@@ -1148,6 +1150,12 @@ update_question msg question = case msg of
                 Just path -> (question, (NoChange, Cmd.batch [set_tab "main" "variables", set_tab "variables" (variable_tab_id path)]))
                 Nothing -> (question, nocmd NoChange)
 
+    ShowPart path ->
+        let
+            tab_id = part_tab_id path
+        in
+            (question, (NoChange, set_tab "parts" tab_id))
+
     ChangeQuestionComputed command value -> case command of
         "generateVariables" ->
             let
@@ -1176,7 +1184,7 @@ update_question msg question = case msg of
                                 nvariables =
                                     group.variables
                                     |> List.indexedMap (\vi variable ->
-                                        case Dict.get (S.getters.string (S.atField "name" variable.settings)) r.variables of
+                                        case Dict.get (name_of variable) r.variables of
                                             Just vvalue -> 
                                                 let
                                                     ncomputed = S.merge vvalue.result variable.computed
@@ -1211,6 +1219,21 @@ update_part msg path part = case msg of
     ChangePartComputed key v -> ({ part | computed = S.insert key v part.computed }, nocmd NoChange)
 
     UpdateMarkingAlgorithm mmsg -> update_marking_algorithm mmsg path part
+
+    ChangeNextPartAvailabilityCondition i (v, at) ->
+        let
+            value = JD.decodeValue JD.string v |> Result.withDefault "custom"
+
+            nv = case value of
+                "custom" -> JE.string ""
+                _ -> v
+
+            (npart, cmd) = update_part (ChangePartSetting (nv, at)) path part
+
+            ncomputed = S.insert "customAvailabilityCondition" (JE.bool <| value == "custom") npart.computed
+        in
+            ({ npart | computed = ncomputed }, cmd)
+            
 
 update_marking_algorithm : MarkingAlgorithmMsg -> PartPath -> Part -> ChangeSideEffect Part
 update_marking_algorithm msg path part =
@@ -1454,18 +1477,39 @@ jme_property eo ui o =
 
 custom_select_property : List (H.Attribute Msg) -> List (String, String) -> PropertyWidget
 custom_select_property attrs options _ o =
-    [ H.select
-        ([ HE.onInput <| (S.setters o.settings o.setter).string
-        , HA.id o.id
-        ]++attrs)
-        (options |> List.map (\(value, label) -> 
-            H.option 
-                [ HA.value value
-                , HA.selected <| value == S.getters.string o.settings
-                ]
-                [H.text label]
-        ))
-    ]
+    let
+        current_value = S.getters.string o.settings
+    in
+        [ H.select
+            ([ HE.onInput <| (S.setters o.settings o.setter).string
+            , HA.id o.id
+            ]++attrs)
+            (options |> List.map (\(value, label) -> 
+                H.option 
+                    [ HA.value value
+                    , HA.selected <| value == current_value
+                    ]
+                    [H.text label]
+            ))
+        ]
+
+select_or_custom_property : Bool -> List (Maybe String, String) -> PropertyWidget
+select_or_custom_property use_custom options _ o =
+    let
+        current_value = if use_custom then Nothing else Just (S.getters.string o.settings)
+    in
+        [ H.select
+            [ HE.onInput <| (S.setters o.settings o.setter).string
+            , HA.id o.id
+            ]
+            (options |> List.map (\(value, label) -> 
+                H.option 
+                    [ HA.value <| Maybe.withDefault "custom" value
+                    , HA.selected <| value == current_value
+                    ]
+                    [H.text label]
+            ))
+        ]
 
 select_property = custom_select_property []
 
@@ -1550,11 +1594,12 @@ variable_names : Variable -> List String
 variable_names v =
     let
         computed_names = S.get (JD.maybe <| JD.list JD.string) Nothing (S.atField "names" v.computed)
-        name_input = S.getters.string (S.atField "name" v.settings)
+        name_input = name_of v
     in
         computed_names
         |> Maybe.withDefault (name_input |> String.split "," |> List.map String.trim)
 
+{- Names of immediate dependencies of the given variable -}
 dependencies_of : Variable -> List String
 dependencies_of =
     .computed
@@ -1568,6 +1613,27 @@ variable_is_random v =
         isRandom = S.getters.bool <| S.atField "isRandom" v.computed
     in
         (not isDeterministic) && isRandom
+
+name_of : { a | settings : Settings } -> String
+name_of thing = S.getters.string (S.atField "name" thing.settings)
+
+variable_link : String -> Html Msg
+variable_link name = 
+    H.a
+        [ HA.href "#"
+        , HE.onClick (ShowVariable name |> UpdateQuestion)
+        , HA.class "monospace btn"
+        ]
+        [ H.text name ]
+
+part_link : PartPath -> Part -> Html Msg
+part_link path part =
+    H.a
+        [ HA.href "#"
+        , HE.onClick (ShowPart path |> UpdateQuestion)
+        , HA.class "btn"
+        ]
+        [H.text <| part_name path part]
 
 numberNotationStyles : List {value : String, label : String, description : String}
 numberNotationStyles =
@@ -1667,6 +1733,11 @@ view_active model =
                 model.numbas
             |> Result.withDefault [("standard", "Standard")]
 
+        explore_penalty_options : List (String, String)
+        explore_penalty_options =
+            S.get (JD.list (JD.oneOf [JD.field "name" JD.string |> JD.map Just, JD.succeed Nothing]) |> JD.map (List.filterMap identity)) [] (S.atField "penalties" question.settings)
+            |> List.map (\v -> (v,v))
+
         statement_tab : TabView Msg
         statement_tab =
             { contents = 
@@ -1684,6 +1755,58 @@ view_active model =
 
         all_variables : List Variable
         all_variables = question.variable_groups |> List.concatMap (.variables)
+
+        variable_dict : Dict String Variable
+        variable_dict =
+            all_variables
+            |> List.map (\v -> (name_of v, v))
+            |> Dict.fromList
+
+        get_variable : String -> Maybe Variable
+        get_variable name = Dict.get name variable_dict
+
+        all_dependencies_of : Variable -> List Variable
+        all_dependencies_of variable =
+            let
+                visit : List String -> Variable -> List Variable
+                visit vpath v =
+                    let
+                        name = name_of v
+                        deps = 
+                            dependencies_of v
+                            |> List.filterMap get_variable
+                    in
+                        if List.member name vpath then
+                            []
+                        else
+                            deps ++ (List.concatMap (visit (name::vpath)) deps)
+            in
+                visit [] variable
+
+        dependants_of : Variable -> List Variable
+        dependants_of v =
+            let
+                name = name_of v
+            in
+                all_variables
+                |> List.filter (dependencies_of >> List.member name)
+
+        all_dependants_of : Variable -> List Variable
+        all_dependants_of variable =
+            let
+                visit : List String -> Variable -> List Variable
+                visit vpath v =
+                    let
+                        name = name_of v
+                        deps = dependants_of v
+                    in
+                        if List.member name vpath then
+                            []
+                        else
+                            deps ++ (List.concatMap (visit (name::vpath)) deps)
+            in
+                visit [] variable
+
 
         variable_tab : VariablePath -> Variable -> Tab Msg
         variable_tab path variable =
@@ -2032,12 +2155,7 @@ view_active model =
                                             [ HA.class "list-inline" ]
                                             (dependencies |> List.map (\d -> 
                                                 H.li [] 
-                                                    [ H.a
-                                                        [ HA.href "#"
-                                                        , HE.onClick (ShowVariable d |> UpdateQuestion)
-                                                        , HA.class "monospace btn info"
-                                                        ]
-                                                        [ H.text d ]
+                                                    [ variable_link d
                                                     ]
                                             ))
                                         ]
@@ -2064,6 +2182,8 @@ view_active model =
                                             ))
                                         ]
                                      ]
+                        , [H.pre [] [H.text <| Debug.toString <| List.map name_of <| all_dependencies_of variable]]
+                        , [H.pre [] [H.text <| Debug.toString <| dependencies_of variable]]
                         ]
                     , attributes = []
                     }
@@ -2188,14 +2308,24 @@ view_active model =
 
         settings_tab =
             { contents =
-                [ H.fieldset [] <|
-                    (question_field
+                [ H.fieldset [] <| List.concat
+                    [question_field
                         { id = "name"
                         , label = "Name"
                         , help = Nothing
                         }
                         text_property
-                    )
+                    , question_field
+                        { id = "partsMode"
+                        , label = "Parts mode"
+                        , help = Nothing
+                        }
+                        (select_property 
+                            [("all", "Sequential")
+                            ,("explore", "Explore")
+                            ]
+                        )
+                    ]
                 ]
             , attributes = []
             }
@@ -2204,6 +2334,33 @@ view_active model =
         all_parts = unwrap_part_container question.parts
 
         (add_part_path, add_part_kind) = model.adding_part |> Maybe.withDefault ([], TopPart)
+
+        top_parts : List (PartPath, Part)
+        top_parts = case question.parts of
+            PartContainer parts -> 
+                parts.parts
+                |> List.indexedMap (\i p -> ([(TopPart, i)], p))
+
+        next_parts_from : Part -> List (PartPath, Part)
+        next_parts_from pp = 
+            S.get (JD.list (JD.field "otherPart" JD.int)) [] (S.atField "nextParts" pp.settings)
+            |> List.filterMap (\i -> LE.getAt i top_parts)
+
+        reachable_parts : List PartPath
+        reachable_parts = 
+            let
+                visit : List PartPath -> List (PartPath, Part) -> List PartPath
+                visit seen queue = case queue of
+                    [] -> seen
+                    (ppath, pp)::rest -> 
+                        if List.member ppath seen then
+                            visit seen rest
+                        else
+                            visit (ppath::seen) (rest++(next_parts_from pp))
+            in
+                top_parts
+                |> List.take 1
+                |> visit []
 
         parts_tabber =
             { name = "parts"
@@ -4047,15 +4204,14 @@ view_active model =
 
                         set_variable_replacements list = pset (JE.list identity list, [S.field "variableReplacements"])
 
-                        replaced_variables : Set String
-                        replaced_variables = variable_replacements |> List.map (first >> S.atField "variable" >> S.getters.string) |> Set.fromList
+                        replaced_variables : List String
+                        replaced_variables = variable_replacements |> List.map (first >> S.atField "variable" >> S.getters.string)
 
                         unreplaced_variables : List String
                         unreplaced_variables = 
                             all_variables
-                            |> List.map (.settings >> S.atField "name" >> S.getters.string)
-                            |> Set.fromList
-                            |> (\s -> Set.diff s replaced_variables)
+                            |> List.map name_of
+                            |> (\s -> Set.diff (Set.fromList s) (Set.fromList replaced_variables))
                             |> Set.toList
                             |> List.sort
 
@@ -4079,7 +4235,7 @@ view_active model =
 
                         add_variable_replacement : String -> Msg
                         add_variable_replacement name =
-                            (List.map second variable_replacements)++[JE.object [("variable", JE.string name), ("path", JE.string <| Maybe.withDefault "" <| Maybe.map first <| List.head <| part_options)]]
+                            (List.map second variable_replacements)++[JE.object [("variable", JE.string name), ("part", JE.string <| Maybe.withDefault "" <| Maybe.map first <| List.head <| part_options)]]
                             |> set_variable_replacements
 
                         remove_variable_replacement : Int -> Msg
@@ -4090,6 +4246,14 @@ view_active model =
                             |> set_variable_replacements
 
                         can_make_variable_replacements = (all_variables /= []) && (part_options /= [])
+
+                        recomputed_random_variables : List Variable
+                        recomputed_random_variables =
+                            replaced_variables
+                            |> List.filterMap get_variable
+                            |> List.concatMap (all_dependants_of)
+                            |> LE.unique
+                            |> List.filter variable_is_random
                     in
                         { id = "adaptive-marking"
                         , label = SimpleLabel "Adaptive marking"
@@ -4170,6 +4334,14 @@ view_active model =
 
                                         ]
                                     ]
+                                , visibleIf (recomputed_random_variables /= []) <|
+                                    [ ui.alert "danger"
+                                        [ H.p [] [H.text "The variable replacements you've chosen will cause the following variables to be regenerated each time the student submits an answer to this part:"]
+                                        , H.ul [ HA.class "list-inline" ] (recomputed_random_variables |> List.map (\r -> H.li [] [variable_link <| name_of r]))
+                                        , H.p [] [H.text "These variables have some random elements, which means they're not guaranteed to have the same value each time the student submits an answer. You should define new variables to store the random elements, so that they remain the same each time this part is marked."]
+                                        , H.p [] [ui.labelled_helplink "adaptive-marking" "More information about this problem"]
+                                        ]
+                                    ]
                                 , visibleIf (unreplaced_variables /= []) <|
                                     ui.dropdown 
                                         "add-variable-replacement" 
@@ -4207,7 +4379,9 @@ view_active model =
                                     ]
                                   ]
                                 , visibleIf (back_references /= []) <|
-                                    [ H.fieldset [] <| List.concat
+                                    [ H.p [] [H.text "The answer to this part is used to replace variables in the following other parts:"]
+                                    , H.ul [] (back_references |> List.map (\(ppath, pp) -> part_link ppath pp))
+                                    , H.fieldset [] <| List.concat
                                         [ part_field
                                             { id = "adaptiveMarkingUseCondition"
                                             , label = "Condition for using this part's answer in adaptive marking"
@@ -4222,38 +4396,246 @@ view_active model =
                                             content_property
                                         ]
                                     ]
-                                , [ H.pre [] [H.text <| JE.encode 4 <| S.getters.value <| S.atField "variableReplacements" part.settings]
-                                  , H.pre [] [H.text <| Debug.toString <| List.map first back_references]
-                                  , H.pre [] [
-                                        all_parts
-                                        |> List.map (\(ppath, pp) ->
-                                            pp.settings
-                                            |> S.get (JD.field "variableReplacements" <| JD.list (JD.oneOf
-                                                [ JD.field "part" JD.string |> JD.map Just
-                                                , JD.succeed Nothing
-                                                ]
-                                               ))
-                                               []
-                                           )
-                                        |> Debug.toString
-                                        |> H.text
-                                      ]
-                                  , H.p [] [H.text path_string]
-                                  ]
                                 ]
                             , attributes = []
                             }
                         }
 
                 next_parts_tab =
-                    { id = "next-parts"
-                    , label = SimpleLabel "Next parts"
-                    , icon = Just "next"
-                    , view =
-                        { contents = [] -- TODO
-                        , attributes = []
+                    let
+                        reachable : Bool
+                        reachable = List.member path reachable_parts
+
+                        is_first_part : Bool
+                        is_first_part = path == [(TopPart, 0)]
+
+                        references : List (PartPath, Part)
+                        references = 
+                               top_parts
+                            |> List.filter (\(ppath, pp) ->
+                                    next_parts_from pp
+                                    |> List.map first
+                                    |> List.member path
+                               )
+
+                        next_part_values = S.get (JD.list JD.value) [] (S.atField "nextParts" part.settings)
+
+                        next_parts : List (Int, Settings, (PartPath, Part))
+                        next_parts = 
+                            next_part_values
+                            |> List.indexedMap (\i _ ->
+                                let
+                                    npsettings = S.at [S.field "nextParts", S.index i] part.settings
+
+                                    mnp = LE.getAt i top_parts
+                                in
+                                    mnp |> Maybe.map (\np -> (i, npsettings, np))
+                               )
+                            |> List.filterMap identity
+
+                        set_next_parts list = pset (JE.list identity list, [S.field "nextParts"])
+
+                        add_next_part : Int -> Msg
+                        add_next_part index =
+                            (next_part_values ++ [JE.object [("otherPart", JE.int index)]])
+                            |> set_next_parts
+                    in
+                        { id = "next-parts"
+                        , label = SimpleLabel "Next parts"
+                        , icon = Just "next"
+                        , view =
+                            { contents = List.concat
+                                [ [H.pre [] [H.text <| Debug.toString reachable_parts]]
+                                , visibleIf (not reachable) <|
+                                    [ ui.alert "warning"
+                                        [ H.p [] [H.text "This part can't be reached by the student."]
+                                        , if references == [] then
+                                            H.p [] [H.text "Add a \"next part\" reference to this part from another part."]
+                                          else
+                                            H.p [] [H.text "None of the parts which can lead to this part are reachable either."]
+                                        ]
+                                    ]
+                                , visibleIf (not is_first_part)
+                                    [ H.fieldset [] <| List.concat
+                                        [ part_field
+                                            { id = "suggestGoingBack"
+                                            , label = "Suggest going back to the previous part?"
+                                            , help = Just "going back"
+                                            }
+                                            boolean_property
+                                        ]
+                                    ]
+                                , [ H.h3 [] [H.text "Next part options"]
+                                  , ui.help_block
+                                      [ ui.helplink "next-parts" "next parts"
+                                      , H.text "Define the list of parts that the student can visit after this one."
+                                      ]
+                                  ]
+                                , next_parts |> List.map (\(i, npsettings, (npath, np)) ->
+                                    let
+                                        npfield k = S.atField k npsettings
+
+                                        availabilityCondition = S.getters.string (npfield "availabilityCondition")
+
+                                        penalty = S.getters.string (npfield "penalty")
+
+
+                                        variable_replacements : List (Int, Settings, JE.Value)
+                                        variable_replacements =
+                                            S.get (JD.list JD.value) [] (npfield "variableReplacements")
+                                            |> List.indexedMap (\vi v -> (vi, S.at [S.field "variableReplacements", S.index vi] npsettings, v))
+
+                                        set_variable_replacements list = pset (JE.list identity list, npsettings.at ++ [S.field "variableReplacements"])
+
+                                        add_variable_replacement : String -> Msg
+                                        add_variable_replacement name =
+                                            (List.map third variable_replacements)++[JE.object [("variable", JE.string name)]]
+                                            |> set_variable_replacements
+
+                                        remove_variable_replacement : Int -> Msg
+                                        remove_variable_replacement vi =
+                                            variable_replacements
+                                            |> List.map third
+                                            |> LE.removeAt vi
+                                            |> set_variable_replacements
+
+                                        can_make_variable_replacements = all_variables /= []
+
+                                        availabilityConditions =
+                                            [ (Just "", "Always")
+                                            , (Just "answered", "When answer submitted")
+                                            , (Just "not (answered and correct)", "When unanswered or incorrect")
+                                            , (Just "answered and credit<1", "When incorrect")
+                                            , (Just "answered and credit=1", "When correct")
+                                            , (Nothing, "Depending on expression")
+                                            ]
+
+                                        custom_availabilityCondition =
+                                            S.get
+                                                JD.bool
+                                                (not <| List.member (Just availabilityCondition) (List.map first <| dropRight 1 availabilityConditions))
+                                                (S.atField "customAvailabilityCondition" part.computed)
+
+                                        next_part_field o = labelled_field
+                                            ui
+                                            { id = o.id
+                                            , label = o.label
+                                            , help = o.help
+                                            , settings = npfield o.id
+                                            , setter = pset
+                                            }
+                                    in
+                                        H.article []
+                                            [ H.p [] [H.text <| part_name npath np]
+                                            , H.fieldset [] <| List.concat
+                                                [ next_part_field
+                                                    { id = "rawLabel"
+                                                    , label = "Label"
+                                                    , help = Just "label"
+                                                    }
+                                                    text_property
+                                                , next_part_field
+                                                    { id = "lockAfterLeaving"
+                                                    , label = "Lock this part?"
+                                                    , help = Just "locking after leaving this part"
+                                                    }
+                                                    boolean_property
+                                                , labelled_field
+                                                    ui
+                                                    { id = "availabilityCondition"
+                                                    , label = "Availability"
+                                                    , help = Just "availability condition"
+                                                    , settings = npfield "availabilityCondition"
+                                                    , setter = ChangeNextPartAvailabilityCondition i >> pmsg
+                                                    }
+                                                    (select_or_custom_property custom_availabilityCondition availabilityConditions)
+                                                , visibleIf custom_availabilityCondition <|
+                                                    next_part_field
+                                                        { id = "availabilityCondition"
+                                                        , label = "Available if"
+                                                        , help = Just "expression for availability"
+                                                        }
+                                                        text_property
+                                                , next_part_field
+                                                    { id = "penalty"
+                                                    , label = "Penalty to apply when visited"
+                                                    , help = Just "penalty for visiting"
+                                                    }
+                                                    (select_property <| ("","")::explore_penalty_options)
+                                                , visibleIf (penalty /= "") <| List.concat
+                                                    [ next_part_field
+                                                        { id = "penaltyAmount"
+                                                        , label = "Amount of penalty"
+                                                        , help = Just "penalty amount"
+                                                        }
+                                                        text_property
+                                                    , next_part_field
+                                                        { id = "showPenaltyHint"
+                                                        , label = "Show penalty hint?"
+                                                        , help = Just "penalty hint"
+                                                        }
+                                                        boolean_property
+                                                    ]
+                                                ]
+                                            , H.fieldset [] <| List.concat
+                                                [ [H.legend [] [H.text "Variable replacements"]]
+                                                , if variable_replacements == [] then
+                                                    [ H.p [ HA.class "nothing-here" ] [H.text "No variable replacements have been defined for this next part option."] ]
+                                                  else
+                                                    [ H.table
+                                                        []
+                                                        [ H.colgroup
+                                                            []
+                                                            [ H.col [HA.class "name"] []
+                                                            , H.col [HA.class "value"] []
+                                                            , H.col [HA.class "controls"] []
+                                                            ]
+                                                        , H.thead
+                                                            []
+                                                            [ H.tr []
+                                                                [ H.th [] [H.text "Variable"]
+                                                                , H.th [] [H.text "Value"]
+                                                                , H.td [] []
+                                                                ]
+                                                            ]
+                                                        , H.tbody
+                                                            []
+                                                            (variable_replacements |> List.map (\(vi, vrsettings, _) -> 
+                                                                let
+                                                                    name = ""
+                                                                in
+                                                                    H.tr
+                                                                        []
+                                                                        [ H.td [HA.class "monospace"] [H.text name]
+                                                                        ]
+                                                            ))
+                                                        ]
+                                                    ]
+                                                ]
+                                            ]
+
+                                  )
+                                , visibleIf (top_parts /= []) <|
+                                    ui.dropdown
+                                        "add-next-part"
+                                        [ ui.icon "add"
+                                        , H.text "Add a next part option"
+                                        ]
+                                        (top_parts |> List.indexedMap (\j (ppath, pp) ->
+                                            H.li
+                                                []
+                                                [ ui.button "monospace"
+                                                    [ HE.onClick <| add_next_part j
+                                                    , HA.attribute "command" "hide-popover"
+                                                    , HA.attribute "commandfor" "add-next-part-menu"
+                                                    ]
+                                                    [ H.text <| part_name ppath pp ]
+                                                ]
+                                        ))
+                                ]
+                            , attributes = []
+                            }
                         }
-                    }
 
                 pview =
                     { contents = 

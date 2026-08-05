@@ -176,6 +176,10 @@
         display: inline;
     }
 
+    .nothing-here {
+        font-style: italic;
+    }
+
     input,
     button,
     select,

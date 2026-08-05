@@ -6828,6 +6828,10 @@ var $elm$core$Set$member = F2(
 		var dict = _v0.a;
 		return A2($elm$core$Dict$member, key, dict);
 	});
+var $author$project$QuestionEditor$name_of = function (thing) {
+	return $author$project$Settings$getters.string(
+		A2($author$project$Settings$atField, 'name', thing.settings));
+};
 var $elm$core$Dict$values = function (dict) {
 	return A3(
 		$elm$core$Dict$foldr,
@@ -6867,8 +6871,7 @@ var $author$project$QuestionEditor$decode_question = function (default_settings)
 					var ungrouped_variables = A2(
 						$elm$core$List$filter,
 						function (v) {
-							var name = $author$project$Settings$getters.string(
-								A2($author$project$Settings$atField, 'name', v.settings));
+							var name = $author$project$QuestionEditor$name_of(v);
 							return !A2($elm$core$Set$member, name, grouped_variables);
 						},
 						$elm$core$Dict$values(variable_dict));
@@ -7039,7 +7042,7 @@ var $author$project$Ui$ui = function (config) {
 						[
 							$elm$html$Html$Attributes$href(
 							_Utils_ap(config.help_root, term_url)),
-							$elm$html$Html$Attributes$class('helplink info'),
+							$elm$html$Html$Attributes$class('helplink'),
 							$elm$html$Html$Attributes$target('numbasquickhelp'),
 							$author$project$Aria$label(hint),
 							$elm$html$Html$Attributes$title(hint)
@@ -7520,8 +7523,7 @@ var $author$project$QuestionEditor$encode_question = function (question) {
 								$elm$core$List$map,
 								function (v) {
 									return _Utils_Tuple2(
-										$author$project$Settings$getters.string(
-											A2($author$project$Settings$atField, 'name', v.settings)),
+										$author$project$QuestionEditor$name_of(v),
 										$author$project$QuestionEditor$encode_variable(v));
 								},
 								A2(
@@ -9844,6 +9846,9 @@ var $author$project$QuestionEditor$set_tab = F2(
 			$author$project$QuestionEditor$UpdateTab,
 			A2($author$project$Tabber$set_tab, tabber_id, tab_id));
 	});
+var $author$project$QuestionEditor$ChangePartSetting = function (a) {
+	return {$: 'ChangePartSetting', a: a};
+};
 var $author$project$Settings$insert = F3(
 	function (k, v, s) {
 		var dict = A2(
@@ -9962,9 +9967,43 @@ var $author$project$QuestionEditor$update_part = F3(
 							computed: A3($author$project$Settings$insert, key, v, part.computed)
 						}),
 					$author$project$QuestionEditor$nocmd($author$project$QuestionEditor$NoChange));
-			default:
+			case 'UpdateMarkingAlgorithm':
 				var mmsg = msg.a;
 				return A3($author$project$QuestionEditor$update_marking_algorithm, mmsg, path, part);
+			default:
+				var i = msg.a;
+				var _v3 = msg.b;
+				var v = _v3.a;
+				var at = _v3.b;
+				var value = A2(
+					$elm$core$Result$withDefault,
+					'custom',
+					A2($elm$json$Json$Decode$decodeValue, $elm$json$Json$Decode$string, v));
+				var nv = function () {
+					if (value === 'custom') {
+						return $elm$json$Json$Encode$string('');
+					} else {
+						return v;
+					}
+				}();
+				var _v4 = A3(
+					$author$project$QuestionEditor$update_part,
+					$author$project$QuestionEditor$ChangePartSetting(
+						_Utils_Tuple2(nv, at)),
+					path,
+					part);
+				var npart = _v4.a;
+				var cmd = _v4.b;
+				var ncomputed = A3(
+					$author$project$Settings$insert,
+					'customAvailabilityCondition',
+					$elm$json$Json$Encode$bool(value === 'custom'),
+					npart.computed);
+				return _Utils_Tuple2(
+					_Utils_update(
+						npart,
+						{computed: ncomputed}),
+					cmd);
 		}
 	});
 var $author$project$QuestionEditor$m_updateAt = F2(
@@ -10200,8 +10239,7 @@ var $elm$json$Json$Decode$maybe = function (decoder) {
 };
 var $elm$core$String$trim = _String_trim;
 var $author$project$QuestionEditor$variable_names = function (v) {
-	var name_input = $author$project$Settings$getters.string(
-		A2($author$project$Settings$atField, 'name', v.settings));
+	var name_input = $author$project$QuestionEditor$name_of(v);
 	var computed_names = A3(
 		$author$project$Settings$get,
 		$elm$json$Json$Decode$maybe(
@@ -10445,6 +10483,14 @@ var $author$project$QuestionEditor$update_question = F2(
 						question,
 						$author$project$QuestionEditor$nocmd($author$project$QuestionEditor$NoChange));
 				}
+			case 'ShowPart':
+				var path = msg.a;
+				var tab_id = $author$project$QuestionEditor$part_tab_id(path);
+				return _Utils_Tuple2(
+					question,
+					_Utils_Tuple2(
+						$author$project$QuestionEditor$NoChange,
+						A2($author$project$QuestionEditor$set_tab, 'parts', tab_id)));
 			default:
 				var command = msg.a;
 				var value = msg.b;
@@ -10496,8 +10542,7 @@ var $author$project$QuestionEditor$update_question = F2(
 													function (vi, variable) {
 														var _v7 = A2(
 															$elm$core$Dict$get,
-															$author$project$Settings$getters.string(
-																A2($author$project$Settings$atField, 'name', variable.settings)),
+															$author$project$QuestionEditor$name_of(variable),
 															r.variables);
 														if (_v7.$ === 'Just') {
 															var vvalue = _v7.a;
@@ -10761,9 +10806,10 @@ var $author$project$QuestionEditor$ChangeMarkingAlgorithmNote = F2(
 	function (a, b) {
 		return {$: 'ChangeMarkingAlgorithmNote', a: a, b: b};
 	});
-var $author$project$QuestionEditor$ChangePartSetting = function (a) {
-	return {$: 'ChangePartSetting', a: a};
-};
+var $author$project$QuestionEditor$ChangeNextPartAvailabilityCondition = F2(
+	function (a, b) {
+		return {$: 'ChangeNextPartAvailabilityCondition', a: a, b: b};
+	});
 var $author$project$QuestionEditor$ChangeQuestionSetting = function (a) {
 	return {$: 'ChangeQuestionSetting', a: a};
 };
@@ -10803,6 +10849,7 @@ var $author$project$QuestionEditor$Undo = {$: 'Undo'};
 var $author$project$QuestionEditor$UpdateMarkingAlgorithm = function (a) {
 	return {$: 'UpdateMarkingAlgorithm', a: a};
 };
+var $elm$html$Html$article = _VirtualDom_node('article');
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
 		return A2(
@@ -10948,6 +10995,8 @@ var $author$project$QuestionEditor$code_property = F2(
 				_List_Nil)
 			]);
 	});
+var $elm$html$Html$col = _VirtualDom_node('col');
+var $elm$html$Html$colgroup = _VirtualDom_node('colgroup');
 var $author$project$QuestionEditor$content_property = F2(
 	function (_v0, o) {
 		return _List_fromArray(
@@ -10982,6 +11031,7 @@ var $elm$html$Html$select = _VirtualDom_node('select');
 var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
 var $author$project$QuestionEditor$custom_select_property = F4(
 	function (attrs, options, _v0, o) {
+		var current_value = $author$project$Settings$getters.string(o.settings);
 		return _List_fromArray(
 			[
 				A2(
@@ -11005,9 +11055,7 @@ var $author$project$QuestionEditor$custom_select_property = F4(
 								[
 									$elm$html$Html$Attributes$value(value),
 									$elm$html$Html$Attributes$selected(
-									_Utils_eq(
-										value,
-										$author$project$Settings$getters.string(o.settings)))
+									_Utils_eq(value, current_value))
 								]),
 							_List_fromArray(
 								[
@@ -11068,6 +11116,15 @@ var $elm$core$Set$diff = F2(
 			A2($elm$core$Dict$diff, dict1, dict2));
 	});
 var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
+var $author$project$Util$dropRight = function (n) {
+	return A2(
+		$elm$core$Basics$composeR,
+		$elm$core$List$reverse,
+		A2(
+			$elm$core$Basics$composeR,
+			$elm$core$List$drop(n),
+			$elm$core$List$reverse));
+};
 var $elm_community$list_extra$List$Extra$dropWhile = F2(
 	function (predicate, list) {
 		dropWhile:
@@ -11411,6 +11468,9 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
+var $author$project$QuestionEditor$ShowPart = function (a) {
+	return {$: 'ShowPart', a: a};
+};
 var $author$project$Util$alphabet = 'abcdefghijklmnopqrstuvwxyz';
 var $elm$core$Basics$modBy = _Basics_modBy;
 var $author$project$Util$letter_ordinal = function (n) {
@@ -11457,6 +11517,24 @@ var $author$project$QuestionEditor$part_name = F2(
 			var name = _v0;
 			return name;
 		}
+	});
+var $author$project$QuestionEditor$part_link = F2(
+	function (path, part) {
+		return A2(
+			$elm$html$Html$a,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$href('#'),
+					$elm$html$Html$Events$onClick(
+					$author$project$QuestionEditor$UpdateQuestion(
+						$author$project$QuestionEditor$ShowPart(path))),
+					$elm$html$Html$Attributes$class('btn')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text(
+					A2($author$project$QuestionEditor$part_name, path, part))
+				]));
 	});
 var $elm$html$Html$Attributes$max = $elm$html$Html$Attributes$stringProperty('max');
 var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
@@ -11531,6 +11609,42 @@ var $elm$core$String$replace = F3(
 	});
 var $elm$html$Html$Attributes$scope = $elm$html$Html$Attributes$stringProperty('scope');
 var $elm$html$Html$section = _VirtualDom_node('section');
+var $author$project$QuestionEditor$select_or_custom_property = F4(
+	function (use_custom, options, _v0, o) {
+		var current_value = use_custom ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
+			$author$project$Settings$getters.string(o.settings));
+		return _List_fromArray(
+			[
+				A2(
+				$elm$html$Html$select,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onInput(
+						A2($author$project$Settings$setters, o.settings, o.setter).string),
+						$elm$html$Html$Attributes$id(o.id)
+					]),
+				A2(
+					$elm$core$List$map,
+					function (_v1) {
+						var value = _v1.a;
+						var label = _v1.b;
+						return A2(
+							$elm$html$Html$option,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$value(
+									A2($elm$core$Maybe$withDefault, 'custom', value)),
+									$elm$html$Html$Attributes$selected(
+									_Utils_eq(value, current_value))
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(label)
+								]));
+					},
+					options))
+			]);
+	});
 var $author$project$QuestionEditor$select_property = $author$project$QuestionEditor$custom_select_property(_List_Nil);
 var $elm$core$Dict$sizeHelp = F2(
 	function (n, dict) {
@@ -11747,6 +11861,12 @@ var $elm$html$Html$tbody = _VirtualDom_node('tbody');
 var $elm$html$Html$td = _VirtualDom_node('td');
 var $elm$html$Html$th = _VirtualDom_node('th');
 var $elm$html$Html$thead = _VirtualDom_node('thead');
+var $author$project$Util$third = function (_v0) {
+	var a = _v0.a;
+	var b = _v0.b;
+	var c = _v0.c;
+	return c;
+};
 var $elm$core$Debug$toString = _Debug_toString;
 var $elm$html$Html$tr = _VirtualDom_node('tr');
 var $author$project$QuestionEditor$variable_is_random = function (v) {
@@ -11755,6 +11875,22 @@ var $author$project$QuestionEditor$variable_is_random = function (v) {
 	var isDeterministic = $author$project$Settings$getters.bool(
 		A2($author$project$Settings$atField, 'isDeterministic', v.computed));
 	return (!isDeterministic) && isRandom;
+};
+var $author$project$QuestionEditor$variable_link = function (name) {
+	return A2(
+		$elm$html$Html$a,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$href('#'),
+				$elm$html$Html$Events$onClick(
+				$author$project$QuestionEditor$UpdateQuestion(
+					$author$project$QuestionEditor$ShowVariable(name))),
+				$elm$html$Html$Attributes$class('monospace btn')
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text(name)
+			]));
 };
 var $elm$core$Result$andThen = F2(
 	function (callback, result) {
@@ -11865,8 +12001,8 @@ var $author$project$QuestionEditor$view_active = function (model) {
 	var view_tablist = A3($author$project$Tabber$view_tablist, ui, $author$project$QuestionEditor$UpdateTab, model.tab_state);
 	var view_tabpanel = A2($author$project$Tabber$view_tabpanel, ui, model.tab_state);
 	var saving_class = function () {
-		var _v44 = model.saving;
-		switch (_v44.$) {
+		var _v53 = model.saving;
+		switch (_v53.$) {
 			case 'Saved':
 				return 'saved';
 			case 'Changed':
@@ -11877,6 +12013,22 @@ var $author$project$QuestionEditor$view_active = function (model) {
 	}();
 	var ready_to_download = $elm$core$Result$Ok(_Utils_Tuple0);
 	var question = model.history.current;
+	var top_parts = function () {
+		var _v52 = question.parts;
+		var parts = _v52.a;
+		return A2(
+			$elm$core$List$indexedMap,
+			F2(
+				function (i, p) {
+					return _Utils_Tuple2(
+						_List_fromArray(
+							[
+								_Utils_Tuple2($author$project$QuestionEditor$TopPart, i)
+							]),
+						p);
+				}),
+			parts.parts);
+	}();
 	var qfield = function (k) {
 		return A2($author$project$Settings$atField, k, question.settings);
 	};
@@ -11899,10 +12051,23 @@ var $author$project$QuestionEditor$view_active = function (model) {
 				A2(
 				$elm$html$Html$fieldset,
 				_List_Nil,
-				A2(
-					question_field,
-					{help: $elm$core$Maybe$Nothing, id: 'name', label: 'Name'},
-					$author$project$QuestionEditor$text_property))
+				$elm$core$List$concat(
+					_List_fromArray(
+						[
+							A2(
+							question_field,
+							{help: $elm$core$Maybe$Nothing, id: 'name', label: 'Name'},
+							$author$project$QuestionEditor$text_property),
+							A2(
+							question_field,
+							{help: $elm$core$Maybe$Nothing, id: 'partsMode', label: 'Parts mode'},
+							$author$project$QuestionEditor$select_property(
+								_List_fromArray(
+									[
+										_Utils_Tuple2('all', 'Sequential'),
+										_Utils_Tuple2('explore', 'Explore')
+									])))
+						])))
 			])
 	};
 	var statement_tab = {
@@ -11949,21 +12114,69 @@ var $author$project$QuestionEditor$view_active = function (model) {
 					$elm$json$Json$Decode$dict(
 						A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string)))),
 			model.numbas));
+	var next_parts_from = function (pp) {
+		return A2(
+			$elm$core$List$filterMap,
+			function (i) {
+				return A2($elm_community$list_extra$List$Extra$getAt, i, top_parts);
+			},
+			A3(
+				$author$project$Settings$get,
+				$elm$json$Json$Decode$list(
+					A2($elm$json$Json$Decode$field, 'otherPart', $elm$json$Json$Decode$int)),
+				_List_Nil,
+				A2($author$project$Settings$atField, 'nextParts', pp.settings)));
+	};
+	var reachable_parts = function () {
+		var visit = F2(
+			function (seen, queue) {
+				visit:
+				while (true) {
+					if (!queue.b) {
+						return seen;
+					} else {
+						var _v50 = queue.a;
+						var ppath = _v50.a;
+						var pp = _v50.b;
+						var rest = queue.b;
+						if (A2($elm$core$List$member, ppath, seen)) {
+							var $temp$seen = seen,
+								$temp$queue = rest;
+							seen = $temp$seen;
+							queue = $temp$queue;
+							continue visit;
+						} else {
+							var $temp$seen = A2($elm$core$List$cons, ppath, seen),
+								$temp$queue = _Utils_ap(
+								rest,
+								next_parts_from(pp));
+							seen = $temp$seen;
+							queue = $temp$queue;
+							continue visit;
+						}
+					}
+				}
+			});
+		return A2(
+			visit,
+			_List_Nil,
+			A2($elm$core$List$take, 1, top_parts));
+	}();
 	var nested_count = function (list) {
 		return A3(
 			$elm$core$List$foldl,
 			F2(
-				function (_v39, _v40) {
-					var a = _v39.a;
-					var bs = _v39.b;
-					var n = _v40.a;
-					var oas = _v40.b;
-					var _v41 = A3(
+				function (_v45, _v46) {
+					var a = _v45.a;
+					var bs = _v45.b;
+					var n = _v46.a;
+					var oas = _v46.b;
+					var _v47 = A3(
 						$elm$core$List$foldl,
 						F2(
-							function (b, _v42) {
-								var nb = _v42.a;
-								var obs = _v42.b;
+							function (b, _v48) {
+								var nb = _v48.a;
+								var obs = _v48.b;
 								return _Utils_Tuple2(
 									nb + 1,
 									_Utils_ap(
@@ -11975,8 +12188,8 @@ var $author$project$QuestionEditor$view_active = function (model) {
 							}),
 						_Utils_Tuple2(n, _List_Nil),
 						bs);
-					var nn = _v41.a;
-					var nbs = _v41.b;
+					var nn = _v47.a;
+					var nbs = _v47.b;
 					return _Utils_Tuple2(
 						nn,
 						_Utils_ap(
@@ -11990,12 +12203,75 @@ var $author$project$QuestionEditor$view_active = function (model) {
 			list).b;
 	};
 	var icon = ui.icon;
+	var explore_penalty_options = A2(
+		$elm$core$List$map,
+		function (v) {
+			return _Utils_Tuple2(v, v);
+		},
+		A3(
+			$author$project$Settings$get,
+			A2(
+				$elm$json$Json$Decode$map,
+				$elm$core$List$filterMap($elm$core$Basics$identity),
+				$elm$json$Json$Decode$list(
+					$elm$json$Json$Decode$oneOf(
+						_List_fromArray(
+							[
+								A2(
+								$elm$json$Json$Decode$map,
+								$elm$core$Maybe$Just,
+								A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string)),
+								$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
+							])))),
+			_List_Nil,
+			A2($author$project$Settings$atField, 'penalties', question.settings)));
 	var all_variables = A2(
 		$elm$core$List$concatMap,
 		function ($) {
 			return $.variables;
 		},
 		question.variable_groups);
+	var dependants_of = function (v) {
+		var name = $author$project$QuestionEditor$name_of(v);
+		return A2(
+			$elm$core$List$filter,
+			A2(
+				$elm$core$Basics$composeR,
+				$author$project$QuestionEditor$dependencies_of,
+				$elm$core$List$member(name)),
+			all_variables);
+	};
+	var variable_dict = $elm$core$Dict$fromList(
+		A2(
+			$elm$core$List$map,
+			function (v) {
+				return _Utils_Tuple2(
+					$author$project$QuestionEditor$name_of(v),
+					v);
+			},
+			all_variables));
+	var get_variable = function (name) {
+		return A2($elm$core$Dict$get, name, variable_dict);
+	};
+	var all_parts = $author$project$QuestionEditor$unwrap_part_container(question.parts);
+	var all_dependencies_of = function (variable) {
+		var visit = F2(
+			function (vpath, v) {
+				var name = $author$project$QuestionEditor$name_of(v);
+				var deps = A2(
+					$elm$core$List$filterMap,
+					get_variable,
+					$author$project$QuestionEditor$dependencies_of(v));
+				return A2($elm$core$List$member, name, vpath) ? _List_Nil : _Utils_ap(
+					deps,
+					A2(
+						$elm$core$List$concatMap,
+						visit(
+							A2($elm$core$List$cons, name, vpath)),
+						deps));
+			});
+		return A2(visit, _List_Nil, variable);
+	};
 	var variable_tab = F2(
 		function (path, variable) {
 			var vset = A2(
@@ -12561,9 +12837,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 																	$elm$html$Html$Attributes$class('datatype')
 																]),
 															function () {
-																var _v36 = $author$project$QuestionEditor$variable_type(variable);
-																if (_v36.$ === 'Just') {
-																	var type_ = _v36.a;
+																var _v42 = $author$project$QuestionEditor$variable_type(variable);
+																if (_v42.$ === 'Just') {
+																	var type_ = _v42.a;
 																	return _List_fromArray(
 																		[
 																			$elm$html$Html$text(type_)
@@ -12640,20 +12916,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 															_List_Nil,
 															_List_fromArray(
 																[
-																	A2(
-																	$elm$html$Html$a,
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$Attributes$href('#'),
-																			$elm$html$Html$Events$onClick(
-																			$author$project$QuestionEditor$UpdateQuestion(
-																				$author$project$QuestionEditor$ShowVariable(d))),
-																			$elm$html$Html$Attributes$class('monospace btn info')
-																		]),
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$text(d)
-																		]))
+																	$author$project$QuestionEditor$variable_link(d)
 																]));
 													},
 													dependencies))
@@ -12717,7 +12980,34 @@ var $author$project$QuestionEditor$view_active = function (model) {
 											]))
 									]);
 							}
-						}()
+						}(),
+							_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$pre,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										$elm$core$Debug$toString(
+											A2(
+												$elm$core$List$map,
+												$author$project$QuestionEditor$name_of,
+												all_dependencies_of(variable))))
+									]))
+							]),
+							_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$pre,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										$elm$core$Debug$toString(
+											$author$project$QuestionEditor$dependencies_of(variable)))
+									]))
+							])
 						]))
 			};
 			return {
@@ -12794,9 +13084,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 									A2(
 									$elm$core$List$indexedMap,
 									F2(
-										function (gi, _v30) {
-											var group = _v30.a;
-											var variable_tabs = _v30.b;
+										function (gi, _v36) {
+											var group = _v36.a;
+											var variable_tabs = _v36.b;
 											return A2(
 												$elm$html$Html$li,
 												_List_fromArray(
@@ -12869,11 +13159,11 @@ var $author$project$QuestionEditor$view_active = function (model) {
 																A2(
 																	$elm$core$List$indexedMap,
 																	F2(
-																		function (vi, _v31) {
-																			var tab_index = _v31.a;
-																			var _v32 = _v31.b;
-																			var variable = _v32.a;
-																			var vtab = _v32.b;
+																		function (vi, _v37) {
+																			var tab_index = _v37.a;
+																			var _v38 = _v37.b;
+																			var variable = _v38.a;
+																			var vtab = _v38.b;
 																			var vfield = function (k) {
 																				return A2($author$project$Settings$atField, k, variable.settings);
 																			};
@@ -12939,17 +13229,17 @@ var $author$project$QuestionEditor$view_active = function (model) {
 																								$elm$html$Html$Attributes$class('value')
 																							]),
 																						function () {
-																							var _v34 = variable.value;
-																							if (_v34.$ === 'Just') {
-																								if (_v34.a.$ === 'Ok') {
-																									var value = _v34.a.a;
+																							var _v40 = variable.value;
+																							if (_v40.$ === 'Just') {
+																								if (_v40.a.$ === 'Ok') {
+																									var value = _v40.a.a;
 																									return _List_fromArray(
 																										[
 																											$author$project$Ui$jme_value(
 																											{abbreviate: true, value: value})
 																										]);
 																								} else {
-																									var err = _v34.a.a;
+																									var err = _v40.a.a;
 																									return _List_fromArray(
 																										[
 																											A2(
@@ -13021,10 +13311,24 @@ var $author$project$QuestionEditor$view_active = function (model) {
 				view_tabpanel(variables_tabber)
 			])
 	};
-	var all_parts = $author$project$QuestionEditor$unwrap_part_container(question.parts);
-	var part_tab = function (_v29) {
-		var path = _v29.a;
-		var part = _v29.b;
+	var all_dependants_of = function (variable) {
+		var visit = F2(
+			function (vpath, v) {
+				var name = $author$project$QuestionEditor$name_of(v);
+				var deps = dependants_of(v);
+				return A2($elm$core$List$member, name, vpath) ? _List_Nil : _Utils_ap(
+					deps,
+					A2(
+						$elm$core$List$concatMap,
+						visit(
+							A2($elm$core$List$cons, name, vpath)),
+						deps));
+			});
+		return A2(visit, _List_Nil, variable);
+	};
+	var part_tab = function (_v35) {
+		var path = _v35.a;
+		var part = _v35.b;
 		var testing_tab = {
 			icon: $elm$core$Maybe$Just('check'),
 			id: 'testing',
@@ -13242,12 +13546,544 @@ var $author$project$QuestionEditor$view_active = function (model) {
 					},
 					$author$project$QuestionEditor$boolean_property)
 				]));
-		var next_parts_tab = {
-			icon: $elm$core$Maybe$Just('next'),
-			id: 'next-parts',
-			label: $author$project$Tabber$SimpleLabel('Next parts'),
-			view: {attributes: _List_Nil, contents: _List_Nil}
-		};
+		var next_parts_tab = function () {
+			var set_next_parts = function (list) {
+				return pset(
+					_Utils_Tuple2(
+						A2($elm$json$Json$Encode$list, $elm$core$Basics$identity, list),
+						_List_fromArray(
+							[
+								$author$project$Settings$field('nextParts')
+							])));
+			};
+			var references = A2(
+				$elm$core$List$filter,
+				function (_v34) {
+					var ppath = _v34.a;
+					var pp = _v34.b;
+					return A2(
+						$elm$core$List$member,
+						path,
+						A2(
+							$elm$core$List$map,
+							$elm$core$Tuple$first,
+							next_parts_from(pp)));
+				},
+				top_parts);
+			var reachable = A2($elm$core$List$member, path, reachable_parts);
+			var next_part_values = A3(
+				$author$project$Settings$get,
+				$elm$json$Json$Decode$list($elm$json$Json$Decode$value),
+				_List_Nil,
+				A2($author$project$Settings$atField, 'nextParts', part.settings));
+			var next_parts = A2(
+				$elm$core$List$filterMap,
+				$elm$core$Basics$identity,
+				A2(
+					$elm$core$List$indexedMap,
+					F2(
+						function (i, _v33) {
+							var npsettings = A2(
+								$author$project$Settings$at,
+								_List_fromArray(
+									[
+										$author$project$Settings$field('nextParts'),
+										$author$project$Settings$index(i)
+									]),
+								part.settings);
+							var mnp = A2($elm_community$list_extra$List$Extra$getAt, i, top_parts);
+							return A2(
+								$elm$core$Maybe$map,
+								function (np) {
+									return _Utils_Tuple3(i, npsettings, np);
+								},
+								mnp);
+						}),
+					next_part_values));
+			var is_first_part = _Utils_eq(
+				path,
+				_List_fromArray(
+					[
+						_Utils_Tuple2($author$project$QuestionEditor$TopPart, 0)
+					]));
+			var add_next_part = function (index) {
+				return set_next_parts(
+					_Utils_ap(
+						next_part_values,
+						_List_fromArray(
+							[
+								$elm$json$Json$Encode$object(
+								_List_fromArray(
+									[
+										_Utils_Tuple2(
+										'otherPart',
+										$elm$json$Json$Encode$int(index))
+									]))
+							])));
+			};
+			return {
+				icon: $elm$core$Maybe$Just('next'),
+				id: 'next-parts',
+				label: $author$project$Tabber$SimpleLabel('Next parts'),
+				view: {
+					attributes: _List_Nil,
+					contents: $elm$core$List$concat(
+						_List_fromArray(
+							[
+								_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$pre,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(
+											$elm$core$Debug$toString(reachable_parts))
+										]))
+								]),
+								A2(
+								$author$project$Ui$visibleIf,
+								!reachable,
+								_List_fromArray(
+									[
+										A2(
+										ui.alert,
+										'warning',
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$p,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text('This part can\u0027t be reached by the student.')
+													])),
+												_Utils_eq(references, _List_Nil) ? A2(
+												$elm$html$Html$p,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Add a \u0022next part\u0022 reference to this part from another part.')
+													])) : A2(
+												$elm$html$Html$p,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text('None of the parts which can lead to this part are reachable either.')
+													]))
+											]))
+									])),
+								A2(
+								$author$project$Ui$visibleIf,
+								!is_first_part,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$fieldset,
+										_List_Nil,
+										$elm$core$List$concat(
+											_List_fromArray(
+												[
+													A2(
+													part_field,
+													{
+														help: $elm$core$Maybe$Just('going back'),
+														id: 'suggestGoingBack',
+														label: 'Suggest going back to the previous part?'
+													},
+													$author$project$QuestionEditor$boolean_property)
+												])))
+									])),
+								_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$h3,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Next part options')
+										])),
+									ui.help_block(
+									_List_fromArray(
+										[
+											A2(ui.helplink, 'next-parts', 'next parts'),
+											$elm$html$Html$text('Define the list of parts that the student can visit after this one.')
+										]))
+								]),
+								A2(
+								$elm$core$List$map,
+								function (_v29) {
+									var i = _v29.a;
+									var npsettings = _v29.b;
+									var _v30 = _v29.c;
+									var npath = _v30.a;
+									var np = _v30.b;
+									var set_variable_replacements = function (list) {
+										return pset(
+											_Utils_Tuple2(
+												A2($elm$json$Json$Encode$list, $elm$core$Basics$identity, list),
+												_Utils_ap(
+													npsettings.at,
+													_List_fromArray(
+														[
+															$author$project$Settings$field('variableReplacements')
+														]))));
+									};
+									var npfield = function (k) {
+										return A2($author$project$Settings$atField, k, npsettings);
+									};
+									var penalty = $author$project$Settings$getters.string(
+										npfield('penalty'));
+									var variable_replacements = A2(
+										$elm$core$List$indexedMap,
+										F2(
+											function (vi, v) {
+												return _Utils_Tuple3(
+													vi,
+													A2(
+														$author$project$Settings$at,
+														_List_fromArray(
+															[
+																$author$project$Settings$field('variableReplacements'),
+																$author$project$Settings$index(vi)
+															]),
+														npsettings),
+													v);
+											}),
+										A3(
+											$author$project$Settings$get,
+											$elm$json$Json$Decode$list($elm$json$Json$Decode$value),
+											_List_Nil,
+											npfield('variableReplacements')));
+									var remove_variable_replacement = function (vi) {
+										return set_variable_replacements(
+											A2(
+												$elm_community$list_extra$List$Extra$removeAt,
+												vi,
+												A2($elm$core$List$map, $author$project$Util$third, variable_replacements)));
+									};
+									var next_part_field = function (o) {
+										return A2(
+											$author$project$QuestionEditor$labelled_field,
+											ui,
+											{
+												help: o.help,
+												id: o.id,
+												label: o.label,
+												setter: pset,
+												settings: npfield(o.id)
+											});
+									};
+									var can_make_variable_replacements = !_Utils_eq(all_variables, _List_Nil);
+									var availabilityConditions = _List_fromArray(
+										[
+											_Utils_Tuple2(
+											$elm$core$Maybe$Just(''),
+											'Always'),
+											_Utils_Tuple2(
+											$elm$core$Maybe$Just('answered'),
+											'When answer submitted'),
+											_Utils_Tuple2(
+											$elm$core$Maybe$Just('not (answered and correct)'),
+											'When unanswered or incorrect'),
+											_Utils_Tuple2(
+											$elm$core$Maybe$Just('answered and credit<1'),
+											'When incorrect'),
+											_Utils_Tuple2(
+											$elm$core$Maybe$Just('answered and credit=1'),
+											'When correct'),
+											_Utils_Tuple2($elm$core$Maybe$Nothing, 'Depending on expression')
+										]);
+									var availabilityCondition = $author$project$Settings$getters.string(
+										npfield('availabilityCondition'));
+									var custom_availabilityCondition = A3(
+										$author$project$Settings$get,
+										$elm$json$Json$Decode$bool,
+										!A2(
+											$elm$core$List$member,
+											$elm$core$Maybe$Just(availabilityCondition),
+											A2(
+												$elm$core$List$map,
+												$elm$core$Tuple$first,
+												A2($author$project$Util$dropRight, 1, availabilityConditions))),
+										A2($author$project$Settings$atField, 'customAvailabilityCondition', part.computed));
+									var add_variable_replacement = function (name) {
+										return set_variable_replacements(
+											_Utils_ap(
+												A2($elm$core$List$map, $author$project$Util$third, variable_replacements),
+												_List_fromArray(
+													[
+														$elm$json$Json$Encode$object(
+														_List_fromArray(
+															[
+																_Utils_Tuple2(
+																'variable',
+																$elm$json$Json$Encode$string(name))
+															]))
+													])));
+									};
+									return A2(
+										$elm$html$Html$article,
+										_List_Nil,
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$p,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text(
+														A2($author$project$QuestionEditor$part_name, npath, np))
+													])),
+												A2(
+												$elm$html$Html$fieldset,
+												_List_Nil,
+												$elm$core$List$concat(
+													_List_fromArray(
+														[
+															A2(
+															next_part_field,
+															{
+																help: $elm$core$Maybe$Just('label'),
+																id: 'rawLabel',
+																label: 'Label'
+															},
+															$author$project$QuestionEditor$text_property),
+															A2(
+															next_part_field,
+															{
+																help: $elm$core$Maybe$Just('locking after leaving this part'),
+																id: 'lockAfterLeaving',
+																label: 'Lock this part?'
+															},
+															$author$project$QuestionEditor$boolean_property),
+															A3(
+															$author$project$QuestionEditor$labelled_field,
+															ui,
+															{
+																help: $elm$core$Maybe$Just('availability condition'),
+																id: 'availabilityCondition',
+																label: 'Availability',
+																setter: A2(
+																	$elm$core$Basics$composeR,
+																	$author$project$QuestionEditor$ChangeNextPartAvailabilityCondition(i),
+																	pmsg),
+																settings: npfield('availabilityCondition')
+															},
+															A2($author$project$QuestionEditor$select_or_custom_property, custom_availabilityCondition, availabilityConditions)),
+															A2(
+															$author$project$Ui$visibleIf,
+															custom_availabilityCondition,
+															A2(
+																next_part_field,
+																{
+																	help: $elm$core$Maybe$Just('expression for availability'),
+																	id: 'availabilityCondition',
+																	label: 'Available if'
+																},
+																$author$project$QuestionEditor$text_property)),
+															A2(
+															next_part_field,
+															{
+																help: $elm$core$Maybe$Just('penalty for visiting'),
+																id: 'penalty',
+																label: 'Penalty to apply when visited'
+															},
+															$author$project$QuestionEditor$select_property(
+																A2(
+																	$elm$core$List$cons,
+																	_Utils_Tuple2('', ''),
+																	explore_penalty_options))),
+															A2(
+															$author$project$Ui$visibleIf,
+															penalty !== '',
+															$elm$core$List$concat(
+																_List_fromArray(
+																	[
+																		A2(
+																		next_part_field,
+																		{
+																			help: $elm$core$Maybe$Just('penalty amount'),
+																			id: 'penaltyAmount',
+																			label: 'Amount of penalty'
+																		},
+																		$author$project$QuestionEditor$text_property),
+																		A2(
+																		next_part_field,
+																		{
+																			help: $elm$core$Maybe$Just('penalty hint'),
+																			id: 'showPenaltyHint',
+																			label: 'Show penalty hint?'
+																		},
+																		$author$project$QuestionEditor$boolean_property)
+																	])))
+														]))),
+												A2(
+												$elm$html$Html$fieldset,
+												_List_Nil,
+												$elm$core$List$concat(
+													_List_fromArray(
+														[
+															_List_fromArray(
+															[
+																A2(
+																$elm$html$Html$legend,
+																_List_Nil,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text('Variable replacements')
+																	]))
+															]),
+															_Utils_eq(variable_replacements, _List_Nil) ? _List_fromArray(
+															[
+																A2(
+																$elm$html$Html$p,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('nothing-here')
+																	]),
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text('No variable replacements have been defined for this next part option.')
+																	]))
+															]) : _List_fromArray(
+															[
+																A2(
+																$elm$html$Html$table,
+																_List_Nil,
+																_List_fromArray(
+																	[
+																		A2(
+																		$elm$html$Html$colgroup,
+																		_List_Nil,
+																		_List_fromArray(
+																			[
+																				A2(
+																				$elm$html$Html$col,
+																				_List_fromArray(
+																					[
+																						$elm$html$Html$Attributes$class('name')
+																					]),
+																				_List_Nil),
+																				A2(
+																				$elm$html$Html$col,
+																				_List_fromArray(
+																					[
+																						$elm$html$Html$Attributes$class('value')
+																					]),
+																				_List_Nil),
+																				A2(
+																				$elm$html$Html$col,
+																				_List_fromArray(
+																					[
+																						$elm$html$Html$Attributes$class('controls')
+																					]),
+																				_List_Nil)
+																			])),
+																		A2(
+																		$elm$html$Html$thead,
+																		_List_Nil,
+																		_List_fromArray(
+																			[
+																				A2(
+																				$elm$html$Html$tr,
+																				_List_Nil,
+																				_List_fromArray(
+																					[
+																						A2(
+																						$elm$html$Html$th,
+																						_List_Nil,
+																						_List_fromArray(
+																							[
+																								$elm$html$Html$text('Variable')
+																							])),
+																						A2(
+																						$elm$html$Html$th,
+																						_List_Nil,
+																						_List_fromArray(
+																							[
+																								$elm$html$Html$text('Value')
+																							])),
+																						A2($elm$html$Html$td, _List_Nil, _List_Nil)
+																					]))
+																			])),
+																		A2(
+																		$elm$html$Html$tbody,
+																		_List_Nil,
+																		A2(
+																			$elm$core$List$map,
+																			function (_v31) {
+																				var vi = _v31.a;
+																				var vrsettings = _v31.b;
+																				var name = '';
+																				return A2(
+																					$elm$html$Html$tr,
+																					_List_Nil,
+																					_List_fromArray(
+																						[
+																							A2(
+																							$elm$html$Html$td,
+																							_List_fromArray(
+																								[
+																									$elm$html$Html$Attributes$class('monospace')
+																								]),
+																							_List_fromArray(
+																								[
+																									$elm$html$Html$text(name)
+																								]))
+																						]));
+																			},
+																			variable_replacements))
+																	]))
+															])
+														])))
+											]));
+								},
+								next_parts),
+								A2(
+								$author$project$Ui$visibleIf,
+								!_Utils_eq(top_parts, _List_Nil),
+								A3(
+									ui.dropdown,
+									'add-next-part',
+									_List_fromArray(
+										[
+											ui.icon('add'),
+											$elm$html$Html$text('Add a next part option')
+										]),
+									A2(
+										$elm$core$List$indexedMap,
+										F2(
+											function (j, _v32) {
+												var ppath = _v32.a;
+												var pp = _v32.b;
+												return A2(
+													$elm$html$Html$li,
+													_List_Nil,
+													_List_fromArray(
+														[
+															A3(
+															ui.button,
+															'monospace',
+															_List_fromArray(
+																[
+																	$elm$html$Html$Events$onClick(
+																	add_next_part(j)),
+																	A2($elm$html$Html$Attributes$attribute, 'command', 'hide-popover'),
+																	A2($elm$html$Html$Attributes$attribute, 'commandfor', 'add-next-part-menu')
+																]),
+															_List_fromArray(
+																[
+																	$elm$html$Html$text(
+																	A2($author$project$QuestionEditor$part_name, ppath, pp))
+																]))
+														]));
+											}),
+										top_parts)))
+							]))
+				}
+			};
+		}();
 		var marks_field = A2(
 			part_field,
 			{
@@ -16242,35 +17078,25 @@ var $author$project$QuestionEditor$view_active = function (model) {
 								$author$project$Settings$field('variableReplacements')
 							])));
 			};
-			var replaced_variables = $elm$core$Set$fromList(
+			var replaced_variables = A2(
+				$elm$core$List$map,
 				A2(
-					$elm$core$List$map,
+					$elm$core$Basics$composeR,
+					$elm$core$Tuple$first,
 					A2(
 						$elm$core$Basics$composeR,
-						$elm$core$Tuple$first,
-						A2(
-							$elm$core$Basics$composeR,
-							$author$project$Settings$atField('variable'),
-							$author$project$Settings$getters.string)),
-					variable_replacements));
+						$author$project$Settings$atField('variable'),
+						$author$project$Settings$getters.string)),
+				variable_replacements);
 			var unreplaced_variables = $elm$core$List$sort(
 				$elm$core$Set$toList(
 					function (s) {
-						return A2($elm$core$Set$diff, s, replaced_variables);
+						return A2(
+							$elm$core$Set$diff,
+							$elm$core$Set$fromList(s),
+							$elm$core$Set$fromList(replaced_variables));
 					}(
-						$elm$core$Set$fromList(
-							A2(
-								$elm$core$List$map,
-								A2(
-									$elm$core$Basics$composeR,
-									function ($) {
-										return $.settings;
-									},
-									A2(
-										$elm$core$Basics$composeR,
-										$author$project$Settings$atField('name'),
-										$author$project$Settings$getters.string)),
-								all_variables)))));
+						A2($elm$core$List$map, $author$project$QuestionEditor$name_of, all_variables))));
 			var remove_variable_replacement = function (i) {
 				return set_variable_replacements(
 					A2(
@@ -16278,6 +17104,14 @@ var $author$project$QuestionEditor$view_active = function (model) {
 						i,
 						A2($elm$core$List$map, $elm$core$Tuple$second, variable_replacements)));
 			};
+			var recomputed_random_variables = A2(
+				$elm$core$List$filter,
+				$author$project$QuestionEditor$variable_is_random,
+				$elm_community$list_extra$List$Extra$unique(
+					A2(
+						$elm$core$List$concatMap,
+						all_dependants_of,
+						A2($elm$core$List$filterMap, get_variable, replaced_variables))));
 			var part_options = A2(
 				$elm$core$List$map,
 				function (_v10) {
@@ -16351,7 +17185,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 										'variable',
 										$elm$json$Json$Encode$string(name)),
 										_Utils_Tuple2(
-										'path',
+										'part',
 										$elm$json$Json$Encode$string(
 											A2(
 												$elm$core$Maybe$withDefault,
@@ -16524,6 +17358,58 @@ var $author$project$QuestionEditor$view_active = function (model) {
 									])),
 								A2(
 								$author$project$Ui$visibleIf,
+								!_Utils_eq(recomputed_random_variables, _List_Nil),
+								_List_fromArray(
+									[
+										A2(
+										ui.alert,
+										'danger',
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$p,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text('The variable replacements you\u0027ve chosen will cause the following variables to be regenerated each time the student submits an answer to this part:')
+													])),
+												A2(
+												$elm$html$Html$ul,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('list-inline')
+													]),
+												A2(
+													$elm$core$List$map,
+													function (r) {
+														return A2(
+															$elm$html$Html$li,
+															_List_Nil,
+															_List_fromArray(
+																[
+																	$author$project$QuestionEditor$variable_link(
+																	$author$project$QuestionEditor$name_of(r))
+																]));
+													},
+													recomputed_random_variables)),
+												A2(
+												$elm$html$Html$p,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text('These variables have some random elements, which means they\u0027re not guaranteed to have the same value each time the student submits an answer. You should define new variables to store the random elements, so that they remain the same each time this part is marked.')
+													])),
+												A2(
+												$elm$html$Html$p,
+												_List_Nil,
+												_List_fromArray(
+													[
+														A2(ui.labelled_helplink, 'adaptive-marking', 'More information about this problem')
+													]))
+											]))
+									])),
+								A2(
+								$author$project$Ui$visibleIf,
 								!_Utils_eq(unreplaced_variables, _List_Nil),
 								A3(
 									ui.dropdown,
@@ -16595,6 +17481,24 @@ var $author$project$QuestionEditor$view_active = function (model) {
 								_List_fromArray(
 									[
 										A2(
+										$elm$html$Html$p,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('The answer to this part is used to replace variables in the following other parts:')
+											])),
+										A2(
+										$elm$html$Html$ul,
+										_List_Nil,
+										A2(
+											$elm$core$List$map,
+											function (_v7) {
+												var ppath = _v7.a;
+												var pp = _v7.b;
+												return A2($author$project$QuestionEditor$part_link, ppath, pp);
+											},
+											back_references)),
+										A2(
 										$elm$html$Html$fieldset,
 										_List_Nil,
 										$elm$core$List$concat(
@@ -16617,70 +17521,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 													},
 													$author$project$QuestionEditor$content_property)
 												])))
-									])),
-								_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$pre,
-									_List_Nil,
-									_List_fromArray(
-										[
-											$elm$html$Html$text(
-											A2(
-												$elm$json$Json$Encode$encode,
-												4,
-												$author$project$Settings$getters.value(
-													A2($author$project$Settings$atField, 'variableReplacements', part.settings))))
-										])),
-									A2(
-									$elm$html$Html$pre,
-									_List_Nil,
-									_List_fromArray(
-										[
-											$elm$html$Html$text(
-											$elm$core$Debug$toString(
-												A2($elm$core$List$map, $elm$core$Tuple$first, back_references)))
-										])),
-									A2(
-									$elm$html$Html$pre,
-									_List_Nil,
-									_List_fromArray(
-										[
-											$elm$html$Html$text(
-											$elm$core$Debug$toString(
-												A2(
-													$elm$core$List$map,
-													function (_v7) {
-														var ppath = _v7.a;
-														var pp = _v7.b;
-														return A3(
-															$author$project$Settings$get,
-															A2(
-																$elm$json$Json$Decode$field,
-																'variableReplacements',
-																$elm$json$Json$Decode$list(
-																	$elm$json$Json$Decode$oneOf(
-																		_List_fromArray(
-																			[
-																				A2(
-																				$elm$json$Json$Decode$map,
-																				$elm$core$Maybe$Just,
-																				A2($elm$json$Json$Decode$field, 'part', $elm$json$Json$Decode$string)),
-																				$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
-																			])))),
-															_List_Nil,
-															pp.settings);
-													},
-													all_parts)))
-										])),
-									A2(
-									$elm$html$Html$p,
-									_List_Nil,
-									_List_fromArray(
-										[
-											$elm$html$Html$text(path_string)
-										]))
-								])
+									]))
 							]))
 				}
 			};

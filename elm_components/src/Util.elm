@@ -4,6 +4,8 @@ module Util exposing
     , letter_ordinal
     , delay
     , first_two
+    , dropRight
+    , third
     )
 
 import Process
@@ -37,3 +39,11 @@ first_two : List a -> Maybe (a, a)
 first_two l = case l of
     a::b::_ -> Just (a,b)
     _ -> Nothing
+
+{- Drop the last n items of the list -}
+dropRight : Int -> List a -> List a
+dropRight n = List.reverse >> List.drop n >> List.reverse
+
+{- The third thing in a triple -}
+third: (a,b,c) -> c
+third (a,b,c) = c

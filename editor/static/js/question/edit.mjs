@@ -425,6 +425,9 @@ const ask_numbas_handlers = {
         const todo = {};
 
         variable_definitions.forEach(v => {
+            if(!v.name) {
+                return;
+            }
             try {
                 const tree = jme.compile(v.definition);
                 const vars = jme.findvars(tree, scope_variable_names, scope);
@@ -443,8 +446,10 @@ const ask_numbas_handlers = {
 
         variable_definitions.forEach(v => {
             const {tree} = todo[v.name];
-            result.variables[v.name].isDeterministic = jme.isDeterministic(tree, scope);
-            result.variables[v.name].isRandom = jme.isRandom(tree, scope);
+            if(tree) {
+                result.variables[v.name].isDeterministic = jme.isDeterministic(tree, scope);
+                result.variables[v.name].isRandom = jme.isRandom(tree, scope);
+            }
         });
 
         const condition = null; // TODO
@@ -461,6 +466,8 @@ const ask_numbas_handlers = {
         });
 
         result.conditionSatisfied = compute_result.conditionSatisfied;
+
+        console.log(result);
 
         return result;
     }

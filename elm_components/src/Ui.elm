@@ -61,7 +61,7 @@ ui config =
                     Just term_url -> 
                         H.a
                             [ HA.href <| config.help_root++term_url
-                            , HA.class "helplink info"
+                            , HA.class "helplink"
                             , HA.target "numbasquickhelp"
                             , Aria.label <| hint
                             , HA.title hint

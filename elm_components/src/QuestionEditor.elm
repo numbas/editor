@@ -184,6 +184,8 @@ type alias PropertyOptions =
     , setter : (JE.Value, S.Address) -> Msg
     }
 
+type alias PropertyWidget = Ui Msg -> PropertyOptions -> List (Html Msg)
+
 type alias LabelledField = Ui Msg -> PropertyOptions -> (Ui Msg -> PropertyOptions -> List (Html Msg)) -> List (Html Msg)
 
 type Msg
@@ -1387,8 +1389,6 @@ labelled_field ui o make_input =
         Nothing -> []
     )
 
-type alias PropertyWidget = Ui Msg -> PropertyOptions -> List (Html Msg)
-
 boolean_property : PropertyWidget
 boolean_property _ o =
     [ H.input
@@ -1560,6 +1560,14 @@ dependencies_of =
     .computed
     >> S.atField "dependencies"
     >> S.get (JD.list JD.string) []
+
+variable_is_random : Variable -> Bool
+variable_is_random v =
+    let
+        isDeterministic = S.getters.bool <| S.atField "isDeterministic" v.computed
+        isRandom = S.getters.bool <| S.atField "isRandom" v.computed
+    in
+        (not isDeterministic) && isRandom
 
 numberNotationStyles : List {value : String, label : String, description : String}
 numberNotationStyles =
@@ -1933,10 +1941,8 @@ view_active model =
                                 , help = Nothing
                                 }
                                 code_property
-                            , [ H.button
-                                [ HA.type_ "button"
-                                , HA.class "btn"
-                                , HE.onClick <| UpdateQuestion <| UpdateVariable path <| PrettyPrintJSON
+                            , [ ui.button ""
+                                [ HE.onClick <| UpdateQuestion <| UpdateVariable path <| PrettyPrintJSON
                                 ]
                                 [ H.text "Clean up formatting" ]
                               ]
@@ -1957,10 +1963,8 @@ view_active model =
                 vview =
                     { contents = List.concat
                         [ [H.fieldset [ HA.class "vertical" ] <| List.concat
-                            [ [ H.button
-                                [ HA.type_ "button"
-                                , HA.class "btn danger"
-                                , HE.onClick <| UpdateQuestion <| DeleteVariable path
+                            [ [ ui.button "danger"
+                                [ HE.onClick <| UpdateQuestion <| DeleteVariable path
                                 ]
                                 [ ui.icon "remove"
                                 , H.text "Delete this variable"
@@ -2120,7 +2124,8 @@ view_active model =
                                     ]
                                 , H.table []
                                     [ H.thead [] [H.tr []
-                                        [ H.th [] [H.text "Name"]
+                                        [ H.th [] [Ui.sr_only "Properties"]
+                                        , H.th [] [H.text "Name"]
                                         , H.th [] [H.text "Type"]
                                         , H.th [] [H.text "Generated Value"]
                                         ]
@@ -2136,7 +2141,9 @@ view_active model =
                                         in
                                             H.tr
                                                 [ HE.onClick <| UpdateTab <| Tabber.SetTab "variables" <| variable_tab_id path ]
-                                                [ H.td [ HA.class "name" ] 
+                                                [ H.td [ HA.class "properties"]
+                                                    [ if variable_is_random variable then ui.icon "random" else H.text "" ]
+                                                , H.td [ HA.class "name" ] 
                                                     [ tab_button ui UpdateTab model.tab_state variables_tabber vtab tab_index
                                                     ]
                                                 , H.td [HA.class "type"] (case mtype of 
@@ -2151,9 +2158,8 @@ view_active model =
                                                 ]
                                       ))
                                     ]
-                                , H.button
+                                , ui.button ""
                                     [ HE.onClick (UpdateQuestion <| AddVariable gi )
-                                    , HA.class "btn"
                                     ]
                                     [ ui.icon "add"
                                     , H.text <| if group.variables == [] then "Add a variable" else "Add another variable"
@@ -2162,17 +2168,14 @@ view_active model =
 
                           ))
                         ]
-                    , H.button
+                    , ui.button "primary"
                         [ HE.onClick (RegenerateVariables |> UpdateQuestion)
-                        , HA.class "btn primary"
                         ]
                         [ ui.icon "regenerate"
                         , H.text "Regenerate values"
                         ]
-                    , H.button
-                        [ HA.type_ "button"
-                        , HA.class "btn"
-                        , HE.onClick (AddVariableGroup |> UpdateQuestion)
+                    , ui.button ""
+                        [ HE.onClick (AddVariableGroup |> UpdateQuestion)
                         ]
                         [ ui.icon "add"
                         , H.text "New variable group"
@@ -2214,9 +2217,8 @@ view_active model =
                     []
                     [ H.h2 [] [ H.text "Parts" ]
                     , view_tablist parts_tabber [HA.class "vertical"]
-                    , H.button
-                        [ HA.class "btn"
-                        , HE.onClick <| StartAddingPart [] TopPart
+                    , ui.button "primary"
+                        [ HE.onClick <| StartAddingPart [] TopPart
                         , HA.attribute "commandfor" "add-part"
                         , HA.attribute "command" "show-modal"
                         ]
@@ -2256,10 +2258,8 @@ view_active model =
                                 Step -> "Add a step"
                                 Alternative -> "Add an alternative"
                             ]
-                        , H.button
-                            [ HA.type_ "button"
-                            , HA.class "btn xs"
-                            , HA.attribute "commandfor" "add-part"
+                        , ui.button "xs"
+                            [ HA.attribute "commandfor" "add-part"
                             , HA.attribute "command" "close"
                             ]
                             [ ui.icon "close"
@@ -2274,10 +2274,8 @@ view_active model =
                             (part_types |> List.map (\t ->
                                 H.li
                                     []
-                                    [ H.button
+                                    [ ui.button "primary"
                                         [ HE.onClick (UpdateQuestion <| AddPart add_part_path add_part_kind (new_part model.default_settings t (JE.object []) empty_part_container))
-                                        , HA.class "btn primary"
-                                        , HA.type_ "button"
                                         , HA.attribute "commandfor" "add-part"
                                         , HA.attribute "command" "close"
                                         ]
@@ -2312,8 +2310,10 @@ view_active model =
 
                 is_top_level = kind == TopPart
 
+                pmsg = UpdatePart path >> UpdateQuestion
+
                 pset : (JE.Value, S.Address) -> Msg
-                pset = ChangePartSetting >> UpdatePart path >> UpdateQuestion
+                pset = ChangePartSetting >> pmsg
 
                 term_to_url = String.replace " " "-"
 
@@ -2460,13 +2460,12 @@ view_active model =
                                                             , setter = pset
                                                             }
                                                             content_property -- TODO : smaller
-                                                        , [H.button
-                                                            [ HA.type_ "button"
-                                                            , HE.onClick <| remove_choice i
-                                                            ]
-                                                            [ ui.icon "remove"
-                                                            , H.text "Delete this choice"
-                                                            ]
+                                                        , [ ui.button "danger"
+                                                                [ HE.onClick <| remove_choice i
+                                                                ]
+                                                                [ ui.icon "remove"
+                                                                , H.text "Delete this choice"
+                                                                ]
                                                           ]
                                                         , visibleIf (not customMCQMarking) <| labelled_field
                                                             ui
@@ -2491,9 +2490,8 @@ view_active model =
                                             )
                                           )
                                         ]
-                                        ++[ H.button
-                                            [ HA.type_ "button"
-                                            , HE.onClick <| set_choices <| choices++[""]
+                                        ++[ ui.button "primary"
+                                            [ HE.onClick <| set_choices <| choices++[""]
                                             ]
                                             [ ui.icon "add"
                                             , H.text "Add a choice"
@@ -2827,9 +2825,8 @@ view_active model =
                                                             , setter = pset
                                                             }
                                                             content_property -- TODO : smaller
-                                                        , [H.button
-                                                            [ HA.type_ "button"
-                                                            , HE.onClick <| remove_choice i
+                                                        , [ ui.button "danger"
+                                                            [ HE.onClick <| remove_choice i
                                                             ]
                                                             [ ui.icon "remove"
                                                             , H.text "Delete this choice"
@@ -2840,9 +2837,8 @@ view_active model =
                                             )
                                           )
                                         ]
-                                        ++[ H.button
-                                            [ HA.type_ "button"
-                                            , HE.onClick <| set_choices <| choices++[""]
+                                        ++[ ui.button "primary"
+                                            [ HE.onClick <| set_choices <| choices++[""]
                                             ]
                                             [ ui.icon "add"
                                             , H.text "Add a choice"
@@ -2902,22 +2898,20 @@ view_active model =
                                                             , setter = pset
                                                             }
                                                             content_property -- TODO : smaller
-                                                        , [H.button
-                                                            [ HA.type_ "button"
-                                                            , HE.onClick <| remove_answer i
-                                                            ]
-                                                            [ ui.icon "remove"
-                                                            , H.text "Delete this answer"
-                                                            ]
+                                                        , [ ui.button "danger"
+                                                                [ HE.onClick <| remove_answer i
+                                                                ]
+                                                                [ ui.icon "remove"
+                                                                , H.text "Delete this answer"
+                                                                ]
                                                           ]
                                                         ]
                                                     )
                                             )
                                           )
                                         ]
-                                        ++[ H.button
-                                            [ HA.type_ "button"
-                                            , HE.onClick <| set_answers <| answers++[""]
+                                        ++[ ui.button "primary"
+                                            [ HE.onClick <| set_answers <| answers++[""]
                                             ]
                                             [ ui.icon "add"
                                             , H.text "Add a answer"
@@ -3861,7 +3855,7 @@ view_active model =
 
                         extendBaseMarkingAlgorithm = pbool "extendBaseMarkingAlgorithm"
 
-                        update_algo = UpdateMarkingAlgorithm >> UpdatePart path >> UpdateQuestion
+                        update_algo = UpdateMarkingAlgorithm >> pmsg
 
                         note_tabs = notes |> List.indexedMap pair |> List.filter (\(_,note) -> note.changed || extendBaseMarkingAlgorithm) |> List.map (\(i, note) ->
                             let
@@ -3887,7 +3881,10 @@ view_active model =
                                 , view =
                                     { contents = 
                                         [ H.fieldset [ HA.class "vertical" ] <| List.concat
-                                            [ [ H.button [ HE.onClick <| update_algo <| DeleteMarkingAlgorithmNote i ] [ ui.icon "remove", H.text "Delete this note" ] ]
+                                            [ [ ui.button "dnager" 
+                                                    [ HE.onClick <| update_algo <| DeleteMarkingAlgorithmNote i ]
+                                                    [ ui.icon "remove", H.text "Delete this note" ]
+                                              ]
                                             , note_field
                                                 { id = "name"
                                                 , label = "Name"
@@ -3934,14 +3931,12 @@ view_active model =
                                 , H.section [HA.class "tabbed-sidebar"]
                                     [ H.nav []
                                         [ view_tablist notes_tabber [ HA.class "vertical" ]
-                                        , H.button
-                                          [ HA.type_ "button"
-                                          , HE.onClick add_note
-                                          , HA.class "primary"
-                                          ]
-                                          [ ui.icon "add"
-                                          , H.text "Add a note"
-                                          ]
+                                        , ui.button "primary"
+                                              [ HE.onClick add_note
+                                              ]
+                                              [ ui.icon "add"
+                                              , H.text "Add a note"
+                                              ]
                                         ]
                                     , view_tabpanel notes_tabber 
                                     ]
@@ -4030,14 +4025,225 @@ view_active model =
                         }
 
                 adaptive_marking_tab =
-                    { id = "adaptive-marking"
-                    , label = SimpleLabel "Adaptive marking"
-                    , icon = Just "transfer"
-                    , view =
-                        { contents = [] -- TODO
-                        , attributes = []
+                    let
+                        back_references : List (PartPath, Part)
+                        back_references =
+                            all_parts
+                            |> List.filter (\(ppath, pp) ->
+                                pp.settings
+                                |> S.get (JD.field "variableReplacements" <| JD.list (JD.oneOf
+                                    [ JD.field "part" JD.string |> JD.map Just
+                                    , JD.succeed Nothing
+                                    ]
+                                   ))
+                                   []
+                                |> List.member (Just path_string)
+                               )
+
+                        variable_replacements : List (Settings, JE.Value)
+                        variable_replacements = 
+                            S.get (JD.list JD.value) [] (pfield "variableReplacements")
+                            |> List.indexedMap (\i v -> (S.at [S.field "variableReplacements", S.index i] part.settings, v))
+
+                        set_variable_replacements list = pset (JE.list identity list, [S.field "variableReplacements"])
+
+                        replaced_variables : Set String
+                        replaced_variables = variable_replacements |> List.map (first >> S.atField "variable" >> S.getters.string) |> Set.fromList
+
+                        unreplaced_variables : List String
+                        unreplaced_variables = 
+                            all_variables
+                            |> List.map (.settings >> S.atField "name" >> S.getters.string)
+                            |> Set.fromList
+                            |> (\s -> Set.diff s replaced_variables)
+                            |> Set.toList
+                            |> List.sort
+
+                        part_options : List (String, String)
+                        part_options = 
+                            all_parts
+                            |> List.filter (\(ppath, pp) -> 
+                                let
+                                    is_prefix = LE.isPrefixOf ppath path
+                                    has_marks = pp.type_.has_marks
+                                    pkind = bottom_index ppath |> Maybe.map first |> Maybe.withDefault TopPart
+                                    pis_alternative = pkind == Alternative
+                                in
+                                    (not is_prefix) && has_marks && (not pis_alternative)
+                               )
+                            |> List.map (\(ppath, pp) -> 
+                                (part_path_toString ppath
+                                , (String.repeat ((List.length ppath)-1) "\u{00a0}\u{00a0}") ++ (part_name ppath pp)
+                                )
+                               )
+
+                        add_variable_replacement : String -> Msg
+                        add_variable_replacement name =
+                            (List.map second variable_replacements)++[JE.object [("variable", JE.string name), ("path", JE.string <| Maybe.withDefault "" <| Maybe.map first <| List.head <| part_options)]]
+                            |> set_variable_replacements
+
+                        remove_variable_replacement : Int -> Msg
+                        remove_variable_replacement i =
+                            variable_replacements
+                            |> List.map second
+                            |> LE.removeAt i
+                            |> set_variable_replacements
+
+                        can_make_variable_replacements = (all_variables /= []) && (part_options /= [])
+                    in
+                        { id = "adaptive-marking"
+                        , label = SimpleLabel "Adaptive marking"
+                        , icon = Just "transfer"
+                        , view =
+                            { contents = List.concat
+                                [ [ ui.help_block
+                                    [ ui.helplink "adaptive-marking" "adaptive marking"
+                                    , H.text "To account for errors made by the student in earlier calculations, replace question variables with answers to earlier parts."
+                                    ]
+                                  ]
+                                , visibleIf (not (can_make_variable_replacements)) <|
+                                    [ ui.alert "warning"
+                                        [ H.text "In order to create a variable replacement, you must define at least one variable and one other part."
+                                        ]
+                                    ]
+                                , visibleIf (variable_replacements /= []) <|
+                                    [H.table
+                                        [ HA.class "variable-replacements"
+                                        ]
+                                        [ H.thead
+                                            []
+                                            [ H.tr
+                                                []
+                                                [ H.th [] [H.text "Variable"]
+                                                , H.th [] [H.text "Answer to use"]
+                                                , H.th [] [H.text "Must be answered?"]
+                                                , H.td [] []
+                                                ]
+                                            ]
+                                        , H.tbody
+                                            []
+                                            (variable_replacements |> List.indexedMap (\i (vrsettings,v) ->
+                                                let
+                                                    variable = S.getters.string (S.atField "variable" vrsettings)
+
+                                                    vr_prefix_id id = prefix_id <| "variable-replacement-"++(fi i)++"-"++id
+                                                in
+                                                    H.tr
+                                                        []
+                                                        [ H.td
+                                                            [ HA.class "monospace" ]
+                                                            [ H.text variable ]
+                                                        , H.td
+                                                            [ ]
+                                                            (select_property
+                                                                part_options
+                                                                ui
+                                                                { id = vr_prefix_id "part"
+                                                                , label = ""
+                                                                , help = Nothing
+                                                                , settings = vrsettings |> S.atField "part"
+                                                                , setter = pset
+                                                                }
+                                                            )
+                                                        , H.td
+                                                            []
+                                                            (boolean_property
+                                                                ui
+                                                                { id = vr_prefix_id "must_go_first"
+                                                                , label = ""
+                                                                , help = Nothing
+                                                                , settings = vrsettings |> S.atField "must_go_first"
+                                                                , setter = pset
+                                                                }
+                                                            )
+                                                        , H.td
+                                                            []
+                                                            [ ui.button "danger"
+                                                                [ HE.onClick <| remove_variable_replacement i
+                                                                , Aria.label <| "Remove replacement of variable "++variable
+                                                                ]
+                                                                [ ui.icon "remove"
+                                                                ]
+                                                            ]
+                                                        ]
+                                            ))
+
+                                        ]
+                                    ]
+                                , visibleIf (unreplaced_variables /= []) <|
+                                    ui.dropdown 
+                                        "add-variable-replacement" 
+                                        [ ui.icon "add"
+                                        , H.text "Add a variable replacement"
+                                        ]
+                                        (unreplaced_variables |> List.map (\name -> 
+                                            H.li
+                                                []
+                                                [ ui.button "monospace"
+                                                    [ HE.onClick <| add_variable_replacement name
+                                                    , HA.attribute "command" "hide-popover"
+                                                    , HA.attribute "commandfor" "add-variable-replacement-menu"
+                                                    ]
+                                                    [ H.text name ]
+                                                ]
+                                        ))
+                                , [H.fieldset [] <| List.concat
+                                    [ part_field
+                                        { id = "variableReplacementStrategy"
+                                        , label = "Variable replacement strategy"
+                                        , help = Just "variable replacement strategy"
+                                        }
+                                        (select_property
+                                            [ ("originalfirst", "Try without replacements first")
+                                            , ("alwaysreplace", "Always replace variables")
+                                            ]
+                                        )
+                                    , part_field
+                                        { id = "adaptiveMarkingPenalty"
+                                        , label = "Penalty when adaptive marking is used"
+                                        , help = Just "adaptive marking penalty"
+                                        }
+                                        text_property
+                                    ]
+                                  ]
+                                , visibleIf (back_references /= []) <|
+                                    [ H.fieldset [] <| List.concat
+                                        [ part_field
+                                            { id = "adaptiveMarkingUseCondition"
+                                            , label = "Condition for using this part's answer in adaptive marking"
+                                            , help = Just "adaptive marking use condition"
+                                            }
+                                            text_property
+                                        , part_field
+                                            { id = "adaptiveMarkingNotUsedMessage"
+                                            , label = "Message when this part's answer is not used"
+                                            , help = Just "adaptive marking use message"
+                                            }
+                                            content_property
+                                        ]
+                                    ]
+                                , [ H.pre [] [H.text <| JE.encode 4 <| S.getters.value <| S.atField "variableReplacements" part.settings]
+                                  , H.pre [] [H.text <| Debug.toString <| List.map first back_references]
+                                  , H.pre [] [
+                                        all_parts
+                                        |> List.map (\(ppath, pp) ->
+                                            pp.settings
+                                            |> S.get (JD.field "variableReplacements" <| JD.list (JD.oneOf
+                                                [ JD.field "part" JD.string |> JD.map Just
+                                                , JD.succeed Nothing
+                                                ]
+                                               ))
+                                               []
+                                           )
+                                        |> Debug.toString
+                                        |> H.text
+                                      ]
+                                  , H.p [] [H.text path_string]
+                                  ]
+                                ]
+                            , attributes = []
+                            }
                         }
-                    }
 
                 next_parts_tab =
                     { id = "next-parts"
@@ -4075,27 +4281,26 @@ view_active model =
 
 
                 control_buttons =
-                    [ (part.type_.name == "gapfill", H.button
-                        [ HA.class "btn xs"
-                        , HE.onClick (StartAddingPart path Gap)
+                    [ (part.type_.name == "gapfill", ui.button "xs"
+                        [ HE.onClick (StartAddingPart path Gap)
                         , HA.attribute "commandfor" "add-part"
                         , HA.attribute "command" "show-modal"
                         ]
-                        [ H.text "Add a gap"
+                        [ ui.icon "add"
+                        , H.text "Add a gap"
                         ]
                       )
-                    , (parts_mode == AllPartsMode && is_top_level && part.type_.has_marks, H.button
-                        [ HA.class "btn xs"
-                        , HE.onClick (StartAddingPart path Step)
+                    , (parts_mode == AllPartsMode && is_top_level && part.type_.has_marks, ui.button "xs"
+                        [ HE.onClick (StartAddingPart path Step)
                         , HA.attribute "commandfor" "add-part"
                         , HA.attribute "command" "show-modal"
                         ]
-                        [ H.text "Add a step"
+                        [ ui.icon "add"
+                        , H.text "Add a step"
                         ]
                       )
-                    , (part.type_.has_marks && not is_alternative, H.button
-                        [ HA.class "btn xs"
-                        , HE.onClick (
+                    , (part.type_.has_marks && not is_alternative, ui.button "xs"
+                        [ HE.onClick (
                             let
                                 settings = part.settings
 
@@ -4112,9 +4317,8 @@ view_active model =
                         [ H.text "Add an alternative"
                         ]
                       )
-                    , (True, H.button
-                        [ HA.type_ "button"
-                        , HE.onClick (DeletePart path |> UpdateQuestion)
+                    , (True, ui.button "danger sm"
+                        [ HE.onClick (DeletePart path |> UpdateQuestion)
                         , HA.class "btn danger sm"
                         ]
                         [ H.text "Delete this part" ]
@@ -4193,18 +4397,21 @@ view_active model =
                         Changed -> "Unsaved changes"
                         Saving _ -> "Saving..."
                     ]
-                , H.button
+                , ui.button ""
                     [ HA.disabled <| not <| History.can_undo model.history
-                    , HA.type_ "button"
                     , HE.onClick Undo
                     ]
-                    [ H.text "Undo" ]
-                , H.button
+                    [ ui.icon "undo"
+                    , H.text "Undo"
+                    ]
+                , ui.button ""
                     [ HA.disabled <| not <| History.can_redo model.history
                     , HA.type_ "button"
                     , HE.onClick Redo
                     ]
-                    [ H.text "Redo" ]
+                    [ ui.icon "redo"
+                    , H.text "Redo"
+                    ]
                 ]
             , H.nav
                 [ HA.id "tabs"]

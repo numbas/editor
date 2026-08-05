@@ -52,6 +52,9 @@ icon_map = {
     'grid': '▩',
     'regenerate': '⟳',
     'close': '❌',
+    'undo': '↶',
+    'redo': '↷',
+    'random': '🎲',
 }
 
 @register.inclusion_tag('icon.html')

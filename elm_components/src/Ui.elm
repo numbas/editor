@@ -7,6 +7,7 @@ module Ui exposing
     , raw_html_string
     , jme_preview
     , jme_value
+    , sr_only
     )
 
 import Aria
@@ -19,6 +20,7 @@ type alias Ui msg =
     { icon : String -> Html msg
     , helplink : String -> String -> Html msg
     , labelled_helplink : String -> String -> Html msg
+    , button : String -> List (H.Attribute msg) -> List (Html msg) -> Html msg
     , dropdown : String -> List (Html msg) -> List (Html msg) -> List (Html msg)
     , help_block : List (Html msg) -> Html msg
     , inline_help_block : List (Html msg) -> Html msg
@@ -37,6 +39,9 @@ type alias UiConfig =
 ui : UiConfig -> Ui msg
 ui config =
     let
+        {-
+            An icon
+        -}
         icon name =
             let
                 mpic = Dict.get name config.icon_map
@@ -48,7 +53,6 @@ ui config =
         {-
             An icon link to the documentation.
         -}
-
         helplink labelled term subject =
             let
                 hint = if labelled then subject else "Help with " ++ subject
@@ -73,6 +77,15 @@ ui config =
                             )
                     Nothing ->
                         H.span [ HA.class "warning" ] [H.text <| "Unknown docs term: "++term]
+
+        button kind attributes contents =
+            H.button
+                ( [ HA.class <| "btn "++kind
+                  , HA.type_ "button"
+                  ]
+                ++ attributes
+                )
+                contents
 
         dropdown name label_content items =
                 [ H.button
@@ -100,6 +113,7 @@ ui config =
         { icon = icon
         , helplink = helplink False
         , labelled_helplink = helplink True
+        , button = button
         , dropdown = dropdown
         , help_block = help_block
         , inline_help_block = inline_help_block
@@ -140,3 +154,6 @@ jme_value o =
         , HA.attribute "abbreviate" <| if o.abbreviate then "true" else "false"
         ]
         []
+
+sr_only : String -> Html msg
+sr_only str = H.span [HA.class "sr-only"] [H.text str]

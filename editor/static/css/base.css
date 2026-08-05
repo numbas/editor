@@ -618,12 +618,17 @@
         border-radius: var(--button-radius);
 
         border: thin solid var(--mixed-border-color);
-    }
-    .alert > :is(p, ul, ol, menu) {
-        margin-bottom: 0;
-    }
-    .alert > p + p {
-        margin-top: var(--third-space);
+
+        & > :is(h1,h2,h3,h4,h5,h6):first-child {
+            margin-top: 0;
+        }
+
+        & > :is(p, ul, ol, menu) {
+            margin-bottom: 0;
+        }
+        & > p + p {
+            margin-top: var(--third-space);
+        }
     }
     .well {
         min-height: var(--spacing);

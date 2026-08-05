@@ -76,7 +76,7 @@ decode_state = JD.oneOf
     ]
 
 update : Msg -> State -> (State, Cmd Msg)
-update msg state = case (Debug.log "update tab" msg) of
+update msg state = case msg of
     SetTab key id -> 
         let
             nstate = Dict.insert key id state
@@ -173,7 +173,7 @@ tab_button ui wrap_msg state tabber tab index =
             , Aria.selected <| selected
             , Aria.controls <| tabpanel_id tabber tab
             , HE.onClick <| wrap_msg <| SetTab tabber.name tab.id
-            , HE.on "keyup" (handle_keypress |> JD.map wrap_msg)
+            , HE.preventDefaultOn "keydown" (handle_keypress |> JD.map (\m -> (wrap_msg m, True)))
             ]
             (case tab.label of
                 SimpleLabel label -> 

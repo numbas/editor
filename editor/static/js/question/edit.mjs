@@ -432,13 +432,19 @@ const ask_numbas_handlers = {
                 Object.assign(result.variables[v.name],
                     {
                         dependencies: vars,
-                        names: jme.variables.splitVariableNames(v.name)
+                        names: jme.variables.splitVariableNames(v.name),
                     }
                 );
             } catch(error) {
                 console.error(error);
                 result.variables[v.name].error = error.message || error.toString();
             }
+        });
+
+        variable_definitions.forEach(v => {
+            const {tree} = todo[v.name];
+            result.variables[v.name].isDeterministic = jme.isDeterministic(tree, scope);
+            result.variables[v.name].isRandom = jme.isRandom(tree, scope);
         });
 
         const condition = null; // TODO
@@ -455,9 +461,6 @@ const ask_numbas_handlers = {
         });
 
         result.conditionSatisfied = compute_result.conditionSatisfied;
-
-        console.log(result);
-
 
         return result;
     }

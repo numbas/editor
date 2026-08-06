@@ -114,7 +114,7 @@ class UploadView(editor.views.editoritem.CreateView):
         if is_zipfile:
             with zipfile.ZipFile(exam_file) as z:
                 for filename,path in self.exam_object.data.get('resources',[]):
-                    zippath = 'resources/'+filename
+                    zippath = 'resources/question-resources/'+path
                     short_filename = filename
 
                     if short_filename.startswith('question-resources/'):

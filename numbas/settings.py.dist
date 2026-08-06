@@ -120,6 +120,18 @@ PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
 ]
 
+# File storage
+# The HashedFilenameStorage avoids duplicating uploaded files.
+STORAGES = {
+    "default": {
+        "BACKEND": "editor.file_storage.HashedFilenameStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/

@@ -121,10 +121,12 @@ class UploadView(editor.views.editoritem.CreateView):
                         short_filename = short_filename[len('question-resources/'):]
 
                     with z.open(zippath) as zf:
+                        f = File(zf)
+                        f.name = path
                         resource = Resource.objects.create(
                             filename=short_filename,
                             owner = self.request.user,
-                            file=File(zf)
+                            file=f
                         )
                         self.resources[filename] = resource
 

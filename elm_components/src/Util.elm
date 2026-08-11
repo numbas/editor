@@ -6,10 +6,12 @@ module Util exposing
     , first_two
     , dropRight
     , third
+    , nested_count
     )
 
 import Process
 import Task exposing (Task)
+import Tuple exposing (second)
 
 fi = String.fromInt
 
@@ -47,3 +49,19 @@ dropRight n = List.reverse >> List.drop n >> List.reverse
 {- The third thing in a triple -}
 third: (a,b,c) -> c
 third (a,b,c) = c
+
+{- Given a list of lists, assign a number to each of the second-level things. -}
+nested_count : List (a, List b) -> List (a, List (Int, b))
+nested_count list =
+    list
+    |> List.foldl (\(a, bs) (n, oas) ->
+        let
+            (nn, nbs) =
+                bs
+                |> List.foldl (\b (nb, obs) -> (nb+1, obs++[(nb,b)])) (n, [])
+        in
+            (nn, oas++[(a, nbs)])
+       )
+       (0, [])
+    |> second
+

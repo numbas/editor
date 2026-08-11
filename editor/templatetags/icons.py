@@ -55,6 +55,8 @@ icon_map = {
     'undo': '↶',
     'redo': '↷',
     'random': '🎲',
+    'advice': '🕮',
+    'extension': '🔧',
 }
 
 @register.inclusion_tag('icon.html')

@@ -17,6 +17,7 @@ module Settings exposing
     , at
     , atIndex
     , atField
+    , no_defaults
     , maybe_get
     , get
     , getters
@@ -24,6 +25,7 @@ module Settings exposing
     , merge
     , set
     , setters
+    , setList
     , setAt
     )
 
@@ -57,6 +59,7 @@ type alias Getters =
     { string : Getter String
     , bool : Getter Bool
     , value : Getter Value
+    , list : Getter (List Value)
     }
 
 type alias Setters msg =
@@ -107,31 +110,40 @@ decode_index_where prop =
     (JD.list prop)
     |> JD.map (List.indexedMap pair >> (\ps -> ps |> List.filter second |> List.map first |> List.head |> Maybe.withDefault (List.length ps)))
 
+no_defaults : Settings -> Settings
+no_defaults settings = { settings | defaults = JE.null }
+
 maybe_get : JD.Decoder a -> Settings -> Maybe a
 maybe_get decoder settings =    
     let
-        reach : Address -> JD.Decoder a
-        reach at_ = case at_ of
-            [] -> decoder
-            (Index i)::rest -> JD.index i (reach rest)
-            (Field k)::rest -> JD.field k (reach rest)
-            (Key k)::[] -> JE.string k |> JD.decodeValue decoder |> \r -> case r of
-                Ok a -> JD.succeed a
-                Err _ -> JD.fail ""
+        reach : Bool -> Address -> JD.Decoder a
+        reach use_default at_ = 
+            let
+                down = reach use_default
+            in
+                case at_ of
+                    [] -> decoder
+                    (Index i)::rest -> JD.oneOf ([(True, JD.index i (down rest)), (use_default, JD.field "items" (down rest))] |> List.filter first |> List.map second)
+                    (Field k)::rest -> JD.field k (down rest)
+                    (Key k)::[] -> JE.string k |> JD.decodeValue decoder |> \r -> case r of
+                        Ok a -> JD.succeed a
+                        Err _ -> JD.fail ""
 
-            (Key k)::rest -> JD.field k (reach rest)
-            (IndexWhere prop _)::rest ->
-                (decode_index_where prop)
-                |> JD.andThen (\i -> JD.index i (reach rest))
+                    (Key k)::rest -> JD.field k (down rest)
+                    (IndexWhere prop _)::rest ->
+                        (decode_index_where prop)
+                        |> JD.andThen (\i -> JD.index i (down rest))
 
 
-        d = reach settings.at
+        decode_value = reach False settings.at
+
+        decode_default = reach True settings.at
     in
         settings.value
-        |> JD.decodeValue d
+        |> JD.decodeValue decode_value
         |> (\r -> case r of
             Ok v -> Ok v
-            Err _ -> JD.decodeValue d settings.defaults
+            Err _ -> JD.decodeValue decode_default settings.defaults
            )
         |> Result.toMaybe
 
@@ -146,6 +158,7 @@ getters =
     { string = get (JD.oneOf [JD.string, JD.float |> JD.map String.fromFloat]) ""
     , bool = get JD.bool False
     , value = get JD.value (JE.null)
+    , list = get (JD.list JD.value) []
     }
 
 insert : String -> Value -> Settings -> Settings
@@ -175,6 +188,9 @@ setters settings msg =
         , bool = sset JE.bool
         , value = sset identity
         }
+
+setList : ((Value,Address) -> msg) -> (a -> Value) -> Settings -> Setter (List a) msg
+setList msg encode settings = set msg settings.at (JE.list encode)
 
 force_updateAt : Int -> (JE.Value -> JE.Value) -> JE.Value -> List JE.Value -> List JE.Value
 force_updateAt i fn default l =

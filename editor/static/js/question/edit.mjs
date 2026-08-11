@@ -72,6 +72,51 @@ default_settings.marking_algorithms = Object.fromEntries(Object.entries(Numbas.p
     ]
 }));
 
+class Extension {
+    constructor(def) {
+        this.def = def;
+    }
+
+    load() {
+        if(!this.loaded) {
+            const {promise: loaded, resolve, reject} = Promise.withResolvers();
+            this.loaded = loaded;
+
+            const {def} = this;
+
+            this.def.stylesheets.forEach(function(name) {
+                var link = document.createElement('link');
+                link.setAttribute('href', def.script_url + name);
+                link.setAttribute('rel','stylesheet');
+                document.head.appendChild(link);
+            });
+            const script_promises = this.def.scripts.map(name => {
+                const script = document.createElement('script');
+                script.setAttribute('src', def.script_url + name);
+                const {promise: script_loaded, resolve, reject} = Promise.withResolvers();
+                script.addEventListener('load',function(e) {
+                    resolve(e);
+                });
+                script.addEventListener('error',function(e) {
+                    reject(e);
+                });
+                document.head.appendChild(script);
+                return script_loaded;
+            });
+            Promise.all(script_promises).then(function() {
+                Numbas.activateExtension(def.location);
+                resolve(Numbas.extensions[def.location]);
+            }).catch(function(err) {
+                reject(err);
+            });
+        }
+        return this.loaded;
+    }
+}
+
+const extensions = Object.fromEntries(item_json.numbasExtensions.map(def => {
+    return [def.location, new Extension(def)];
+}));
 
 
 window.default_settings = default_settings;
@@ -80,6 +125,19 @@ const tab_state = history_state.get('tabs');
 
 const {jme} = Numbas;
 
+function find_jme_types() {
+    const types = [];
+    const forbiddenJmeTypes = ['op','name','function'];
+    for(const type in Numbas.jme.types) {
+        const t = Numbas.jme.types[type].prototype.type;
+        if(t && !types.includes(t) && !forbiddenJmeTypes.includes(t)) {
+            types.push(t);
+        }
+    }
+    types.sort();
+    return types;
+}
+
 const flags = {
     item_json,
     tab_state,
@@ -87,8 +145,9 @@ const flags = {
     Numbas,
     default_settings,
     docs_mapping,
+    jme_types: find_jme_types()
 };
-//console.log(flags);
+console.log(flags);
 
 const app = Elm.QuestionEditor.init({
     node: document.querySelector('main'), 
@@ -100,11 +159,12 @@ app.ports.save_tab_state.subscribe(state => {
 });
 
 let variable_generation_run_number = 0;
+
 async function computeVariables(prep) {
-    const result = {variables: {}, conditionSatisfied: true, errors: []};
-    
     const scope = new jme.Scope([prep.scope]);
 
+    const result = {variables: {}, conditionSatisfied: true, errors: [], scope};
+    
     const {todo, condition} = prep;
 
     const random_int_string = () => new jme.types.TString(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)+'');
@@ -356,6 +416,9 @@ function get_variable_template(templateType) {
     return handler;
 }
 
+function activateExtension(extension) {
+}
+
 const ask_numbas_handlers = {
     is_equation({expression, notation}) { // -> boolean
         notation = jme.notations[notation];
@@ -413,14 +476,126 @@ const ask_numbas_handlers = {
         const definition = handler.toJME(template);
         return {definition};
     },
+
     async generateVariables({question}) {
-        const scope = new jme.Scope([jme.builtinScope]); // TODO extensions etc.
+        let scope = new jme.Scope([jme.builtinScope]); // TODO extensions etc.
+
+        await Promise.all((question.extensions || []).map(async (location) => {
+            const extension = extensions[location];
+            if(!extension) {
+                throw(new Error(`Unknown extension ${location}`));
+            }
+            const ext = await extension.load();
+            if(ext.scope) {
+                scope = new jme.Scope([scope, ext.scope]);
+            }
+        }));
+
+        const functionsTodo = question.functions;
+
+        const made_functions = jme.variables.makeFunctions(functionsTodo, scope);
+        
+        const seen_functions = {}
+
+        functionsTodo.map(function(f) {
+            try {
+                const name = jme.normaliseName(f.name, scope);
+                if(!name) {
+                    return;
+                }
+                const i = seen_functions[name] || 0;
+                seen_functions[name] = i + 1;
+                const cfn = made_functions[name][i];
+
+                const oevaluate = cfn.evaluate;
+                cfn.evaluate = function(args,scope) {
+                    function warning(message) {
+                        let wscope = scope;
+                        while(wscope.editor_evaluation_warnings === undefined) {
+                            wscope = wscope.parent;
+                            if(!wscope) {
+                                return;
+                            }
+                        }
+
+                        const suggestions = [];
+                        function parameter_signature_suggestion(tok) {
+                            if(jme.isType(tok,'number')) {
+                                return 'number';
+                            }
+                            if(tok.type == 'list') {
+                                if(tok.value.length > 0) {
+                                    const item_sigs = tok.value.map(parameter_signature_suggestion);
+                                    if(item_sigs.length > 0 && item_sigs.every(s => s == item_sigs[0])) {
+                                        return 'list of ' + item_sigs[0];
+                                    }
+                                }
+                                return 'list';
+                            }
+                            if(tok.type == 'dict') {
+                                const item_sigs = Object.values(tok.value).map(parameter_signature_suggestion);
+                                if(item_sigs.length > 0 && item_sigs.every(s => s == item_sigs[0])) {
+                                    return 'dict of '+item_sigs[0];
+                                }
+                            }
+                            return tok.type;
+                        }
+                        const parameter_signature_suggestions = args.map(parameter_signature_suggestion);
+                        f.parameters.forEach(function(p,i) {
+                            const current_sig = p.type.replace('?','anything');
+                            const suggested_sig = parameter_signature_suggestion(args[i]);
+                            if(current_sig != suggested_sig) {
+                                suggestions.push({
+                                    kind: 'change signature', 
+                                    parameter: p, 
+                                    from: current_sig, 
+                                    to: suggested_sig
+                                });
+                            }
+                        });
+
+                        wscope.editor_evaluation_warnings.push({fn: f, message: message, suggestions: suggestions, args: args.slice()});
+                    }
+                    function check_value(tok) {
+                        switch(tok.type) {
+                            case 'number':
+                                if(!(Numbas.util.isNumber(tok.value) || tok.value.complex)) {
+                                    warning("A value of <code>NaN</code> was returned.");
+                                }
+                                break;
+                            case 'list':
+                                tok.value.forEach(check_value);
+                                break;
+                            case 'dict':
+                                Object.values(tok.value).forEach(check_value);
+                                break;
+                        }
+                    }
+                    const result = oevaluate.apply(this, arguments);
+                    if(cfn.outtype != '?' && !jme.isType(result,cfn.outtype)) {
+                        warning("This function is supposed to return a <code>"+cfn.outtype+"</code> but instead returned a <code>"+result.type+"</code>.");
+                    }
+                    check_value(result);
+                    return result;
+                }
+                console.log('add function', cfn.name);
+                scope.addFunction(cfn);
+                return {fn: cfn};
+            }
+            catch(e) {
+                console.error(e);
+                return {error: e};
+            }
+        });
 
         const scope_variable_names = Object.keys(scope.allVariables());
 
         const variable_definitions = Object.values(question.variables);
 
-        const result = {variables: Object.fromEntries(variable_definitions.map(v => [v.name, {}]))};
+        const result = {
+            variables: Object.fromEntries(variable_definitions.map(v => [v.name, {}])),
+            scope
+        };
 
         const todo = {};
 
@@ -467,8 +642,103 @@ const ask_numbas_handlers = {
 
         result.conditionSatisfied = compute_result.conditionSatisfied;
 
-        console.log(result);
+        result.scope = compute_result.scope;
 
+        return result;
+    },
+
+    async generateQuestion({question: question_def, scope}) {
+        const question = Numbas.createQuestionFromJSON(question_def, 1, null, null, scope);
+
+        question.generateVariables();
+
+        await question.signals.on('ready');
+
+        if(question_def.partsMode == 'explore') {
+            question_def.parts.slice(1).forEach(function(_, i) {
+                const p = question.addExtraPart(i+1);
+            });
+        }
+
+        const part_info = Object.fromEntries(question.allParts().map(p => {
+            const scope = p.getScope();
+            const answer = p.getCorrectAnswer(scope);
+            return [p.path, {answer}];
+        }));
+
+        return {question, part_info};
+    },
+
+    async submit_answer({answer, path, question}) {
+        await promise;
+
+        const result = {};
+
+        try {
+            const part = question.getPart(path);
+            if(!part) {
+                throw(new Error("Part not found"));
+            }
+            if(!answer) {
+                throw(new Error("Student's answer not set. There may be an error in the input widget."));
+            }
+            part.storeAnswer(answer);
+            part.setStudentAnswer();
+
+            var marking_parameters = part.marking_parameters(part.rawStudentAnswerAsJME());
+            result.marking_parameters = Object.entries(marking_parameters).map(function(p){ 
+                return {
+                    name: p[0],
+                    value: p[1]
+                }
+            });
+            result.settings = Object.entries(marking_parameters['settings'].value).map(function(s) {
+                return {
+                    name: s[0],
+                    value: s[1]
+                }
+            });
+
+            part.submit();
+
+            var promise;
+            if(part.waiting_for_pre_submit) {
+                this.waiting_for_pre_submit(true);
+                promise = part.waiting_for_pre_submit.then(function() {
+                    part.submit();
+                });
+            } else {
+                promise = Promise.resolve(true);
+            }
+            await promise;
+
+            var res = part.script_result;
+            let out;
+            if(!res) {
+                out = {script: part.markingScript, error: 'The marking algorithm did not return a result.'};
+            } else {
+                var alternative_used = part.best_alternative ? part.best_alternative.path : null;
+                out = {
+                    script: part.markingScript,
+                    result: res,
+                    marking_result: part.marking_result,
+                    markingFeedback: part.markingFeedback,
+                    marks: part.marks,
+                    credit: part.credit,
+                    score: part.score,
+                    alternative_used: alternative_used
+                };
+                if(res.state_errors.mark) {
+                    out.error = 'Error when computing the <code>mark</code> note: '+res.state_errors.mark.message;
+                } else if(!res.state_valid.mark) {
+                    out.error = 'This answer is not valid.';
+                    out.warnings = part.warnings;
+                }
+            }
+            Object.assign(result, out);
+        } catch(e) {
+            result.error = 'Error marking: '+e.message;
+        }
         return result;
     }
 };

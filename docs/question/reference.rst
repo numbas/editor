@@ -416,6 +416,8 @@ Extensions & scripts
 
 This tab contains tools to change the behaviour of your question, using pre-built extensions, redefining constants, or by adding custom JME functions and JavaScript.
 
+.. _question-extensions:
+
 Extensions
 -----------
 
@@ -504,6 +506,7 @@ Custom functions can be used in any JME expression in the question, such as vari
 
 .. glossary::
     Name
+        .. _function-name:
         The name of the function. 
         Should be a valid JME name - it should start with a letter, and contain only letters and numbers, with no spaces or punctuation.
 
@@ -738,6 +741,7 @@ Settings
 
 .. glossary::
     Name
+        .. _resource-name:
         This is shown to the student and used for searching within the editor, so make it something intelligible.
         "Find the roots of a quadratic equation" is a good name; "Alg102 q2" is not.
 
@@ -747,6 +751,7 @@ Settings
         *CC BY* allows other users to reuse your content however you like, as long as they give appropriate credit to you.
 
     Description
+        .. _resource-description:
         Use this field to describe the question's contents, what it assesses, and so on. 
         This is shown in the questions index and in the questions list of any exams containing this question, so make sure it's fairly concise.
 

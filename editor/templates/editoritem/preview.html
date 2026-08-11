@@ -17,7 +17,7 @@
         <link rel="stylesheet" href="{% sstatic 'css/preview.css' %}"/>
         {% include "mathjax.html" %}
     </head>
-    <body>
+    <body class="numbas-container">
         <header role="banner">
             <h1 class="description">
                 <a href="{{item.get_absolute_url}}">{{item.name}}</a>
@@ -42,20 +42,22 @@
 
             <a class="action" href="{% editoritem_url 'download' item.rel_obj %}?scorm">Download</a>
 
-            <button class="like-link action" id="share">Share</button>
+            <button type="button" popovertarget="embed-url">Share</summary>
 
-            <span id="embed-url">
-                <fieldset>
-                    <legend>Link to this {{item.item_type}}</legend>
-                    <a id="embed-link" class="text-muted" href="{{SITE_ROOT}}{{embed_url}}"><code>{{SITE_ROOT}}{{embed_url}}</code></a>
+        </header>
+            <dialog id="embed-url" popover>
+                <p>Link to this {{item.item_type}}</p>
+                <p>
+                    <a id="embed-link" class="text-muted" href="{{SITE_ROOT}}{{embed_url}}">{{SITE_ROOT}}{{embed_url}}</a>
                     <button for="embed-link" class="copy-link" type="button">
                         <span class="not-copied">Copy this link</span>
                         <span class="copied">Link copied!</span>
                     </button>
-                </fieldset>
+                </p>
+                <hr>
                 <form id="make-lockdown-link-form" method="GET" action="{% url 'item_make_lockdown_link' item.pk %}">
-                    <fieldset>
-                        <legend>Make a link to launch in the Numbas lockdown app:</legend>
+                    <p>Make a link to launch in the Numbas lockdown app:</p>
+                    <p>
                         <label for="lockdown-password">Password:</label>
                         <input type="text" id="lockdown-password" name="password">
                         <output for="lockdown-password">
@@ -65,25 +67,17 @@
                                 <span class="copied">Link copied!</span>
                             </button>
                         </output>
-                    </fieldset>
+                    </p>
                 </form>
-            </span>
+            </dialog>
 
-        </header>
         <main role="main">
         <iframe title="{{item.name}}" src="{{exam_url}}"></iframe>
         </main>
 
 
         <script>
-            var share_button = document.getElementById('share');
             var embed_display = document.getElementById('embed-url');
-
-            /* To toggle the embedded URL area */
-            share_button.addEventListener('click',function() {
-                embed_display.classList.toggle('shown'); 
-                embed_display.focus();
-            });
 
             Array.from(document.querySelectorAll('button.copy-link')).forEach(copy_link_button => {
                 if(!(navigator.clipboard && navigator.clipboard.writeText)) {

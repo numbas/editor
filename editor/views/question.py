@@ -153,7 +153,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
 
         extensions = Extension.objects.filter(Extension.filter_can_be_viewed_by(self.user) | Q(pk__in=self.object.extensions.all()))
         extensions = extensions.distinct().order_by(Lower('name'))
-        self.item_json['numbasExtensions'] = context['extensions'] = [e.as_json() for e in extensions]
+        self.item_json['numbasExtensions'] = context['extensions'] = [e.as_json(self.request) for e in extensions]
 
         self.item_json['used_in_exams'] = self.object.exams_using_this.exists()
         user = self.request.user

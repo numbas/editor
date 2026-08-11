@@ -1,0 +1,26 @@
+@import './_variables.css';
+@import './base.css';
+@import './color-mix.css';
+
+body {
+    display: grid;
+    grid-template: min-content 1fr / 1fr;
+    height: 100svh;
+    overflow: hidden;
+}
+
+header {
+    --background-color: var(--main-color);
+    background-color: var(--background-color);
+    
+    display: flex;
+    gap: var(--spacing);
+    & h1 {
+        font-size: 1em;
+    }
+}
+
+main iframe {
+    width: 100%;
+    height: 100%;
+}

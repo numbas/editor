@@ -541,7 +541,7 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
                     | Q(author=user)
                    )
 
-    def as_json(self):
+    def as_json(self, request=None):
         d = {
             'name': self.name,
             'url': reverse('extension_documentation',args=(self.pk,)),
@@ -550,6 +550,7 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
             'author': self.author.pk if self.author is not None else None,
             'edit_url': reverse('extension_edit', args=(self.pk,)),
             'script_url': self.script_root,
+            'can_edit': False if request is None else self.can_be_edited_by(request.user),
         }
         path = self.script_path
         if path is not None:

@@ -754,31 +754,33 @@
                     }
                 },
                 "functions": {
-                    "type": "object",
+                    "type": "array",
                     "title": "Functions",
-                    "additionalProperties": {
+                    "items": {
                         "type": "object",
                         "properties": {
                             "parameters": {
                                 "type": "array",
                                 "title": "Parameters",
                                 "items": {
-                                    "type": "array",
-                                    "prefixItems": [
-                                        {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
                                             "type": "string",
                                             "title": "Name"
                                         },
-                                        {
+                                        "type": {
                                             "type": "string",
-                                            "title": "Type signature"
+                                            "title": "Type signature",
+                                            "default": "number"
                                         }
-                                    ]
+                                    }
                                 }
                             },
                             "type": {
                                 "type": "string",
-                                "title": "Type"
+                                "title": "Type",
+                                "default": "anything"
                             },
                             "language": {
                                 "type": "string",
@@ -786,7 +788,8 @@
                                 "enum": [
                                     "jme",
                                     "javascript"
-                                ]
+                                ],
+                                "default": "jme"
                             },
                             "definition": {
                                 "type": "string",
@@ -949,7 +952,36 @@
                     }
                 },
                 "customMarkingAlgorithm": {
-                    "type": "string",
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "notes": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "name": {
+                                                "type": "string",
+                                                "title": "Name"
+                                            },
+                                            "definition": {
+                                                "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
+                                                "title": "Definition"
+                                            },
+                                            "description": {
+                                                "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html",
+                                                "title": "Description"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
                     "title": "Custom marking algorithm"
                 },
                 "extendBaseMarkingAlgorithm": {
@@ -1156,7 +1188,8 @@
                                         },
                                         "definition": {
                                             "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
-                                            "title": "Definition"
+                                            "title": "Definition",
+                                            "default": "interpreted_answer"
                                         }
                                     }
                                 }
@@ -1475,7 +1508,8 @@
                         },
                         "notation": {
                             "type": "string",
-                            "title": "Notation"
+                            "title": "Notation",
+                            "default": "standard"
                         },
                         "enabledFunctions": {
                             "type": "array",

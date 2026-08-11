@@ -91,6 +91,32 @@ body.editor {
             }  
         } 
     }
+
+    & .part-controls {
+        display: flex;
+        gap: var(--spacing);
+        justify-content: end;
+        flex-grow: 1;
+    }
+
+
+    & #custom-constants {
+        width: 100%;
+        
+        & td {
+            vertical-align: top;
+
+            & input {
+                display: block;
+            }
+        }
+    }
+
+
+    & #rulesets :is(td, th) {
+        padding-inline: var(--half-space);
+        vertical-align: top;
+    }
 }
     
 @container variables {
@@ -102,8 +128,11 @@ body.editor {
 .tabbed-sidebar {
     display: grid;
     grid-template-columns: 20em 1fr;
-    gap: var(--spacing);
     padding-right: var(--spacing);
+}
+
+[role="tabpanel"]:not(.tabbed-sidebar) {
+    padding-inline: var(--spacing);
 }
 
 jme-preview {
@@ -131,12 +160,12 @@ jme-preview {
     }
 }
 
-body.editor {
-    & .part-controls {
-        display: flex;
-        gap: var(--spacing);
-        justify-content: end;
-        flex-grow: 1;
+.toggle-list {
+    list-style: none;
+    padding-left: var(--spacing);
+
+    & input:not(:checked) + label {
+        font-weight: normal;
     }
 }
 

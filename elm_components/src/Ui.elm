@@ -8,13 +8,29 @@ module Ui exposing
     , jme_preview
     , jme_value
     , sr_only
+    , toggle_list
     )
 
 import Aria
 import Dict exposing (Dict)
 import Html as H exposing (Html)
 import Html.Attributes as HA
+import Html.Events as HE
 import Json.Encode as JE
+
+type alias BooleanInputOptions msg =
+    { checked : Bool
+    , onCheck : Bool -> msg
+    , id : String
+    }
+
+type alias ToggleListOptions a msg =
+    { label_for : a -> String
+    , id_for : a -> String
+    , is_checked : a -> Bool
+    , toggle : a -> Bool -> msg
+    , view_item : a -> List (Html msg)
+    }
 
 type alias Ui msg =
     { icon : String -> Html msg
@@ -26,6 +42,7 @@ type alias Ui msg =
     , inline_help_block : List (Html msg) -> Html msg
     , alert : String -> List (Html msg) -> Html msg
     , styled_text : String -> List (Html msg) -> Html msg
+    , boolean_input : BooleanInputOptions msg -> List (Html msg)
     , config : UiConfig
     }
 
@@ -109,6 +126,17 @@ ui config =
         alert kind content = H.div [HA.class <| "alert "++kind] content
 
         styled_text kind content = H.span [HA.class kind] content
+
+        boolean_input o =
+            [ H.input
+                [ HA.type_ "checkbox"
+                , HA.checked o.checked
+                , HE.onCheck o.onCheck
+                , HA.id o.id
+                ]
+                []
+            ]
+
     in
         { icon = icon
         , helplink = helplink False
@@ -119,6 +147,7 @@ ui config =
         , inline_help_block = inline_help_block
         , alert = alert
         , styled_text = styled_text
+        , boolean_input = boolean_input
         , config = config
         }
 
@@ -157,3 +186,22 @@ jme_value o =
 
 sr_only : String -> Html msg
 sr_only str = H.span [HA.class "sr-only"] [H.text str]
+
+toggle_list : ToggleListOptions a msg -> Ui msg -> List a -> Html msg
+toggle_list o ui_ items =
+    H.ul
+        [ HA.class "toggle-list" ]
+        (items |> List.map (\item ->
+            H.li [] <| List.concat
+                [ ui_.boolean_input 
+                    { id = o.id_for item
+                    , checked = o.is_checked item
+                    , onCheck = o.toggle item
+                    }
+                , [ H.text " "
+                  , H.label [ HA.for <| o.id_for item ] [ H.text <| o.label_for item ] 
+                  , H.text " "
+                  ]
+                , o.view_item item
+                ]
+        ))

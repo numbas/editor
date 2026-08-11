@@ -325,6 +325,7 @@
 
         & .muted {
             color: color-mix(in hsl, var(--muted-color), var(--text-color) var(--styled-text-mix));
+            font-style: italic;
             --styled-background: var(--muted-color);
             --styled-text: var(--muted-text-color);
         }

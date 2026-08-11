@@ -413,6 +413,8 @@
         margin-bottom: var(--double-space);
         line-height: inherit;
         border: 0;
+        font-size: 1.2em;
+        font-weight: bold;
     }
     label {
         display: inline-block;

@@ -491,7 +491,23 @@ const ask_numbas_handlers = {
             }
         }));
 
+        const result = {
+            scope
+        };
+
+        document.body.jme_scope = scope;
+        document.body.dataset.showSubstitutions = true;
+
         const functionsTodo = question.functions;
+
+        // Feedback for individual functions - show any errors in the definition.
+        result.functions = functionsTodo.forEach(def => {
+            try {
+                Numbas.jme.variables.makeFunction(def, scope);
+            } catch(e) {
+                return {error: e};
+            }
+        });
 
         const made_functions = jme.variables.makeFunctions(functionsTodo, scope);
         
@@ -578,7 +594,6 @@ const ask_numbas_handlers = {
                     check_value(result);
                     return result;
                 }
-                console.log('add function', cfn.name);
                 scope.addFunction(cfn);
                 return {fn: cfn};
             }
@@ -588,14 +603,15 @@ const ask_numbas_handlers = {
             }
         });
 
+        Numbas.jme.variables.makeConstants(Numbas.jme.builtin_constants, scope, question.builtin_constants || {});
+
+        Numbas.jme.variables.makeConstants(question.constants, scope);
+
         const scope_variable_names = Object.keys(scope.allVariables());
 
         const variable_definitions = Object.values(question.variables);
 
-        const result = {
-            variables: Object.fromEntries(variable_definitions.map(v => [v.name, {}])),
-            scope
-        };
+        result.variables = Object.fromEntries(variable_definitions.map(v => [v.name, {}]));
 
         const todo = {};
 

@@ -34,6 +34,7 @@ type alias ToggleListOptions a msg =
 
 type alias Ui msg =
     { icon : String -> Html msg
+    , titled_icon: String -> String -> Html msg
     , helplink : String -> String -> Html msg
     , labelled_helplink : String -> String -> Html msg
     , button : String -> List (H.Attribute msg) -> List (Html msg) -> Html msg
@@ -66,6 +67,17 @@ ui config =
                 case mpic of
                     Just pic -> H.span [ HA.class "icon" ] [H.text pic, H.text " "]
                     Nothing -> H.span [ HA.class "icon missing" ] [H.text name, H.text " "]
+
+        {-
+            An icon
+        -}
+        titled_icon name title =
+            let
+                mpic = Dict.get name config.icon_map
+            in
+                case mpic of
+                    Just pic -> H.span [ HA.class "icon", HA.title title ] [H.text pic, H.text " ", sr_only title]
+                    Nothing -> H.span [ HA.class "icon missing", HA.title title ] [H.text name, H.text " ", sr_only title]
 
         {-
             An icon link to the documentation.
@@ -139,6 +151,7 @@ ui config =
 
     in
         { icon = icon
+        , titled_icon = titled_icon
         , helplink = helplink False
         , labelled_helplink = helplink True
         , button = button

@@ -534,6 +534,9 @@
         line-height: var(--line-height);
         border-radius: var(--button-radius);
     }
+    .btn.unpadded {
+        padding: 0;
+    }
     .navbar-toggle {
         width: calc(1em + 2 * var(--two-thirds-space));
         height: calc(1em + 2 * var(--two-thirds-space));

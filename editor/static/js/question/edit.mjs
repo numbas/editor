@@ -477,8 +477,9 @@ const ask_numbas_handlers = {
         return {definition};
     },
 
-    async generateVariables({question}) {
-        let scope = new jme.Scope([jme.builtinScope]); // TODO extensions etc.
+    async generateVariables({question, locked_variables}) {
+        console.log(locked_variables);
+        let scope = new jme.Scope([jme.builtinScope, {variables: locked_variables}]);
 
         await Promise.all((question.extensions || []).map(async (location) => {
             const extension = extensions[location];
@@ -659,6 +660,8 @@ const ask_numbas_handlers = {
         result.conditionSatisfied = compute_result.conditionSatisfied;
 
         result.scope = compute_result.scope;
+
+        console.log(result.variables.a);
 
         return result;
     },

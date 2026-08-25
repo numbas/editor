@@ -179,6 +179,7 @@ type alias VariableGroup =
 
 type alias Variable =
     { value : Maybe (Result String JE.Value)
+    , locked : Bool
     , computed : Settings
     , settings : Settings
     , template : String
@@ -186,7 +187,7 @@ type alias Variable =
 
 type alias VariablesGenerationResult =
     { conditionSatisfied : Bool
-    , variables : Dict String VariableGenerationResult
+    , variables : Dict String (Maybe VariableGenerationResult)
     , scope : JE.Value
     }
 
@@ -289,6 +290,7 @@ type VariableMsg
     = ChangeVariableSetting (JE.Value, S.Address)
     | ChangeVariableTemplateSetting (JE.Value, S.Address)
     | ChangeVariableComputed String JE.Value
+    | LockVariable Bool
     | PrettyPrintJSON
 
 type MarkingAlgorithmMsg
@@ -346,6 +348,7 @@ insert_json k v value =
 blank_variable : Variable
 blank_variable =
     { value = Nothing
+    , locked = False
     , computed = S.empty
     , settings = S.empty
     , template = "anything"
@@ -865,7 +868,7 @@ decode_variable default_settings =
     let
         variable_defaults = get_default_settings ["question", "variables", "additionalProperties"] default_settings
     in
-        JD.succeed (Variable Nothing S.empty)
+        JD.succeed (Variable Nothing False S.empty)
         |> andMap (JD.value |> JD.map (S.fromValue variable_defaults))
         |> andMap (JD.oneOf [JD.field "templateType" JD.string, JD.succeed "anything"])
 
@@ -1168,19 +1171,24 @@ update_question msg question = case msg of
     ChangeQuestionSetting ComputedSetting (value, at) -> case at of
         (S.Field "generateVariables")::_ ->
             let
+                result : Result JD.Error VariablesGenerationResult
                 result = 
                     value
                     |> JD.decodeValue
                         (JD.succeed VariablesGenerationResult
                         |> andMap (JD.field "conditionSatisfied" JD.bool)
                         |> andMap (JD.field "variables" <| JD.dict (
-                            JD.succeed VariableGenerationResult
-                                |> andMap (JD.oneOf
-                                    [ JD.field "value" JD.value |> JD.map Ok
-                                    , JD.field "error" JD.string |> JD.map Err
-                                    ]
-                                  )
-                                |> andMap (JD.dict JD.value)
+                            JD.oneOf
+                                [ JD.succeed VariableGenerationResult
+                                    |> andMap (JD.oneOf
+                                        [ JD.field "value" JD.value |> JD.map Ok
+                                        , JD.field "error" JD.string |> JD.map Err
+                                        ]
+                                      )
+                                    |> andMap (JD.dict JD.value)
+                                    |> JD.map Just
+                                , JD.succeed Nothing
+                                ]
                             ))
                         |> andMap (JD.field "scope" JD.value)
                         )
@@ -1194,7 +1202,7 @@ update_question msg question = case msg of
                                 nvariables =
                                     group.variables
                                     |> List.indexedMap (\vi variable ->
-                                        case Dict.get (name_of variable) r.variables of
+                                        case Dict.get (name_of variable) r.variables |> Maybe.andThen identity of
                                             Just vvalue -> 
                                                 let
                                                     ncomputed = S.merge vvalue.result variable.computed
@@ -1324,10 +1332,25 @@ update_question msg question = case msg of
 
     RegenerateVariables ->
         let
+            variables : List Variable
+            variables =
+                question.variable_groups
+                |> List.concatMap .variables
+
+            locked_variables : Dict String JE.Value
+            locked_variables =
+                variables
+                |> List.filter (.locked)
+                |> List.filterMap (\v -> v.value |> Maybe.andThen Result.toMaybe |> Maybe.map (pair (v.settings |> S.atField "name" |> S.getters.string)))
+                |> Dict.fromList
+
             cmd = do_ask_numbas 
                 { command = "generateVariables"
                 , key = JE.string "question"
-                , param = JE.object [("question", encode_question question)]
+                , param = JE.object 
+                    [ ("question", encode_question question)
+                    , ("locked_variables", JE.dict identity identity locked_variables)
+                    ]
                 }
         in
             (question, (NoChange, cmd))
@@ -1586,6 +1609,8 @@ update_variable msg path variable = case msg of
                         variable |> nochange
                 
         _ -> variable |> nochange
+
+    LockVariable locked -> { variable | locked = locked } |> nochange
 
     PrettyPrintJSON ->
         let
@@ -2490,7 +2515,8 @@ view_active model =
                                     ]
                                 , H.table []
                                     [ H.thead [] [H.tr []
-                                        [ H.th [] [Ui.sr_only "Properties"]
+                                        [ H.th [] [Ui.sr_only "Locked"]
+                                        , H.th [] [Ui.sr_only "Properties"]
                                         , H.th [] [H.text "Name"]
                                         , H.th [] [H.text "Type"]
                                         , H.th [] [H.text "Generated Value"]
@@ -2507,9 +2533,19 @@ view_active model =
                                         in
                                             H.tr
                                                 [ HE.onClick <| UpdateTab <| Tabber.SetTab "variables" <| variable_tab_id path ]
-                                                [ H.td [ HA.class "properties"]
-                                                    [ if variable_is_random variable then ui.icon "random" else H.text "" ]
-                                                    -- TODO lock value
+                                                [ H.td [ HA.class "lock" ]
+                                                    [ ui.button "unpadded" 
+                                                            [ HE.onClick <| UpdateQuestion <| UpdateVariable path <| LockVariable (not variable.locked)
+                                                            , Aria.pressed variable.locked
+                                                            ] 
+                                                            [ if variable.locked then ui.titled_icon "locked" "Unlock the value of this variable. Currently unlocked. (editor only)" else ui.titled_icon "unlocked" "Lock the value of this variable. Currently locked. (editor only)" ]
+                                                    ]
+                                                , H.td [ HA.class "properties"] <|
+                                                    (if variable_is_random variable then 
+                                                        [ ui.titled_icon "random" "This variable is a source of randomisation" ]
+                                                     else
+                                                        []
+                                                    )
                                                 , H.td [ HA.class "name" ] 
                                                     [ tab_button ui UpdateTab model.tab_state variables_tabber vtab tab_index
                                                     ]

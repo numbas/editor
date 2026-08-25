@@ -6813,9 +6813,9 @@ var $author$project$QuestionEditor$decode_part = function (default_settings) {
 				$elm$json$Json$Decode$succeed(
 					$author$project$QuestionEditor$new_part(default_settings)))));
 };
-var $author$project$QuestionEditor$Variable = F4(
-	function (value, computed, settings, template) {
-		return {computed: computed, settings: settings, template: template, value: value};
+var $author$project$QuestionEditor$Variable = F5(
+	function (value, locked, computed, settings, template) {
+		return {computed: computed, locked: locked, settings: settings, template: template, value: value};
 	});
 var $author$project$QuestionEditor$decode_variable = function (default_settings) {
 	var variable_defaults = A2(
@@ -6838,7 +6838,7 @@ var $author$project$QuestionEditor$decode_variable = function (default_settings)
 				$author$project$Settings$fromValue(variable_defaults),
 				$elm$json$Json$Decode$value),
 			$elm$json$Json$Decode$succeed(
-				A2($author$project$QuestionEditor$Variable, $elm$core$Maybe$Nothing, $author$project$Settings$empty))));
+				A3($author$project$QuestionEditor$Variable, $elm$core$Maybe$Nothing, false, $author$project$Settings$empty))));
 };
 var $elm$core$Set$Set_elm_builtin = function (a) {
 	return {$: 'Set_elm_builtin', a: a};
@@ -7141,12 +7141,58 @@ var $elm$html$Html$Events$onCheck = function (tagger) {
 };
 var $elm$html$Html$p = _VirtualDom_node('p');
 var $elm$html$Html$span = _VirtualDom_node('span');
-var $elm$html$Html$Attributes$target = $elm$html$Html$Attributes$stringProperty('target');
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $author$project$Ui$sr_only = function (str) {
+	return A2(
+		$elm$html$Html$span,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('sr-only')
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text(str)
+			]));
+};
+var $elm$html$Html$Attributes$target = $elm$html$Html$Attributes$stringProperty('target');
 var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $author$project$Ui$ui = function (config) {
+	var titled_icon = F2(
+		function (name, title) {
+			var mpic = A2($elm$core$Dict$get, name, config.icon_map);
+			if (mpic.$ === 'Just') {
+				var pic = mpic.a;
+				return A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('icon'),
+							$elm$html$Html$Attributes$title(title)
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(pic),
+							$elm$html$Html$text(' '),
+							$author$project$Ui$sr_only(title)
+						]));
+			} else {
+				return A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('icon missing'),
+							$elm$html$Html$Attributes$title(title)
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(name),
+							$elm$html$Html$text(' '),
+							$author$project$Ui$sr_only(title)
+						]));
+			}
+		});
 	var styled_text = F2(
 		function (kind, content) {
 			return A2(
@@ -7319,7 +7365,8 @@ var $author$project$Ui$ui = function (config) {
 		icon: icon,
 		inline_help_block: inline_help_block,
 		labelled_helplink: helplink(true),
-		styled_text: styled_text
+		styled_text: styled_text,
+		titled_icon: titled_icon
 	};
 };
 var $author$project$QuestionEditor$decode_ui = A2(
@@ -9739,7 +9786,7 @@ var $author$project$QuestionEditor$add_part_at = F3(
 			path,
 			A2($author$project$QuestionEditor$add_part, kind, part));
 	});
-var $author$project$QuestionEditor$blank_variable = {computed: $author$project$Settings$empty, settings: $author$project$Settings$empty, template: 'anything', value: $elm$core$Maybe$Nothing};
+var $author$project$QuestionEditor$blank_variable = {computed: $author$project$Settings$empty, locked: false, settings: $author$project$Settings$empty, template: 'anything', value: $elm$core$Maybe$Nothing};
 var $elm_community$list_extra$List$Extra$removeAt = F2(
 	function (index, l) {
 		if (index < 0) {
@@ -10474,6 +10521,12 @@ var $author$project$QuestionEditor$update_variable = F3(
 					default:
 						return $author$project$QuestionEditor$nochange(variable);
 				}
+			case 'LockVariable':
+				var locked = msg.a;
+				return $author$project$QuestionEditor$nochange(
+					_Utils_update(
+						variable,
+						{locked: locked}));
 			default:
 				var at = _List_fromArray(
 					[
@@ -10576,24 +10629,32 @@ var $author$project$QuestionEditor$update_question = F2(
 														$elm$json$Json$Decode$field,
 														'variables',
 														$elm$json$Json$Decode$dict(
-															A2(
-																$elm_community$json_extra$Json$Decode$Extra$andMap,
-																$elm$json$Json$Decode$dict($elm$json$Json$Decode$value),
-																A2(
-																	$elm_community$json_extra$Json$Decode$Extra$andMap,
-																	$elm$json$Json$Decode$oneOf(
-																		_List_fromArray(
-																			[
-																				A2(
-																				$elm$json$Json$Decode$map,
-																				$elm$core$Result$Ok,
-																				A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$value)),
-																				A2(
-																				$elm$json$Json$Decode$map,
-																				$elm$core$Result$Err,
-																				A2($elm$json$Json$Decode$field, 'error', $elm$json$Json$Decode$string))
-																			])),
-																	$elm$json$Json$Decode$succeed($author$project$QuestionEditor$VariableGenerationResult))))),
+															$elm$json$Json$Decode$oneOf(
+																_List_fromArray(
+																	[
+																		A2(
+																		$elm$json$Json$Decode$map,
+																		$elm$core$Maybe$Just,
+																		A2(
+																			$elm_community$json_extra$Json$Decode$Extra$andMap,
+																			$elm$json$Json$Decode$dict($elm$json$Json$Decode$value),
+																			A2(
+																				$elm_community$json_extra$Json$Decode$Extra$andMap,
+																				$elm$json$Json$Decode$oneOf(
+																					_List_fromArray(
+																						[
+																							A2(
+																							$elm$json$Json$Decode$map,
+																							$elm$core$Result$Ok,
+																							A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$value)),
+																							A2(
+																							$elm$json$Json$Decode$map,
+																							$elm$core$Result$Err,
+																							A2($elm$json$Json$Decode$field, 'error', $elm$json$Json$Decode$string))
+																						])),
+																				$elm$json$Json$Decode$succeed($author$project$QuestionEditor$VariableGenerationResult)))),
+																		$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
+																	])))),
 													A2(
 														$elm_community$json_extra$Json$Decode$Extra$andMap,
 														A2($elm$json$Json$Decode$field, 'conditionSatisfied', $elm$json$Json$Decode$bool),
@@ -10621,9 +10682,12 @@ var $author$project$QuestionEditor$update_question = F2(
 																	F2(
 																		function (vi, variable) {
 																			var _v4 = A2(
-																				$elm$core$Dict$get,
-																				$author$project$QuestionEditor$name_of(variable),
-																				r.variables);
+																				$elm$core$Maybe$andThen,
+																				$elm$core$Basics$identity,
+																				A2(
+																					$elm$core$Dict$get,
+																					$author$project$QuestionEditor$name_of(variable),
+																					r.variables));
 																			if (_v4.$ === 'Just') {
 																				var vvalue = _v4.a;
 																				var ncomputed = A2($author$project$Settings$merge, vvalue.result, variable.computed);
@@ -10919,6 +10983,29 @@ var $author$project$QuestionEditor$update_question = F2(
 								_List_fromArray(
 									[cmd, $author$project$QuestionEditor$variables_changed]))));
 				case 'RegenerateVariables':
+					var variables = A2(
+						$elm$core$List$concatMap,
+						function ($) {
+							return $.variables;
+						},
+						question.variable_groups);
+					var locked_variables = $elm$core$Dict$fromList(
+						A2(
+							$elm$core$List$filterMap,
+							function (v) {
+								return A2(
+									$elm$core$Maybe$map,
+									$elm$core$Tuple$pair(
+										$author$project$Settings$getters.string(
+											A2($author$project$Settings$atField, 'name', v.settings))),
+									A2($elm$core$Maybe$andThen, $elm$core$Result$toMaybe, v.value));
+							},
+							A2(
+								$elm$core$List$filter,
+								function ($) {
+									return $.locked;
+								},
+								variables)));
 					var cmd = $author$project$QuestionEditor$do_ask_numbas(
 						{
 							command: 'generateVariables',
@@ -10928,7 +11015,10 @@ var $author$project$QuestionEditor$update_question = F2(
 									[
 										_Utils_Tuple2(
 										'question',
-										$author$project$QuestionEditor$encode_question(question))
+										$author$project$QuestionEditor$encode_question(question)),
+										_Utils_Tuple2(
+										'locked_variables',
+										A3($elm$json$Json$Encode$dict, $elm$core$Basics$identity, $elm$core$Basics$identity, locked_variables))
 									]))
 						});
 					return _Utils_Tuple2(
@@ -11324,6 +11414,9 @@ var $author$project$QuestionEditor$FeedbackMessage = F6(
 var $author$project$QuestionEditor$GenerateQuestion = {$: 'GenerateQuestion'};
 var $author$project$Tabber$HtmlLabel = function (a) {
 	return {$: 'HtmlLabel', a: a};
+};
+var $author$project$QuestionEditor$LockVariable = function (a) {
+	return {$: 'LockVariable', a: a};
 };
 var $author$project$QuestionEditor$MarkingFeedback = F2(
 	function (credit, messages) {
@@ -12129,6 +12222,13 @@ var $author$project$QuestionEditor$percent_property = F2(
 	});
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $elm$html$Html$pre = _VirtualDom_node('pre');
+var $author$project$Aria$bool_str = function (v) {
+	return v ? 'true' : 'false';
+};
+var $author$project$Aria$pressed = A2(
+	$elm$core$Basics$composeL,
+	$elm$html$Html$Attributes$attribute('aria-pressed'),
+	$author$project$Aria$bool_str);
 var $author$project$Ui$raw_html = function (content) {
 	return A3(
 		$elm$html$Html$node,
@@ -12248,18 +12348,6 @@ var $elm$core$List$sortBy = _List_sortBy;
 var $elm$core$List$sort = function (xs) {
 	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
 };
-var $author$project$Ui$sr_only = function (str) {
-	return A2(
-		$elm$html$Html$span,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('sr-only')
-			]),
-		_List_fromArray(
-			[
-				$elm$html$Html$text(str)
-			]));
-};
 var $author$project$Aria$controls = $elm$html$Html$Attributes$attribute('aria-controls');
 var $author$project$Tabber$current_tab = F2(
 	function (state, tabber) {
@@ -12288,12 +12376,10 @@ var $author$project$Tabber$current_tab = F2(
 				A2($elm$core$Dict$get, tabber.name, state)));
 	});
 var $author$project$Aria$role = $elm$html$Html$Attributes$attribute('role');
-var $author$project$Aria$selected = function (v) {
-	return A2(
-		$elm$html$Html$Attributes$attribute,
-		'aria-selected',
-		v ? 'true' : 'false');
-};
+var $author$project$Aria$selected = A2(
+	$elm$core$Basics$composeL,
+	$elm$html$Html$Attributes$attribute('aria-selected'),
+	$author$project$Aria$bool_str);
 var $author$project$Tabber$tab_id = F2(
 	function (tabber, tab) {
 		return tabber.name + ('-tab-' + tab.id);
@@ -14780,6 +14866,13 @@ var $author$project$QuestionEditor$view_active = function (model) {
 																				_List_Nil,
 																				_List_fromArray(
 																					[
+																						$author$project$Ui$sr_only('Locked')
+																					])),
+																				A2(
+																				$elm$html$Html$th,
+																				_List_Nil,
+																				_List_fromArray(
+																					[
 																						$author$project$Ui$sr_only('Properties')
 																					])),
 																				A2(
@@ -14841,12 +14934,38 @@ var $author$project$QuestionEditor$view_active = function (model) {
 																						$elm$html$Html$td,
 																						_List_fromArray(
 																							[
-																								$elm$html$Html$Attributes$class('properties')
+																								$elm$html$Html$Attributes$class('lock')
 																							]),
 																						_List_fromArray(
 																							[
-																								$author$project$QuestionEditor$variable_is_random(variable) ? ui.icon('random') : $elm$html$Html$text('')
+																								A3(
+																								ui.button,
+																								'unpadded',
+																								_List_fromArray(
+																									[
+																										$elm$html$Html$Events$onClick(
+																										$author$project$QuestionEditor$UpdateQuestion(
+																											A2(
+																												$author$project$QuestionEditor$UpdateVariable,
+																												path,
+																												$author$project$QuestionEditor$LockVariable(!variable.locked)))),
+																										$author$project$Aria$pressed(variable.locked)
+																									]),
+																								_List_fromArray(
+																									[
+																										variable.locked ? A2(ui.titled_icon, 'locked', 'Unlock the value of this variable. Currently unlocked. (editor only)') : A2(ui.titled_icon, 'unlocked', 'Lock the value of this variable. Currently locked. (editor only)')
+																									]))
 																							])),
+																						A2(
+																						$elm$html$Html$td,
+																						_List_fromArray(
+																							[
+																								$elm$html$Html$Attributes$class('properties')
+																							]),
+																						$author$project$QuestionEditor$variable_is_random(variable) ? _List_fromArray(
+																							[
+																								A2(ui.titled_icon, 'random', 'This variable is a source of randomisation')
+																							]) : _List_Nil),
 																						A2(
 																						$elm$html$Html$td,
 																						_List_fromArray(

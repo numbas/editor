@@ -57,6 +57,8 @@ icon_map = {
     'random': '🎲',
     'advice': '🕮',
     'extension': '🔧',
+    'locked': '🔒',
+    'unlocked': '🔓',
 }
 
 @register.inclusion_tag('icon.html')

@@ -4,7 +4,9 @@ import Html as H
 import Html.Attributes as HA
 
 selected : Bool -> H.Attribute msg
-selected v = HA.attribute "aria-selected" <| if v then "true" else "false"
+selected = HA.attribute "aria-selected" << bool_str
+
+bool_str v = if v then "true" else "false"
 
 controls : String -> H.Attribute msg
 controls = HA.attribute "aria-controls"
@@ -17,3 +19,6 @@ role = HA.attribute "role"
 
 label : String -> H.Attribute msg
 label = HA.attribute "aria-label"
+
+pressed : Bool -> H.Attribute msg
+pressed = HA.attribute "aria-pressed" << bool_str 

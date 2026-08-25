@@ -70,12 +70,27 @@ body.editor {
             margin-inline: 0;
             width: 100%;
             flex-grow: 1;
+            
+            & tr:has([aria-selected=true]) {
+                    background: var(--highlight-color);
+            }
+            
+            & th {
+                text-align: center;
+            }
             & td {
                 border-bottom: thin solid var(--faint-line-color);
                 padding-bottom: var(--half-space);
             }
             & :is(td,th) {
                 padding-inline: var(--half-space);
+            }
+            & .name button {
+                white-space: wrap;
+                word-break: break-all;
+                padding: 0;
+                border: none;
+                background: none;
             }
             & jme-value {
                 font-family: var(--monospace-font);
@@ -127,7 +142,7 @@ body.editor {
     
 .tabbed-sidebar {
     display: grid;
-    grid-template-columns: 20em 1fr;
+    grid-template-columns: 25em 1fr;
     padding-right: var(--spacing);
 }
 

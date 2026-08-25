@@ -11,6 +11,7 @@ import io
 from docutils.nodes import NodeVisitor
 import json
 from pathlib import Path
+import warnings
 
 class JMEFunction(nodes.container):
     pass
@@ -246,9 +247,11 @@ def read_file(p):
     with open(p) as f:
         source = f.read()
         parser = rst.Parser()
-        opts = docutils.frontend.OptionParser(
-                            components=(docutils.parsers.rst.Parser,)
-                            )
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=DeprecationWarning)
+            opts = docutils.frontend.OptionParser(
+                                components=(docutils.parsers.rst.Parser,)
+                                )
         settings = opts.get_default_values()
         warning_stream = io.StringIO("")
         settings.update({'warning_stream': warning_stream},opts)

@@ -89,7 +89,9 @@
 <div class="loaded-content">
     <div class="page-header">
         {% block page_header %}
+        {% if not request.user.is_anonymous %}
         <a class="back" href="{% url 'profile_custom_part_types' request.user.pk %}">Back to custom part types</a>
+        {% endif %}
         <h1 class="name-header">
             <span class="glyphicon glyphicon-ok"></span> 
             <span class="name" data-bind="mathjaxHTML: name"></span>

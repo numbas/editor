@@ -1,4 +1,5 @@
 from django import http
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.db import transaction
@@ -128,7 +129,7 @@ class DeleteView(AuthorRequiredMixin, generic.DeleteView):
     def get_success_url(self):
         return reverse('profile_custom_part_types', args=(self.request.user.pk,))
 
-class PublishView(generic.UpdateView):
+class PublishView(AuthorRequiredMixin, generic.UpdateView):
     model = CustomPartType
     fields = ['published']
     
@@ -154,7 +155,7 @@ class PublishView(generic.UpdateView):
         messages.add_message(self.request, messages.SUCCESS, 'This custom part type has been published to the public database.')
         return redirect(self.get_success_url())
 
-class UnPublishView(generic.UpdateView):
+class UnPublishView(AuthorRequiredMixin, generic.UpdateView):
     model = CustomPartType
 
     def get_success_url(self):
@@ -175,7 +176,7 @@ class UnPublishView(generic.UpdateView):
         messages.add_message(self.request, messages.INFO, 'This custom part type has been unpublished from the public database.')
         return redirect(self.get_success_url())
 
-class CopyView(generic.FormView, generic.edit.ModelFormMixin):
+class CopyView(CanViewMixin, LoginRequiredMixin, generic.FormView, generic.edit.ModelFormMixin):
 
     model = CustomPartType
     template_name = 'custom_part_type/copy.html'

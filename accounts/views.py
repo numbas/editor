@@ -12,6 +12,7 @@ from django.views.generic import UpdateView, DetailView, ListView, TemplateView
 from django.views.generic.base import RedirectView
 from django.contrib.auth.models import User
 from django.core import signing
+from django.core.exceptions import SuspiciousOperation
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.contrib import messages
@@ -257,6 +258,11 @@ class DeactivateUserView(CurrentUserUpdateView):
     model = User
     template_name = 'profile/deactivate.html'
     form_class = DeactivateUserForm
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.request.user.is_anonymous:
+            raise SuspiciousOperation("You are not logged in.")
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, *args, **kwargs):
         context = super(DeactivateUserView, self).get_context_data(*args, **kwargs)

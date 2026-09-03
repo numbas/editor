@@ -175,8 +175,9 @@ class UploadView(editor.views.editoritem.CreateView):
     def add_contributors(self,item,contributor_data):
         root = self.request.build_absolute_uri('/')
         for c in contributor_data:
-            if c['profile_url'][:len(root)] == root:
-                rest = c['profile_url'][len(root):]
+            profile_url = c.get('profile_url', '')
+            if profile_url[:len(root)] == root:
+                rest = profile_url[len(root):]
                 try:
                     match = resolve(rest)
                     if match.url_name != 'view_profile':
@@ -185,9 +186,9 @@ class UploadView(editor.views.editoritem.CreateView):
                     user = User.objects.get(pk=pk)
                     Contributor.objects.create(item=item,user=user)
                 except (Resolver404,User.DoesNotExist):
-                    Contributor.objects.create(item=item,name=c['name'],profile_url=c['profile_url'])
+                    Contributor.objects.create(item=item,name=c['name'],profile_url=profile_url)
             else:
-                Contributor.objects.create(item=item,name=c['name'],profile_url=c['profile_url'])
+                Contributor.objects.create(item=item,name=c['name'],profile_url=profile_url)
 
     def make_question(self, q):
         question_object = NumbasObject(data=q, version=self.exam_object.version)

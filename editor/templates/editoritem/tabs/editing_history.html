@@ -15,8 +15,10 @@
                 {% contributor_thumbnail contributor 40 36 link=True %}
                 {% if contributor.user %}
                     {% user_link contributor.user %}
-                {% else %}
+                {% elif contributor.profile_url %}
                     <a class="user-link" target="_blank" href="{{contributor.profile_url}}">{{contributor.name}}</a>
+                {% else %}
+                    {{contributor.name}}
                 {% endif %}
             </li>
             {% endfor %}

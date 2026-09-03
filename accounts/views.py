@@ -16,7 +16,7 @@ from django.core.exceptions import SuspiciousOperation
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.contrib import messages
-from django.http import Http404, HttpResponse, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse, HttpResponseNotFound
 from editor.slugify import slugify
 from django.template.loader import get_template
 from django.contrib.sites.shortcuts import get_current_site
@@ -243,7 +243,10 @@ class UserEditorItemSearchView(editoritem.SearchView):
     template_name = 'profile/editoritem_search.html'
 
     def dispatch(self, request, pk, *args, **kwargs):
-        self.user = User.objects.get(pk=pk)
+        try:
+            self.user = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            raise Http404('That user does not exist.')
         return super(UserEditorItemSearchView, self).dispatch(request, pk, *args, **kwargs)
 
     def base_queryset(self):

@@ -12,22 +12,11 @@ def hash_existing_files(apps, schema_editor):
     root = Path(field.storage.location)
     upload_to = root / field.upload_to
 
-    linked_names = list(Resource.objects.values_list('file', flat=True))
-    for p in (upload_to).iterdir():
-        if not p.is_file():
-            continue
+    for fname in Resource.objects.values_list('file', flat=True).distinct():
+        with Path(root / fname).open('rb') as f:
+            n = hashed_name(fname, f)
 
-        s = str(p.relative_to(root))
-
-        if s not in linked_names:
-            print(f"Delete {s}")
-            p.unlink()
-
-    for r in Resource.objects.all():
-        with r.file.open() as f:
-            n = hashed_name(r.file.name, f)
-
-        original_path = root / r.file.name
+        original_path = root / fname
 
         new_path = upload_to / Path(n).name
 
@@ -41,8 +30,7 @@ def hash_existing_files(apps, schema_editor):
         else:
             original_path.rename(new_path)
 
-        with new_path.open('rb') as f:
-            r.file.save(new_path.relative_to(upload_to), f)
+        Resource.objects.filter(file=fname).update(file=new_path.relative_to(root))
 
 class Migration(migrations.Migration):
 

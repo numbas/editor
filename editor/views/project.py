@@ -174,7 +174,10 @@ class SearchView(ProjectAccessMixin, CanViewMixin, editor.views.editoritem.Searc
         return Project.objects.get(pk=self.kwargs.get('pk'))
 
     def dispatch(self, request, pk, *args, **kwargs):
-        self.project = self.get_object() 
+        try:
+            self.project = self.get_object() 
+        except Project.DoesNotExist:
+            raise http.Http404('That project does not exist.')
         return super(SearchView, self).dispatch(request, pk, *args, **kwargs)
 
     def base_queryset(self):

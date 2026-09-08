@@ -120,7 +120,9 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         return super().form_valid(*args, **kwargs)
     
     def post(self, request, *args, **kwargs):
-        super(UpdateView, self).post(request, *args, **kwargs)
+        res = super().post(request, *args, **kwargs)
+        if res is not None:
+            return res
 
         self.resources = self.data['resources']
         del self.data['resources']

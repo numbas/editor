@@ -95,6 +95,7 @@
         <div class="save-status alert" data-bind="class: autoSave().status_info().class">
             <span class="glyphicon" data-bind="class: autoSave().status_info().icon"></span>
             <span data-bind="text: autoSave().status_info().message">Saved</span>
+            <p data-bind="visible: autoSave().last_response()?.status == 401">You must <a href="{% url 'login' %}">log in</a>.</p>
         </div>
         <!-- /ko -->
         {% endblock page_header %}

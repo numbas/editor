@@ -136,12 +136,13 @@ $(document).ready(function() {
     }
 
     var post_json = Editor.post_json = function(url, data, extra_options) {
+        const csrftoken = getCSRFtoken();
         const options = {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFtoken()
+                'X-CSRFToken': csrftoken,
             },
             body: JSON.stringify(data)
         };
@@ -429,6 +430,7 @@ $(document).ready(function() {
         this.savefn = savefn;
         this.status = ko.observable('saved');
         this.error_message = ko.observable('');
+        this.last_response = ko.observable(null);
         this.status_info = ko.pureComputed(function() {
             return {
                 'saved': {message: 'Saved', class: 'alert-success', icon: 'glyphicon-ok'},
@@ -810,29 +812,33 @@ $(document).ready(function() {
 
                     return data;
                 },
-                function(data) {
+                async function(data) {
                     if(!ei.name()) {
                         throw(new Error("We can't save changes while the name field is empty."));
                     }
 
-                    var request = post_json(
+                    const request = post_json(
                         Editor.url_prefix+ei.item_type+'/'+ei.id+'/'+slugify(ei.realName())+'/',
                         data
                     );
 
-                    request.then(function(data) {
-                        var address = location.protocol+'//'+location.host+data.url;
-                        if(history.replaceState) {
+                    const response = await request;
+                    this.last_response(response);
+                    const t = await response.text();
+                    if(!response.ok) {
+                        throw(new Error(response.statusText));
+                    }
+
+                    var address = location.protocol+'//'+location.host+response.url;
+                    if(history.replaceState) {
+                        try {
                             history.replaceState(history.state,ei.realName(),address);
+                        } catch {
                         }
-                    }).catch(function() {});
+                    }
 
                     if(callback) {
-                        try {
-                            callback(request);
-                        } catch(e) {
-                            return Promise.reject(e);
-                        }
+                        callback(request);
                     }
 
                     return request;

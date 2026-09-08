@@ -224,11 +224,12 @@ window.getCookie = function(name) {
 }
 
 window.getCSRFtoken = function() {
-    var inp = document.querySelector('input[name="csrfmiddlewaretoken"]');
-    if(inp) {
-        return inp.value;
+    const inp = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    const cookie = getCookie('csrftoken');
+    if(cookie !== null) {
+        return cookie;
     } else {
-        return getCookie('csrftoken');
+        return inp.value;
     }
 }
 })();

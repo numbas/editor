@@ -194,8 +194,10 @@ class BaseUpdateView(generic.UpdateView):
             return super(BaseUpdateView, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
+        if self.user.is_anonymous:
+            return http.HttpResponse('You must be logged in to do this.', status=401)
         if not self.object.editoritem.can_be_edited_by(self.user):
-            return http.HttpResponseForbidden()
+            raise PermissionDenied("You can not edit this item.")
 
         self.data = json.loads(request.body.decode('utf-8'))
 

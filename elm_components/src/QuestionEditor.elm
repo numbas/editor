@@ -185,6 +185,92 @@ type alias Variable =
     , template : String
     }
 
+type alias AddressedVariable = (VariablePath, Variable)
+
+variable_manager variable_groups = 
+    let
+        all_variables : List AddressedVariable
+        all_variables = 
+            variable_groups 
+            |> List.indexedMap (\gi group -> 
+                group.variables
+                |> List.indexedMap (\vi variable -> ((gi,vi), variable))
+               )
+            |> List.concat
+
+        variable_dict : Dict String AddressedVariable
+        variable_dict =
+            all_variables
+            |> List.map (\(p,v) -> (name_of v, (p,v)))
+            |> Dict.fromList
+
+        get_variable : String -> Maybe AddressedVariable
+        get_variable name = Dict.get name variable_dict
+
+        at_path : VariablePath -> Maybe Variable
+        at_path (gi, vi) =
+            variable_groups
+            |> LE.getAt gi
+            |> Maybe.andThen (.variables >> LE.getAt vi)
+
+        all_dependencies_of : Variable -> List AddressedVariable
+        all_dependencies_of variable =
+            let
+                visit : List String -> Variable -> List AddressedVariable
+                visit vpath v =
+                    let
+                        name = name_of v
+                        deps = 
+                            dependencies_of v
+                            |> List.filterMap get_variable
+                    in
+                        if List.member name vpath then
+                            []
+                        else
+                            deps ++ (List.concatMap (second >> visit (name::vpath)) deps)
+            in
+                visit [] variable
+
+        dependants_of : Variable -> List AddressedVariable
+        dependants_of v =
+            let
+                name = name_of v
+            in
+                all_variables
+                |> List.filter (second >> dependencies_of >> List.member name)
+
+        all_dependants_of : Variable -> List AddressedVariable
+        all_dependants_of variable =
+            let
+                visit : List String -> Variable -> List AddressedVariable
+                visit vpath v =
+                    let
+                        name = name_of v
+                        deps = dependants_of v
+                    in
+                        if List.member name vpath then
+                            []
+                        else
+                            deps ++ (List.concatMap (second >> visit (name::vpath)) deps)
+            in
+                visit [] variable
+
+
+        transitively_locked : Variable -> Bool
+        transitively_locked variable = variable |> all_dependants_of |> List.any (second >> .locked)
+
+        is_locked : Variable -> Bool
+        is_locked variable = variable.locked || (transitively_locked variable)
+    in
+        { all = all_variables
+        , get = get_variable
+        , at_path = at_path
+        , all_dependencies_of = all_dependencies_of
+        , all_dependants_of = all_dependants_of
+        , transitively_locked = transitively_locked
+        , is_locked = is_locked
+        }
+
 type alias VariablesGenerationResult =
     { conditionSatisfied : Bool
     , variables : Dict String (Maybe VariableGenerationResult)
@@ -275,6 +361,7 @@ type QuestionMsg
     | AddVariable Int
     | DeleteVariable VariablePath
     | UpdateVariable VariablePath VariableMsg
+    | LockVariable VariablePath Bool
     | RegenerateVariables
     | AddFunction
     | ShowVariable String
@@ -290,7 +377,6 @@ type VariableMsg
     = ChangeVariableSetting (JE.Value, S.Address)
     | ChangeVariableTemplateSetting (JE.Value, S.Address)
     | ChangeVariableComputed String JE.Value
-    | LockVariable Bool
     | PrettyPrintJSON
 
 type MarkingAlgorithmMsg
@@ -1044,7 +1130,7 @@ compute_all model =
             |> List.filterMap (\(ats, fn) -> S.maybe_get JD.value (S.at ats part.settings) |> Maybe.andThen (fn path part))
             )
 
-        all_variables : List (VariablePath, Variable)
+        all_variables : List AddressedVariable
         all_variables = 
             question.variable_groups 
             |> List.indexedMap (\gi group -> 
@@ -1330,17 +1416,42 @@ update_question msg question = case msg of
         in
             ({ question | variable_groups = variable_groups }, (change, Cmd.batch [cmd, variables_changed]))
 
+    LockVariable path locked ->
+        let
+            variables = variable_manager question.variable_groups
+        in
+            case variables.at_path path of
+                Nothing -> question |> nochange
+                Just variable ->
+                    let
+                        dependants: List AddressedVariable
+                        dependants = variables.all_dependants_of variable
+
+                        dependant_paths : List VariablePath
+                        dependant_paths = List.map first dependants
+                        
+                        ngroups =
+                            question.variable_groups
+                            |> List.indexedMap (\gi group ->
+                                    let
+                                        nvariables = 
+                                            group.variables
+                                            |> List.indexedMap (\vi v -> { v | locked = if (gi,vi)==path || (not locked && List.member (gi,vi) dependant_paths) then locked else v.locked })
+                                    in
+                                        { group | variables = nvariables }
+                                )
+                    in
+                        { question | variable_groups = ngroups } |> nochange
+
     RegenerateVariables ->
         let
-            variables : List Variable
-            variables =
-                question.variable_groups
-                |> List.concatMap .variables
+            variables = variable_manager question.variable_groups
 
             locked_variables : Dict String JE.Value
             locked_variables =
-                variables
-                |> List.filter (.locked)
+                variables.all
+                |> List.map second
+                |> List.filter (variables.is_locked)
                 |> List.filterMap (\v -> v.value |> Maybe.andThen Result.toMaybe |> Maybe.map (pair (v.settings |> S.atField "name" |> S.getters.string)))
                 |> Dict.fromList
 
@@ -1609,8 +1720,6 @@ update_variable msg path variable = case msg of
                         variable |> nochange
                 
         _ -> variable |> nochange
-
-    LockVariable locked -> { variable | locked = locked } |> nochange
 
     PrettyPrintJSON ->
         let
@@ -1941,6 +2050,10 @@ view_active model =
 
         qfield k = S.atField k question.settings
 
+        variables = variable_manager question.variable_groups
+
+        all_variables = variables.all
+
         parts_mode : PartsMode
         parts_mode = S.getters.string (qfield "partsMode") |> \s -> case s of
             "explore" -> ExploreMode
@@ -2037,61 +2150,6 @@ view_active model =
             , attributes = []
             }
 
-        all_variables : List Variable
-        all_variables = question.variable_groups |> List.concatMap (.variables)
-
-        variable_dict : Dict String Variable
-        variable_dict =
-            all_variables
-            |> List.map (\v -> (name_of v, v))
-            |> Dict.fromList
-
-        get_variable : String -> Maybe Variable
-        get_variable name = Dict.get name variable_dict
-
-        all_dependencies_of : Variable -> List Variable
-        all_dependencies_of variable =
-            let
-                visit : List String -> Variable -> List Variable
-                visit vpath v =
-                    let
-                        name = name_of v
-                        deps = 
-                            dependencies_of v
-                            |> List.filterMap get_variable
-                    in
-                        if List.member name vpath then
-                            []
-                        else
-                            deps ++ (List.concatMap (visit (name::vpath)) deps)
-            in
-                visit [] variable
-
-        dependants_of : Variable -> List Variable
-        dependants_of v =
-            let
-                name = name_of v
-            in
-                all_variables
-                |> List.filter (dependencies_of >> List.member name)
-
-        all_dependants_of : Variable -> List Variable
-        all_dependants_of variable =
-            let
-                visit : List String -> Variable -> List Variable
-                visit vpath v =
-                    let
-                        name = name_of v
-                        deps = dependants_of v
-                    in
-                        if List.member name vpath then
-                            []
-                        else
-                            deps ++ (List.concatMap (visit (name::vpath)) deps)
-            in
-                visit [] variable
-
-
         variable_tab : VariablePath -> Variable -> Tab Msg
         variable_tab path variable =
             let
@@ -2118,8 +2176,8 @@ view_active model =
                 used_by : List String
                 used_by =
                     all_variables
-                    |> List.filter (dependencies_of >> Set.fromList >> Set.intersect names >> (/=) Set.empty)
-                    |> List.map (variable_names >> String.join ", ")
+                    |> List.filter (second >> dependencies_of >> Set.fromList >> Set.intersect names >> (/=) Set.empty)
+                    |> List.map (second >> variable_names >> String.join ", ")
 
                 variable_field : { id : String, label : String, help : Maybe String } -> PropertyWidget -> List (Html Msg)
                 variable_field o = labelled_field
@@ -2530,15 +2588,22 @@ view_active model =
                                             path = (gi, vi)
 
                                             mtype = variable_type variable
+
+                                            transitively_locked = variables.transitively_locked variable
+                                            locked = variables.is_locked variable
                                         in
                                             H.tr
                                                 [ HE.onClick <| UpdateTab <| Tabber.SetTab "variables" <| variable_tab_id path ]
                                                 [ H.td [ HA.class "lock" ]
                                                     [ ui.button "unpadded" 
-                                                            [ HE.onClick <| UpdateQuestion <| UpdateVariable path <| LockVariable (not variable.locked)
-                                                            , Aria.pressed variable.locked
+                                                            [ HE.onClick <| UpdateQuestion <| LockVariable path (not locked)
+                                                            , Aria.pressed locked
                                                             ] 
-                                                            [ if variable.locked then ui.titled_icon "locked" "Unlock the value of this variable. Currently unlocked. (editor only)" else ui.titled_icon "unlocked" "Lock the value of this variable. Currently locked. (editor only)" ]
+                                                            [ if locked then
+                                                                ui.titled_icon "locked" "Unlock the value of this variable. Currently unlocked. (editor only)"
+                                                              else
+                                                                ui.titled_icon "unlocked" "Lock the value of this variable. Currently locked. (editor only)"
+                                                            ]
                                                     ]
                                                 , H.td [ HA.class "properties"] <|
                                                     (if variable_is_random variable then 
@@ -4574,7 +4639,7 @@ view_active model =
                         unreplaced_variables : List String
                         unreplaced_variables = 
                             all_variables
-                            |> List.map name_of
+                            |> List.map (second >> name_of)
                             |> (\s -> Set.diff (Set.fromList s) (Set.fromList replaced_variables))
                             |> Set.toList
                             |> List.sort
@@ -4614,9 +4679,11 @@ view_active model =
                         recomputed_random_variables : List Variable
                         recomputed_random_variables =
                             replaced_variables
-                            |> List.filterMap get_variable
-                            |> List.concatMap (all_dependants_of)
+                            |> List.filterMap variables.get
+                            |> List.map second
+                            |> List.concatMap (variables.all_dependants_of)
                             |> LE.unique
+                            |> List.map second
                             |> List.filter variable_is_random
                     in
                         { id = "adaptive-marking"
@@ -4868,7 +4935,7 @@ view_active model =
                                         unreplaced_variables : List String
                                         unreplaced_variables = 
                                             all_variables
-                                            |> List.map name_of
+                                            |> List.map (second >> name_of)
                                             |> (\s -> Set.diff (Set.fromList s) (Set.fromList replaced_variables))
                                             |> Set.toList
                                             |> List.sort

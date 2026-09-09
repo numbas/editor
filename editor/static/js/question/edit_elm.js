@@ -10521,12 +10521,6 @@ var $author$project$QuestionEditor$update_variable = F3(
 					default:
 						return $author$project$QuestionEditor$nochange(variable);
 				}
-			case 'LockVariable':
-				var locked = msg.a;
-				return $author$project$QuestionEditor$nochange(
-					_Utils_update(
-						variable,
-						{locked: locked}));
 			default:
 				var at = _List_fromArray(
 					[
@@ -10569,6 +10563,130 @@ var $author$project$QuestionEditor$update_variable_at = F3(
 		};
 		return A3($author$project$QuestionEditor$m_updateAt, gi, do_group, groups);
 	});
+var $author$project$QuestionEditor$dependencies_of = A2(
+	$elm$core$Basics$composeR,
+	function ($) {
+		return $.computed;
+	},
+	A2(
+		$elm$core$Basics$composeR,
+		$author$project$Settings$atField('dependencies'),
+		A2(
+			$author$project$Settings$get,
+			$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
+			_List_Nil)));
+var $author$project$QuestionEditor$variable_manager = function (variable_groups) {
+	var at_path = function (_v1) {
+		var gi = _v1.a;
+		var vi = _v1.b;
+		return A2(
+			$elm$core$Maybe$andThen,
+			A2(
+				$elm$core$Basics$composeR,
+				function ($) {
+					return $.variables;
+				},
+				$elm_community$list_extra$List$Extra$getAt(vi)),
+			A2($elm_community$list_extra$List$Extra$getAt, gi, variable_groups));
+	};
+	var all_variables = $elm$core$List$concat(
+		A2(
+			$elm$core$List$indexedMap,
+			F2(
+				function (gi, group) {
+					return A2(
+						$elm$core$List$indexedMap,
+						F2(
+							function (vi, variable) {
+								return _Utils_Tuple2(
+									_Utils_Tuple2(gi, vi),
+									variable);
+							}),
+						group.variables);
+				}),
+			variable_groups));
+	var dependants_of = function (v) {
+		var name = $author$project$QuestionEditor$name_of(v);
+		return A2(
+			$elm$core$List$filter,
+			A2(
+				$elm$core$Basics$composeR,
+				$elm$core$Tuple$second,
+				A2(
+					$elm$core$Basics$composeR,
+					$author$project$QuestionEditor$dependencies_of,
+					$elm$core$List$member(name))),
+			all_variables);
+	};
+	var variable_dict = $elm$core$Dict$fromList(
+		A2(
+			$elm$core$List$map,
+			function (_v0) {
+				var p = _v0.a;
+				var v = _v0.b;
+				return _Utils_Tuple2(
+					$author$project$QuestionEditor$name_of(v),
+					_Utils_Tuple2(p, v));
+			},
+			all_variables));
+	var get_variable = function (name) {
+		return A2($elm$core$Dict$get, name, variable_dict);
+	};
+	var all_dependencies_of = function (variable) {
+		var visit = F2(
+			function (vpath, v) {
+				var name = $author$project$QuestionEditor$name_of(v);
+				var deps = A2(
+					$elm$core$List$filterMap,
+					get_variable,
+					$author$project$QuestionEditor$dependencies_of(v));
+				return A2($elm$core$List$member, name, vpath) ? _List_Nil : _Utils_ap(
+					deps,
+					A2(
+						$elm$core$List$concatMap,
+						A2(
+							$elm$core$Basics$composeR,
+							$elm$core$Tuple$second,
+							visit(
+								A2($elm$core$List$cons, name, vpath))),
+						deps));
+			});
+		return A2(visit, _List_Nil, variable);
+	};
+	var all_dependants_of = function (variable) {
+		var visit = F2(
+			function (vpath, v) {
+				var name = $author$project$QuestionEditor$name_of(v);
+				var deps = dependants_of(v);
+				return A2($elm$core$List$member, name, vpath) ? _List_Nil : _Utils_ap(
+					deps,
+					A2(
+						$elm$core$List$concatMap,
+						A2(
+							$elm$core$Basics$composeR,
+							$elm$core$Tuple$second,
+							visit(
+								A2($elm$core$List$cons, name, vpath))),
+						deps));
+			});
+		return A2(visit, _List_Nil, variable);
+	};
+	var transitively_locked = function (variable) {
+		return A2(
+			$elm$core$List$any,
+			A2(
+				$elm$core$Basics$composeR,
+				$elm$core$Tuple$second,
+				function ($) {
+					return $.locked;
+				}),
+			all_dependants_of(variable));
+	};
+	var is_locked = function (variable) {
+		return variable.locked || transitively_locked(variable);
+	};
+	return {all: all_variables, all_dependants_of: all_dependants_of, all_dependencies_of: all_dependencies_of, at_path: at_path, get: get_variable, is_locked: is_locked, transitively_locked: transitively_locked};
+};
 var $elm$json$Json$Decode$maybe = function (decoder) {
 	return $elm$json$Json$Decode$oneOf(
 		_List_fromArray(
@@ -10982,13 +11100,49 @@ var $author$project$QuestionEditor$update_question = F2(
 							$elm$core$Platform$Cmd$batch(
 								_List_fromArray(
 									[cmd, $author$project$QuestionEditor$variables_changed]))));
+				case 'LockVariable':
+					var path = msg.a;
+					var locked = msg.b;
+					var variables = $author$project$QuestionEditor$variable_manager(question.variable_groups);
+					var _v12 = variables.at_path(path);
+					if (_v12.$ === 'Nothing') {
+						return $author$project$QuestionEditor$nochange(question);
+					} else {
+						var variable = _v12.a;
+						var dependants = variables.all_dependants_of(variable);
+						var dependant_paths = A2($elm$core$List$map, $elm$core$Tuple$first, dependants);
+						var ngroups = A2(
+							$elm$core$List$indexedMap,
+							F2(
+								function (gi, group) {
+									var nvariables = A2(
+										$elm$core$List$indexedMap,
+										F2(
+											function (vi, v) {
+												return _Utils_update(
+													v,
+													{
+														locked: (_Utils_eq(
+															_Utils_Tuple2(gi, vi),
+															path) || ((!locked) && A2(
+															$elm$core$List$member,
+															_Utils_Tuple2(gi, vi),
+															dependant_paths))) ? locked : v.locked
+													});
+											}),
+										group.variables);
+									return _Utils_update(
+										group,
+										{variables: nvariables});
+								}),
+							question.variable_groups);
+						return $author$project$QuestionEditor$nochange(
+							_Utils_update(
+								question,
+								{variable_groups: ngroups}));
+					}
 				case 'RegenerateVariables':
-					var variables = A2(
-						$elm$core$List$concatMap,
-						function ($) {
-							return $.variables;
-						},
-						question.variable_groups);
+					var variables = $author$project$QuestionEditor$variable_manager(question.variable_groups);
 					var locked_variables = $elm$core$Dict$fromList(
 						A2(
 							$elm$core$List$filterMap,
@@ -11002,10 +11156,8 @@ var $author$project$QuestionEditor$update_question = F2(
 							},
 							A2(
 								$elm$core$List$filter,
-								function ($) {
-									return $.locked;
-								},
-								variables)));
+								variables.is_locked,
+								A2($elm$core$List$map, $elm$core$Tuple$second, variables.all))));
 					var cmd = $author$project$QuestionEditor$do_ask_numbas(
 						{
 							command: 'generateVariables',
@@ -11025,11 +11177,11 @@ var $author$project$QuestionEditor$update_question = F2(
 						question,
 						_Utils_Tuple2($author$project$QuestionEditor$NoChange, cmd));
 				case 'GenerateQuestion':
-					var _v12 = question.scope;
-					if (_v12.$ === 'Nothing') {
+					var _v13 = question.scope;
+					if (_v13.$ === 'Nothing') {
 						return $author$project$QuestionEditor$nochange(question);
 					} else {
-						var scope = _v12.a;
+						var scope = _v13.a;
 						var cmd = $author$project$QuestionEditor$do_ask_numbas(
 							{
 								command: 'generateQuestion',
@@ -11415,9 +11567,10 @@ var $author$project$QuestionEditor$GenerateQuestion = {$: 'GenerateQuestion'};
 var $author$project$Tabber$HtmlLabel = function (a) {
 	return {$: 'HtmlLabel', a: a};
 };
-var $author$project$QuestionEditor$LockVariable = function (a) {
-	return {$: 'LockVariable', a: a};
-};
+var $author$project$QuestionEditor$LockVariable = F2(
+	function (a, b) {
+		return {$: 'LockVariable', a: a, b: b};
+	});
 var $author$project$QuestionEditor$MarkingFeedback = F2(
 	function (credit, messages) {
 		return {credit: credit, messages: messages};
@@ -11640,18 +11793,6 @@ var $author$project$QuestionEditor$custom_text_property = F3(
 				_List_Nil)
 			]);
 	});
-var $author$project$QuestionEditor$dependencies_of = A2(
-	$elm$core$Basics$composeR,
-	function ($) {
-		return $.computed;
-	},
-	A2(
-		$elm$core$Basics$composeR,
-		$author$project$Settings$atField('dependencies'),
-		A2(
-			$author$project$Settings$get,
-			$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
-			_List_Nil)));
 var $elm$core$Dict$diff = F2(
 	function (t1, t2) {
 		return A3(
@@ -12927,6 +13068,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 			$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
 			_List_Nil,
 			A2($author$project$Settings$atField, 'extensions', question.settings)));
+	var variables = $author$project$QuestionEditor$variable_manager(question.variable_groups);
 	var qset = A2(
 		$elm$core$Basics$composeR,
 		$author$project$QuestionEditor$ChangeQuestionSetting($author$project$QuestionEditor$FinalSetting),
@@ -14008,34 +14150,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 				view_tabpanel(extensions_tabber)
 			])
 	};
-	var all_variables = A2(
-		$elm$core$List$concatMap,
-		function ($) {
-			return $.variables;
-		},
-		question.variable_groups);
-	var dependants_of = function (v) {
-		var name = $author$project$QuestionEditor$name_of(v);
-		return A2(
-			$elm$core$List$filter,
-			A2(
-				$elm$core$Basics$composeR,
-				$author$project$QuestionEditor$dependencies_of,
-				$elm$core$List$member(name)),
-			all_variables);
-	};
-	var variable_dict = $elm$core$Dict$fromList(
-		A2(
-			$elm$core$List$map,
-			function (v) {
-				return _Utils_Tuple2(
-					$author$project$QuestionEditor$name_of(v),
-					v);
-			},
-			all_variables));
-	var get_variable = function (name) {
-		return A2($elm$core$Dict$get, name, variable_dict);
-	};
+	var all_variables = variables.all;
 	var variable_tab = F2(
 		function (path, variable) {
 			var vset = A2(
@@ -14106,20 +14221,26 @@ var $author$project$QuestionEditor$view_active = function (model) {
 				$elm$core$List$map,
 				A2(
 					$elm$core$Basics$composeR,
-					$author$project$QuestionEditor$variable_names,
-					$elm$core$String$join(', ')),
+					$elm$core$Tuple$second,
+					A2(
+						$elm$core$Basics$composeR,
+						$author$project$QuestionEditor$variable_names,
+						$elm$core$String$join(', '))),
 				A2(
 					$elm$core$List$filter,
 					A2(
 						$elm$core$Basics$composeR,
-						$author$project$QuestionEditor$dependencies_of,
+						$elm$core$Tuple$second,
 						A2(
 							$elm$core$Basics$composeR,
-							$elm$core$Set$fromList,
+							$author$project$QuestionEditor$dependencies_of,
 							A2(
 								$elm$core$Basics$composeR,
-								$elm$core$Set$intersect(names),
-								$elm$core$Basics$neq($elm$core$Set$empty)))),
+								$elm$core$Set$fromList,
+								A2(
+									$elm$core$Basics$composeR,
+									$elm$core$Set$intersect(names),
+									$elm$core$Basics$neq($elm$core$Set$empty))))),
 					all_variables));
 			var mvalue = variable.value;
 			var jme_template = {
@@ -14912,8 +15033,10 @@ var $author$project$QuestionEditor$view_active = function (model) {
 																			var vfield = function (k) {
 																				return A2($author$project$Settings$atField, k, variable.settings);
 																			};
+																			var transitively_locked = variables.transitively_locked(variable);
 																			var path = _Utils_Tuple2(gi, vi);
 																			var mtype = $author$project$QuestionEditor$variable_type(variable);
+																			var locked = variables.is_locked(variable);
 																			var cfield = function (k) {
 																				return A2($author$project$Settings$atField, k, variable.computed);
 																			};
@@ -14945,15 +15068,12 @@ var $author$project$QuestionEditor$view_active = function (model) {
 																									[
 																										$elm$html$Html$Events$onClick(
 																										$author$project$QuestionEditor$UpdateQuestion(
-																											A2(
-																												$author$project$QuestionEditor$UpdateVariable,
-																												path,
-																												$author$project$QuestionEditor$LockVariable(!variable.locked)))),
-																										$author$project$Aria$pressed(variable.locked)
+																											A2($author$project$QuestionEditor$LockVariable, path, !locked))),
+																										$author$project$Aria$pressed(locked)
 																									]),
 																								_List_fromArray(
 																									[
-																										variable.locked ? A2(ui.titled_icon, 'locked', 'Unlock the value of this variable. Currently unlocked. (editor only)') : A2(ui.titled_icon, 'unlocked', 'Lock the value of this variable. Currently locked. (editor only)')
+																										locked ? A2(ui.titled_icon, 'locked', 'Unlock the value of this variable. Currently unlocked. (editor only)') : A2(ui.titled_icon, 'unlocked', 'Lock the value of this variable. Currently locked. (editor only)')
 																									]))
 																							])),
 																						A2(
@@ -15083,39 +15203,6 @@ var $author$project$QuestionEditor$view_active = function (model) {
 			])
 	};
 	var all_parts = $author$project$QuestionEditor$unwrap_part_container(question.parts);
-	var all_dependencies_of = function (variable) {
-		var visit = F2(
-			function (vpath, v) {
-				var name = $author$project$QuestionEditor$name_of(v);
-				var deps = A2(
-					$elm$core$List$filterMap,
-					get_variable,
-					$author$project$QuestionEditor$dependencies_of(v));
-				return A2($elm$core$List$member, name, vpath) ? _List_Nil : _Utils_ap(
-					deps,
-					A2(
-						$elm$core$List$concatMap,
-						visit(
-							A2($elm$core$List$cons, name, vpath)),
-						deps));
-			});
-		return A2(visit, _List_Nil, variable);
-	};
-	var all_dependants_of = function (variable) {
-		var visit = F2(
-			function (vpath, v) {
-				var name = $author$project$QuestionEditor$name_of(v);
-				var deps = dependants_of(v);
-				return A2($elm$core$List$member, name, vpath) ? _List_Nil : _Utils_ap(
-					deps,
-					A2(
-						$elm$core$List$concatMap,
-						visit(
-							A2($elm$core$List$cons, name, vpath)),
-						deps));
-			});
-		return A2(visit, _List_Nil, variable);
-	};
 	var part_tab = function (_v37) {
 		var path = _v37.a;
 		var part = _v37.b;
@@ -15961,7 +16048,10 @@ var $author$project$QuestionEditor$view_active = function (model) {
 													$elm$core$Set$fromList(s),
 													$elm$core$Set$fromList(replaced_variables));
 											}(
-												A2($elm$core$List$map, $author$project$QuestionEditor$name_of, all_variables))));
+												A2(
+													$elm$core$List$map,
+													A2($elm$core$Basics$composeR, $elm$core$Tuple$second, $author$project$QuestionEditor$name_of),
+													all_variables))));
 									var npcomputed = A2($author$project$Settings$at, npat, part.computed);
 									var next_part_field = function (o) {
 										return A2(
@@ -19257,7 +19347,10 @@ var $author$project$QuestionEditor$view_active = function (model) {
 							$elm$core$Set$fromList(s),
 							$elm$core$Set$fromList(replaced_variables));
 					}(
-						A2($elm$core$List$map, $author$project$QuestionEditor$name_of, all_variables))));
+						A2(
+							$elm$core$List$map,
+							A2($elm$core$Basics$composeR, $elm$core$Tuple$second, $author$project$QuestionEditor$name_of),
+							all_variables))));
 			var remove_variable_replacement = function (i) {
 				return set_variable_replacements(
 					A2(
@@ -19268,11 +19361,17 @@ var $author$project$QuestionEditor$view_active = function (model) {
 			var recomputed_random_variables = A2(
 				$elm$core$List$filter,
 				$author$project$QuestionEditor$variable_is_random,
-				$elm_community$list_extra$List$Extra$unique(
-					A2(
-						$elm$core$List$concatMap,
-						all_dependants_of,
-						A2($elm$core$List$filterMap, get_variable, replaced_variables))));
+				A2(
+					$elm$core$List$map,
+					$elm$core$Tuple$second,
+					$elm_community$list_extra$List$Extra$unique(
+						A2(
+							$elm$core$List$concatMap,
+							variables.all_dependants_of,
+							A2(
+								$elm$core$List$map,
+								$elm$core$Tuple$second,
+								A2($elm$core$List$filterMap, variables.get, replaced_variables))))));
 			var part_options = A2(
 				$elm$core$List$map,
 				function (_v10) {

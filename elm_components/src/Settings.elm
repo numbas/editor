@@ -174,7 +174,7 @@ merge more s =
     let
         value = JD.decodeValue (JD.dict JD.value) s.value |> Result.withDefault Dict.empty
     in
-        { s | value = JE.dict identity identity (Dict.union value more) }
+        { s | value = JE.dict identity identity (Dict.union more value) }
 
 set : ((Value, Address) -> msg) -> Address -> (a -> Value) -> Setter a msg
 set msg at_ encoder a = msg (encoder a, at_)

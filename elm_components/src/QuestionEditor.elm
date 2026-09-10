@@ -178,7 +178,7 @@ type alias VariableGroup =
     }
 
 type alias Variable =
-    { value : Maybe (Result String JE.Value)
+    { value : Maybe (Result (List VariableError) JE.Value)
     , locked : Bool
     , computed : Settings
     , settings : Settings
@@ -278,9 +278,16 @@ type alias VariablesGenerationResult =
     }
 
 type alias VariableGenerationResult =
-    { value : Result String JE.Value
+    { value : Result (List VariableError) JE.Value
     , result : Dict String JE.Value
     }
+
+type alias VariableError = (VariableErrorAspect, String)
+
+type VariableErrorAspect
+    = NameError
+    | DefinitionError
+    | ValueError
 
 type alias GeneratedPartInfo =
     { answer : JE.Value
@@ -678,7 +685,7 @@ unwrap_part_container = apply_part_container (\c ->
     )
 
 variable_type : Variable -> Maybe String
-variable_type = .value >> Maybe.andThen (Result.andThen (JD.decodeValue (JD.field "type" JD.string) >> Result.mapError JD.errorToString) >> Result.toMaybe)
+variable_type = .value >> Maybe.andThen (Result.andThen (JD.decodeValue (JD.field "type" JD.string) >> Result.mapError (\_ -> [])) >> Result.toMaybe)
 
 standard_part_type : String -> String -> String -> String -> String -> PartType
 standard_part_type name nice_name description help_page widget =
@@ -958,6 +965,22 @@ decode_variable default_settings =
         |> andMap (JD.value |> JD.map (S.fromValue variable_defaults))
         |> andMap (JD.oneOf [JD.field "templateType" JD.string, JD.succeed "anything"])
 
+variable_error_aspects = Dict.fromList
+    [ ("name", NameError)
+    , ("definition", DefinitionError)
+    , ("value", ValueError)
+    ]
+
+decode_variable_error : JD.Decoder VariableError
+decode_variable_error =
+    JD.succeed pair
+    |> andMap (JD.field "aspect" JD.string
+        |> JD.andThen (\aspect_str -> case Dict.get aspect_str variable_error_aspects of
+            Just aspect -> JD.succeed aspect
+            Nothing -> JD.fail <| "unrecognised error type " ++ aspect_str
+          )
+       )
+    |> andMap (JD.field "message" JD.string)
 
 decode_extension : JD.Decoder Extension
 decode_extension =
@@ -1267,8 +1290,8 @@ update_question msg question = case msg of
                             JD.oneOf
                                 [ JD.succeed VariableGenerationResult
                                     |> andMap (JD.oneOf
-                                        [ JD.field "value" JD.value |> JD.map Ok
-                                        , JD.field "error" JD.string |> JD.map Err
+                                        [ JD.field "errors" (JD.list decode_variable_error) |> JD.andThen (\err -> if err == [] then JD.fail "no errors" else JD.succeed (Err err))
+                                        , JD.field "value" JD.value |> JD.map Ok
                                         ]
                                       )
                                     |> andMap (JD.dict JD.value)
@@ -1291,6 +1314,7 @@ update_question msg question = case msg of
                                         case Dict.get (name_of variable) r.variables |> Maybe.andThen identity of
                                             Just vvalue -> 
                                                 let
+                                                    q = Debug.log (S.getters.string (S.atField "name" variable.settings)) (vvalue.result)
                                                     ncomputed = S.merge vvalue.result variable.computed
                                                 in
                                                     { variable | computed = ncomputed, value = Just vvalue.value }
@@ -2428,6 +2452,16 @@ view_active model =
 
                 variable_label = if variable_name == "" then "Unnamed" else variable_name
 
+                errors_by_aspect aspect = case mvalue of
+                    Just (Err errs) -> errs |> List.filter (first >> (==) aspect) |> List.map second
+                    _ -> []
+
+                name_errors = errors_by_aspect NameError
+
+                value_errors = errors_by_aspect ValueError
+
+                definition_errors = errors_by_aspect DefinitionError
+
                 vview =
                     { contents = List.concat
                         [ [H.fieldset [ HA.class "vertical" ] <| List.concat
@@ -2437,6 +2471,7 @@ view_active model =
                                 [ ui.icon "remove"
                                 , H.text "Delete this variable"
                                 ]
+                              , H.pre [] [H.text <| Debug.toString <| dependencies_of variable ]
                               ]
                             , variable_field
                                 { id = "name"
@@ -2444,6 +2479,9 @@ view_active model =
                                 , help = Nothing
                                 }
                                 text_property
+                            , visibleIf (name_errors /= [])
+                                [ ui.alert "warning" (name_errors |> List.map (\err -> H.p [] [Ui.raw_html_string err]))
+                                ]
                             , variable_field
                                 { id = "templateType"
                                 , label = "Data type"
@@ -2451,6 +2489,9 @@ view_active model =
                                 }
                                 (select_property (templateTypes |> List.map (\t -> (t.id, t.label))))
                             , templateType.view
+                            , visibleIf (definition_errors /= [])
+                                [ ui.alert "warning" (definition_errors |> List.map (\err -> H.p [] [Ui.raw_html_string err]))
+                                ]
                             , variable_field
                                 { id = "description"
                                 , label = "Description"
@@ -2480,12 +2521,15 @@ view_active model =
                                         ]
                                     ]
 
-                                Just (Err err) -> 
-                                    [ ui.alert "warning"
-                                        [ H.h4 [] [H.text "Error"]
-                                        , Ui.raw_html_string err
-                                        ]
-                                    ]
+                                Just (Err errs) -> 
+                                    case value_errors of
+                                        [] -> []
+                                        _ ->
+                                            [ ui.alert "warning" <|
+                                                ([ H.h4 [] [H.text "Error"]
+                                                 ])
+                                                ++(List.map (Ui.raw_html_string) value_errors)
+                                            ]
 
                                 Nothing -> []
                         , case dependencies of
@@ -2620,7 +2664,7 @@ view_active model =
                                                   )
                                                 , H.td [HA.class "value"] (case variable.value of
                                                     Just (Ok value) -> [Ui.jme_value { value = value, abbreviate = True }]
-                                                    Just (Err err) -> [H.span [HA.class "truncate warning"] [Ui.raw_html_string err]]
+                                                    Just (Err err) -> [H.span [HA.class "truncate warning"] [Ui.raw_html_string <| String.join " " <| List.map second err]]
                                                     Nothing -> []
                                                   )
                                                 ]

@@ -65,6 +65,7 @@
     code, kbd, pre, samp {
         font-family: monospace;
         font-size: 1em;
+        white-space-collapse: preserve;
     }
     table {
         width: auto;

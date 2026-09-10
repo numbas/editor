@@ -82,10 +82,8 @@ export class JMEPreviewElement extends HTMLElement {
     static observedAttributes = ['expression', 'notation'];
 
     connectedCallback() {
-        this.attachShadow({mode: 'open'});
         this.output = this.ownerDocument.createElement('output');
         this.output.setAttribute('for', this.getAttribute('for'));
-        this.shadowRoot.append(this.output);
         this.display();
     }
 
@@ -225,7 +223,6 @@ export class JMEValueElement extends HTMLElement {
     static observedAttributes = ['abbreviate'];
 
     connectedCallback() {
-        this.attachShadow({mode: 'open'});
         this.display();
     }
 
@@ -243,15 +240,12 @@ export class JMEValueElement extends HTMLElement {
     }
 
     display() {
-        if(!this.shadowRoot) {
-            return;
-        }
         const abbreviate = this.getAttribute('abbreviate') == 'true';
 
         const value = this.value;
 
         if(!value) {
-            this.shadowRoot.innerHTML = '';
+            this.innerHTML = '';
             return;
         }
 
@@ -271,17 +265,17 @@ export class JMEValueElement extends HTMLElement {
 
         this.setAttribute('data-jme-value-type',type);
         if(display.value !== undefined) {
-            this.shadowRoot.innerHTML = '';
+            this.innerHTML = '';
             if(Array.isArray(display.value)) {
                 for(let el of display.value) {
-                    this.shadowRoot.append(el);
+                    this.append(el);
                 }
             } else {
-                this.shadowRoot.innerHTML = display.value;
+                this.innerHTML = display.value;
             }
             this.setAttribute('data-jme-value-display','value');
         } else if(display.description !== undefined) {
-            this.shadowRoot.innerHTML = display.description;
+            this.innerHTML = display.description;
             this.setAttribute('data-jme-value-display','description');
         }
     }
@@ -294,10 +288,6 @@ customElements.define('jme-value', JMEValueElement);
  * The `value` attribute should be the HTML code you want to display.
  */
 export class RawHTMLElement extends HTMLElement {
-    constructor() {
-        super();
-        this.attachShadow({mode:'open'});
-    }
     static get observedAttributes() { return ['html'] };
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -308,10 +298,10 @@ export class RawHTMLElement extends HTMLElement {
 
     set html(value) {
         if(typeof value == 'string') {
-            this.shadowRoot.innerHTML = value;
+            this.innerHTML = value;
         } else {
-            this.shadowRoot.innerHTML = '';
-            this.shadowRoot.append(value);
+            this.innerHTML = '';
+            this.append(value);
         }
     }
 }

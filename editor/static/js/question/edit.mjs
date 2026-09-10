@@ -147,7 +147,6 @@ const flags = {
     docs_mapping,
     jme_types: find_jme_types()
 };
-console.log(flags);
 
 const app = Elm.QuestionEditor.init({
     node: document.querySelector('main'), 
@@ -160,6 +159,16 @@ app.ports.save_tab_state.subscribe(state => {
 
 let variable_generation_run_number = 0;
 
+/** Compute all variables.
+ * @returns {
+ *  variables: Object.<{error: string, warnings: Array.<string>, value: Numbas.jme.token}>,
+ *  conditionSatisfied: boolean,
+ *  conditionError: string,
+ *  error: boolean,
+ *  errors: Array.<string>,
+ *  scope: Numbas.jme.Scope
+ *  }
+ */
 async function computeVariables(prep) {
     const scope = new jme.Scope([prep.scope]);
 
@@ -477,8 +486,22 @@ const ask_numbas_handlers = {
         return {definition};
     },
 
+    /** Check for invalid or duplicate variable names, and find references to variables.
+     */
+    async findVariableReferences({question}) {
+        const variable_definitions = Object.values(question.variables);
+    },
+
+    /** Generate values for the variables and record dependencies.
+     *
+     * @returns {
+     *  scope: Numbas.jme.Scope,
+     *  functions: Array.<{error}>,
+     *  variables: Object.<{dependencies: Array.<string>, names: Array.<string>, value: Numbas.jme.token, nameError: string}>,
+     *  conditionSatisfied: boolean
+     *  }
+     */
     async generateVariables({question, locked_variables}) {
-        console.log(locked_variables);
         let scope = new jme.Scope([jme.builtinScope, {variables: locked_variables}]);
 
         await Promise.all((question.extensions || []).map(async (location) => {
@@ -612,7 +635,7 @@ const ask_numbas_handlers = {
 
         const variable_definitions = Object.values(question.variables);
 
-        result.variables = Object.fromEntries(variable_definitions.map(v => [v.name, {}]));
+        result.variables = Object.fromEntries(variable_definitions.map(v => [v.name, {errors: []}]));
 
         const todo = {};
 
@@ -620,6 +643,32 @@ const ask_numbas_handlers = {
             if(!v.name) {
                 return;
             }
+
+            const vout = result.variables[v.name];
+
+            try {
+                if(v.name.match(/^\s|\s$/)) {
+                    throw(new Error('extra space'));
+                }
+                const re_name = jme.standardParser.re.re_name;
+                const m = re_name.exec(v.name);
+                if(!m || m[0]!=v.name) {
+                    throw(new Error('invalid'));
+                }
+                const tokens = Numbas.jme.tokenise(v.name);
+                if(tokens.length != 1) {
+                    throw(new Error('not a single token'));
+                }
+                if(tokens[0].type != 'name') {
+                    throw(new Error('reserved'));
+                }
+                if(Numbas.jme.builtinScope.getVariable(v.name) !== undefined) {
+                    throw(new Error('reserved'));
+                }
+            } catch(error) {
+                vout.errors.push({aspect: 'name', message: `The variable name <code>${v.name}</code> is invalid.`});
+            }
+
             try {
                 const tree = jme.compile(v.definition);
                 const vars = jme.findvars(tree, scope_variable_names, scope);
@@ -632,12 +681,12 @@ const ask_numbas_handlers = {
                 );
             } catch(error) {
                 console.error(error);
-                result.variables[v.name].error = error.message || error.toString();
+                result.variables[v.name].errors.push({aspect: 'definition', message: error.message || error.toString()});
             }
         });
 
         variable_definitions.forEach(v => {
-            const {tree} = todo[v.name];
+            const {tree} = todo[v.name] || {};
             if(tree) {
                 result.variables[v.name].isDeterministic = jme.isDeterministic(tree, scope);
                 result.variables[v.name].isRandom = jme.isRandom(tree, scope);
@@ -654,14 +703,22 @@ const ask_numbas_handlers = {
             if(!result.variables[name]) {
                 return;
             }
-            Object.assign(result.variables[name], res);
+            Object.assign(result.variables[name],
+                {
+                    value: res.value,
+                    warnings: res.warnings
+                }
+            );
+            if(res.error) {
+                result.variables[name].errors.push({aspect: 'value', message: res.error});
+            }
         });
 
         result.conditionSatisfied = compute_result.conditionSatisfied;
 
         result.scope = compute_result.scope;
 
-        console.log(result.variables.a);
+        console.log(result);
 
         return result;
     },

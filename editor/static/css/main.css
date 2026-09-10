@@ -2,11 +2,6 @@
 @import './base.css';
 @import './color-mix.css';
 
-:host * {
-    color: blue;
-}
-
-
 @layer theme {
 
     body.padded-main main {
@@ -314,4 +309,7 @@
         color: var(--main-text-color);
     }
 
+    raw-html {
+        --background--color: transparent;
+    }
 }

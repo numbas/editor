@@ -9787,6 +9787,34 @@ var $author$project$QuestionEditor$add_part_at = F3(
 			A2($author$project$QuestionEditor$add_part, kind, part));
 	});
 var $author$project$QuestionEditor$blank_variable = {computed: $author$project$Settings$empty, locked: false, settings: $author$project$Settings$empty, template: 'anything', value: $elm$core$Maybe$Nothing};
+var $author$project$QuestionEditor$DefinitionError = {$: 'DefinitionError'};
+var $author$project$QuestionEditor$NameError = {$: 'NameError'};
+var $author$project$QuestionEditor$ValueError = {$: 'ValueError'};
+var $author$project$QuestionEditor$variable_error_aspects = $elm$core$Dict$fromList(
+	_List_fromArray(
+		[
+			_Utils_Tuple2('name', $author$project$QuestionEditor$NameError),
+			_Utils_Tuple2('definition', $author$project$QuestionEditor$DefinitionError),
+			_Utils_Tuple2('value', $author$project$QuestionEditor$ValueError)
+		]));
+var $author$project$QuestionEditor$decode_variable_error = A2(
+	$elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2($elm$json$Json$Decode$field, 'message', $elm$json$Json$Decode$string),
+	A2(
+		$elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(
+			$elm$json$Json$Decode$andThen,
+			function (aspect_str) {
+				var _v0 = A2($elm$core$Dict$get, aspect_str, $author$project$QuestionEditor$variable_error_aspects);
+				if (_v0.$ === 'Just') {
+					var aspect = _v0.a;
+					return $elm$json$Json$Decode$succeed(aspect);
+				} else {
+					return $elm$json$Json$Decode$fail('unrecognised error type ' + aspect_str);
+				}
+			},
+			A2($elm$json$Json$Decode$field, 'aspect', $elm$json$Json$Decode$string)),
+		$elm$json$Json$Decode$succeed($elm$core$Tuple$pair)));
 var $elm_community$list_extra$List$Extra$removeAt = F2(
 	function (index, l) {
 		if (index < 0) {
@@ -9851,6 +9879,7 @@ var $elm_community$list_extra$List$Extra$getAt = F2(
 		return (idx < 0) ? $elm$core$Maybe$Nothing : $elm$core$List$head(
 			A2($elm$core$List$drop, idx, xs));
 	});
+var $elm$core$Debug$log = _Debug_log;
 var $elm$core$Maybe$map2 = F3(
 	function (func, ma, mb) {
 		if (ma.$ === 'Nothing') {
@@ -9882,7 +9911,7 @@ var $author$project$Settings$merge = F2(
 					$elm$json$Json$Encode$dict,
 					$elm$core$Basics$identity,
 					$elm$core$Basics$identity,
-					A2($elm$core$Dict$union, value, more))
+					A2($elm$core$Dict$union, more, value))
 			});
 	});
 var $author$project$QuestionEditor$nochange = function (model) {
@@ -10762,13 +10791,19 @@ var $author$project$QuestionEditor$update_question = F2(
 																					_List_fromArray(
 																						[
 																							A2(
-																							$elm$json$Json$Decode$map,
-																							$elm$core$Result$Ok,
-																							A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$value)),
+																							$elm$json$Json$Decode$andThen,
+																							function (err) {
+																								return _Utils_eq(err, _List_Nil) ? $elm$json$Json$Decode$fail('no errors') : $elm$json$Json$Decode$succeed(
+																									$elm$core$Result$Err(err));
+																							},
+																							A2(
+																								$elm$json$Json$Decode$field,
+																								'errors',
+																								$elm$json$Json$Decode$list($author$project$QuestionEditor$decode_variable_error))),
 																							A2(
 																							$elm$json$Json$Decode$map,
-																							$elm$core$Result$Err,
-																							A2($elm$json$Json$Decode$field, 'error', $elm$json$Json$Decode$string))
+																							$elm$core$Result$Ok,
+																							A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$value))
 																						])),
 																				$elm$json$Json$Decode$succeed($author$project$QuestionEditor$VariableGenerationResult)))),
 																		$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
@@ -10808,6 +10843,11 @@ var $author$project$QuestionEditor$update_question = F2(
 																					r.variables));
 																			if (_v4.$ === 'Just') {
 																				var vvalue = _v4.a;
+																				var q = A2(
+																					$elm$core$Debug$log,
+																					$author$project$Settings$getters.string(
+																						A2($author$project$Settings$atField, 'name', variable.settings)),
+																					vvalue.result);
 																				var ncomputed = A2($author$project$Settings$merge, vvalue.result, variable.computed);
 																				return _Utils_update(
 																					variable,
@@ -12773,7 +12813,10 @@ var $author$project$QuestionEditor$variable_type = A2(
 					$elm$core$Basics$composeR,
 					$elm$json$Json$Decode$decodeValue(
 						A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string)),
-					$elm$core$Result$mapError($elm$json$Json$Decode$errorToString))),
+					$elm$core$Result$mapError(
+						function (_v0) {
+							return _List_Nil;
+						}))),
 			$elm$core$Result$toMaybe)));
 var $author$project$Tabber$view_tablist = F5(
 	function (ui, wrap_msg, state, tabber, tabber_attrs) {
@@ -12859,8 +12902,8 @@ var $author$project$QuestionEditor$view_active = function (model) {
 	var view_tablist = A3($author$project$Tabber$view_tablist, ui, $author$project$QuestionEditor$UpdateTab, model.tab_state);
 	var view_tabpanel = A2($author$project$Tabber$view_tabpanel, ui, model.tab_state);
 	var saving_class = function () {
-		var _v54 = model.saving;
-		switch (_v54.$) {
+		var _v56 = model.saving;
+		switch (_v56.$) {
 			case 'Saved':
 				return 'saved';
 			case 'Changed':
@@ -13047,8 +13090,8 @@ var $author$project$QuestionEditor$view_active = function (model) {
 		};
 	}();
 	var top_parts = function () {
-		var _v53 = question.parts;
-		var parts = _v53.a;
+		var _v55 = question.parts;
+		var parts = _v55.a;
 		return A2(
 			$elm$core$List$indexedMap,
 			F2(
@@ -13180,9 +13223,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 					if (!queue.b) {
 						return seen;
 					} else {
-						var _v51 = queue.a;
-						var ppath = _v51.a;
-						var pp = _v51.b;
+						var _v53 = queue.a;
+						var ppath = _v53.a;
+						var pp = _v53.b;
 						var rest = queue.b;
 						if (A2($elm$core$List$member, ppath, seen)) {
 							var $temp$seen = seen,
@@ -13434,9 +13477,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 																								_Utils_ap(
 																									A2(
 																										$elm$core$List$map,
-																										function (_v49) {
-																											var t = _v49.a;
-																											var l = _v49.b;
+																										function (_v51) {
+																											var t = _v51.a;
+																											var l = _v51.b;
 																											return _Utils_Tuple2(
 																												$elm$core$Maybe$Just(t),
 																												l);
@@ -13669,14 +13712,14 @@ var $author$project$QuestionEditor$view_active = function (model) {
 				view_item: view_extension
 			},
 			ui);
-		var _v47 = A2(
+		var _v49 = A2(
 			$elm$core$List$partition,
 			function (e) {
 				return A2($elm$core$List$member, e, shown_extensions);
 			},
 			model.extensions);
-		var searched_extensions = _v47.a;
-		var other_extensions = _v47.b;
+		var searched_extensions = _v49.a;
+		var other_extensions = _v49.b;
 		return {
 			attributes: _List_Nil,
 			contents: $elm$core$List$concat(
@@ -14282,7 +14325,27 @@ var $author$project$QuestionEditor$view_active = function (model) {
 							variable.computed)
 					});
 			};
+			var errors_by_aspect = function (aspect) {
+				if ((mvalue.$ === 'Just') && (mvalue.a.$ === 'Err')) {
+					var errs = mvalue.a.a;
+					return A2(
+						$elm$core$List$map,
+						$elm$core$Tuple$second,
+						A2(
+							$elm$core$List$filter,
+							A2(
+								$elm$core$Basics$composeR,
+								$elm$core$Tuple$first,
+								$elm$core$Basics$eq(aspect)),
+							errs));
+				} else {
+					return _List_Nil;
+				}
+			};
+			var name_errors = errors_by_aspect($author$project$QuestionEditor$NameError);
+			var value_errors = errors_by_aspect($author$project$QuestionEditor$ValueError);
 			var dependencies = $author$project$QuestionEditor$dependencies_of(variable);
+			var definition_errors = errors_by_aspect($author$project$QuestionEditor$DefinitionError);
 			var cfield = function (k) {
 				return A2($author$project$Settings$atField, k, variable.computed);
 			};
@@ -14661,12 +14724,42 @@ var $author$project$QuestionEditor$view_active = function (model) {
 													[
 														ui.icon('remove'),
 														$elm$html$Html$text('Delete this variable')
+													])),
+												A2(
+												$elm$html$Html$pre,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text(
+														$elm$core$Debug$toString(
+															$author$project$QuestionEditor$dependencies_of(variable)))
 													]))
 											]),
 											A2(
 											variable_field,
 											{help: $elm$core$Maybe$Nothing, id: 'name', label: 'Name'},
 											$author$project$QuestionEditor$text_property),
+											A2(
+											$author$project$Ui$visibleIf,
+											!_Utils_eq(name_errors, _List_Nil),
+											_List_fromArray(
+												[
+													A2(
+													ui.alert,
+													'warning',
+													A2(
+														$elm$core$List$map,
+														function (err) {
+															return A2(
+																$elm$html$Html$p,
+																_List_Nil,
+																_List_fromArray(
+																	[
+																		$author$project$Ui$raw_html_string(err)
+																	]));
+														},
+														name_errors))
+												])),
 											A2(
 											variable_field,
 											{
@@ -14682,6 +14775,27 @@ var $author$project$QuestionEditor$view_active = function (model) {
 													},
 													templateTypes))),
 											templateType.view,
+											A2(
+											$author$project$Ui$visibleIf,
+											!_Utils_eq(definition_errors, _List_Nil),
+											_List_fromArray(
+												[
+													A2(
+													ui.alert,
+													'warning',
+													A2(
+														$elm$core$List$map,
+														function (err) {
+															return A2(
+																$elm$html$Html$p,
+																_List_Nil,
+																_List_fromArray(
+																	[
+																		$author$project$Ui$raw_html_string(err)
+																	]));
+														},
+														definition_errors))
+												])),
 											A2(
 											variable_field,
 											{help: $elm$core$Maybe$Nothing, id: 'description', label: 'Description'},
@@ -14744,24 +14858,29 @@ var $author$project$QuestionEditor$view_active = function (model) {
 												]))
 										]);
 								} else {
-									var err = mvalue.a.a;
-									return _List_fromArray(
-										[
-											A2(
-											ui.alert,
-											'warning',
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$h4,
-													_List_Nil,
+									var errs = mvalue.a.a;
+									if (!value_errors.b) {
+										return _List_Nil;
+									} else {
+										return _List_fromArray(
+											[
+												A2(
+												ui.alert,
+												'warning',
+												_Utils_ap(
 													_List_fromArray(
 														[
-															$elm$html$Html$text('Error')
-														])),
-													$author$project$Ui$raw_html_string(err)
-												]))
-										]);
+															A2(
+															$elm$html$Html$h4,
+															_List_Nil,
+															_List_fromArray(
+																[
+																	$elm$html$Html$text('Error')
+																]))
+														]),
+													A2($elm$core$List$map, $author$project$Ui$raw_html_string, value_errors)))
+											]);
+									}
 								}
 							} else {
 								return _List_Nil;
@@ -15141,7 +15260,11 @@ var $author$project$QuestionEditor$view_active = function (model) {
 																												]),
 																											_List_fromArray(
 																												[
-																													$author$project$Ui$raw_html_string(err)
+																													$author$project$Ui$raw_html_string(
+																													A2(
+																														$elm$core$String$join,
+																														' ',
+																														A2($elm$core$List$map, $elm$core$Tuple$second, err)))
 																												]))
 																										]);
 																								}

@@ -15802,7 +15802,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         fn.paramNames = paramNames;
         fn.definition = def.definition;
         fn.name = jme.normaliseName(def.name, scope);
-        fn.language = def.language || 'jme';
+        fn.language = def.language;
         try {
             switch(fn.language) {
             case 'jme':
@@ -16463,30 +16463,25 @@ var re_note = /^(\$?[a-zA-Z_][a-zA-Z0-9_]*'*)(?:\s*\(([^)]*)\))?\s*:\s*((?:.|\n)
  * @property {Numbas.jme.tree} tree - The compiled form of the expression.
  * @property {string[]} vars - The names of the variables this note depends on.
  *
- * @param {string|object} source
+ * @param {JME} source
  * @param {Numbas.jme.Scope} scope - The scope to use for normalising names.
  *
  */
 var ScriptNote = jme.variables.ScriptNote = function(source, scope) {
-    if(typeof source == 'string') {
-        source = source.trim();
-        var m = re_note.exec(source);
-        if(!m) {
-            var hint;
-            if(/^[a-zA-Z_][a-zA-Z0-9+]*'*(?:\s*\(([^)]*)\))?$/.test(source)) {
-                hint = R('jme.script.note.invalid definition.missing colon');
-            } else if(/^[a-zA-Z_][a-zA-Z0-9+]*'*\s*\(/.test(source)) {
-                hint = R('jme.script.note.invalid definition.description missing closing bracket');
-            }
-            throw(new Numbas.Error("jme.script.note.invalid definition", {source: source, hint: hint}));
+    source = source.trim();
+    var m = re_note.exec(source);
+    if(!m) {
+        var hint;
+        if(/^[a-zA-Z_][a-zA-Z0-9+]*'*(?:\s*\(([^)]*)\))?$/.test(source)) {
+            hint = R('jme.script.note.invalid definition.missing colon');
+        } else if(/^[a-zA-Z_][a-zA-Z0-9+]*'*\s*\(/.test(source)) {
+            hint = R('jme.script.note.invalid definition.description missing closing bracket');
         }
-        this.name = m[1];
-        this.description = m[2];
-        this.expr = m[3];
-    } else {
-        this.name = source.name;
-        this.expr = source.definition;
+        throw(new Numbas.Error("jme.script.note.invalid definition", {source: source, hint: hint}));
     }
+    this.name = m[1];
+    this.description = m[2];
+    this.expr = m[3];
     if(!this.expr) {
         throw(new Numbas.Error("jme.script.note.empty expression", {name:this.name}));
     }
@@ -16517,7 +16512,7 @@ jme.variables.note_script_constructor = function(construct_scope, process_result
     /**
      * A notes script.
      *
-     * @param {string|object} source - The source of the script.
+     * @param {string} source - The source of the script.
      * @param {Numbas.jme.variables.Script} base - A base script to extend.
      * @param {Numbas.jme.Scope} scope
      * @memberof Numbas.jme.variables
@@ -16527,24 +16522,16 @@ jme.variables.note_script_constructor = function(construct_scope, process_result
         this.source = source;
         scope = construct_scope(scope || Numbas.jme.builtinScope);
         try {
+            var notes = source.replace(/^\/\/.*$/gm, '').split(/\n(?:\s*\n)+(?!\s)/);
             var ntodo = {};
             var todo = {};
-            if(typeof source == 'string') {
-                let notes;
-                notes = source.replace(/^\/\/.*$/gm, '').split(/\n(?:\s*\n)+(?!\s)/);
-                notes.forEach(function(note) {
-                    if(note.trim().length) {
-                        var res = new ScriptNote(note, scope);
-                        var name = jme.normaliseName(res.name, scope);
-                        ntodo[name] = todo[name] = res;
-                    }
-                });
-            } else {
-                source.notes.forEach(note => {
-                    const name = jme.normaliseName(note.name, scope);
-                    ntodo[name] = todo[name] = new ScriptNote(note);
-                });
-            }
+            notes.forEach(function(note) {
+                if(note.trim().length) {
+                    var res = new ScriptNote(note, scope);
+                    var name = jme.normaliseName(res.name, scope);
+                    ntodo[name] = todo[name] = res;
+                }
+            });
             if(base) {
                 Object.keys(base.notes).forEach(function(name) {
                     if(name in ntodo) {
@@ -17380,6 +17367,9 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      */
     loadFromXML: function(xml) {
         this.xml = xml;
+
+        this.json_data = JSON.parse(xml.querySelector('json-data').textContent);
+
         var tryGetAttribute = Numbas.xml.tryGetAttribute;
         tryGetAttribute(this, this.xml, '.', ['type', 'marks', 'useCustomName', 'customName']);
         tryGetAttribute(this.settings, this.xml, '.', ['minimumMarks', 'enableMinimumMarks', 'stepsPenalty', 'showStepsLabel', 'showCorrectAnswer', 'showFeedbackIcon', 'exploreObjective', 'suggestGoingBack', 'useAlternativeFeedback'], []);
@@ -17427,26 +17417,11 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
 
         // create the JME marking script for the part
         var markingScriptNode = this.xml.selectSingleNode('markingalgorithm');
-        var markingScriptNoteNodes = markingScriptNode.selectNodes('note');
-        let markingScriptDefinition;
-        if(markingScriptNoteNodes) {
-            markingScriptDefinition = {
-                notes: markingScriptNoteNodes.map(node => {
-                    const note = {};
-                    tryGetAttribute(note, node, '.', ['name', 'definition']);
-                    note.description = Numbas.xml.getTextContent(node).trim();
-                    return note;
-                })
-            };
-        } else {
-            markingScriptDefinition = Numbas.xml.getTextContent(markingScriptNode).trim();
-        }
-
+        var markingScriptString = Numbas.xml.getTextContent(markingScriptNode).trim();
         var markingScript = {};
         tryGetAttribute(markingScript, this.xml, markingScriptNode, ['extend']);
         var extend_base = markingScript.extend;
-        
-        this.setMarkingScript(markingScriptDefinition, extend_base);
+        this.setMarkingScript(markingScriptString, extend_base);
 
         // custom JavaScript scripts
         var scriptNodes = this.xml.selectNodes('scripts/script');
@@ -17463,6 +17438,9 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      */
     loadFromJSON: function(data) {
         this.json = data;
+
+        this.json_data = data;
+
         var p = this;
         var tryLoad = Numbas.json.tryLoad;
         var tryGet = Numbas.json.tryGet;
@@ -17638,7 +17616,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @param {string} markingScriptString
      * @param {boolean} extend_base - Does this script extend the built-in script?
      */
-    setMarkingScript: function(markingScriptDefinition, extend_base) {
+    setMarkingScript: function(markingScriptString, extend_base) {
         if(!this.doesMarking) {
             return;
         }
@@ -17646,8 +17624,8 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         var p = this;
 
         var algo = this.baseMarkingScript();
-        if(markingScriptDefinition) {
-            algo = new marking.MarkingScript(markingScriptDefinition, extend_base ? algo : undefined, this.getScope());
+        if(markingScriptString) {
+            algo = new marking.MarkingScript(markingScriptString, extend_base ? algo : undefined, this.getScope());
         }
         this.markingScript = algo;
 

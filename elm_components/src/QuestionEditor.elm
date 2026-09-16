@@ -69,6 +69,7 @@ type alias Preview =
 
 type alias ActiveModelRecord = 
     { generate_variables_debouncer : Debouncer Msg
+    , find_variable_references_debouncer : Debouncer Msg
     , extension_search : FilterList.State
     , saving : Saving
     , last_saved : Maybe String
@@ -179,6 +180,7 @@ type alias VariableGroup =
 
 type alias Variable =
     { value : Maybe (Result (List VariableError) JE.Value)
+    , automatically_created: Bool
     , locked : Bool
     , computed : Settings
     , settings : Settings
@@ -187,6 +189,18 @@ type alias Variable =
 
 type alias AddressedVariable = (VariablePath, Variable)
 
+type alias VariableManager =
+    { all : List AddressedVariable
+    , get : String -> Maybe AddressedVariable
+    , update : (AddressedVariable -> Variable) -> List VariableGroup
+    , at_path : VariablePath -> Maybe Variable
+    , all_dependencies_of : Variable -> List AddressedVariable
+    , all_dependants_of : Variable -> List AddressedVariable
+    , transitively_locked : Variable -> Bool
+    , is_locked : Variable -> Bool
+    }
+
+variable_manager : List VariableGroup -> VariableManager
 variable_manager variable_groups = 
     let
         all_variables : List AddressedVariable
@@ -198,6 +212,12 @@ variable_manager variable_groups =
                )
             |> List.concat
 
+        update_variables : (AddressedVariable -> Variable) -> List VariableGroup
+        update_variables fn =
+            variable_groups
+            |> List.indexedMap (\gi group -> { group | variables = List.indexedMap (\vi variable -> fn ((gi,vi), variable)) group.variables })
+
+        -- TODO: cope with destructured variables and normalise names
         variable_dict : Dict String AddressedVariable
         variable_dict =
             all_variables
@@ -263,6 +283,7 @@ variable_manager variable_groups =
         is_locked variable = variable.locked || (transitively_locked variable)
     in
         { all = all_variables
+        , update = update_variables
         , get = get_variable
         , at_path = at_path
         , all_dependencies_of = all_dependencies_of
@@ -280,6 +301,17 @@ type alias VariablesGenerationResult =
 type alias VariableGenerationResult =
     { value : Result (List VariableError) JE.Value
     , result : Dict String JE.Value
+    }
+
+type VariableReferenceSegment
+    = StringRef String
+    | IntRef Int
+
+type alias VariableReference = List VariableReferenceSegment
+
+type alias VariableReferencesResult =
+    { references : Dict String (List JE.Value)
+    , undefined_variables : List String
     }
 
 type alias VariableError = (VariableErrorAspect, String)
@@ -350,6 +382,7 @@ type Msg
     | StartAddingPart PartPath ChildPart
     | AnswerNumbas JE.Value
     | GenerateVariableDebouncer (Debouncer.Msg Msg)
+    | FindVariableReferencesDebouncer (Debouncer.Msg Msg)
     | SetExtensionSearch String
 
 type alias SettingWatchers path a = List (S.Address, path -> { a | settings : Settings, computed : Settings } -> JE.Value -> Maybe (Cmd Msg))
@@ -370,6 +403,7 @@ type QuestionMsg
     | UpdateVariable VariablePath VariableMsg
     | LockVariable VariablePath Bool
     | RegenerateVariables
+    | FindVariableReferences
     | AddFunction
     | ShowVariable String
     | ShowPart PartPath
@@ -442,6 +476,7 @@ blank_variable : Variable
 blank_variable =
     { value = Nothing
     , locked = False
+    , automatically_created = False
     , computed = S.empty
     , settings = S.empty
     , template = "anything"
@@ -961,7 +996,7 @@ decode_variable default_settings =
     let
         variable_defaults = get_default_settings ["question", "variables", "additionalProperties"] default_settings
     in
-        JD.succeed (Variable Nothing False S.empty)
+        JD.succeed (Variable Nothing False False S.empty)
         |> andMap (JD.value |> JD.map (S.fromValue variable_defaults))
         |> andMap (JD.oneOf [JD.field "templateType" JD.string, JD.succeed "anything"])
 
@@ -1049,6 +1084,7 @@ decode_flags : JD.Decoder ActiveModelRecord
 decode_flags =
     JD.succeed ( 
         ActiveModelRecord 
+            (Debouncer.debounce 500 |> toDebouncer)
             (Debouncer.debounce 500 |> toDebouncer)
             FilterList.init
             (Saved (Ok ()))
@@ -1182,7 +1218,12 @@ compute_all model =
                             ]
                )
 
-        cmds = part_cmds ++ variable_cmds ++ variable_def_cmds
+        question_cmds =
+            [ variables_changed
+            , question_changed
+            ]
+
+        cmds = part_cmds ++ variable_cmds ++ variable_def_cmds ++ question_cmds
     in
         (model, Cmd.batch cmds)
 
@@ -1193,6 +1234,13 @@ variable_debouncer_config =
     , setDebouncer = \d m -> { m | generate_variables_debouncer = d }
     }
 
+find_variable_references_debouncer_config : Debouncer.UpdateConfig Msg ActiveModelRecord
+find_variable_references_debouncer_config =
+    { mapMsg = FindVariableReferencesDebouncer
+    , getDebouncer = .find_variable_references_debouncer
+    , setDebouncer = \d m -> { m | find_variable_references_debouncer = d }
+    }
+
 variables_changed : Cmd Msg
 variables_changed = 
     Task.perform 
@@ -1200,6 +1248,17 @@ variables_changed =
         |> UpdateQuestion
         |> Debouncer.provideInput
         |> GenerateVariableDebouncer
+        |> always
+        )
+        (Task.succeed ())
+
+question_changed : Cmd Msg
+question_changed =
+    Task.perform 
+        (  FindVariableReferences
+        |> UpdateQuestion
+        |> Debouncer.provideInput
+        |> FindVariableReferencesDebouncer
         |> always
         )
         (Task.succeed ())
@@ -1221,11 +1280,19 @@ update_active msg model = case msg of
                 BigChange -> History.big_change 
 
             history = change nq model.history
+            
+            changed_cmd = Cmd.batch
+                [ delay 2000 (Save nq)
+                , question_changed
+                ]
         in
-            ({ model | history = history, saving = Changed }, Cmd.batch [cmd, if mchange /= NoChange then delay 2000 (Save nq) else Cmd.none])
+            ({ model | history = history, saving = Changed }, Cmd.batch [cmd, if mchange /= NoChange then changed_cmd else Cmd.none])
 
     GenerateVariableDebouncer dmsg ->
         Debouncer.update update_active variable_debouncer_config dmsg model
+
+    FindVariableReferencesDebouncer dmsg ->
+        Debouncer.update update_active find_variable_references_debouncer_config dmsg model
 
     UpdateTab tab_msg -> 
         let
@@ -1275,9 +1342,71 @@ update_active msg model = case msg of
 
     NoOp -> model |> nocmd
 
+decode_variable_reference : JD.Decoder VariableReference
+decode_variable_reference =
+    JD.list
+        (JD.oneOf
+            [ JD.string |> JD.map StringRef
+            , JD.int |> JD.map IntRef
+            ]
+        )
+
+decode_variable_references_result : JD.Decoder VariableReferencesResult
+decode_variable_references_result =
+    JD.succeed VariableReferencesResult
+    |> andMap (JD.field "references" (JD.dict (JD.list JD.value)))
+    |> andMap (JD.field "undefined_names" (JD.list JD.string))
+
 update_question : QuestionMsg -> Question -> ChangeSideEffect Question
 update_question msg question = case msg of
     ChangeQuestionSetting ComputedSetting (value, at) -> case at of
+        (S.Field "findVariableReferences")::_ -> 
+            case JD.decodeValue decode_variable_references_result value of
+                Err err ->
+                    let
+                        q = Debug.log "???" err
+                    in
+                        question |> nochange
+
+                Ok refdata ->
+                    let
+                        variables = variable_manager question.variable_groups
+
+                        references = 
+                            refdata.references
+                            |> Dict.toList
+                            |> List.map (Tuple.mapSecond (List.map (JD.decodeValue decode_variable_reference)))
+                            |> Debug.log "references"
+
+                        undefined_variables =
+                            refdata.undefined_variables
+                            |> List.filter (\name -> variables.get name == Nothing)
+                            |> List.map (\name -> { blank_variable | automatically_created = True } |> \v -> { v | settings = S.setAt [S.field "name"] (JE.string name) v.settings })
+
+                        add_undefined_variables variable_groups = 
+                            variable_groups
+                            |> LE.updateAt 0 (\group -> { group | variables = group.variables ++ undefined_variables })
+
+                        set_references variable_groups =
+                            (variable_manager variable_groups).update (\(_,v) ->
+                                let
+                                    refs = 
+                                        refdata.references
+                                        |> Dict.toList
+                                        |> List.filter (first >> (==) (name_of v))
+                                        |> List.concatMap second
+                                in
+                                    { v | computed = S.setAt [S.field "references"] (JE.list identity refs) v.computed }
+                            )
+
+
+                        nvariable_groups = 
+                            question.variable_groups
+                            |> add_undefined_variables
+                            |> set_references
+                    in
+                        { question | variable_groups = nvariable_groups } |> nochange
+
         (S.Field "generateVariables")::_ ->
             let
                 result : Result JD.Error VariablesGenerationResult
@@ -1314,7 +1443,6 @@ update_question msg question = case msg of
                                         case Dict.get (name_of variable) r.variables |> Maybe.andThen identity of
                                             Just vvalue -> 
                                                 let
-                                                    q = Debug.log (S.getters.string (S.atField "name" variable.settings)) (vvalue.result)
                                                     ncomputed = S.merge vvalue.result variable.computed
                                                 in
                                                     { variable | computed = ncomputed, value = Just vvalue.value }
@@ -1331,7 +1459,9 @@ update_question msg question = case msg of
                     |> Result.map .scope
                     |> Result.toMaybe
             in
-                { question | variable_groups = nvariable_groups, scope = scope } |> nochange
+                ( { question | variable_groups = nvariable_groups, scope = scope }
+                , (NoChange, question_changed)
+                )
 
         (S.Field "generateQuestion")::_ ->
             let
@@ -1489,6 +1619,21 @@ update_question msg question = case msg of
                 }
         in
             (question, (NoChange, cmd))
+
+    FindVariableReferences -> case question.scope of
+        Nothing -> question |> nochange |> Debug.log "no scope"
+        Just scope ->
+            let
+                cmd = do_ask_numbas
+                    { command = "findVariableReferences"
+                    , key = JE.string "question"
+                    , param = JE.object
+                        [ ("question", encode_question question)
+                        , ("scope", scope)
+                        ]
+                    }
+            in
+                (question, (NoChange, cmd))
 
     GenerateQuestion -> case question.scope of
         Nothing -> question |> nochange
@@ -2203,6 +2348,15 @@ view_active model =
                     |> List.filter (second >> dependencies_of >> Set.fromList >> Set.intersect names >> (/=) Set.empty)
                     |> List.map (second >> variable_names >> String.join ", ")
 
+                references : List VariableReference
+                references =
+                    S.get (JD.list decode_variable_reference) [] (S.atField "references" variable.computed)
+
+                qqq = 
+                    variable.computed.value
+                    |> JD.decodeValue (JD.dict JD.value)
+                    |> Debug.log (name_of variable)
+
                 variable_field : { id : String, label : String, help : Maybe String } -> PropertyWidget -> List (Html Msg)
                 variable_field o = labelled_field
                     ui
@@ -2567,6 +2721,28 @@ view_active model =
                                                         , HA.class "monospace btn info"
                                                         ]
                                                         [ H.text d ]
+                                                    ]
+                                            ))
+                                        ]
+                                     ]
+                        , case references of
+                                [] -> []
+                                _ -> [H.section
+                                        [ HA.class "references" ]
+                                        [ H.h3 [] 
+                                            [ H.text "References"
+                                            , ui.icon "to"
+                                            ]
+                                        , H.ul
+                                            [ HA.class "list-inline" ]
+                                            (references |> List.map (\refpath -> 
+                                                H.li [] 
+                                                    [ H.a
+                                                        [ HA.href "#"
+                                                        --, HE.onClick (ShowVariable d |> UpdateQuestion) TODO
+                                                        , HA.class "monospace btn info"
+                                                        ]
+                                                        [ H.text <| Debug.toString refpath ]
                                                     ]
                                             ))
                                         ]

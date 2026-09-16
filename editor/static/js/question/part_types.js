@@ -742,8 +742,8 @@ part_types.models = [
 
         variable_references: function(part,model) {
             var o = [
-                {tab: 'marking-settings', value: model.answer, type: 'string', description: 'Answer pattern'},
-                {tab: 'marking-settings', value: model.displayAnswer, type: 'string', description: 'Display answer'},
+                {tab: 'marking-settings', value: model.answer, type: 'jme-sub', description: 'Answer pattern'},
+                {tab: 'marking-settings', value: model.displayAnswer, type: 'jme-sub', description: 'Display answer'},
             ];
             return o;
         },
@@ -862,7 +862,7 @@ part_types.models = [
 
         variable_references: function(part,model) {
             var o = [
-                {tab: 'marking-settings', value: model.answer, type: 'string', description: 'Answer pattern'},
+                {tab: 'marking-settings', value: model.answer, type: 'jme-sub', description: 'Answer pattern'},
                 {tab: 'marking-settings', value: model.customMatrix, type: 'jme', description: 'Custom matrix expression'},
                 {tab: 'choices', value: model.customChoicesExpression, type: 'jme', description: 'List of choices'},
             ];
@@ -1453,7 +1453,7 @@ CustomPartType.prototype = {
             switch(s.input_type) {
                 case 'string':
                     if(def.subvars) {
-                        o.push({tab:'marking-settings', value: s.value, type: 'string', description: s.label});
+                        o.push({tab:'marking-settings', value: s.value, type: 'jme-sub', description: s.label});
                     }
                     break;
                 case 'mathematical_expression':

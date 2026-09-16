@@ -754,33 +754,31 @@
                     }
                 },
                 "functions": {
-                    "type": "array",
+                    "type": "object",
                     "title": "Functions",
-                    "items": {
+                    "additionalProperties": {
                         "type": "object",
                         "properties": {
                             "parameters": {
                                 "type": "array",
                                 "title": "Parameters",
                                 "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "name": {
+                                    "type": "array",
+                                    "prefixItems": [
+                                        {
                                             "type": "string",
                                             "title": "Name"
                                         },
-                                        "type": {
+                                        {
                                             "type": "string",
-                                            "title": "Type signature",
-                                            "default": "number"
+                                            "title": "Type signature"
                                         }
-                                    }
+                                    ]
                                 }
                             },
                             "type": {
                                 "type": "string",
-                                "title": "Type",
-                                "default": "anything"
+                                "title": "Type"
                             },
                             "language": {
                                 "type": "string",
@@ -788,8 +786,7 @@
                                 "enum": [
                                     "jme",
                                     "javascript"
-                                ],
-                                "default": "jme"
+                                ]
                             },
                             "definition": {
                                 "type": "string",
@@ -952,36 +949,7 @@
                     }
                 },
                 "customMarkingAlgorithm": {
-                    "oneOf": [
-                        {
-                            "type": "object",
-                            "properties": {
-                                "notes": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "name": {
-                                                "type": "string",
-                                                "title": "Name"
-                                            },
-                                            "definition": {
-                                                "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/jme",
-                                                "title": "Definition"
-                                            },
-                                            "description": {
-                                                "$ref": "https://www.numbas.org.uk/schemas/exam_schema.9.0.json#/$defs/html",
-                                                "title": "Description"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "type": "string"
-                        }
-                    ],
+                    "type": "string",
                     "title": "Custom marking algorithm"
                 },
                 "extendBaseMarkingAlgorithm": {
@@ -1508,8 +1476,7 @@
                         },
                         "notation": {
                             "type": "string",
-                            "title": "Notation",
-                            "default": "standard"
+                            "title": "Notation"
                         },
                         "enabledFunctions": {
                             "type": "array",

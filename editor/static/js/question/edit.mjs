@@ -10,6 +10,51 @@ window.docs_mapping = docs_mapping;
 
 window.defs = defs;
 
+function visit_schema(schema, obj, callback, path=[]) {
+    if(schema.oneOf) {
+        for(let oschema of schema.oneOf) {
+            const nschema = Object.assign({type:schema.type}, oschema);
+            visit_schema(nschema, obj, callback, path);
+        }
+    }
+    if(schema.anyOf) {
+        for(let oschema of schema.anyOf) {
+            const nschema = Object.assign({type:schema.type}, oschema);
+            visit_schema(nschema, obj, callback, path);
+        }
+    }
+    if(obj===undefined || obj===null) {
+        return;
+    }
+    if(schema['$ref']) {
+        const m = schema['$ref'].match(/(.*)#\/\$defs\/(.*)/);
+        if(!m) {
+            console.log(schema['$ref']);
+        }
+        const ref = m[2];
+        
+        schema = Object.assign({'$shortref': ref}, schema, defs[ref]);
+    }
+    
+    callback(schema, obj, path);
+    
+    if(schema.type == 'object') {
+        if(schema.additionalProperties) {
+            Object.entries(obj).forEach(([k,v]) => {
+                visit_schema(schema.additionalProperties, v, callback, path.concat([k]));
+            });
+        }
+        Object.entries(schema.properties || {}).forEach(([k,pschema]) => {
+            visit_schema(pschema, obj[k], callback, path.concat([k]));
+        })
+    }
+    if(schema.type == 'array' && Array.isArray(obj)) {
+        obj.forEach((item, i) => {
+            visit_schema(schema.items, item, callback, path.concat([i]));
+        })
+    }
+}
+
 class DefaultsArray extends Array {
     constructor(contents, items) {
         super(...contents);
@@ -425,7 +470,28 @@ function get_variable_template(templateType) {
     return handler;
 }
 
-function activateExtension(extension) {
+function vars_used_in_html(html,scope) {
+    const element = document.createElement('div');
+    element.innerHTML = html;
+    try {
+        const subber = new Numbas.jme.variables.DOMcontentsubber(scope);
+        return subber.findvars(element);
+    } catch(e) {
+        return [];
+    }
+}
+function vars_used_in_string(str,scope) {
+    const bits = Numbas.util.splitbrackets(str,'{','}');
+    let vars = [];
+    for(let i=1; i<bits.length; i+=2) {
+        try {
+            const tree = Numbas.jme.compile(bits[i]);
+            vars = vars.merge(Numbas.jme.findvars(tree, [], scope));
+        } catch(e) {
+            continue;
+        }
+    }
+    return vars;
 }
 
 const ask_numbas_handlers = {
@@ -488,8 +554,55 @@ const ask_numbas_handlers = {
 
     /** Check for invalid or duplicate variable names, and find references to variables.
      */
-    async findVariableReferences({question}) {
+    async findVariableReferences({question, scope}) {
+        console.log('find references', question);
+
+        const references = {};
+
+        function reference(path, vars) {
+            vars.forEach(name => {
+                references[name] = references[name] || [];
+                references[name].push(path);
+            });
+        }
+
+        visit_schema(defs.question, question, (schema, value, path) => {
+            const ref = schema['$shortref'];
+            if(ref == 'jme') {
+                console.log(path);
+                try {
+                    var tree = Numbas.jme.compile(value);
+                } catch(e) {
+                    return;
+                }
+                if(tree) {
+                    var vars = Numbas.jme.findvars(tree,[],scope);
+                    // TODO - this deals with the scope for marking algorithm notes
+                    /*
+                    if(def.defined_names) {
+                        vars = vars.filter(function(name) { return def.defined_names.indexOf(name)==-1; });
+                    }
+                    */
+                    reference(path, vars);
+                } else {
+                }
+            } else if(ref == 'jme_subbed_string') {
+                const vars = vars_used_in_string(value, scope);
+                reference(path, vars);
+            } else if(ref == 'html') {
+                const vars = vars_used_in_html(value, scope);
+                reference(path, vars);
+            }
+        });
+
         const variable_definitions = Object.values(question.variables);
+        const defined_names = new Set(variable_definitions.flatMap(def => jme.variables.splitVariableNames(def.name)).map(jme.normaliseName));
+
+        const all_names = new Set(Object.keys(references).map(jme.normaliseName));
+        const undefined_names = [...all_names.difference(defined_names)];
+
+        console.log(references);
+        return {references, undefined_names};
     },
 
     /** Generate values for the variables and record dependencies.
@@ -718,13 +831,14 @@ const ask_numbas_handlers = {
 
         result.scope = compute_result.scope;
 
-        console.log(result);
-
         return result;
     },
 
     async generateQuestion({question: question_def, scope}) {
+        window.question_def = question_def;
+
         const question = Numbas.createQuestionFromJSON(question_def, 1, null, null, scope);
+        window.question = question;
 
         question.generateVariables();
 

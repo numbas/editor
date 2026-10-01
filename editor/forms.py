@@ -110,11 +110,14 @@ class EditorItemSearchForm(forms.Form):
     order_by = forms.ChoiceField(choices=[('last_modified', 'Last modified'), ('name', 'Name'), ('licence', 'Usage rights'), ('author', 'Author')], required=False, widget=BootstrapSelect, initial='last_modified')
 
     custom_part_type = forms.ModelChoiceField(queryset=editor.models.CustomPartType.objects.all(), widget=BootstrapSelect, required=False)
-    theme = forms.ChoiceField(choices=[(b,a) for a,b in settings.GLOBAL_SETTINGS['NUMBAS_THEMES']]+[(t.slug,t.name) for t in editor.models.Theme.objects.all()], widget=BootstrapSelect, required=False)
-    extension = forms.ChoiceField(choices=[(e.location, e.name) for e in editor.models.Extension.objects.all()], widget=BootstrapSelect, required=False)
 
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
     exclude_tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+        self.fields['theme'] = forms.ChoiceField(choices=[(b,a) for a,b in settings.GLOBAL_SETTINGS['NUMBAS_THEMES']]+[(t.slug,t.name) for t in editor.models.Theme.objects.all()], widget=BootstrapSelect, required=False)
+        self.fields['extension'] = forms.ChoiceField(choices=[(e.location, e.name) for e in editor.models.Extension.objects.all()], widget=BootstrapSelect, required=False)
 
 class AccessForm(forms.ModelForm):
     class Meta:
@@ -287,6 +290,8 @@ class UploadExamForm(forms.ModelForm):
 class ValidateZipField:
     def clean_zipfile(self):
         value = self.cleaned_data['zipfile']
+        if value is None:
+            return value
         if not zipfile.is_zipfile(value):
             raise forms.ValidationError('Uploaded file is not a zip file')
         return value
@@ -531,7 +536,7 @@ class UpdateThemeForm(forms.ModelForm, ValidateZipField):
     
     class Meta:
         model = Theme
-        fields = ['name', 'zipfile']
+        fields = ['name', 'zipfile', 'compiler']
         widgets = {
             'name': forms.TextInput(attrs={'class':'form-control'}),
             'zipfile': forms.FileInput()

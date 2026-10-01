@@ -52,6 +52,8 @@ from examparser import numbasobject
 from .notify_watching import notify_watching
 from .jsonfield import JSONField
 
+NUMBAS_PATH = settings.GLOBAL_SETTINGS['NUMBAS_PATH']
+
 PUBLIC_ACCESS_CHOICES = (('hidden', 'Hidden'), ('view', 'Public can view'), ('edit', 'Public can edit'))
 USER_ACCESS_CHOICES = (('view', 'Can view'), ('edit', 'Can edit'))
 
@@ -415,7 +417,7 @@ class EditorTag(taggit.models.TagBase):
 def validate_content(content):
     try:
         obj = numbasobject.NumbasObject(content)
-        with open(Path(settings.GLOBAL_SETTINGS['NUMBAS_PATH']) / 'schema' / 'exam_schema.json') as f:
+        with open(Path(NUMBAS_PATH) / 'schema' / 'exam_schema.json') as f:
             schema = json.load(f)
 
         jsonschema.validate(json.loads(json.dumps(obj.data)), schema) # The data is dumped to JSON and then loaded again to ensure that tuples turn into lists.
@@ -596,7 +598,7 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
         if self.editable:
             return super().extracted_path
         else:
-            return os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'], 'extensions', self.location)
+            return os.path.join(NUMBAS_PATH, 'extensions', self.location)
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
@@ -674,6 +676,15 @@ def delete_extracted_extension(sender,instance,**kwargs):
         shutil.rmtree(str(p))
     
 
+class Compiler(models.Model):
+    """ Details for an alternative Numbas compiler.
+    """
+    name = models.CharField(max_length=200)
+    path = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.name
+
 class Theme(models.Model, ControlledObject, EditablePackageMixin):
     name = models.CharField(max_length=200)
     public = models.BooleanField(default=False, help_text='Can this theme be seen by everyone?')
@@ -681,7 +692,9 @@ class Theme(models.Model, ControlledObject, EditablePackageMixin):
     author = models.ForeignKey(User, related_name='own_themes', on_delete=models.CASCADE)
     last_modified = models.DateTimeField(auto_now=True)
     zipfile_folder = 'user-themes'
-    zipfile = models.FileField(upload_to=zipfile_folder+'/zips', max_length=255, verbose_name='Theme package', help_text='A .zip package containing the theme\'s files')
+    zipfile = models.FileField(upload_to=zipfile_folder+'/zips', null=True, blank=True, max_length=255, verbose_name='Theme package', help_text='A .zip package containing the theme\'s files')
+
+    compiler = models.ForeignKey(Compiler, related_name='themes', null=True, blank=True, help_text='If blank, the default compiler is used.', on_delete=models.SET_NULL)
 
     access = GenericRelation('IndividualAccess', related_query_name='theme', content_type_field='object_content_type', object_id_field='object_id')
 
@@ -731,6 +744,12 @@ class Theme(models.Model, ControlledObject, EditablePackageMixin):
             return 'inherit.txt'
         else:
             return self.readme_filename
+
+    def compiler_path(self):
+        if self.compiler is None:
+            return Path(NUMBAS_PATH)
+        else:
+            return Path(self.compiler.path)
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
@@ -1752,7 +1771,7 @@ class NewQuestion(models.Model):
     extensions = models.ManyToManyField(Extension, blank=True, related_name='questions')
     custom_part_types = models.ManyToManyField(CustomPartType, blank=True, related_name='questions')
 
-    theme_path = os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'], 'themes', 'question')
+    theme_path = os.path.join(NUMBAS_PATH, 'themes', 'question')
 
     icon = 'file'
 
@@ -1795,7 +1814,8 @@ class NewQuestion(models.Model):
             ('extensions', [e.location for e in extensions]),
             ('custom_part_types', [p.as_json() for p in self.custom_part_types.all()]),
             ('resources', self.resource_paths),
-            ('navigation', {'allowregen': True, 'showfrontpage': False, 'preventleave': False, 'typeendtoleave': False}),
+            ('navigation', {'allowregen': True, 'showfrontpage': False, 'preventleave': False, 'typeendtoleave': False,}),
+            ('feedback', {'showactualmarkwhen': 'always', 'showtotalmarkwhen': 'always', 'showanswerstatewhen': 'always', 'showpartfeedbackmessageswhen': 'always', 'allowrevealanswer': True, 'showexpectedanswerswhen': 'inreview', 'showadvicewhen': 'inreview'}),
             ('question_groups', [{'pickingStrategy':'all-ordered', 'questions':[question_data]}]),
         ])
         data['contributors'] = contributor_data
@@ -1900,7 +1920,7 @@ class NewExam(models.Model):
         if self.custom_theme:
             return self.custom_theme.extracted_path
         else:
-            return os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'], 'themes', self.theme)
+            return os.path.join(NUMBAS_PATH, 'themes', self.theme)
 
     def as_numbasobject(self,request):
         obj = numbasobject.NumbasObject(self.editoritem.content)

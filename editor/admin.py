@@ -6,6 +6,7 @@ import editor.models
 
 admin.site.register(editor.models.SiteBroadcast)
 admin.site.register(editor.models.Tip)
+admin.site.register(editor.models.Compiler)
 
 @admin.display(description="Name")
 def editoritem_name(obj):

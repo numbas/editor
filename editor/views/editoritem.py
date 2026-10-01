@@ -508,6 +508,7 @@ class CompileObject(MustHaveAccessMixin):
             return 'en-GB'
 
     def get_theme(self):
+        """ Get the slug of the theme, its path, and the path to the compiler. """
         theme_query = self.request.GET.get('theme')
         if theme_query == '':
             theme_query = None
@@ -515,27 +516,27 @@ class CompileObject(MustHaveAccessMixin):
         if theme_query is not None:
             try:
                 theme = Theme.objects.get(slug=theme_query)
-                return (f'{theme.pk}-{theme.slug}', Path(theme.extracted_path))
+                return (f'{theme.pk}-{theme.slug}', Path(theme.extracted_path), theme.compiler_path())
             except Theme.DoesNotExist:
-                return (theme_query, NUMBAS_PATH / 'themes' / theme_query)
+                return (theme_query, NUMBAS_PATH / 'themes' / theme_query, NUMBAS_PATH)
 
         if hasattr(self.editoritem, 'exam'):
             exam = self.editoritem.exam
             if exam.custom_theme:
                 theme = exam.custom_theme
-                return (f'{theme.pk}-{theme.slug}', Path(theme.extracted_path))
+                return (f'{theme.pk}-{theme.slug}', Path(theme.extracted_path), theme.compiler_path())
             else:
-                return (exam.theme, NUMBAS_PATH / 'themes' / exam.theme)
+                return (exam.theme, NUMBAS_PATH / 'themes' / exam.theme, NUMBAS_PATH)
         else:
-            return ('question', NUMBAS_PATH / 'themes' / 'question')
+            return ('question', NUMBAS_PATH / 'themes' / 'question', NUMBAS_PATH)
 
 
     def theme_dir(self):
-        slug, path = self.get_theme()
+        _, path, _ = self.get_theme()
         return path
 
     def output_location(self):
-        slug, path = self.get_theme()
+        slug, _, _ = self.get_theme()
         return slug
 
     def output_path(self):
@@ -554,7 +555,7 @@ class CompileObject(MustHaveAccessMixin):
             Compile the generic runtime for this theme and locale combination.
         """
 
-        _, theme_path = self.get_theme()
+        _, theme_path, numbas_path = self.get_theme()
         if not theme_path.exists():
             raise CompileError("Theme not found at {}. Is MEDIA_ROOT configured correctly? It should be the absolute path to your editor media directory.".format(theme_path))
 
@@ -564,8 +565,8 @@ class CompileObject(MustHaveAccessMixin):
 
         numbas_command = [
             settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
-            str(NUMBAS_PATH / 'bin' / 'numbas.py'),
-            '-p'+str(NUMBAS_PATH),
+            str(numbas_path / 'bin' / 'numbas.py'),
+            '-p'+str(numbas_path),
             '-o'+str(output_path),
             '-t'+str(theme_path),
             '-l'+locale,
@@ -640,10 +641,12 @@ class PreviewView(CompileObject, generic.DetailView):
 
         mtime = output_path.stat().st_mtime
 
+        _, theme_dir, numbas_path = self.get_theme()
+
         dirs = [
-            self.theme_dir(),
-            NUMBAS_PATH / 'runtime',
-            NUMBAS_PATH / 'themes' / 'default'
+            theme_dir,
+            numbas_path / 'runtime',
+            numbas_path / 'themes' / 'default'
         ]
 
         compiler_mtime = max(directory_last_modified(d) for d in dirs)
@@ -679,7 +682,7 @@ class PreviewView(CompileObject, generic.DetailView):
     def get_exam_url(self):
         token = self.request.GET.get('token','')
 
-        theme_slug, _ = self.get_theme()
+        theme_slug, _, _ = self.get_theme()
         
         source_url = self.editoritem.rel_obj.source_url()
         if token:

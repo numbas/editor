@@ -516,19 +516,25 @@ class CompileObject(MustHaveAccessMixin):
         if theme_query is not None:
             try:
                 theme = Theme.objects.get(slug=theme_query)
-                return (f'{theme.pk}-{theme.slug}', Path(theme.extracted_path), theme.compiler_path())
+                theme_path = Path(theme.extracted_path)
             except Theme.DoesNotExist:
-                return (theme_query, NUMBAS_PATH / 'themes' / theme_query, NUMBAS_PATH)
+                theme = Theme(slug=theme_query, compiler=None)
+                theme_path = Path(NUMBAS_PATH / 'themes' / theme_query)
 
         if hasattr(self.editoritem, 'exam'):
             exam = self.editoritem.exam
             if exam.custom_theme:
                 theme = exam.custom_theme
-                return (f'{theme.pk}-{theme.slug}', Path(theme.extracted_path), theme.compiler_path())
+                theme_path = Path(theme.extracted_path)
             else:
-                return (exam.theme, NUMBAS_PATH / 'themes' / exam.theme, NUMBAS_PATH)
+                theme = Theme(slug=exam.theme, compiler=None)
+                theme_path = Path(NUMBAS_PATH / 'themes' / exam.theme)
         else:
-            return ('question', NUMBAS_PATH / 'themes' / 'question', NUMBAS_PATH)
+            theme = Theme(slug='question', compiler=None)
+            theme_path = Path(NUMBAS_PATH / 'themes' / 'question')
+
+        compiler = 'default' if theme.compiler is None else theme.compiler.pk
+        return (f'{compiler}-{theme.pk}-{theme.slug}', theme_path, theme.compiler_path())
 
 
     def theme_dir(self):

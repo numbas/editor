@@ -114,10 +114,8 @@ class EditorItemSearchForm(forms.Form):
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
     exclude_tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
-        self.fields['theme'] = forms.ChoiceField(choices=[(b,a) for a,b in settings.GLOBAL_SETTINGS['NUMBAS_THEMES']]+[(t.slug,t.name) for t in editor.models.Theme.objects.all()], widget=BootstrapSelect, required=False)
-        self.fields['extension'] = forms.ChoiceField(choices=[(e.location, e.name) for e in editor.models.Extension.objects.all()], widget=BootstrapSelect, required=False)
+    theme = forms.ChoiceField(choices=[(b,a) for a,b in settings.GLOBAL_SETTINGS['NUMBAS_THEMES']], widget=BootstrapSelect, required=False)
+    extension = forms.ChoiceField(choices=[], widget=BootstrapSelect, required=False)
 
 class AccessForm(forms.ModelForm):
     class Meta:

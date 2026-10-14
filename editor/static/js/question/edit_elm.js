@@ -14440,13 +14440,6 @@ var $author$project$QuestionEditor$view_active = function (model) {
 				$elm$json$Json$Decode$list($author$project$QuestionEditor$decode_variable_reference),
 				_List_Nil,
 				A2($author$project$Settings$atField, 'references', variable.computed));
-			var qqq = A2(
-				$elm$core$Debug$log,
-				$author$project$QuestionEditor$name_of(variable),
-				A2(
-					$elm$json$Json$Decode$decodeValue,
-					$elm$json$Json$Decode$dict($elm$json$Json$Decode$value),
-					variable.computed.value));
 			var prefix_id = function (s) {
 				return 'variable-' + ($author$project$QuestionEditor$variable_path_to_id(path) + ('-' + s));
 			};
@@ -14947,15 +14940,6 @@ var $author$project$QuestionEditor$view_active = function (model) {
 													[
 														ui.icon('remove'),
 														$elm$html$Html$text('Delete this variable')
-													])),
-												A2(
-												$elm$html$Html$pre,
-												_List_Nil,
-												_List_fromArray(
-													[
-														$elm$html$Html$text(
-														$elm$core$Debug$toString(
-															$author$project$QuestionEditor$dependencies_of(variable)))
 													]))
 											]),
 											A2(

@@ -15820,7 +15820,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         fn.paramNames = paramNames;
         fn.definition = def.definition;
         fn.name = jme.normaliseName(def.name, scope);
-        fn.language = def.language;
+        fn.language = def.language || 'jme';
         try {
             switch(fn.language) {
             case 'jme':
@@ -16481,25 +16481,30 @@ var re_note = /^(\$?[a-zA-Z_][a-zA-Z0-9_]*'*)(?:\s*\(([^)]*)\))?\s*:\s*((?:.|\n)
  * @property {Numbas.jme.tree} tree - The compiled form of the expression.
  * @property {string[]} vars - The names of the variables this note depends on.
  *
- * @param {JME} source
+ * @param {string|object} source
  * @param {Numbas.jme.Scope} scope - The scope to use for normalising names.
  *
  */
 var ScriptNote = jme.variables.ScriptNote = function(source, scope) {
-    source = source.trim();
-    var m = re_note.exec(source);
-    if(!m) {
-        var hint;
-        if(/^[a-zA-Z_][a-zA-Z0-9+]*'*(?:\s*\(([^)]*)\))?$/.test(source)) {
-            hint = R('jme.script.note.invalid definition.missing colon');
-        } else if(/^[a-zA-Z_][a-zA-Z0-9+]*'*\s*\(/.test(source)) {
-            hint = R('jme.script.note.invalid definition.description missing closing bracket');
+    if(typeof source == 'string') {
+        source = source.trim();
+        var m = re_note.exec(source);
+        if(!m) {
+            var hint;
+            if(/^[a-zA-Z_][a-zA-Z0-9+]*'*(?:\s*\(([^)]*)\))?$/.test(source)) {
+                hint = R('jme.script.note.invalid definition.missing colon');
+            } else if(/^[a-zA-Z_][a-zA-Z0-9+]*'*\s*\(/.test(source)) {
+                hint = R('jme.script.note.invalid definition.description missing closing bracket');
+            }
+            throw(new Numbas.Error("jme.script.note.invalid definition", {source: source, hint: hint}));
         }
-        throw(new Numbas.Error("jme.script.note.invalid definition", {source: source, hint: hint}));
+        this.name = m[1];
+        this.description = m[2];
+        this.expr = m[3];
+    } else {
+        this.name = source.name;
+        this.expr = source.definition;
     }
-    this.name = m[1];
-    this.description = m[2];
-    this.expr = m[3];
     if(!this.expr) {
         throw(new Numbas.Error("jme.script.note.empty expression", {name:this.name}));
     }
@@ -16530,7 +16535,7 @@ jme.variables.note_script_constructor = function(construct_scope, process_result
     /**
      * A notes script.
      *
-     * @param {string} source - The source of the script.
+     * @param {string|object} source - The source of the script.
      * @param {Numbas.jme.variables.Script} base - A base script to extend.
      * @param {Numbas.jme.Scope} scope
      * @memberof Numbas.jme.variables
@@ -16540,16 +16545,24 @@ jme.variables.note_script_constructor = function(construct_scope, process_result
         this.source = source;
         scope = construct_scope(scope || Numbas.jme.builtinScope);
         try {
-            var notes = source.replace(/^\/\/.*$/gm, '').split(/\n(?:\s*\n)+(?!\s)/);
             var ntodo = {};
             var todo = {};
-            notes.forEach(function(note) {
-                if(note.trim().length) {
-                    var res = new ScriptNote(note, scope);
-                    var name = jme.normaliseName(res.name, scope);
-                    ntodo[name] = todo[name] = res;
-                }
-            });
+            if(typeof source == 'string') {
+                let notes;
+                notes = source.replace(/^\/\/.*$/gm, '').split(/\n(?:\s*\n)+(?!\s)/);
+                notes.forEach(function(note) {
+                    if(note.trim().length) {
+                        var res = new ScriptNote(note, scope);
+                        var name = jme.normaliseName(res.name, scope);
+                        ntodo[name] = todo[name] = res;
+                    }
+                });
+            } else {
+                source.notes.forEach(note => {
+                    const name = jme.normaliseName(note.name, scope);
+                    ntodo[name] = todo[name] = new ScriptNote(note);
+                });
+            }
             if(base) {
                 Object.keys(base.notes).forEach(function(name) {
                     if(name in ntodo) {
@@ -17339,7 +17352,6 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @type {object}
      */
     json: null,
-
     /** Load the part's settings from a JSON object.
      *
      * @param {object} data
@@ -17525,7 +17537,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @param {string} markingScriptString
      * @param {boolean} extend_base - Does this script extend the built-in script?
      */
-    setMarkingScript: function(markingScriptString, extend_base) {
+    setMarkingScript: function(markingScriptDefinition, extend_base) {
         if(!this.doesMarking) {
             return;
         }
@@ -17533,8 +17545,8 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         var p = this;
 
         var algo = this.baseMarkingScript();
-        if(markingScriptString) {
-            algo = new marking.MarkingScript(markingScriptString, extend_base ? algo : undefined, this.getScope());
+        if(markingScriptDefinition) {
+            algo = new marking.MarkingScript(markingScriptDefinition, extend_base ? algo : undefined, this.getScope());
         }
         this.markingScript = algo;
 
@@ -19788,21 +19800,25 @@ Question.prototype = /** @lends Numbas.Question.prototype */
 
         var functions = tryGet(data, 'functions');
         if(functions) {
-            q.functionsTodo = Object.keys(functions).map(function(name) {
-                var fd = functions[name];
-                return {
-                    name: name,
-                    definition: fd.definition,
-                    language: fd.language,
-                    outtype: fd.type,
-                    parameters: fd.parameters.map(function(p) {
-                        return {
-                            name: p[0],
-                            type: p[1]
-                        }
-                    })
-                };
-            });
+            if(Array.isArray(functions)) {
+                q.functionsTodo = functions.slice();
+            } else {
+                q.functionsTodo = Object.keys(functions).map(function(name) {
+                    var fd = functions[name];
+                    return {
+                        name: name,
+                        definition: fd.definition,
+                        language: fd.language,
+                        outtype: fd.type,
+                        parameters: fd.parameters.map(function(p) {
+                            return {
+                                name: p[0],
+                                type: p[1]
+                            }
+                        })
+                    };
+                });
+            }
         }
         q.signals.trigger('functionsLoaded');
         var rulesets = tryGet(data, 'rulesets');
@@ -31913,7 +31929,7 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
             var value = scope.evaluate(expr);
             settings[setting] = value === null ? value : jme.unwrapValue(value);
         }
-        ['numRows', 'numColumns', 'tolerance', 'prefilledCells'].map(eval_setting);
+        ['numRows', 'numColumns', 'tolerance'].map(eval_setting);
         if(settings.allowResize) {
             ['minColumns', 'maxColumns', 'minRows', 'maxRows'].map(eval_setting);
         }

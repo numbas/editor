@@ -2352,11 +2352,6 @@ view_active model =
                 references =
                     S.get (JD.list decode_variable_reference) [] (S.atField "references" variable.computed)
 
-                qqq = 
-                    variable.computed.value
-                    |> JD.decodeValue (JD.dict JD.value)
-                    |> Debug.log (name_of variable)
-
                 variable_field : { id : String, label : String, help : Maybe String } -> PropertyWidget -> List (Html Msg)
                 variable_field o = labelled_field
                     ui
@@ -2625,7 +2620,6 @@ view_active model =
                                 [ ui.icon "remove"
                                 , H.text "Delete this variable"
                                 ]
-                              , H.pre [] [H.text <| Debug.toString <| dependencies_of variable ]
                               ]
                             , variable_field
                                 { id = "name"

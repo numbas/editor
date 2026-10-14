@@ -10,19 +10,14 @@ window.docs_mapping = docs_mapping;
 
 window.defs = defs;
 
+/** Visit every property defined in the schema, and call the callback function with the object and the corresponding bit of the schema.
+ *
+ * @param {jsonschema} schema - The schema definition for this object.
+ * @param {object} obj - The object being visited.
+ * @param {function} callback - The callback function.
+ * @param {Array.<string>} - The path taken through the schema: the list of parent keys.
+ */
 function visit_schema(schema, obj, callback, path=[]) {
-    if(schema.oneOf) {
-        for(let oschema of schema.oneOf) {
-            const nschema = Object.assign({type:schema.type}, oschema);
-            visit_schema(nschema, obj, callback, path);
-        }
-    }
-    if(schema.anyOf) {
-        for(let oschema of schema.anyOf) {
-            const nschema = Object.assign({type:schema.type}, oschema);
-            visit_schema(nschema, obj, callback, path);
-        }
-    }
     if(obj===undefined || obj===null) {
         return;
     }
@@ -34,6 +29,24 @@ function visit_schema(schema, obj, callback, path=[]) {
         const ref = m[2];
         
         schema = Object.assign({'$shortref': ref}, schema, defs[ref]);
+    }
+    if(schema.oneOf) {
+        for(let oschema of schema.oneOf) {
+            const nschema = Object.assign({type:schema.type}, oschema);
+            visit_schema(nschema, obj, callback, path);
+        }
+    }
+    if(schema.anyOf) {
+        // visit the first alternative whose const properties all match this object
+        for(let oschema of schema.anyOf) {
+            const consts = Object.entries(oschema.properties).filter(([k,v]) => v.const);
+            if(!consts.every(([k,v]) => obj[k] == v.const)) {
+                continue;
+            }
+            const nschema = Object.assign({type:schema.type}, oschema);
+            visit_schema(nschema, obj, callback, path);
+            break;
+        }
     }
     
     callback(schema, obj, path);
@@ -52,6 +65,25 @@ function visit_schema(schema, obj, callback, path=[]) {
         obj.forEach((item, i) => {
             visit_schema(schema.items, item, callback, path.concat([i]));
         })
+    }
+}
+
+function resolve_relative_reference(path, obj, ref) {
+    path = path.slice();
+    if(ref && ref['$ref']) {
+        const bits = ref['$ref'].slice(1).split('/');
+        while(bits.length && bits.at(0)=='..') {
+            bits.splice(0,1);
+            path.pop();
+        }
+        path = path.concat(bits);
+        let out = obj;
+        path.forEach(bit => {
+            out = out[bit];
+        });
+        return out;
+    } else {
+        return ref;
     }
 }
 
@@ -555,8 +587,6 @@ const ask_numbas_handlers = {
     /** Check for invalid or duplicate variable names, and find references to variables.
      */
     async findVariableReferences({question, scope}) {
-        console.log('find references', question);
-
         const references = {};
 
         function reference(path, vars) {
@@ -566,17 +596,21 @@ const ask_numbas_handlers = {
             });
         }
 
+        // Visit every JME property in the schema and find references.
         visit_schema(defs.question, question, (schema, value, path) => {
             const ref = schema['$shortref'];
             if(ref == 'jme') {
-                console.log(path);
+                const notation_name = resolve_relative_reference(path, question, schema.notation) || 'standard';
+                const notation = jme.notations[notation_name] || jme.notations.standard;
+                const scope_options = Object.fromEntries(Object.entries(schema.scope || {}).map(([k,v]) => [k, resolve_relative_reference(path, question, v)]));
+                const rscope = new jme.Scope([scope, scope_options]);
                 try {
-                    var tree = Numbas.jme.compile(value);
+                    var tree = notation.compile(value);
                 } catch(e) {
                     return;
                 }
                 if(tree) {
-                    var vars = Numbas.jme.findvars(tree,[],scope);
+                    var vars = Numbas.jme.findvars(tree,[],rscope);
                     // TODO - this deals with the scope for marking algorithm notes
                     /*
                     if(def.defined_names) {
@@ -601,7 +635,6 @@ const ask_numbas_handlers = {
         const all_names = new Set(Object.keys(references).map(jme.normaliseName));
         const undefined_names = [...all_names.difference(defined_names)];
 
-        console.log(references);
         return {references, undefined_names};
     },
 

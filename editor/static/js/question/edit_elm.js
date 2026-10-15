@@ -9957,7 +9957,6 @@ var $elm_community$list_extra$List$Extra$getAt = F2(
 		return (idx < 0) ? $elm$core$Maybe$Nothing : $elm$core$List$head(
 			A2($elm$core$List$drop, idx, xs));
 	});
-var $elm$core$Debug$log = _Debug_log;
 var $elm$core$Maybe$map2 = F3(
 	function (func, ma, mb) {
 		if (ma.$ === 'Nothing') {
@@ -10520,7 +10519,7 @@ var $author$project$QuestionEditor$update_variable = F3(
 				var nsettings = A3($author$project$Settings$setAt, at, v, variable.settings);
 				var nvariable = _Utils_update(
 					variable,
-					{settings: nsettings});
+					{automatically_created: false, settings: nsettings});
 				var cmds = A2(
 					$elm$core$List$filter,
 					$elm$core$Basics$neq($elm$core$Platform$Cmd$none),
@@ -10852,7 +10851,6 @@ var $author$project$QuestionEditor$update_question = F2(
 										var _v4 = A2($elm$json$Json$Decode$decodeValue, $author$project$QuestionEditor$decode_variable_references_result, value);
 										if (_v4.$ === 'Err') {
 											var err = _v4.a;
-											var q = A2($elm$core$Debug$log, '???', err);
 											return $author$project$QuestionEditor$nochange(question);
 										} else {
 											var refdata = _v4.a;
@@ -10916,14 +10914,44 @@ var $author$project$QuestionEditor$update_question = F2(
 													});
 											};
 											var references = A2(
-												$elm$core$Debug$log,
-												'references',
+												$elm$core$List$map,
+												$elm$core$Tuple$mapSecond(
+													$elm$core$List$map(
+														$elm$json$Json$Decode$decodeValue($author$project$QuestionEditor$decode_variable_reference))),
+												$elm$core$Dict$toList(refdata.references));
+											var referenced_variable_names = $elm$core$Set$fromList(
 												A2(
 													$elm$core$List$map,
-													$elm$core$Tuple$mapSecond(
-														$elm$core$List$map(
-															$elm$json$Json$Decode$decodeValue($author$project$QuestionEditor$decode_variable_reference))),
-													$elm$core$Dict$toList(refdata.references)));
+													$elm$core$Tuple$first,
+													A2(
+														$elm$core$List$filter,
+														A2(
+															$elm$core$Basics$composeR,
+															$elm$core$Tuple$second,
+															$elm$core$Basics$neq(_List_Nil)),
+														references)));
+											var remove_automatically_created_unreferenced_variables = function (variable_groups) {
+												return A3(
+													$elm_community$list_extra$List$Extra$updateAt,
+													0,
+													function (group) {
+														var kept_variables = A2(
+															$elm$core$List$filter,
+															function (v) {
+																return (!v.automatically_created) || A2(
+																	$elm$core$List$any,
+																	function (name) {
+																		return A2($elm$core$Set$member, name, referenced_variable_names);
+																	},
+																	$author$project$QuestionEditor$variable_names(v));
+															},
+															group.variables);
+														return _Utils_update(
+															group,
+															{variables: kept_variables});
+													},
+													variable_groups);
+											};
 											var add_undefined_variables = function (variable_groups) {
 												return A3(
 													$elm_community$list_extra$List$Extra$updateAt,
@@ -10938,7 +10966,8 @@ var $author$project$QuestionEditor$update_question = F2(
 													variable_groups);
 											};
 											var nvariable_groups = set_references(
-												add_undefined_variables(question.variable_groups));
+												remove_automatically_created_unreferenced_variables(
+													add_undefined_variables(question.variable_groups)));
 											return $author$project$QuestionEditor$nochange(
 												_Utils_update(
 													question,
@@ -11301,7 +11330,15 @@ var $author$project$QuestionEditor$update_question = F2(
 					var _v12 = A3(
 						$author$project$QuestionEditor$update_variable_at,
 						path,
-						A2($author$project$QuestionEditor$update_variable, vmsg, path),
+						A2(
+							$elm$core$Basics$composeR,
+							A2($author$project$QuestionEditor$update_variable, vmsg, path),
+							$elm$core$Tuple$mapFirst(
+								function (v) {
+									return _Utils_update(
+										v,
+										{automatically_created: false});
+								})),
 						question.variable_groups);
 					var variable_groups = _v12.a;
 					var _v13 = _v12.b;
@@ -11395,10 +11432,7 @@ var $author$project$QuestionEditor$update_question = F2(
 				case 'FindVariableReferences':
 					var _v15 = question.scope;
 					if (_v15.$ === 'Nothing') {
-						return A2(
-							$elm$core$Debug$log,
-							'no scope',
-							$author$project$QuestionEditor$nochange(question));
+						return $author$project$QuestionEditor$nochange(question);
 					} else {
 						var scope = _v15.a;
 						var cmd = $author$project$QuestionEditor$do_ask_numbas(

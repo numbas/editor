@@ -23,9 +23,6 @@ function visit_schema(schema, obj, callback, path=[]) {
     }
     if(schema['$ref']) {
         const m = schema['$ref'].match(/(.*)#\/\$defs\/(.*)/);
-        if(!m) {
-            console.log(schema['$ref']);
-        }
         const ref = m[2];
         
         schema = Object.assign({'$shortref': ref}, schema, defs[ref]);
@@ -792,6 +789,7 @@ const ask_numbas_handlers = {
 
             const vout = result.variables[v.name];
 
+            // Check the name
             try {
                 if(v.name.match(/^\s|\s$/)) {
                     throw(new Error('extra space'));
@@ -815,8 +813,9 @@ const ask_numbas_handlers = {
                 vout.errors.push({aspect: 'name', message: `The variable name <code>${v.name}</code> is invalid.`});
             }
 
+            // Check the definition and find dependencies
             try {
-                const tree = jme.compile(v.definition);
+                const tree = jme.compile(v.definition || '');
                 const vars = jme.findvars(tree, scope_variable_names, scope);
                 todo[v.name] = {tree, vars};
                 Object.assign(result.variables[v.name],

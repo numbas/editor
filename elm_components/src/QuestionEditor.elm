@@ -1362,21 +1362,17 @@ update_question msg question = case msg of
     ChangeQuestionSetting ComputedSetting (value, at) -> case at of
         (S.Field "findVariableReferences")::_ -> 
             case JD.decodeValue decode_variable_references_result value of
-                Err err ->
-                    let
-                        q = Debug.log "???" err
-                    in
-                        question |> nochange
+                Err err -> question |> nochange
 
                 Ok refdata ->
                     let
                         variables = variable_manager question.variable_groups
 
+                        references : List (String, List (Result JD.Error VariableReference))
                         references = 
                             refdata.references
                             |> Dict.toList
                             |> List.map (Tuple.mapSecond (List.map (JD.decodeValue decode_variable_reference)))
-                            |> Debug.log "references"
 
                         undefined_variables =
                             refdata.undefined_variables
@@ -1386,6 +1382,23 @@ update_question msg question = case msg of
                         add_undefined_variables variable_groups = 
                             variable_groups
                             |> LE.updateAt 0 (\group -> { group | variables = group.variables ++ undefined_variables })
+
+                        referenced_variable_names =
+                            references
+                            |> List.filter (second >> (/=) [])
+                            |> List.map first
+                            |> Set.fromList
+
+                        remove_automatically_created_unreferenced_variables variable_groups =
+                            variable_groups
+                            |> LE.updateAt 0 (\group -> 
+                                let
+                                    kept_variables = 
+                                        group.variables
+                                        |> List.filter (\v -> (not v.automatically_created) || (variable_names v |> List.any (\name -> Set.member name referenced_variable_names)))
+                                in
+                                    { group | variables = kept_variables }
+                               )
 
                         set_references variable_groups =
                             (variable_manager variable_groups).update (\(_,v) ->
@@ -1403,6 +1416,7 @@ update_question msg question = case msg of
                         nvariable_groups = 
                             question.variable_groups
                             |> add_undefined_variables
+                            |> remove_automatically_created_unreferenced_variables
                             |> set_references
                     in
                         { question | variable_groups = nvariable_groups } |> nochange
@@ -1566,7 +1580,7 @@ update_question msg question = case msg of
 
     UpdateVariable path vmsg ->
         let
-            (variable_groups, (change, cmd)) = update_variable_at path (update_variable vmsg path) question.variable_groups
+            (variable_groups, (change, cmd)) = update_variable_at path (update_variable vmsg path >> Tuple.mapFirst (\v -> { v | automatically_created = False })) question.variable_groups
         in
             ({ question | variable_groups = variable_groups }, (change, Cmd.batch [cmd, variables_changed]))
 
@@ -1621,7 +1635,7 @@ update_question msg question = case msg of
             (question, (NoChange, cmd))
 
     FindVariableReferences -> case question.scope of
-        Nothing -> question |> nochange |> Debug.log "no scope"
+        Nothing -> question |> nochange
         Just scope ->
             let
                 cmd = do_ask_numbas
@@ -1842,7 +1856,7 @@ update_variable msg path variable = case msg of
         let
             nsettings = S.setAt at v variable.settings
 
-            nvariable = { variable | settings = nsettings }
+            nvariable = { variable | settings = nsettings, automatically_created = False }
 
             cmds = 
                   (variable_setting_computed

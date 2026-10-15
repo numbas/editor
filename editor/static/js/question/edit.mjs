@@ -51,11 +51,11 @@ function visit_schema(schema, obj, callback, path=[]) {
     if(schema.type == 'object') {
         if(schema.additionalProperties) {
             Object.entries(obj).forEach(([k,v]) => {
-                visit_schema(schema.additionalProperties, v, callback, path.concat([k]));
+                visit_schema(schema.additionalProperties, v, callback, path.concat([{key: k, title: schema.title}]));
             });
         }
         Object.entries(schema.properties || {}).forEach(([k,pschema]) => {
-            visit_schema(pschema, obj[k], callback, path.concat([k]));
+            visit_schema(pschema, obj[k], callback, path.concat([{key: k, title: pschema.title}]));
         })
     }
     if(schema.type == 'array' && Array.isArray(obj)) {
@@ -64,6 +64,61 @@ function visit_schema(schema, obj, callback, path=[]) {
         })
     }
 }
+
+// TODO - temp for me to scope out which fields might produce variable references
+function find_all_possible_subbed_fields() {
+    function* visit(obj) {
+        if(obj.const) {
+            return;
+        }
+        
+        if(obj['$ref']) {
+            const m = obj['$ref'].match(/(.*)#\/\$defs\/(.*)/);
+            const ref = m[2];
+            
+            if(['jme','jme_subbed_string','html'].includes(ref)) {
+                yield [];
+            }
+        }
+
+        if(obj.properties) {
+            for(let [k,v] of Object.entries(obj.properties)) {
+                for(let path of visit(v)) {
+                    yield [k].concat(path);
+                }
+            }
+        }
+        if(obj.additionalProperties) {
+            yield* [...visit(obj.additionalProperties)].map(path=>['$x'].concat(path));
+        }
+        if(obj.oneOf) {
+            yield* visit(obj.oneOf[0]);
+        }
+        if(obj.anyOf) {
+            for(let variant of obj.anyOf) {
+                yield* visit(variant);
+            }
+        }
+        switch(obj.type) {
+            case 'array':
+                if(obj.prefixItems) {
+                    yield* obj.prefixItems.map((_,i) => [i])
+                }
+                if(obj.items) {
+                    for(let path of visit(obj.items)) {
+                        yield [0].concat(path);
+                    }
+                }
+        }
+        
+    }
+
+
+    console.log([...visit(defs.question)])
+    console.log([...visit(defs.part)])
+}
+
+
 
 function resolve_relative_reference(path, obj, ref) {
     path = path.slice();
@@ -631,6 +686,8 @@ const ask_numbas_handlers = {
 
         const all_names = new Set(Object.keys(references).map(jme.normaliseName));
         const undefined_names = [...all_names.difference(defined_names)];
+
+        console.log(references);
 
         return {references, undefined_names};
     },

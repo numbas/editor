@@ -1,0 +1,60 @@
+advice
+constants → 0 → value
+name
+statement
+variables → $x → definition
+variables → $x → description
+part → 0 → customName
+part → 0 → customMarkingAlgorithm → notes → 0 → definition
+part → 0 → customMarkingAlgorithm → notes → 0 → description
+part → 0 → unitTests → 0 → variables → 0 → value
+part → 0 → unitTests → 0 → notes → 0 → expected → value
+part → 0 → nextParts → 0 → label
+part → 0 → nextParts → 0 → variableReplacements → 0 → definition
+part → 0 → nextParts → 0 → availabilityCondition
+part → 0 → nextParts → 0 → penaltyAmount
+part → 0 → prompt
+part → 0 → answer
+part → 0 → vsetRange → 0
+part → 0 → vsetRange → 1
+part → 0 → maxlength → message
+part → 0 → minlength → message
+part → 0 → musthave → message
+part → 0 → notallowed → message
+part → 0 → mustmatchpattern → pattern
+part → 0 → mustmatchpattern → message
+part → 0 → valuegenerators → 0 → value
+part → 0 → minValue
+part → 0 → maxValue
+part → 0 → precision
+part → 0 → displayAnswer
+part → 0 → correctAnswer
+part → 0 → numRows
+part → 0 → numColumns
+part → 0 → minColumns
+part → 0 → maxColumns
+part → 0 → minRows
+part → 0 → maxRows
+part → 0 → prefilledCells
+part → 0 → tolerance
+part → 0 → precision
+part → 0 → gridlinesCustomColumns
+part → 0 → gridlinesCustomRows
+part → 0 → answer
+part → 0 → displayAnswer
+part → 0 → choices
+part → 0 → matrix
+part → 0 → distractors → 0
+part → 0 → minAnswers
+part → 0 → maxAnswers
+part → 0 → choices
+part → 0 → matrix
+part → 0 → distractors → 0
+part → 0 → minAnswers
+part → 0 → maxAnswers
+part → 0 → choices
+part → 0 → choicesHeader
+part → 0 → answers
+part → 0 → answersHeader
+part → 0 → matrix
+part → 0 → layout → expression

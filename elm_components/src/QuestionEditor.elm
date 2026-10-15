@@ -14,9 +14,10 @@ import Json.Decode as JD
 import Json.Decode.Extra as JDE exposing (andMap)
 import List.Extra as LE
 import Parser as P exposing (Parser, Step(..), (|.), (|=))
+import Property
 import Set exposing (Set)
-import Settings as S exposing (Settings)
-import Tabber exposing (Tabber, Tab, TabView, Msg(..), TabLabel(..), tab_button)
+import Settings as S exposing (Settings, Address)
+import Tabber exposing (Tabber(..), Tab, TabView, Msg(..), TabLabel(..), tab_button, tabber_name, tabber_tabs)
 import Task
 import Tuple exposing (pair, mapFirst, first, second)
 import Ui exposing (Ui, UiConfig, visibleIf, jme_preview, raw_html)
@@ -304,7 +305,7 @@ type alias VariableGenerationResult =
     }
 
 type VariableReferenceSegment
-    = StringRef String
+    = StringRef String String
     | IntRef Int
 
 type alias VariableReference = List VariableReferenceSegment
@@ -361,15 +362,9 @@ type alias FeedbackMessage =
     , scope : JE.Value
     }
 
-type alias PropertyOptions =
-    { help : Maybe String {- text description of the subject. The label is used to find the matching reference in the docs. -}
-    , id : String {- id attribute for the input -}
-    , label : String {- displayed label text -}
-    , settings : Settings
-    , setter : (JE.Value, S.Address) -> Msg
-    }
-
-type alias PropertyWidget = Ui Msg -> PropertyOptions -> List (Html Msg)
+type alias PropertyOptions = Property.Options Msg
+type alias PropertyWidget = Property.Widget Msg
+type alias PropertyField = Property.Field Msg
 
 type Msg
     = UpdateQuestion QuestionMsg
@@ -408,6 +403,7 @@ type QuestionMsg
     | ShowVariable String
     | ShowPart PartPath
     | GenerateQuestion
+    | GoToVariableReference VariableReference
 
 type PartMsg
     = ChangePartSetting SettingChangeKind (JE.Value, S.Address)
@@ -1346,8 +1342,17 @@ decode_variable_reference : JD.Decoder VariableReference
 decode_variable_reference =
     JD.list
         (JD.oneOf
-            [ JD.string |> JD.map StringRef
+            [ JD.succeed StringRef
+              |> andMap (JD.field "key" JD.string)
+              |> andMap (JD.field "title" (JD.oneOf [JD.string, JD.succeed ""]))
+
             , JD.int |> JD.map IntRef
+            , JD.value |> JD.andThen (\v ->
+                let
+                    q = Debug.log "???" (JE.encode 2 v)
+                in
+                    JD.fail "poo"
+                )
             ]
         )
 
@@ -1702,6 +1707,12 @@ update_question msg question = case msg of
             fi = List.length functions
         in
             ({ question | settings = S.setAt [S.field "functions"] (JE.list identity nfunctions) question.settings}, (BigChange, set_tab "functions" (function_tab_id fi)))
+
+    GoToVariableReference ref ->
+        let
+            tab_changes = go_to_reference ref
+        in
+            (question, (NoChange, Cmd.batch (tab_changes |> List.map (\(name,tab) -> set_tab name tab))))
             
 
 question_setting_computed : List (S.Address, () -> Question -> JE.Value -> Maybe (Cmd Msg))
@@ -1920,40 +1931,62 @@ update_variable msg path variable = case msg of
             { variable | computed = ncomputed } |> nochange
             
 
-labelled_field : Ui Msg -> PropertyOptions -> PropertyWidget -> List (Html Msg)
+labelled_field : Ui Msg -> PropertyOptions -> PropertyWidget -> PropertyField
 labelled_field ui o make_input =
-    [ H.label
-        [ HA.for o.id
-        ]
-        [ H.text o.label
-        ]
-    , case make_input ui o of
-        a::[] ->
-            a
+    let
+        field = make_input ui o
 
-        lots -> 
-            H.div
-                []
-                lots
-    ]++(case o.help of
-        Just subject -> [H.text " ", ui.helplink o.label subject]
-        Nothing -> []
-    )
+        nview = 
+            [ H.label
+                [ HA.for o.id
+                ]
+                [ H.text o.label
+                ]
+            , case field.view of
+                a::[] ->
+                    a
 
-unlabelled_field : Ui Msg -> PropertyOptions -> (List (H.Attribute Msg) -> PropertyWidget) -> List (Html Msg)
+                lots -> 
+                    H.div
+                        []
+                        lots
+            ]++(case o.help of
+                Just subject -> [H.text " ", ui.helplink o.label subject]
+                Nothing -> []
+            )
+    in
+        { field | view = nview }
+
+unlabelled_field : Ui Msg -> PropertyOptions -> (List (H.Attribute Msg) -> PropertyWidget) -> PropertyField
 unlabelled_field ui o make_input =
-    [ case make_input [Aria.label o.label] ui o of
-        a::[] ->
-            a
+    let
+        field = make_input [Aria.label o.label] ui o
+        
+        nview = 
+            [ case field.view of
+                a::[] ->
+                    a
 
-        lots -> 
-            H.div
-                []
-                lots
-    ]
+                lots -> 
+                    H.div
+                        []
+                        lots
+            ]
+    in
+        { field | view = nview }
+
+property_field : PropertyOptions -> List (Html Msg) -> PropertyField
+property_field o v =
+    { options = o
+    , view = v
+    }
+
+map_property_field : (List (Html Msg) -> List (Html Msg)) -> PropertyField -> PropertyField
+map_property_field fn field = { field | view = fn field.view }
 
 boolean_property : PropertyWidget
 boolean_property ui o =
+    property_field o <|
     ui.boolean_input
         { checked = S.getters.bool o.settings
         , onCheck = (S.setters o.settings o.setter).bool
@@ -1962,115 +1995,128 @@ boolean_property ui o =
 
 custom_text_property : List (H.Attribute Msg) -> PropertyWidget
 custom_text_property attrs _ o =
-    [ H.input
-        ([ HA.value <| S.getters.string o.settings
-        , HE.onInput <| (S.setters o.settings o.setter).string
-        , HA.id o.id
-        , HA.class "monospace"
-        ]++attrs)
-        []
-    ]
+    property_field o <|
+        [ H.input
+            ([ HA.value <| S.getters.string o.settings
+            , HE.onInput <| (S.setters o.settings o.setter).string
+            , HA.id o.id
+            , HA.class "monospace"
+            ]++attrs)
+            []
+        ]
 
 text_property : PropertyWidget
 text_property = custom_text_property []
 
 code_property : PropertyWidget
 code_property _ o =
-    [ H.node "code-editor"
-        [ HA.value <| S.getters.string o.settings
-        , HE.onInput <| (S.setters o.settings o.setter).string
-        , HA.id o.id
+    property_field o <|
+        [ H.node "code-editor"
+            [ HA.value <| S.getters.string o.settings
+            , HE.onInput <| (S.setters o.settings o.setter).string
+            , HA.id o.id
+            ]
+            []
         ]
-        []
-    ]
 
 percent_property : PropertyWidget
 percent_property _ o =
-    [ H.input
-        [ HA.value <| S.getters.string o.settings
-        , HE.onInput <| (S.setters o.settings o.setter).string
-        , HA.id o.id
-        , HA.type_ "range"
-        , HA.min "0"
-        , HA.max "100"
-        , HA.step "5"
+    property_field o <|
+        [ H.input
+            [ HA.value <| S.getters.string o.settings
+            , HE.onInput <| (S.setters o.settings o.setter).string
+            , HA.id o.id
+            , HA.type_ "range"
+            , HA.min "0"
+            , HA.max "100"
+            , HA.step "5"
+            ]
+            []
+        , H.output
+            [ HA.for o.id
+            ]
+            [ H.text <| (S.getters.string o.settings)++"%" ]
         ]
-        []
-    , H.output
-        [ HA.for o.id
-        ]
-        [ H.text <| (S.getters.string o.settings)++"%" ]
-    ]
 
 jme_property : { notation : String } -> PropertyWidget
 jme_property eo ui o =
-    (text_property ui o)
-    ++ [ jme_preview
-            { expression = S.getters.string o.settings
-            , notation = eo.notation
-            , for = o.id
-            }
-       ]
+    let
+        text_field = text_property ui o
+
+        preview = 
+            [ jme_preview
+                { expression = S.getters.string o.settings
+                , notation = eo.notation
+                , for = o.id
+                }
+            ]
+    in
+        { text_field | view = text_field.view ++ preview }
 
 latex_property : PropertyWidget
 latex_property ui o =
     let
         latex = S.getters.string o.settings
+
+        text_field = text_property ui o
+
+        preview = [ mathjax_span <| if latex == "" then "" else "\\(" ++ latex ++ "\\)" ]
     in
-        (text_property ui o)
-        ++ [ mathjax_span <| if latex == "" then "" else "\\(" ++ latex ++ "\\)"
-           ]
+        { text_field | view = text_field.view ++ preview }
 
 custom_select_property : List (H.Attribute Msg) -> List (String, String) -> PropertyWidget
 custom_select_property attrs options _ o =
     let
         current_value = S.getters.string o.settings
     in
-        [ H.select
-            ([ HE.onInput <| (S.setters o.settings o.setter).string
-            , HA.id o.id
-            ]++attrs)
-            (options |> List.map (\(value, label) -> 
-                H.option 
-                    [ HA.value value
-                    , HA.selected <| value == current_value
-                    ]
-                    [H.text label]
-            ))
-        ]
+        property_field o <| 
+            [ H.select
+                ([ HE.onInput <| (S.setters o.settings o.setter).string
+                , HA.id o.id
+                ]++attrs)
+                (options |> List.map (\(value, label) -> 
+                    H.option 
+                        [ HA.value value
+                        , HA.selected <| value == current_value
+                        ]
+                        [H.text label]
+                ))
+            ]
 
 select_or_custom_property : Bool -> List (Maybe String, String) -> List (H.Attribute Msg) -> PropertyWidget
 select_or_custom_property use_custom options attrs _ o =
     let
         current_value = if use_custom then Nothing else Just (S.getters.string o.settings)
     in
-        [ H.select
-            ([ HE.onInput <| (S.setters o.settings o.setter).string
-            , HA.id o.id
-            ]++attrs)
-            (options |> List.map (\(value, label) -> 
-                H.option 
-                    [ HA.value <| Maybe.withDefault "custom" value
-                    , HA.selected <| value == current_value
-                    ]
-                    [H.text label]
-            ))
-        ]
+        property_field o <| 
+            [ H.select
+                ([ HE.onInput <| (S.setters o.settings o.setter).string
+                , HA.id o.id
+                ]++attrs)
+                (options |> List.map (\(value, label) -> 
+                    H.option 
+                        [ HA.value <| Maybe.withDefault "custom" value
+                        , HA.selected <| value == current_value
+                        ]
+                        [H.text label]
+                ))
+            ]
 
 select_property = custom_select_property []
 
 content_property : PropertyWidget
 content_property _ o =
-    [ H.node "tinymce-editor"
-        [ HA.attribute "config" "tinymceConfig"
-        , HA.attribute "setup" "setupTinyMCE"
-        , HE.on "input" (JD.field "detail" JD.string |> JD.map ((S.setters o.settings o.setter).string))
-        , HA.id o.id
-        , HA.value <| S.getters.string o.settings
+    property_field o <| 
+        [ H.node "tinymce-editor"
+            [ HA.attribute "config" "tinymceConfig"
+            , HA.attribute "setup" "setupTinyMCE"
+            , HE.on "input" (JD.field "detail" JD.string |> JD.map ((S.setters o.settings o.setter).string))
+            , HA.id o.id
+            , HA.value <| S.getters.string o.settings
+            ]
+            [ H.text <| S.getters.string o.settings
+            ]
         ]
-        [ H.text <| S.getters.string o.settings
-        ]
-    ]
 
 multi_select_property : List { value : String, label : String, description : String } -> PropertyWidget
 multi_select_property choices ui o =
@@ -2084,31 +2130,32 @@ multi_select_property choices ui o =
                 (S.setters o.settings o.setter).value (nchosen |> Set.toList |> JE.list JE.string)
 
     in
-        [ H.ul [HA.class "list-unstyled multi-select"] 
-            (choices |> List.indexedMap (\i choice ->
-                let
-                    id = o.id++"-choice-"++(fi i)
-                in
-                    H.li
-                        []
-                        [ H.input
-                            [ HA.type_ "checkbox"
-                            , HA.name choice.value
-                            , HA.checked <| Set.member choice.value chosen
-                            , HE.onCheck (check choice)
-                            , HA.id <| id
-                            ]
+        property_field o <| 
+            [ H.ul [HA.class "list-unstyled multi-select"] 
+                (choices |> List.indexedMap (\i choice ->
+                    let
+                        id = o.id++"-choice-"++(fi i)
+                    in
+                        H.li
                             []
-                        , H.text " "
-                        , H.label
-                            [ HA.for id
+                            [ H.input
+                                [ HA.type_ "checkbox"
+                                , HA.name choice.value
+                                , HA.checked <| Set.member choice.value chosen
+                                , HE.onCheck (check choice)
+                                , HA.id <| id
+                                ]
+                                []
+                            , H.text " "
+                            , H.label
+                                [ HA.for id
+                                ]
+                                [ H.text choice.label ]
+                            , H.text " "
+                            , ui.inline_help_block [ H.text choice.description ]
                             ]
-                            [ H.text choice.label ]
-                        , H.text " "
-                        , ui.inline_help_block [ H.text choice.description ]
-                        ]
-            ))
-        ]
+                ))
+            ]
 
 mathjax_span : String -> Html msg
 mathjax_span content = H.node "mathjax-span" [HA.attribute "text" content] []
@@ -2224,6 +2271,18 @@ numberNotationStyles =
       }
     ]
 
+go_to_reference : VariableReference -> List (String, String)
+go_to_reference ref = case ref of
+    (StringRef "advice" _)::_ -> [("main", "advice")]
+    (StringRef "statement" _)::_ -> [("main", "statement")]
+    _ -> []
+
+-- list of (icon, text)
+describe_reference : VariableReference -> String
+describe_reference ref = case ref of
+    (StringRef _ title)::[] -> title
+    _ -> Debug.toString ref
+
 view_active : ActiveModelRecord -> Html Msg
 view_active model = 
     let
@@ -2242,7 +2301,7 @@ view_active model =
             "explore" -> ExploreMode
             _ -> AllPartsMode
 
-        main_tabber = 
+        main_tabber = Tabber
             { name = "main"
             , allow_empty = False
             , tabs = 
@@ -2250,38 +2309,44 @@ view_active model =
                   , label = SimpleLabel "Statement"
                   , icon = Just "text"
                   , view = statement_tab
+                  , tabbers = []
                   }
                 , { id = "variables"
                   , label = SimpleLabel "Variables"
                   , icon = Just "list"
                   , view = variables_tab
+                  , tabbers = [variables_tabber]
                   }
                 , { id = "parts"
                   , label = SimpleLabel "Parts"
                   , icon = Just "correct"
                   , view = parts_tab
+                  , tabbers = [parts_tabber]
                   }
                 , { id = "advice"
                   , label = SimpleLabel "Advice"
                   , icon = Just "advice"
                   , view = advice_tab
+                  , tabbers = []
                   }
                 , { id = "extensions"
                   , label = SimpleLabel "Extensions & scripts"
                   , icon = Just "extension"
                   , view = extensions_scripts_tab
+                  , tabbers = [extensions_tabber]
                   }
                 , { id = "settings"
                   , label = SimpleLabel "Settings"
                   , icon = Just "settings"
                   , view = settings_tab
+                  , tabbers = []
                   }
                 ]
             }
 
         qset = ChangeQuestionSetting FinalSetting >> UpdateQuestion
 
-        question_field : { id : String, label : String, help : Maybe String } -> PropertyWidget -> List (Html Msg)
+        question_field : { id : String, label : String, help : Maybe String } -> PropertyWidget -> PropertyField
         question_field o = labelled_field
             ui
             { id = o.id
@@ -2305,33 +2370,37 @@ view_active model =
 
         statement_tab : TabView Msg
         statement_tab =
-            { contents = 
-                [ H.fieldset [] <|
-                    (question_field
-                        { id = "statement"
-                        , label = "Statement"
-                        , help = Just "the question statement"
-                        }
-                        content_property
-                    )
-                ]
-            , attributes = []
-            }
+            let
+                statement_field = question_field
+                    { id = "statement"
+                    , label = "Statement"
+                    , help = Just "the question statement"
+                    }
+                    content_property
+            in
+                { contents = 
+                    [ H.fieldset [] <| statement_field.view
+                    ]
+                , attributes = []
+                , fields = [ statement_field ]
+                }
 
         advice_tab : TabView Msg
         advice_tab =
-            { contents = 
-                [ H.fieldset [] <|
-                    (question_field
-                        { id = "advice"
-                        , label = "Advice"
-                        , help = Just "the question advice"
-                        }
-                        content_property
-                    )
-                ]
-            , attributes = []
-            }
+            let
+                advice_field = question_field
+                    { id = "advice"
+                    , label = "Advice"
+                    , help = Just "the question advice"
+                    }
+                    content_property
+            in
+                { contents = 
+                    [ H.fieldset [] <| advice_field.view
+                    ]
+                , attributes = []
+                , fields = [ advice_field ]
+                }
 
         variable_tab : VariablePath -> Variable -> Tab Msg
         variable_tab path variable =
@@ -2366,7 +2435,7 @@ view_active model =
                 references =
                     S.get (JD.list decode_variable_reference) [] (S.atField "references" variable.computed)
 
-                variable_field : { id : String, label : String, help : Maybe String } -> PropertyWidget -> List (Html Msg)
+                variable_field : { id : String, label : String, help : Maybe String } -> PropertyWidget -> PropertyField
                 variable_field o = labelled_field
                     ui
                     { id = prefix_id o.id
@@ -2376,7 +2445,7 @@ view_active model =
                     , setter = vset
                     }
 
-                template_field : { id : String, label : String, help : Maybe String } -> PropertyWidget -> List (Html Msg)
+                template_field : { id : String, label : String, help : Maybe String } -> PropertyWidget -> PropertyField
                 template_field o = labelled_field
                     ui
                     { id = prefix_id <| "-template-"++o.id
@@ -2386,7 +2455,7 @@ view_active model =
                     , setter = tset
                     }
 
-                inline_text_field : { id : String, label : String, help : Maybe String } -> List (Html Msg)
+                inline_text_field : { id : String, label : String, help : Maybe String } -> PropertyField
                 inline_text_field o = 
                     custom_text_property
                         [ Aria.label o.label ]
@@ -2400,149 +2469,87 @@ view_active model =
 
 
                 jme_template =
-                    { id = "anything"
-                    , label = "JME code"
-                    , view = List.concat
-                        [ template_field
+                    let
+                        value_field = template_field
                             { id = "code"
                             , label = "Value"
                             , help = Nothing
                             }
                             code_property
-                        , [ui.labelled_helplink "jme-functions" "JME function reference"]
-                        ]
-                    }
+                    in
+                        { id = "anything"
+                        , label = "JME code"
+                        , fields = [ value_field ]
+                        , view = List.concat
+                            [ value_field.view
+                            , [ui.labelled_helplink "jme-functions" "JME function reference"]
+                            ]
+                        }
 
                 builtin_templateTypes =
-                    jme_template ::
-                    [ { id = "range"
-                      , label = "Range of numbers"
-                      , view = 
-                            [ H.p [HA.class "inline-fields"] <| List.concat
-                                [ [H.text "Numbers between "]
-                                , inline_text_field
-                                    { id = "min"
-                                    , label = "Minimum"
-                                    , help = Nothing
-                                    }
-                                , [H.text " and "]
-                                , inline_text_field
-                                    { id = "max"
-                                    , label = "Maximum"
-                                    , help = Nothing
-                                    }
-                                , [H.text " (inclusive) with step size "]
-                                , inline_text_field
-                                    { id = "step"
-                                    , label = "Step size"
-                                    , help = Nothing
-                                    }
-                                ]
-                            ]
-                      }
-                    , { id = "randrange"
-                      , label = "Random number from a range"
-                      , view = 
-                            [ H.p [HA.class "inline-fields"] <| List.concat
-                                [ [H.text "A random number between "]
-                                , inline_text_field
-                                    { id = "min"
-                                    , label = "Minimum"
-                                    , help = Nothing
-                                    }
-                                , [H.text " and "]
-                                , inline_text_field
-                                    { id = "max"
-                                    , label = "Maximum"
-                                    , help = Nothing
-                                    }
-                                , [H.text " (inclusive) with step size "]
-                                , inline_text_field
-                                    { id = "step"
-                                    , label = "Step size"
-                                    , help = Nothing
-                                    }
-                                ]
-                            ]
-                      }
-                    , { id = "string"
-                      , label = "Short text string"
-                      , view = List.concat
-                        [ template_field
+                    let
+                        min_field = inline_text_field
+                            { id = "min"
+                            , label = "Minimum"
+                            , help = Nothing
+                            }
+
+                        max_field = inline_text_field
+                            { id = "max"
+                            , label = "Maximum"
+                            , help = Nothing
+                            }
+
+                        step_field = inline_text_field
+                            { id = "step"
+                            , label = "Step size"
+                            , help = Nothing
+                            }
+
+                        string_value_field = template_field
                             { id = "string"
                             , label = "Value"
                             , help = Nothing
                             }
                             text_property
-                        , [ui.help_block [H.text "(text string)"]]
-                        , template_field
+
+                        isTemplate_field = template_field
                             { id = "isTemplate"
                             , label = "Is this a template?"
                             , help = Nothing
                             }
                             boolean_property
-                        ]
-                      }
-                    , { id = "long plain string"
-                      , label = "Long plain text string"
-                      , view = List.concat
-                        [ template_field
+
+                        long_plain_value_field = template_field
                             { id = "string"
                             , label = "Value"
                             , help = Nothing
                             }
                             code_property
-                        , [ui.help_block [H.text "(text string)"]]
-                        , template_field
-                            { id = "isTemplate"
-                            , label = "Is this a template?"
-                            , help = Nothing
-                            }
-                            boolean_property
-                        ]
-                      }
-                    , { id = "long string"
-                      , label = "Formatted text"
-                      , view = List.concat
-                        [ template_field
+
+                        content_value_field = template_field
                             { id = "string"
                             , label = "Value"
                             , help = Nothing
                             }
                             content_property
-                        , [ui.help_block [H.text "(text string)"]]
-                        , template_field
-                            { id = "isTemplate"
-                            , label = "Is this a template?"
-                            , help = Nothing
-                            }
-                            boolean_property
-                        ]
-                      }
-                    , { id = "mathematical expression"
-                      , label = "Abstract mathematical expression"
-                      , view = List.concat
-                        [ template_field
+
+                        expression_field = template_field
                             { id = "expression"
                             , label = "Expression"
                             , help = Nothing
                             }
                             code_property
-                        ]
-                      }
-                    , { id = "list of numbers"
-                      , label = "List of numbers"
-                      , view =
-                          let
-                              stored_values = S.get (JD.list JD.string) [] (S.at [S.field "template", S.field "values"] variable.computed)
 
-                              last_thing = stored_values |> List.reverse |> List.head |> Maybe.withDefault ""
+                        list_of_numbers_fields = 
+                            let
+                                stored_values = S.get (JD.list JD.string) [] (S.at [S.field "template", S.field "values"] variable.computed)
 
-                              values = stored_values ++ (if last_thing == "" then [] else [""])
-                          in
-                            List.concat
-                                [ [H.label [] [H.text "Value"]]
-                                , values |> List.indexedMap (\i v ->
+                                last_thing = stored_values |> List.reverse |> List.head |> Maybe.withDefault ""
+
+                                values = stored_values ++ (if last_thing == "" then [] else [""])
+                            in
+                                values |> List.indexedMap (\i v -> 
                                     custom_text_property
                                         [ Aria.label <| "Number "++(fi i) ]
                                         ui
@@ -2552,25 +2559,19 @@ view_active model =
                                         , settings = S.at [S.field "template", S.field "values", S.index i] variable.computed
                                         , setter = tset
                                         }
-                                  )
-                                  |> List.concat
-                                ] 
-                        }
-                    , { id = "list of strings"
-                      , label = "List of short text strings"
-                      , view =
-                          let
-                              stored_values = 
-                                  S.get (JD.list JD.string) [] (S.at [S.field "template", S.field "values"] variable.computed)
-                                  |> List.reverse
-                                  |> LE.dropWhile ((==) "")
-                                  |> List.reverse
+                                )
 
-                              values = stored_values ++ [""]
-                          in
-                            List.concat
-                                [ [H.label [] [H.text "Value"]]
-                                , values |> List.indexedMap (\i v ->
+                        list_of_strings_fields =
+                            let
+                                stored_values = 
+                                    S.get (JD.list JD.string) [] (S.at [S.field "template", S.field "values"] variable.computed)
+                                    |> List.reverse
+                                    |> LE.dropWhile ((==) "")
+                                    |> List.reverse
+
+                                values = stored_values ++ [""]
+                            in
+                                values |> List.indexedMap (\i v ->
                                     custom_text_property
                                         [ Aria.label <| "Number "++(fi i) ]
                                         ui
@@ -2580,27 +2581,110 @@ view_active model =
                                         , settings = S.at [S.field "template", S.field "values", S.index i] variable.computed
                                         , setter = tset
                                         }
-                                  )
-                                  |> List.concat
-                                ] 
-                        }
-                    , { id = "json"
-                      , label = "JSON data"
-                      , view = List.concat
-                            [ template_field
-                                { id = "json"
-                                , label = "Value"
-                                , help = Nothing
-                                }
-                                code_property
-                            , [ ui.button ""
-                                [ HE.onClick <| UpdateQuestion <| UpdateVariable path <| PrettyPrintJSON
+                                )
+
+                        json_value_field = template_field
+                            { id = "json"
+                            , label = "Value"
+                            , help = Nothing
+                            }
+                            code_property
+
+                    in
+                        [ jme_template
+                        , { id = "range"
+                          , label = "Range of numbers"
+                          , fields = [ min_field, max_field, step_field ]
+                          , view = 
+                                [ H.p [HA.class "inline-fields"] <| List.concat
+                                    [ [H.text "Numbers between "]
+                                    , min_field.view
+                                    , [H.text " and "]
+                                    , max_field.view
+                                    , [H.text " (inclusive) with step size "]
+                                    , step_field.view
+                                    ]
                                 ]
-                                [ H.text "Clean up formatting" ]
-                              ]
+                          }
+                        , { id = "randrange"
+                          , label = "Random number from a range"
+                          , fields = [ min_field, max_field, step_field ]
+                          , view = 
+                                [ H.p [HA.class "inline-fields"] <| List.concat
+                                    [ [H.text "A random number between "]
+                                    , min_field.view
+                                    , [H.text " and "]
+                                    , max_field.view
+                                    , [H.text " (inclusive) with step size "]
+                                    , step_field.view
+                                    ]
+                                ]
+                          }
+                        , { id = "string"
+                          , label = "Short text string"
+                          , fields = [ string_value_field, isTemplate_field ]
+                          , view = List.concat
+                            [ string_value_field.view
+                            , [ui.help_block [H.text "(text string)"]]
+                            , isTemplate_field.view
                             ]
-                      }
-                    ]
+                          }
+                        , { id = "long plain string"
+                          , label = "Long plain text string"
+                          , fields = [ long_plain_value_field, isTemplate_field ]
+                          , view = List.concat
+                            [ long_plain_value_field.view
+                            , [ui.help_block [H.text "(text string)"]]
+                            , isTemplate_field.view
+                            ]
+                          }
+                        , { id = "long string"
+                          , label = "Formatted text"
+                          , fields = [ content_value_field, isTemplate_field ]
+                          , view = List.concat
+                            [ content_value_field.view
+                            , [ui.help_block [H.text "(text string)"]]
+                            , isTemplate_field.view
+                            ]
+                          }
+                        , { id = "mathematical expression"
+                          , label = "Abstract mathematical expression"
+                          , fields = [ expression_field ]
+                          , view = List.concat
+                            [ expression_field.view
+                            ]
+                          }
+                        , { id = "list of numbers"
+                          , label = "List of numbers"
+                          , fields = list_of_numbers_fields
+                          , view =
+                                List.concat
+                                    [ [H.label [] [H.text "Value"]]
+                                    , list_of_numbers_fields |> List.concatMap (.view)
+                                    ] 
+                            }
+                        , { id = "list of strings"
+                          , label = "List of short text strings"
+                          , fields = list_of_strings_fields
+                          , view =
+                                List.concat
+                                    [ [H.label [] [H.text "Value"]]
+                                    , list_of_strings_fields |> List.concatMap (.view)
+                                    ] 
+                            }
+                        , { id = "json"
+                          , label = "JSON data"
+                          , fields = [ json_value_field ]
+                          , view = List.concat
+                                [ json_value_field.view
+                                , [ ui.button ""
+                                    [ HE.onClick <| UpdateQuestion <| UpdateVariable path <| PrettyPrintJSON
+                                    ]
+                                    [ H.text "Clean up formatting" ]
+                                  ]
+                                ]
+                          }
+                        ]
                     
 
                 templateTypes = builtin_templateTypes
@@ -2625,6 +2709,34 @@ view_active model =
 
                 definition_errors = errors_by_aspect DefinitionError
 
+                variable_name_field = variable_field
+                    { id = "name"
+                    , label = "Name"
+                    , help = Nothing
+                    }
+                    text_property
+                    
+                variable_data_type_field = variable_field
+                    { id = "templateType"
+                    , label = "Data type"
+                    , help = Just "data type"
+                    }
+                    (select_property (templateTypes |> List.map (\t -> (t.id, t.label))))
+
+                variable_description_field = variable_field
+                    { id = "description"
+                    , label = "Description"
+                    , help = Nothing
+                    }
+                    content_property
+
+                variable_can_override_field = variable_field
+                    { id = "can_override"
+                    , label = "Can an exam override the value of this variable?"
+                    , help = Just "exams overriding variable values"
+                    }
+                    boolean_property
+
                 vview =
                     { contents = List.concat
                         [ [H.fieldset [ HA.class "vertical" ] <| List.concat
@@ -2635,37 +2747,17 @@ view_active model =
                                 , H.text "Delete this variable"
                                 ]
                               ]
-                            , variable_field
-                                { id = "name"
-                                , label = "Name"
-                                , help = Nothing
-                                }
-                                text_property
+                            , variable_name_field.view
                             , visibleIf (name_errors /= [])
                                 [ ui.alert "warning" (name_errors |> List.map (\err -> H.p [] [Ui.raw_html_string err]))
                                 ]
-                            , variable_field
-                                { id = "templateType"
-                                , label = "Data type"
-                                , help = Just "data type"
-                                }
-                                (select_property (templateTypes |> List.map (\t -> (t.id, t.label))))
+                            , variable_data_type_field.view
                             , templateType.view
                             , visibleIf (definition_errors /= [])
                                 [ ui.alert "warning" (definition_errors |> List.map (\err -> H.p [] [Ui.raw_html_string err]))
                                 ]
-                            , variable_field
-                                { id = "description"
-                                , label = "Description"
-                                , help = Nothing
-                                }
-                                content_property
-                            , variable_field
-                                { id = "can_override"
-                                , label = "Can an exam override the value of this variable?"
-                                , help = Just "exams overriding variable values"
-                                }
-                                boolean_property
+                            , variable_description_field.view
+                            , variable_can_override_field.view
                           ]
                         ]
                         , case mvalue of
@@ -2744,25 +2836,37 @@ view_active model =
                                         , H.ul
                                             [ HA.class "list-inline" ]
                                             (references |> List.map (\refpath -> 
-                                                H.li [] 
-                                                    [ H.a
-                                                        [ HA.href "#"
-                                                        --, HE.onClick (ShowVariable d |> UpdateQuestion) TODO
-                                                        , HA.class "monospace btn info"
+                                                let
+                                                    tab_changes = go_to_reference refpath
+                                                in
+                                                    H.li [] 
+                                                        [ H.a
+                                                            [ HA.href "#"
+                                                            , HE.onClick (GoToVariableReference refpath |> UpdateQuestion)
+                                                            , HA.class "monospace btn info"
+                                                            ]
+                                                            [ H.text <| describe_reference refpath ]
                                                         ]
-                                                        [ H.text <| Debug.toString refpath ]
-                                                    ]
                                             ))
                                         ]
                                      ]
+                        , [H.pre [] [H.text "refs", H.text <| Debug.toString references]]
                         ]
                     , attributes = []
+                    , fields = 
+                        [ variable_name_field
+                        , variable_data_type_field
+                        , variable_description_field
+                        , variable_can_override_field
+                        ]
+                        ++ templateType.fields
                     }
             in
                 { id = variable_tab_id path
                 , label = SimpleLabel <| variable_label
                 , icon = Nothing
                 , view = vview
+                , tabbers = []
                 }
 
         grouped_variable_tabs : List (VariableGroup, List (Int, (Variable, Tab Msg)))
@@ -2781,7 +2885,7 @@ view_active model =
             in
                 nested_count groups_with_tabs
 
-        variables_tabber =
+        variables_tabber = Tabber
             { name = "variables"
             , allow_empty = True
             , tabs = grouped_variable_tabs |> List.map second |> List.concat |> List.map (second >> second)
@@ -2880,30 +2984,36 @@ view_active model =
                 , view_tabpanel variables_tabber
                 ]
             , attributes = [ HA.class "tabbed-sidebar"]
+            , fields = []
             }
+
+        question_name_field = question_field
+            { id = "name"
+            , label = "Name"
+            , help = Nothing
+            }
+            text_property
+
+        question_parts_mode_field = question_field
+            { id = "partsMode"
+            , label = "Parts mode"
+            , help = Nothing
+            }
+            (select_property 
+                [("all", "Sequential")
+                ,("explore", "Explore")
+                ]
+            )
 
         settings_tab =
             { contents =
                 [ H.fieldset [] <| List.concat
-                    [question_field
-                        { id = "name"
-                        , label = "Name"
-                        , help = Nothing
-                        }
-                        text_property
-                    , question_field
-                        { id = "partsMode"
-                        , label = "Parts mode"
-                        , help = Nothing
-                        }
-                        (select_property 
-                            [("all", "Sequential")
-                            ,("explore", "Explore")
-                            ]
-                        )
+                    [ question_name_field.view
+                    , question_parts_mode_field.view
                     ]
                 ]
             , attributes = []
+            , fields = [question_name_field, question_parts_mode_field]
             }
 
         all_parts : List (PartPath, Part)
@@ -2938,7 +3048,7 @@ view_active model =
                 |> List.take 1
                 |> visit []
 
-        parts_tabber =
+        parts_tabber = Tabber
             { name = "parts"
             , allow_empty = True
             , tabs = all_parts |> List.map part_tab
@@ -2963,6 +3073,7 @@ view_active model =
                 , view_tabpanel parts_tabber
                 ]
             , attributes = [HA.class "tabbed-sidebar"]
+            , fields = []
             }
 
         add_part_modal : Html Msg
@@ -3069,7 +3180,7 @@ view_active model =
                     in
                         "question/parts/"++filename++".html#term-"++(term_to_url term)
 
-                part_field : { id : String, label : String, help : Maybe String } -> PropertyWidget -> List (Html Msg)
+                part_field : { id : String, label : String, help : Maybe String } -> PropertyWidget -> PropertyField
                 part_field o = labelled_field
                     ui
                     { id = prefix_id o.id
@@ -3078,6 +3189,27 @@ view_active model =
                     , settings = pfield o.id
                     , setter = pset
                     }
+
+                toggleExpressionField : { id : String, label : String, help : Maybe String, field : String, default : JE.Value } -> PropertyField
+                toggleExpressionField eo =
+                    labelled_field
+                        ui
+                        { id = prefix_id eo.id
+                        , label = eo.label
+                        , help = eo.help
+                        , settings = part.settings
+                        , setter = pset
+                        }
+                        (\_ o -> 
+                            property_field o [ H.input
+                                [ HA.type_ "checkbox"
+                                , HA.checked <| fieldIsString eo.field
+                                , HE.onCheck <| \b -> pset (if b then JE.string "" else eo.default, [S.field eo.field])
+                                , HA.id o.id
+                                ]
+                                []
+                            ]
+                        )
 
                 tabs : List (Tabber.Tab Msg)
                 tabs =  
@@ -3121,27 +3253,85 @@ view_active model =
                         markingMethod = pstring "markingMethod"
 
                         needsMaxMarks = markingMethod == "score per matched cell" || markingMethod == "all-or-nothing"
+
+                        markingMethod_field = part_field
+                            { id = "markingMethod"
+                            , label = "Marking method"
+                            , help = Just "marking method"
+                            }
+                            (select_property
+                                [ ("sum ticked cells", "Sum ticked cells")
+                                , ("score per matched cell", "Score per matched cell")
+                                , ("all-or-nothing", "All-or-nothing")
+                                ]
+                            )
+
+                        customChoices_field = toggleExpressionField
+                            { field = "choices"
+                            , default = JE.list JE.string []
+                            , id = "customChoices"
+                            , label = "Variable list of choices?"
+                            , help = Just "variable list of choices"
+                            }
+
+                        choices_field = part_field -- TODO does toggleExpressionField not mean this is unnecessary?
+                            { id = "choices"
+                            , label = "List of choices"
+                            , help = Just "list of choices"
+                            }
+                            text_property
+
+                        shuffleChoices_field = part_field
+                            { id = "shuffleChoices"
+                            , label = "Shuffle order of choices?"
+                            , help = Just "shuffling choices"
+                            }
+                            boolean_property
+
+                        choice_fields = choices |> List.indexedMap 
+                            (\i choice ->
+                                { content_field = labelled_field
+                                    ui
+                                    { id = prefix_id <| "choice-"++(fi i)
+                                    , label = "Content"
+                                    , help = Nothing
+                                    , settings = S.at [S.field "choices", S.index i] part.settings
+                                    , setter = pset
+                                    }
+                                    content_property -- TODO : smaller
+                                , marks_field = labelled_field
+                                    ui
+                                    { id = prefix_id <| "choice-"++(fi i)++"-marks"
+                                    , label = "Marks"
+                                    , help = Nothing
+                                    , settings = S.at [S.field "matrix", S.index i] part.settings
+                                    , setter = pset
+                                    }
+                                    text_property
+                                , distractor_field = labelled_field
+                                    ui
+                                    { id = prefix_id <| "choice-"++(fi i)++"-distractor"
+                                    , label = "Distractor message"
+                                    , help = Nothing
+                                    , settings = S.at [S.field "distractors", S.index i] part.settings
+                                    , setter = pset
+                                    }
+                                    text_property
+                                }
+                            )
                     in
                         { id = "choices"
                           , label = SimpleLabel "Choices"
                           , icon = Just "list"
+                          , tabbers = []
                           , view =
                               { contents = List.concat
                                   [ [H.fieldset [] <| List.concat
                                     [ case part.type_.name of
                                         "m_n_2" ->
-                                            (part_field
-                                                { id = "markingMethod"
-                                                , label = "Marking method"
-                                                , help = Just "marking method"
-                                                }
-                                                (select_property
-                                                    [ ("sum ticked cells", "Sum ticked cells")
-                                                    , ("score per matched cell", "Score per matched cell")
-                                                    , ("all-or-nothing", "All-or-nothing")
-                                                    ]
-                                                )
-                                            )++(case markingMethod of
+                                            (markingMethod_field.view
+                                            )
+                                            ++(case markingMethod of
                                                 "sum ticked cells" ->
                                                     [ui.help_block [H.text "For each choice, specify the number of marks to add or subtract when the student picks it."]]
                                                 "score per matched cell" ->
@@ -3158,44 +3348,19 @@ view_active model =
 
                                         _ -> []
 
-                                    , toggleExpressionField
-                                        { field = "choices"
-                                        , default = JE.list JE.string []
-                                        , id = "customChoices"
-                                        , label = "Variable list of choices?"
-                                        , help = Just "variable list of choices"
-                                        }
-                                    , visibleIf (customChoices) <|
-                                        part_field
-                                            { id = "choices"
-                                            , label = "List of choices"
-                                            , help = Just "list of choices"
-                                            }
-                                            text_property
-                                    , part_field
-                                        { id = "shuffleChoices"
-                                        , label = "Shuffle order of choices?"
-                                        , help = Just "shuffling choices"
-                                        }
-                                        boolean_property
+                                    , customChoices_field.view
+                                    , visibleIf (customChoices) <| choices_field.view
+                                    , shuffleChoices_field.view
                                     ]]
                                   , visibleIf (not <| customChoices) <| List.concat
                                         [ [H.h4 [] [H.text "Choices"]]
-                                        , (choices |> List.indexedMap
-                                            (\i choice ->
+                                        , (choice_fields |> List.indexedMap
+                                            (\i choice_row ->
                                                 H.fieldset
                                                     [ HA.class "choice" ]
                                                     (List.concat <|
                                                         [ [ H.legend [] [H.text <| "Choice "++(fi i)] ]
-                                                        , labelled_field
-                                                            ui
-                                                            { id = "choice-"++(fi i)
-                                                            , label = "Content"
-                                                            , help = Nothing
-                                                            , settings = S.at [S.field "choices", S.index i] part.settings
-                                                            , setter = pset
-                                                            }
-                                                            content_property -- TODO : smaller
+                                                        , choice_row.content_field.view
                                                         , [ ui.button "danger"
                                                                 [ HE.onClick <| remove_choice i
                                                                 ]
@@ -3203,24 +3368,8 @@ view_active model =
                                                                 , H.text "Delete this choice"
                                                                 ]
                                                           ]
-                                                        , visibleIf (not customMCQMarking) <| labelled_field
-                                                            ui
-                                                            { id = "choice-"++(fi i)++"-marks"
-                                                            , label = "Marks"
-                                                            , help = Nothing
-                                                            , settings = S.at [S.field "matrix", S.index i] part.settings
-                                                            , setter = pset
-                                                            }
-                                                            text_property
-                                                        , labelled_field
-                                                            ui
-                                                            { id = "choice-"++(fi i)++"-distractor"
-                                                            , label = "Distractor message"
-                                                            , help = Nothing
-                                                            , settings = S.at [S.field "distractors", S.index i] part.settings
-                                                            , setter = pset
-                                                            }
-                                                            text_property
+                                                        , visibleIf (not customMCQMarking) <| choice_row.marks_field.view
+                                                        , choice_row.distractor_field.view
                                                         ]
                                                     )
                                             )
@@ -3235,6 +3384,19 @@ view_active model =
                                         ]
                                   ]
                               , attributes = []
+                              , fields = 
+                                  [ markingMethod_field
+                                  , customChoices_field
+                                  , choices_field
+                                  , shuffleChoices_field
+                                  ]
+                                  ++ (choice_fields |> List.concatMap (\row ->
+                                      [ row.content_field
+                                      , row.marks_field
+                                      , row.distractor_field
+                                      ]
+                                      )
+                                    )
                               }
                         }
 
@@ -3258,205 +3420,248 @@ view_active model =
                             capturedNameOptions =
                                    ("", "Whole expression")
                                 :: (capturedNames |> List.map (\n -> (n,n)))
-                        in
-                        [ { id = "restrictions"
-                          , label = SimpleLabel "Restrictions"
-                          , icon = Just "restriction"
-                          , view =
-                              { contents = 
-                                  [ H.fieldset [] <| List.concat
-                                    [ [ H.legend [] [H.text "Pattern restriction"] ]
-                                    , labelled_field
-                                        ui
-                                        { id = "mustMatchPattern"
-                                        , label = "Pattern student's answer must match"
-                                        , help = Just "pattern restriction"
-                                        , settings = S.at [S.field "mustmatchpattern", S.field "pattern"] part.settings
-                                        , setter = pset
-                                        }
-                                        (\_ o -> List.concat
-                                            [ jme_property { notation = "pattern_matching" } ui o
-                                            , visibleIf (notation /= "standard")
-                                                [ ui.alert "warning"
-                                                    [ H.text "Write this pattern in the standard notation, not "
-                                                    , H.em [] [H.text notation_name]
-                                                    , H.text "."
-                                                    ]
-                                                ]
+
+                            mustMatchPattern_field = labelled_field
+                                ui
+                                { id = prefix_id "mustMatchPattern"
+                                , label = "Pattern student's answer must match"
+                                , help = Just "pattern restriction"
+                                , settings = S.at [S.field "mustmatchpattern", S.field "pattern"] part.settings
+                                , setter = pset
+                                }
+                                (jme_property { notation = "pattern_matching" })
+                              |> map_property_field (\v -> 
+                                    v ++
+                                    ( visibleIf (notation /= "standard")
+                                        [ ui.alert "warning"
+                                            [ H.text "Write this pattern in the standard notation, not "
+                                            , H.em [] [H.text notation_name]
+                                            , H.text "."
                                             ]
-                                        )
-                                    , if mustMatchPattern == "" then [] else List.concat <|
-                                        [ labelled_field
-                                            ui
-                                            { id = "mustmatchpattern-nameToCompare"
-                                            , label = "Part of expression to mark"
-                                            , help = Just "part of expression to mark"
-                                            , settings = S.at [S.field "mustmatchpattern", S.field "nameToCompare"] part.settings
-                                            , setter = pset
-                                            }
-                                            (select_property capturedNameOptions)
-                                        , labelled_field
-                                            ui
-                                            { id = "mustmatchpattern-partialCredit"
-                                            , label = "Partial credit for not matching pattern"
-                                            , help = Just "partial credit for not matching pattern"
-                                            , settings = S.at [S.field "mustmatchpattern", S.field "partialCredit"] part.settings
-                                            , setter = pset
-                                            }
-                                            percent_property
-                                        , labelled_field
-                                            ui
-                                            { id = "mustmatchpattern-warningTime"
-                                            , label = "When to warn the student if their answer does not match the pattern"
-                                            , help = Just "pattern warning time"
-                                            , settings = S.at [S.field "mustmatchpattern", S.field "warningTime"] part.settings
-                                            , setter = pset
-                                            }
-                                            (select_property
-                                                [ ("submission", "After submitting")
-                                                , ("input", "While entering their answer")
-                                                , ("prevent", "Prevent submission")
-                                                ]
-                                            )
-                                        , labelled_field
-                                            ui
-                                            { id = "mustmatchpattern-message"
-                                            , label = "Warning message"
-                                            , help = Nothing
-                                            , settings = S.at [S.field "mustmatchpattern", S.field "message"] part.settings
-                                            , setter = pset
-                                            }
-                                            content_property
                                         ]
-                                            
+                                    )
+                                 )
+
+                            mustMatchPattern_nameToCompare_field = labelled_field
+                                ui
+                                { id = prefix_id "mustmatchpattern-nameToCompare"
+                                , label = "Part of expression to mark"
+                                , help = Just "part of expression to mark"
+                                , settings = S.at [S.field "mustmatchpattern", S.field "nameToCompare"] part.settings
+                                , setter = pset
+                                }
+                                (select_property capturedNameOptions)
+
+                            mustMatchPattern_partialCredit_field = labelled_field
+                                ui
+                                { id = prefix_id "mustmatchpattern-partialCredit"
+                                , label = "Partial credit for not matching pattern"
+                                , help = Just "partial credit for not matching pattern"
+                                , settings = S.at [S.field "mustmatchpattern", S.field "partialCredit"] part.settings
+                                , setter = pset
+                                }
+                                percent_property
+
+                            mustMatchPattern_warningType_field = labelled_field
+                                ui
+                                { id = prefix_id "mustmatchpattern-warningTime"
+                                , label = "When to warn the student if their answer does not match the pattern"
+                                , help = Just "pattern warning time"
+                                , settings = S.at [S.field "mustmatchpattern", S.field "warningTime"] part.settings
+                                , setter = pset
+                                }
+                                (select_property
+                                    [ ("submission", "After submitting")
+                                    , ("input", "While entering their answer")
+                                    , ("prevent", "Prevent submission")
                                     ]
-                                  , H.fieldset [] <| List.concat
-                                    [ [ H.legend [] [H.text "Variables"] ]
-                                    , part_field
-                                        { id = "checkVariableNames"
-                                        , label = "Warn if student uses an unexpected variable name?"
-                                        , help = Just "unexpected variable names"
-                                        }
-                                        boolean_property
-                                    , part_field
-                                        { id = "singleLetterVariables"
-                                        , label = "Force single letter variable names?"
-                                        , help = Just "single letter variable names"
-                                        }
-                                        boolean_property
-                                    , part_field
-                                        { id = "allowUnknownFunctions"
-                                        , label = "Allow unknown function names?"
-                                        , help = Just "unknown function names"
-                                        }
-                                        boolean_property
-                                    , part_field
-                                        { id = "implicitFunctionComposition"
-                                        , label = "Use implicit function composition?"
-                                        , help = Just "implicit function composition"
-                                        }
-                                        boolean_property
+                                )
+
+                            mustMatchPattern_message_field = labelled_field
+                                ui
+                                { id = prefix_id "mustmatchpattern-message"
+                                , label = "Warning message"
+                                , help = Nothing
+                                , settings = S.at [S.field "mustmatchpattern", S.field "message"] part.settings
+                                , setter = pset
+                                }
+                                content_property
+
+                            checkVariableNames_field = part_field
+                                { id = "checkVariableNames"
+                                , label = "Warn if student uses an unexpected variable name?"
+                                , help = Just "unexpected variable names"
+                                }
+                                boolean_property
+                            singleLetterVariables_field = part_field
+                                { id = "singleLetterVariables"
+                                , label = "Force single letter variable names?"
+                                , help = Just "single letter variable names"
+                                }
+                                boolean_property
+                            allowUnknownFunctions_field = part_field
+                                { id = "allowUnknownFunctions"
+                                , label = "Allow unknown function names?"
+                                , help = Just "unknown function names"
+                                }
+                                boolean_property
+                            implicitFunctionComposition_field = part_field
+                                { id = "implicitFunctionComposition"
+                                , label = "Use implicit function composition?"
+                                , help = Just "implicit function composition"
+                                }
+                                boolean_property
+
+                            checkingType_field = part_field
+                                { id = "checkingType"
+                                , label = "Checking type"
+                                , help = Just "checking type"
+                                }
+                                (select_property 
+                                    [ ("absdiff", "Absolute difference")
+                                    , ("reldiff", "Relative difference")
+                                    , ("dp", "Decimal points")
+                                    , ("sigfig", "Significant figures")
                                     ]
-                                  ]
-                              , attributes = []
-                              }
-                          }
-                        , { id = "checking-accuracy"
-                          , label = SimpleLabel "Checking accuracy"
-                          , icon = Just "scale"
-                          , view =
-                              { attributes = []
-                              , contents = 
-                                  [ H.fieldset [] <| List.concat
-                                    [ [ H.legend [] [H.text "Checking accuracy"]
-                                      , ui.help_block 
-                                         [ ui.helplink "Checking accuracy" "checking accuracy"
-                                         , H.text "Define the range of points over which the student's answer will be compared with the correct answer, and the method used to compare them."
-                                         ]
-                                      ]
-                                    , part_field
-                                        { id = "checkingType"
-                                        , label = "Checking type"
-                                        , help = Just "checking type"
-                                        }
-                                        (select_property 
-                                            [ ("absdiff", "Absolute difference")
-                                            , ("reldiff", "Relative difference")
-                                            , ("dp", "Decimal points")
-                                            , ("sigfig", "Significant figures")
+                                )
+                            checkingAccuracy_field = part_field
+                                { id = "checkingAccuracy"
+                                , label = "Checking accuracy"
+                                , help = Just "checking accuracy"
+                                }
+                                text_property
+                            vsetRangePoints_field = part_field
+                                { id = "vsetRangePoints"
+                                , label = "Points to check"
+                                , help = Just "checked points"
+                                }
+                                text_property
+                            failureRate_field = part_field
+                                { id = "failureRate"
+                                , label = "Maximum no. of failures"
+                                , help = Just "maximum number of failures"
+                                }
+                                text_property
+                            vsetRangeStart_field = labelled_field
+                                ui
+                                { id = prefix_id "vsetRangeStart"
+                                , label = "Checking range start"
+                                , help = Just "checking range start"
+                                , settings = S.at [S.field "vsetRange", S.index 0] part.settings
+                                , setter = pset
+                                }
+                                text_property
+                            vsetRangeEnd_field = labelled_field
+                                ui
+                                { id = prefix_id "vsetRangeEnd"
+                                , label = "Checking range end"
+                                , help = Just "checking range end"
+                                , settings = S.at [S.field "vsetRange", S.index 1] part.settings
+                                , setter = pset
+                                }
+                                text_property
+
+                            free_names = S.get (JD.list (JD.map2 pair (JD.field "name" JD.string) (JD.maybe <| JD.field "inferredType" JD.string))) [] (cfield "findvars")
+
+                            value_generator_fields = free_names |> List.map (\(name, minferredType) ->
+                                labelled_field
+                                    ui
+                                    { id = prefix_id <| "value-generator-"++name
+                                    , label = name
+                                    , help = Nothing
+                                    , settings = S.at [S.field "valuegenerators", S.indexWhereName name, S.field "value"] part.settings
+                                    , setter = pset
+                                    }
+                                    text_property
+                                |> map_property_field (\v ->
+                                    v
+                                    ++ case minferredType of
+                                        Nothing -> []
+                                        Just inferredType -> [ui.help_block [ H.text <| "(this might be a " ++ inferredType ++ ")" ]]
+                                   )
+                                )
+                        in
+                            [ { id = "restrictions"
+                              , label = SimpleLabel "Restrictions"
+                              , icon = Just "restriction"
+                              , tabbers = []
+                              , view =
+                                  { contents = 
+                                      [ H.fieldset [] <| List.concat
+                                        [ [ H.legend [] [H.text "Pattern restriction"] ]
+                                        , mustMatchPattern_field.view
+                                        , if mustMatchPattern == "" then [] else List.concat <|
+                                            [ mustMatchPattern_nameToCompare_field.view
+                                            , mustMatchPattern_partialCredit_field.view
+                                            , mustMatchPattern_warningType_field.view
+                                            , mustMatchPattern_message_field.view
                                             ]
-                                        )
-                                    , part_field
-                                        { id = "checkingAccuracy"
-                                        , label = "Checking accuracy"
-                                        , help = Just "checking accuracy"
-                                        }
-                                        text_property
-                                    , part_field
-                                        { id = "vsetRangePoints"
-                                        , label = "Points to check"
-                                        , help = Just "checked points"
-                                        }
-                                        text_property
-                                    , part_field
-                                        { id = "failureRate"
-                                        , label = "Maximum no. of failures"
-                                        , help = Just "maximum number of failures"
-                                        }
-                                        text_property
-                                    , labelled_field
-                                        ui
-                                        { id = "vsetRangeStart"
-                                        , label = "Checking range start"
-                                        , help = Just "checking range start"
-                                        , settings = S.at [S.field "vsetRange", S.index 0] part.settings
-                                        , setter = pset
-                                        }
-                                        text_property
-                                    , labelled_field
-                                        ui
-                                        { id = "vsetRangeEnd"
-                                        , label = "Checking range end"
-                                        , help = Just "checking range end"
-                                        , settings = S.at [S.field "vsetRange", S.index 1] part.settings
-                                        , setter = pset
-                                        }
-                                        text_property
-                                    ]
-                                  , H.fieldset [] <| List.concat
-                                    [ [ H.legend [] [H.text "Variable value generators"]
-                                      , ui.help_block 
-                                         [ ui.helplink "variable-value-generators" "variable value generators"
-                                         , H.text "Give expressions which produce values for each of the variables in the expected answer. Leave blank to pick a random value from the range defined above, following the inferred type of the variable."
-                                         ]
+                                                
+                                        ]
+                                      , H.fieldset [] <| List.concat
+                                        [ [ H.legend [] [H.text "Variables"] ]
+                                        , checkVariableNames_field.view
+                                        , singleLetterVariables_field.view
+                                        , allowUnknownFunctions_field.view
+                                        , implicitFunctionComposition_field.view
+                                        ]
                                       ]
-                                    , let
-                                        names = S.get (JD.list (JD.map2 pair (JD.field "name" JD.string) (JD.maybe <| JD.field "inferredType" JD.string))) [] (cfield "findvars")
-                                      in
-                                        names
-                                        |> List.concatMap (\(name, minferredType) ->
-                                            List.concat
-                                                [ labelled_field
-                                                    ui
-                                                    { id = "value-generator-"++name
-                                                    , label = name
-                                                    , help = Nothing
-                                                    , settings = S.at [S.field "valuegenerators", S.indexWhereName name, S.field "value"] part.settings
-                                                    , setter = pset
-                                                    }
-                                                    (\_ o -> 
-                                                        (text_property ui o)
-                                                        ++ case minferredType of
-                                                            Nothing -> []
-                                                            Just inferredType -> [ui.help_block [ H.text <| "(this might be a " ++ inferredType ++ ")" ]]
-                                                    )
-                                                ]
-                                           )
-                                    ]
-                                  ]
+                                  , attributes = []
+                                  , fields = 
+                                      [ mustMatchPattern_field
+                                      , mustMatchPattern_nameToCompare_field
+                                      , mustMatchPattern_partialCredit_field
+                                      , mustMatchPattern_warningType_field
+                                      , checkVariableNames_field
+                                      , singleLetterVariables_field
+                                      , allowUnknownFunctions_field
+                                      , implicitFunctionComposition_field
+                                      ]
+                                  }
                               }
-                          }
-                        ]
+                            , { id = "checking-accuracy"
+                              , label = SimpleLabel "Checking accuracy"
+                              , icon = Just "scale"
+                              , tabbers = []
+                              , view =
+                                  { attributes = []
+                                  , contents = 
+                                      [ H.fieldset [] <| List.concat
+                                        [ [ H.legend [] [H.text "Checking accuracy"]
+                                          , ui.help_block 
+                                             [ ui.helplink "Checking accuracy" "checking accuracy"
+                                             , H.text "Define the range of points over which the student's answer will be compared with the correct answer, and the method used to compare them."
+                                             ]
+                                          ]
+                                        , checkingType_field.view
+                                        , checkingAccuracy_field.view
+                                        , vsetRangePoints_field.view
+                                        , failureRate_field.view
+                                        , vsetRangeStart_field.view
+                                        , vsetRangeEnd_field.view
+                                        ]
+                                      , H.fieldset [] <| List.concat
+                                        [ [ H.legend [] [H.text "Variable value generators"]
+                                          , ui.help_block 
+                                             [ ui.helplink "variable-value-generators" "variable value generators"
+                                             , H.text "Give expressions which produce values for each of the variables in the expected answer. Leave blank to pick a random value from the range defined above, following the inferred type of the variable."
+                                             ]
+                                          ]
+                                        , List.concatMap (.view) value_generator_fields
+                                        ]
+                                      ]
+                                  , fields =
+                                        [ checkingType_field
+                                        , checkingAccuracy_field
+                                        , vsetRangePoints_field
+                                        , failureRate_field
+                                        , vsetRangeStart_field
+                                        , vsetRangeEnd_field
+                                        ]
+                                        ++ value_generator_fields
+                                  }
+                              }
+                            ]
 
                     "1_n_2" ->
                         [ choices_tab
@@ -3510,258 +3715,293 @@ view_active model =
                             hasAnswers = answers /= []
 
                             showMarkingMatrix = hasChoices && hasAnswers && not customMCQMarking
-                        in
-                        [ { id = "choices"
-                          , label = SimpleLabel "Choices"
-                          , icon = Just "list"
-                          , view =
-                              { contents = List.concat
-                                  [ [H.fieldset [] <| List.concat
-                                    [ toggleExpressionField
-                                        { field = "choices"
-                                        , default = JE.list JE.string []
-                                        , id = "customChoices"
-                                        , label = "Variable list of choices?"
-                                        , help = Just "variable list of choices"
-                                        }
-                                    , visibleIf customChoices <|
-                                        part_field
-                                            { id = "choices"
-                                            , label = "List of choices"
-                                            , help = Just "list of choices"
-                                            }
-                                            text_property
-                                    , part_field
-                                        { id = "shuffleChoices"
-                                        , label = "Shuffle order of choices?"
-                                        , help = Just "shuffling choices"
-                                        }
-                                        boolean_property
-                                    , part_field
-                                        { id = "choicesHeader"
-                                        , label = "Text before choices"
-                                        , help = Just "text before choices"
-                                        }
-                                        text_property
-                                    ]]
-                                  , visibleIf (not customChoices) <| List.concat
-                                        [ [H.h4 [] [H.text "Choices"]]
-                                        , (choices |> List.indexedMap
-                                            (\i choice ->
-                                                H.fieldset
-                                                    [ HA.class "choice" ]
-                                                    (List.concat <|
-                                                        [ [ H.legend [] [H.text <| "Choice "++(fi i)] ]
-                                                        , labelled_field
-                                                            ui
-                                                            { id = "choice-"++(fi i)
-                                                            , label = "Content"
-                                                            , help = Nothing
-                                                            , settings = S.at [S.field "choices", S.index i] part.settings
-                                                            , setter = pset
-                                                            }
-                                                            content_property -- TODO : smaller
-                                                        , [ ui.button "danger"
-                                                            [ HE.onClick <| remove_choice i
-                                                            ]
-                                                            [ ui.icon "remove"
-                                                            , H.text "Delete this choice"
-                                                            ]
-                                                          ]
-                                                        ]
-                                                    )
+
+                            choices_field = toggleExpressionField
+                                { field = "choices"
+                                , default = JE.list JE.string []
+                                , id = "customChoices"
+                                , label = "Variable list of choices?"
+                                , help = Just "variable list of choices"
+                                }
+
+                            customChoices_field = 
+                                part_field
+                                    { id = "choices"
+                                    , label = "List of choices"
+                                    , help = Just "list of choices"
+                                    }
+                                    text_property
+
+                            shuffleChoices_field = part_field
+                                { id = "shuffleChoices"
+                                , label = "Shuffle order of choices?"
+                                , help = Just "shuffling choices"
+                                }
+                                boolean_property
+
+                            choicesHeader_field = part_field
+                                { id = "choicesHeader"
+                                , label = "Text before choices"
+                                , help = Just "text before choices"
+                                }
+                                text_property
+
+                            choices_rows = choices |> List.indexedMap (\i choice ->
+                                labelled_field
+                                    ui
+                                    { id = prefix_id <| "choice-"++(fi i)
+                                    , label = "Content"
+                                    , help = Nothing
+                                    , settings = S.at [S.field "choices", S.index i] part.settings
+                                    , setter = pset
+                                    }
+                                    content_property -- TODO : smaller
+                                )
+
+                            answers_field = toggleExpressionField
+                                { field = "answers"
+                                , default = JE.list JE.string []
+                                , id = "customAnswers"
+                                , label = "Variable list of answers?"
+                                , help = Just "variable list of answers"
+                                }
+
+                            customAnswers_field = part_field
+                                { id = "answers"
+                                , label = "List of answers"
+                                , help = Just "list of answers"
+                                }
+                                text_property
+
+                            shuffleAnswers_field = part_field
+                                { id = "shuffleAnswers"
+                                , label = "Shuffle order of answers?"
+                                , help = Just "shuffling answers"
+                                }
+                                boolean_property
+                            answersHeader_field = part_field
+                                { id = "answersHeader"
+                                , label = "Text above answers"
+                                , help = Just "text above answers"
+                                }
+                                text_property
+
+                            answers_rows = answers |> List.indexedMap (\i answer ->
+                                labelled_field
+                                    ui
+                                    { id = prefix_id <| "answer-"++(fi i)
+                                    , label = "Content"
+                                    , help = Nothing
+                                    , settings = S.at [S.field "answers", S.index i] part.settings
+                                    , setter = pset
+                                    }
+                                    content_property -- TODO : smaller
+                                )
+
+                            markingMethod_field = part_field
+                                { id = "markingMethod"
+                                , label = "Marking method"
+                                , help = Just "marking method"
+                                }
+                                (select_property
+                                    [ ("sum ticked cells", "Sum ticked cells")
+                                    , ("score per matched cell", "Score per matched cell")
+                                    , ("all-or-nothing", "All-or-nothing")
+                                    ]
+                                )
+
+                            matrix_fields = 
+                                choices 
+                                |> List.indexedMap 
+                                    (\i choice ->
+                                        (choice
+                                        , answers |> List.indexedMap (\j _ -> 
+                                            custom_text_property
+                                                [ HA.attribute "aria-labelledby" <| (prefix_id <| "mcq-matrix-answer-"++(fi j))++" "++(prefix_id <| "mcq-matrix-choice-"++(fi i))
+                                                ]
+                                                ui
+                                                { id = prefix_id <| "matrix-"++(fi i)++"-"++(fi j)
+                                                , label = "Choice "++(fi i)++", answer "++(fi j)
+                                                , help = Nothing
+                                                , settings = S.at [S.field "matrix", S.index i, S.index j] part.settings
+                                                , setter = pset
+                                                }
                                             )
-                                          )
-                                        ]
-                                        ++[ ui.button "primary"
-                                            [ HE.onClick <| set_choices <| choices++[""]
+                                        )
+                                    )
+                        in
+                            [ { id = "choices"
+                              , label = SimpleLabel "Choices"
+                              , icon = Just "list"
+                              , tabbers = []
+                              , view =
+                                  { contents = List.concat
+                                      [ [H.fieldset [] <| List.concat
+                                            [ choices_field.view
+                                            , visibleIf customChoices <| customChoices_field.view
+                                            , shuffleChoices_field.view
+                                            , choicesHeader_field.view
                                             ]
-                                            [ ui.icon "add"
-                                            , H.text "Add a choice"
-                                            ]
                                         ]
-                                  ]
-                              , attributes = []
-                              }
-                          }
-                        , { id = "answers"
-                          , label = SimpleLabel "Answers"
-                          , icon = Just "list"
-                          , view =
-                              { contents = List.concat
-                                  [ [H.fieldset [] <| List.concat
-                                    [ toggleExpressionField
-                                        { field = "answers"
-                                        , default = JE.list JE.string []
-                                        , id = "customAnswers"
-                                        , label = "Variable list of answers?"
-                                        , help = Just "variable list of answers"
-                                        }
-                                    , visibleIf customAnswers <|
-                                        part_field
-                                            { id = "answers"
-                                            , label = "List of answers"
-                                            , help = Just "list of answers"
-                                            }
-                                            text_property
-                                    , part_field
-                                        { id = "shuffleAnswers"
-                                        , label = "Shuffle order of answers?"
-                                        , help = Just "shuffling answers"
-                                        }
-                                        boolean_property
-                                    , part_field
-                                        { id = "answersHeader"
-                                        , label = "Text above answers"
-                                        , help = Just "text above answers"
-                                        }
-                                        text_property
-                                    ]]
-                                  , visibleIf (not customAnswers) <| List.concat
-                                        [ [H.h4 [] [H.text "Answers"]]
-                                        , (answers |> List.indexedMap
-                                            (\i _ ->
-                                                H.fieldset
-                                                    [ HA.class "answer" ]
-                                                    (List.concat <|
-                                                        [ [ H.legend [] [H.text <| "Answer "++(fi i)] ]
-                                                        , labelled_field
-                                                            ui
-                                                            { id = "answer-"++(fi i)
-                                                            , label = "Content"
-                                                            , help = Nothing
-                                                            , settings = S.at [S.field "answers", S.index i] part.settings
-                                                            , setter = pset
-                                                            }
-                                                            content_property -- TODO : smaller
-                                                        , [ ui.button "danger"
-                                                                [ HE.onClick <| remove_answer i
+                                      , visibleIf (not customChoices) <| List.concat
+                                            [ [H.h4 [] [H.text "Choices"]]
+                                            , (choices_rows |> List.indexedMap
+                                                (\i choice_field ->
+                                                    H.fieldset
+                                                        [ HA.class "choice" ]
+                                                        (List.concat <|
+                                                            [ [ H.legend [] [H.text <| "Choice "++(fi i)] ]
+                                                            , choice_field.view
+                                                            , [ ui.button "danger"
+                                                                [ HE.onClick <| remove_choice i
                                                                 ]
                                                                 [ ui.icon "remove"
-                                                                , H.text "Delete this answer"
+                                                                , H.text "Delete this choice"
                                                                 ]
+                                                              ]
+                                                            ]
+                                                        )
+                                                )
+                                              )
+                                            ]
+                                            ++[ ui.button "primary"
+                                                [ HE.onClick <| set_choices <| choices++[""]
+                                                ]
+                                                [ ui.icon "add"
+                                                , H.text "Add a choice"
+                                                ]
+                                            ]
+                                      ]
+                                  , attributes = []
+                                  , fields = 
+                                      [ choices_field
+                                      , customChoices_field
+                                      , shuffleChoices_field
+                                      , choicesHeader_field
+                                      ]
+                                      ++ choices_rows
+                                  }
+                              }
+                            , { id = "answers"
+                              , label = SimpleLabel "Answers"
+                              , icon = Just "list"
+                              , tabbers = []
+                              , view =
+                                  { contents = List.concat
+                                      [ [H.fieldset [] <| List.concat
+                                        [ answers_field.view
+                                        , visibleIf customAnswers <| customAnswers_field.view
+                                        , shuffleAnswers_field.view
+                                        , answersHeader_field.view
+                                        ]]
+                                      , visibleIf (not customAnswers) <| List.concat
+                                            [ [H.h4 [] [H.text "Answers"]]
+                                            , (answers_rows |> List.indexedMap
+                                                (\i answer_field ->
+                                                    H.fieldset
+                                                        [ HA.class "answer" ]
+                                                        (List.concat <|
+                                                            [ [ H.legend [] [H.text <| "Answer "++(fi i)] ]
+                                                            , answer_field.view
+                                                            , [ ui.button "danger"
+                                                                    [ HE.onClick <| remove_answer i
+                                                                    ]
+                                                                    [ ui.icon "remove"
+                                                                    , H.text "Delete this answer"
+                                                                    ]
+                                                              ]
+                                                            ]
+                                                        )
+                                                )
+                                              )
+                                            ]
+                                            ++[ ui.button "primary"
+                                                [ HE.onClick <| set_answers <| answers++[""]
+                                                ]
+                                                [ ui.icon "add"
+                                                , H.text "Add a answer"
+                                                ]
+                                            ]
+                                      ]
+                                  , attributes = []
+                                  , fields = 
+                                      [ answers_field
+                                      , customAnswers_field
+                                      , shuffleAnswers_field
+                                      , answersHeader_field
+                                      ]
+                                      ++ answers_rows
+                                  }
+                              }
+                            , { id = "marking-matrix"
+                              , label = SimpleLabel "Marking matrix"
+                              , icon = Just "grid"
+                              , tabbers = []
+                              , view =
+                                  { contents = List.concat
+                                    [ [H.fieldset [] <| List.concat
+                                        [ visibleIf (displayType == "checkbox") <| markingMethod_field.view
+                                        , visibleIf (displayType == "checkbox" && needsMaxMarks && (String.toFloat (pstring "maxMarks") |> Maybe.withDefault 0) <= 0 ) <|
+                                            [ ui.alert "warning"
+                                                [ H.text "You must set a "
+                                                , H.map UpdateTab <| Tabber.tab_link part_tabber_name "marking-settings" "maximum number of marks"
+                                                , H.text " in order to use this marking method."
+                                                ]
+                                            ]
+                                        , customMCQMarking_field.view
+                                        , visibleIf customMCQMarking <| customMCQMatrix_field.view
+                                        ]]
+                                    , visibleIf showMarkingMatrix <|
+                                      [ H.fieldset [] <|
+                                        [ H.legend [] [H.text "Marking matrix"]
+                                        , if displayType == "radiogroup" || markingMethod == "sum ticked cells" then
+                                            ui.help_block [ H.text "For each combination of answer and choice, specify the number of marks to add or subtract when the student picks it."]
+                                          else
+                                            ui.help_block [ H.text "For each combination of answer and choice, write 1 if the student should tick it, or 0 if they should leave it unticked."]
+                                        , H.table [] <| List.concat
+                                                [ [H.thead
+                                                    []
+                                                    [ H.tr [] <| (H.td [] [])::(answers |> List.indexedMap (\i answer -> 
+                                                        H.th 
+                                                            [ HA.id <| prefix_id <| "mcq-matrix-answer-"++(fi i)
+                                                            , HA.scope "col"
+                                                            ]
+                                                            [mathjax_span answer]
+                                                      ))
+                                                    ]
+                                                  ]
+                                                , matrix_fields |> List.indexedMap (\i (choice, answer_fields) ->
+                                                    H.tr [] <| List.concat
+                                                        [ [H.th 
+                                                            [ HA.id <| prefix_id <| "mcq-matrix-choice-"++(fi i)
+                                                            , HA.scope "row"
+                                                            ]
+                                                            [mathjax_span choice]
                                                           ]
+                                                        , answer_fields |> List.indexedMap (\j field ->
+                                                            H.td [] field.view)
                                                         ]
                                                     )
-                                            )
-                                          )
-                                        ]
-                                        ++[ ui.button "primary"
-                                            [ HE.onClick <| set_answers <| answers++[""]
-                                            ]
-                                            [ ui.icon "add"
-                                            , H.text "Add a answer"
-                                            ]
-                                        ]
-                                  ]
-                              , attributes = []
-                              }
-                          }
-                        , { id = "marking-matrix"
-                          , label = SimpleLabel "Marking matrix"
-                          , icon = Just "grid"
-                          , view =
-                              { contents = List.concat
-                                [ [H.fieldset [] <| List.concat
-                                    [ visibleIf (displayType == "checkbox") <| part_field
-                                        { id = "markingMethod"
-                                        , label = "Marking method"
-                                        , help = Just "marking method"
-                                        }
-                                        (select_property
-                                            [ ("sum ticked cells", "Sum ticked cells")
-                                            , ("score per matched cell", "Score per matched cell")
-                                            , ("all-or-nothing", "All-or-nothing")
-                                            ]
-                                        )
-                                    , visibleIf (displayType == "checkbox" && needsMaxMarks && (String.toFloat (pstring "maxMarks") |> Maybe.withDefault 0) <= 0 ) <|
-                                        [ ui.alert "warning"
-                                            [ H.text "You must set a "
-                                            , H.map UpdateTab <| Tabber.tab_link part_tabber_name "marking-settings" "maximum number of marks"
-                                            , H.text " in order to use this marking method."
-                                            ]
-                                        ]
-                                    , labelled_field
-                                        ui
-                                        { id = "customMCQMarking"
-                                        , label = "Custom marking matrix?"
-                                        , help = Just "custom marking matrix"
-                                        , settings = part.settings
-                                        , setter = pset
-                                        }
-                                        (\_ o -> 
-                                            [ H.input
-                                                [ HA.type_ "checkbox"
-                                                , HA.checked <| customMCQMarking
-                                                , HE.onCheck <| \b -> if b then pset (JE.string "", [S.field "matrix"]) else psetList identity (pfield "matrix") []
-                                                , HA.id o.id
                                                 ]
-                                                []
-                                            ]
-                                        )
-                                    , visibleIf customMCQMarking <|
-                                        part_field
-                                            { id = "matrix"
-                                            , label = "Custom matrix expression"
-                                            , help = Just "custom matrix expression"
-                                            }
-                                            text_property
-                                    ]]
-                                , visibleIf showMarkingMatrix <|
-                                  [ H.fieldset [] <|
-                                    [ H.legend [] [H.text "Marking matrix"]
-                                    , if displayType == "radiogroup" || markingMethod == "sum ticked cells" then
-                                        ui.help_block [ H.text "For each combination of answer and choice, specify the number of marks to add or subtract when the student picks it."]
-                                      else
-                                        ui.help_block [ H.text "For each combination of answer and choice, write 1 if the student should tick it, or 0 if they should leave it unticked."]
-                                    , H.table [] <| List.concat
-                                            [ [H.thead
-                                                []
-                                                [ H.tr [] <| (H.td [] [])::(answers |> List.indexedMap (\i answer -> 
-                                                    H.th 
-                                                        [ HA.id <| prefix_id <| "mcq-matrix-answer-"++(fi i)
-                                                        , HA.scope "row"
-                                                        ]
-                                                        [mathjax_span answer]
-                                                  ))
-                                                ]
-                                              ]
-                                            , choices |> List.indexedMap (\i choice ->
-                                                H.tr [] <| List.concat
-                                                    [ [H.th 
-                                                        [ HA.id <| prefix_id <| "mcq-matrix-choice-"++(fi i)
-                                                        , HA.scope "row"
-                                                        ]
-                                                        [mathjax_span choice]
-                                                      ]
-                                                    , answers |> List.indexedMap (\j _ ->
-                                                        H.td [] (custom_text_property
-                                                            [ HA.attribute "aria-labelledby" <| (prefix_id <| "mcq-matrix-answer-"++(fi j))++" "++(prefix_id <| "mcq-matrix-choice-"++(fi i))
-                                                            ]
-                                                            ui
-                                                            { id = "matrix-"++(fi i)++"-"++(fi j)
-                                                            , label = "Choice "++(fi i)++", answer "++(fi j)
-                                                            , help = Nothing
-                                                            , settings = S.at [S.field "matrix", S.index i, S.index j] part.settings
-                                                            , setter = pset
-                                                            }
-                                                        ))
-                                                    ]
-                                                )
-                                            ]
+                                        ]
+                                      ]
                                     ]
-                                  ]
-                                ]
-                              , attributes = []
+                                  , attributes = []
+                                  , fields =
+                                      [ markingMethod_field
+                                      , customMCQMarking_field
+                                      , customMCQMatrix_field
+                                      ]
+                                      ++(matrix_fields |> List.concatMap second)
+                                  }
                               }
-                          }
-                        ]
+                            ]
 
                     _ -> []
 
                 part_tabber_name = "part-"++path_string
 
-                part_tabber =
+                part_tabber = Tabber
                     { name = part_tabber_name
                     , allow_empty = False
                     , tabs = tabs
@@ -3776,22 +4016,24 @@ view_active model =
 
                 cfield k = S.atField k part.computed
 
+                prompt_field = part_field
+                    { id = "prompt"
+                    , label = "Prompt"
+                    , help = Just "the part prompt"
+                    }
+                    content_property
+
                 prompt_tab =
                     { id = "prompt"
                     , label = SimpleLabel "Prompt"
                     , icon = Just "text"
+                    , tabbers = []
                     , view =
                         { contents = 
-                            [ H.fieldset [ HA.class "vertical" ] <|
-                                (part_field
-                                    { id = "prompt"
-                                    , label = "Prompt"
-                                    , help = Just "the part prompt"
-                                    }
-                                    content_property
-                                )
+                            [ H.fieldset [ HA.class "vertical" ] <| prompt_field.view
                             ]
                         , attributes = []
+                        , fields = [ prompt_field ]
                         }
                     }
 
@@ -3802,20 +4044,19 @@ view_active model =
                     }
                     text_property
 
-                show_feedback_fields = List.concat
-                    [ part_field
-                        { id = "showCorrectAnswer"
-                        , label = "Show correct answer on reveal?"
-                        , help = Just "revealing the correct answer"
-                        }
-                        boolean_property
-                    , part_field
-                        { id = "showFeedbackIcon"
-                        , label = "Show score feedback icon?"
-                        , help = Just "the feedback icon"
-                        }
-                        boolean_property
-                    ]
+                showCorrectAnswer_field = part_field
+                    { id = "showCorrectAnswer"
+                    , label = "Show correct answer on reveal?"
+                    , help = Just "revealing the correct answer"
+                    }
+                    boolean_property
+
+                showFeedbackIcon_field = part_field
+                    { id = "showFeedbackIcon"
+                    , label = "Show score feedback icon?"
+                    , help = Just "the feedback icon"
+                    }
+                    boolean_property
 
                 fieldIsString field =
                     S.getters.value (pfield field)
@@ -3825,761 +4066,938 @@ view_active model =
 
                 customMCQMarking = fieldIsString "matrix"
 
-                toggleExpressionField : { id : String, label : String, help : Maybe String, field : String, default : JE.Value } -> List (Html Msg)
-                toggleExpressionField eo =
-                    labelled_field
-                        ui
-                        { id = eo.id
-                        , label = eo.label
-                        , help = eo.help
-                        , settings = part.settings
-                        , setter = pset
-                        }
-                        (\_ o -> 
-                            [ H.input
-                                [ HA.type_ "checkbox"
-                                , HA.checked <| fieldIsString eo.field
-                                , HE.onCheck <| \b -> pset (if b then JE.string "" else eo.default, [S.field eo.field])
-                                , HA.id o.id
-                                ]
-                                []
-                            ]
-                        )
+                showCellAnswerState_field = part_field
+                    { id = "showCellAnswerState"
+                    , label = "Show choice feedback state?"
+                    , help = Just "choice feedback state"
+                    }
+                    boolean_property
+
+                displayColumns_field = part_field
+                    { id = "displayColumns"
+                    , label = "Number of display columns"
+                    , help = Just "display columns"
+                    }
+                    text_property
+
+
+                customMCQMarking_field = toggleExpressionField 
+                    { id = "customMarking"
+                    , label = "Custom marking matrix?"
+                    , help = Just "custom marking matrix"
+                    , field = "matrix"
+                    , default = JE.list JE.string []
+                    }
+
+                customMCQMatrix_field = part_field
+                    { id = "matrix"
+                    , label = "Custom matrix expression"
+                    , help = Just "custom matrix expression"
+                    }
+                    text_property
+
+                minMarks_field = part_field
+                    { id = "minMarks"
+                    , label = "Minimum marks"
+                    , help = Just "minimum marks"
+                    }
+                    text_property
+
+                maxMarks_field = part_field
+                    { id = "maxMarks"
+                    , label = "Maximum marks"
+                    , help = Just "maximum marks"
+                    }
+                    text_property
+
+                minAnswers_field = part_field
+                    { id = "minAnswers"
+                    , label = "Minimum answers"
+                    , help = Just "minimum answers"
+                    }
+                    text_property
+
+                maxAnswers_field = part_field
+                    { id = "maxAnswers"
+                    , label = "Maximum answers"
+                    , help = Just "maximum answers"
+                    }
+                    text_property
+
+                warningType_field = part_field
+                                { id = "warningType"
+                                , label = "What to do if wrong number of answers selected"
+                                , help = Just "wrong number of answers"
+                                }
+                                (select_property
+                                    [ ("none", "Do nothing")
+                                    , ("warn", "Warn")
+                                    , ("prevent", "Prevent submission")
+                                    ]
+                                )
+
+                precisionType = pstring "precisionType"
+
+                precisionWord = case precisionType of
+                    "dp" -> "Digits"
+                    "sigfig" -> "Significant figures"
+                    _ -> ""
+
+                precision_field = part_field
+                    { id = "precision"
+                    , label = precisionWord
+                    , help = Nothing
+                    }
+                    text_property
+
+                strictPrecision_field = part_field
+                    { id = "strictPrecision"
+                    , label = "Require trailing zeros?"
+                    , help = Just "trailing zeros"
+                    }
+                    boolean_property
+
+                showPrecisionHint_field = part_field
+                    { id = "showPrecisionHint"
+                    , label = "Show precision restriction hint?"
+                    , help = Just "precision restriction hint"
+                    }
+                    boolean_property
+
+                precisionPartialCredit_field = part_field
+                    { id = "precisionPartialCredit"
+                    , label = "Partial credit for wrong precision"
+                    , help = Nothing
+                    }
+                    percent_property
+
+                precisionMessage_field = part_field
+                    { id = "precisionMessage"
+                    , label = "Message if wrong precision"
+                    , help = Nothing
+                    }
+                    content_property
 
                 marking_settings_tab = 
                     { id = "marking-settings"
                     , label = SimpleLabel "Marking settings"
                     , icon = Just "pencil"
-                    , view =
-                        { contents = case part.type_.name of
-                            "jme" ->
-                                [ H.fieldset [] <| List.concat
-                                    [ marks_field
-                                    , part_field
-                                        { id = "answer"
-                                        , label = "Correct answer"
-                                        , help = Just "correct answer"
-                                        }
-                                        (jme_property { notation = pstring "notation" })
-                                    , visibleIf (S.getters.bool (cfield "is_equation"))
-                                        [ H.div 
-                                            [ HA.class "alert warning" ]
-                                            [ ui.helplink "marking-an-equation" "marking an equation"
-                                            , H.text "The correct answer is an equation. Use the "
-                                            , H.map UpdateTab <| Tabber.tab_link part_tabber_name "checking-accuracy" "accuracy tab"
-                                            , H.text " to generate variable values satisfying this equation so it can be marked accurately."
-                                            ]
-                                        ]
-                                    , part_field
-                                        { id = "notation"
-                                        , label = "Notation"
-                                        , help = Just "notation"
-                                        }
-                                        (select_property notation_options)
-                                    ]
-                                , H.fieldset [] show_feedback_fields
-                                , H.fieldset [] <| List.concat
-                                    [ [ H.legend [] [H.text "Advanced settings"] ]
-                                    , part_field
-                                        { id = "answerSimplification"
-                                        , label = "Answer simplification rules"
-                                        , help = Just "answer simplification rules"
-                                        }
-                                        text_property
-                                    , part_field
-                                        { id = "showPreview"
-                                        , label = "Show preview of student's answer?"
-                                        , help = Just "student answer preview"
-                                        }
-                                        boolean_property
-                                    , part_field
-                                        { id = "caseSensitive"
-                                        , label = "Expression is case-sensitive?"
-                                        , help = Just "case-sensitivity"
-                                        }
-                                        boolean_property
-                                    ]
-                                ]
+                    , tabbers = []
+                    , view = case part.type_.name of
+                        "jme" ->
+                            let
+                                answer_field = part_field
+                                    { id = "answer"
+                                    , label = "Correct answer"
+                                    , help = Just "correct answer"
+                                    }
+                                    (jme_property { notation = pstring "notation" })
 
-                            "numberentry" ->
-                                let
-                                    precisionType = pstring "precisionType"
+                                notation_field = part_field
+                                    { id = "notation"
+                                    , label = "Notation"
+                                    , help = Just "notation"
+                                    }
+                                    (select_property notation_options)
 
-                                    precisionWord = case precisionType of
-                                        "dp" -> "Digits"
-                                        "sigfig" -> "Significant figures"
-                                        _ -> ""
+                                answerSimplification_field = part_field
+                                    { id = "answerSimplification"
+                                    , label = "Answer simplification rules"
+                                    , help = Just "answer simplification rules"
+                                    }
+                                    text_property
 
-                                    fractionPossible = not (List.member precisionType ["dp", "sigfig"])
+                                showPreview_field = part_field
+                                    { id = "showPreview"
+                                    , label = "Show preview of student's answer?"
+                                    , help = Just "student answer preview"
+                                    }
+                                    boolean_property
 
-                                    allowFractions = pbool "allowFractions"
-
-                                    mustBeReduced = pbool "mustBeReduced"
-                                in
+                                caseSensitive_field = part_field
+                                    { id = "caseSensitive"
+                                    , label = "Expression is case-sensitive?"
+                                    , help = Just "case-sensitivity"
+                                    }
+                                    boolean_property
+                            in
+                                { contents = 
                                     [ H.fieldset [] <| List.concat
-                                        [ marks_field
-                                        , part_field
-                                            { id = "minValue"
-                                            , label = "Minimum accepted value"
-                                            , help = Just "minimum accepted value"
-                                            }
-                                            text_property
-                                        , part_field
-                                            { id = "maxValue"
-                                            , label = "Maximum accepted value"
-                                            , help = Just "maximum accepted value"
-                                            }
-                                            text_property
+                                        [ marks_field.view
+                                        , answer_field.view
+                                        , visibleIf (S.getters.bool (cfield "is_equation"))
+                                            [ H.div 
+                                                [ HA.class "alert warning" ]
+                                                [ ui.helplink "marking-an-equation" "marking an equation"
+                                                , H.text "The correct answer is an equation. Use the "
+                                                , H.map UpdateTab <| Tabber.tab_link part_tabber_name "checking-accuracy" "accuracy tab"
+                                                , H.text " to generate variable values satisfying this equation so it can be marked accurately."
+                                                ]
+                                            ]
+                                        , notation_field.view
                                         ]
-                                    , H.fieldset [] show_feedback_fields
+                                    , H.fieldset [] <| List.concat 
+                                        [ showCorrectAnswer_field.view
+                                        , showFeedbackIcon_field.view
+                                        ]
                                     , H.fieldset [] <| List.concat
                                         [ [ H.legend [] [H.text "Advanced settings"] ]
-                                        , part_field
+                                        , answerSimplification_field.view
+                                        , showPreview_field.view
+                                        , caseSensitive_field.view
+                                        ]
+                                    ]
+                                , attributes = []
+                                , fields = 
+                                    [ marks_field
+                                    , answer_field
+                                    , notation_field
+                                    , showCorrectAnswer_field
+                                    , showFeedbackIcon_field
+                                    , answerSimplification_field
+                                    , showPreview_field
+                                    , caseSensitive_field
+                                    ]
+                                }
+
+                        "numberentry" ->
+                            let
+                                fractionPossible = not (List.member precisionType ["dp", "sigfig"])
+
+                                allowFractions = pbool "allowFractions"
+
+                                mustBeReduced = pbool "mustBeReduced"
+
+                                minValue_field = part_field
+                                    { id = "minValue"
+                                    , label = "Minimum accepted value"
+                                    , help = Just "minimum accepted value"
+                                    }
+                                    text_property
+
+                                maxValue_field = part_field
+                                    { id = "maxValue"
+                                    , label = "Maximum accepted value"
+                                    , help = Just "maximum accepted value"
+                                    }
+                                    text_property
+
+
+                                displayAnswer_field = 
+                                    let
+                                        f = part_field
                                             { id = "displayAnswer"
                                             , label = "Display answer"
                                             , help = Just "display answer"
                                             }
-                                            (\_ o -> List.concat
-                                                [ text_property ui o
-                                                , visibleIf (pstring "displayAnswer" == "")
-                                                    [ui.help_block [ H.text "(The midpoint of the minimum and maximum accepted values)" ]]
-                                                ]
-                                            )
-                                        , part_field
-                                            { id = "precisionType"
-                                            , label = "Precision restriction"
-                                            , help = Just "precision restriction"
-                                            }
-                                            (select_property
-                                                [ ("none", "None")
-                                                , ("dp", "Decimal places")
-                                                , ("sigfig", "Significant figures")
-                                                ]
-                                            )
-                                        , visibleIf (fractionPossible) <|
-                                            part_field
-                                                { id = "allowFractions"
-                                                , label = "Allow the student to enter a fraction?"
-                                                , help = Just "allowing the student to enter a fraction"
-                                                }
-                                                boolean_property
+                                            text_property
+
+                                        hint = visibleIf (pstring "displayAnswer" == "")
+                                            [ui.help_block [ H.text "(The midpoint of the minimum and maximum accepted values)" ]]
+                                    in
+                                        { f | view = f.view ++ hint }
+
+                                precisionType_field = part_field
+                                    { id = "precisionType"
+                                    , label = "Precision restriction"
+                                    , help = Just "precision restriction"
+                                    }
+                                    (select_property
+                                        [ ("none", "None")
+                                        , ("dp", "Decimal places")
+                                        , ("sigfig", "Significant figures")
+                                        ]
+                                    )
+
+                                allowFractions_field = part_field
+                                        { id = "allowFractions"
+                                        , label = "Allow the student to enter a fraction?"
+                                        , help = Just "allowing the student to enter a fraction"
+                                        }
+                                        boolean_property
+
+                                mustBeReduced_field = part_field
+                                    { id = "mustBeReduced"
+                                    , label = "Must the fraction be reduced?"
+                                    , help = Just "reduced fractions"
+                                    }
+                                    boolean_property
+
+                                showFractionHint_field = part_field
+                                    { id = "showFractionHint"
+                                    , label = "Show fraction input hint?"
+                                    , help = Just "the fraction input hint"
+                                    }
+                                    boolean_property
+
+                                mustBeReducedPC_field = part_field
+                                    { id = "mustBeReducedPC"
+                                    , label = "Partial credit for unreduced fraction"
+                                    , help = Just "reduced fraction"
+                                    }
+                                    boolean_property
+
+                                correctAnswerFraction_field = part_field
+                                    { id = "correctAnswerFraction"
+                                    , label = "Display the correct answer as a fraction?"
+                                    , help = Just "displaying the correct answer as a fraction"
+                                    }
+                                    boolean_property
+
+                                notationStyles_field = part_field
+                                    { id = "notationStyles"
+                                    , label = "Allowed notation"
+                                    , help = Just "allowed notation styles"
+                                    }
+                                    (multi_select_property numberNotationStyles)
+
+                                correctAnswerStyle_field = part_field
+                                    { id = "correctAnswerStyle"
+                                    , label = "Correct answer style"
+                                    , help = Just "correct answer style"
+                                    }
+                                    (select_property (numberNotationStyles |> List.map (\s -> (s.value, s.label))))
+                            in
+                                { contents = 
+                                    [ H.fieldset [] <| List.concat
+                                        [ marks_field.view
+                                        , minValue_field.view
+                                        , maxValue_field.view
+                                        ]
+                                    , H.fieldset [] <| List.concat
+                                        [ showCorrectAnswer_field.view
+                                        , showFeedbackIcon_field.view
+                                        ]
+                                    , H.fieldset [] <| List.concat
+                                        [ [ H.legend [] [H.text "Advanced settings"] ]
+                                        , displayAnswer_field.view
+                                        , precisionType_field.view
+                                        , visibleIf fractionPossible <| allowFractions_field.view
                                         , visibleIf (fractionPossible && allowFractions) <| List.concat
-                                            [ part_field
-                                                { id = "mustBeReduced"
-                                                , label = "Must the fraction be reduced?"
-                                                , help = Just "reduced fractions"
-                                                }
-                                                boolean_property
-                                            , part_field
-                                                { id = "showFractionHint"
-                                                , label = "Show fraction input hint?"
-                                                , help = Just "the fraction input hint"
-                                                }
-                                                boolean_property
-                                            , visibleIf mustBeReduced <| 
-                                                part_field
-                                                    { id = "mustBeReducedPC"
-                                                    , label = "Partial credit for unreduced fraction"
-                                                    , help = Just "reduced fraction"
-                                                    }
-                                                    boolean_property
-                                            , part_field
-                                                { id = "correctAnswerFraction"
-                                                , label = "Display the correct answer as a fraction?"
-                                                , help = Just "displaying the correct answer as a fraction"
-                                                }
-                                                boolean_property
+                                            [ mustBeReduced_field.view
+                                            , showFractionHint_field.view
+                                            , visibleIf mustBeReduced <| mustBeReducedPC_field.view
+                                            , correctAnswerFraction_field.view
                                             ]
                                         , visibleIf (precisionType /= "none") <| List.concat
-                                            [ part_field
-                                                { id = "precision"
-                                                , label = precisionWord
-                                                , help = Nothing
-                                                }
-                                                text_property
-                                            , part_field
-                                                { id = "strictPrecision"
-                                                , label = "Require trailing zeros?"
-                                                , help = Just "trailing zeros"
-                                                }
-                                                boolean_property
-                                            , part_field
-                                                { id = "showPrecisionHint"
-                                                , label = "Show precision restriction hint?"
-                                                , help = Just "precision restriction hint"
-                                                }
-                                                boolean_property
-                                            , part_field
-                                                { id = "precisionPartialCredit"
-                                                , label = "Partial credit for wrong precision"
-                                                , help = Nothing
-                                                }
-                                                percent_property
-                                            , part_field
-                                                { id = "precisionMessage"
-                                                , label = "Message if wrong precision"
-                                                , help = Nothing
-                                                }
-                                                content_property
+                                            [ precision_field.view
+                                            , strictPrecision_field.view
+                                            , showPrecisionHint_field.view
+                                            , precisionPartialCredit_field.view
+                                            , precisionMessage_field.view
                                             ]
                                         ]
                                     , H.fieldset [] <| List.concat
                                         [ [ H.legend [] [H.text "Notation styles"] ]
-                                        , part_field
-                                            { id = "notationStyles"
-                                            , label = "Allowed notation"
-                                            , help = Just "allowed notation styles"
-                                            }
-                                            (multi_select_property numberNotationStyles)
-                                        , part_field
-                                            { id = "correctAnswerStyle"
-                                            , label = "Correct answer style"
-                                            , help = Just "correct answer style"
-                                            }
-                                            (select_property (numberNotationStyles |> List.map (\s -> (s.value, s.label))))
+                                        , notationStyles_field.view
+                                        , correctAnswerStyle_field.view
                                         ]
                                     ]
+                                , attributes = []
+                                , fields = 
+                                    [ marks_field
+                                    , minValue_field
+                                    , maxValue_field
+                                    , showCorrectAnswer_field
+                                    , showFeedbackIcon_field
+                                    , displayAnswer_field
+                                    , precisionType_field
+                                    , allowFractions_field
+                                    , mustBeReduced_field
+                                    , showFractionHint_field
+                                    , mustBeReducedPC_field
+                                    , correctAnswerFraction_field
+                                    , precision_field
+                                    , strictPrecision_field
+                                    , showPrecisionHint_field
+                                    , precisionPartialCredit_field
+                                    , precisionMessage_field
+                                    , notationStyles_field
+                                    , correctAnswerStyle_field
+                                    ]
+                                }
 
-                            "1_n_2" ->
-                                let
-                                    displayType = pstring "displayType"
-                                in
-                                    [ H.fieldset [] <| List.concat
-                                        [ part_field
-                                            { id = "showCellAnswerState"
-                                            , label = "Show choice feedback state?"
-                                            , help = Just "choice feedback state"
-                                            }
-                                            boolean_property
+                        "1_n_2" ->
+                            let
+                                displayType = pstring "displayType"
+
+                                displayType_field = part_field
+                                    { id = "displayType"
+                                    , label = "Selection type"
+                                    , help = Just "selection type"
+                                    }
+                                    (select_property 
+                                        [ ("radiogroup", "Radio buttons")
+                                        , ("dropdownlist", "Drop down list")
                                         ]
-                                    , H.fieldset [] show_feedback_fields
+                                    )
+
+                                showBlankOption_field = part_field
+                                    { id = "showBlankOption"
+                                    , label = "Show a blank choice?"
+                                    , help = Just "blank choice"
+                                    }
+                                    boolean_property
+
+                                interpretedAnswerForm_field = part_field
+                                    { id = "interpretedAnswerForm"
+                                    , label = "Form of the interpreted answer"
+                                    , help = Just "form of the interpreted answer"
+                                    }
+                                    (select_property
+                                        [ ("list of list of boolean", "2D array of booleans")
+                                        , ("index of choice", "Index of selected choice")
+                                        , ("text of choice", "Text of selected choice")
+                                        ]
+                                    )
+                            in
+                                { contents = 
+                                    [ H.fieldset [] <| List.concat
+                                        [ showCellAnswerState_field.view
+                                        ]
+                                    , H.fieldset [] <| List.concat
+                                        [ showCorrectAnswer_field.view
+                                        , showFeedbackIcon_field.view
+                                        ]
                                     , H.fieldset [] <| List.concat
                                         [ [ H.legend [] [H.text "Advanced settings"] ]
-                                        , part_field
-                                            { id = "displayType"
-                                            , label = "Selection type"
-                                            , help = Just "selection type"
-                                            }
-                                            (select_property 
-                                                [ ("radiogroup", "Radio buttons")
-                                                , ("dropdownlist", "Drop down list")
-                                                ]
-                                            )
-                                        , visibleIf (displayType == "dropdownlist") <|
-                                            part_field
-                                                { id = "showBlankOption"
-                                                , label = "Show a blank choice?"
-                                                , help = Just "blank choice"
-                                                }
-                                                boolean_property
-                                        , visibleIf (displayType == "radiogroup") <|
-                                            part_field
-                                                { id = "displayColumns"
-                                                , label = "Number of display columns"
-                                                , help = Just "display columns"
-                                                }
-                                                text_property
-                                        , toggleExpressionField 
-                                            { id = "customMarking"
-                                            , label = "Custom marking matrix?"
-                                            , help = Just "custom marking matrix"
-                                            , field = "matrix"
-                                            , default = JE.list JE.string []
-                                            }
-                                        , visibleIf customMCQMarking <|
-                                            part_field
-                                                { id = "matrix"
-                                                , label = "Custom matrix expression"
-                                                , help = Just "custom matrix expression"
-                                                }
-                                                text_property
-                                        , part_field
-                                            { id = "interpretedAnswerForm"
-                                            , label = "Form of the interpreted answer"
-                                            , help = Just "form of the interpreted answer"
-                                            }
-                                            (select_property
-                                                [ ("list of list of boolean", "2D array of booleans")
-                                                , ("index of choice", "Index of selected choice")
-                                                , ("text of choice", "Text of selected choice")
-                                                ]
-                                            )
+                                        , displayType_field.view
+                                        , visibleIf (displayType == "dropdownlist") <| showBlankOption_field.view
+                                        , visibleIf (displayType == "radiogroup") <| displayColumns_field.view
+                                        , customMCQMarking_field.view
+                                        , visibleIf customMCQMarking <| customMCQMatrix_field.view
+                                        , interpretedAnswerForm_field.view
                                         ]
                                     ]
+                                , attributes = []
+                                , fields = 
+                                    [ showCellAnswerState_field
+                                    , showCorrectAnswer_field
+                                    , showFeedbackIcon_field
+                                    , displayType_field
+                                    , displayColumns_field
+                                    , customMCQMarking_field
+                                    , customMCQMatrix_field
+                                    , interpretedAnswerForm_field
+                                    ]
+                                }
 
-                            "m_n_2" ->
-                                [ H.fieldset [] <| List.concat
-                                    [ part_field
-                                        { id = "minMarks"
-                                        , label = "Minimum marks"
-                                        , help = Just "minimum marks"
-                                        }
-                                        text_property
-                                    , part_field
-                                        { id = "maxMarks"
-                                        , label = "Maximum marks"
-                                        , help = Just "maximum marks"
-                                        }
-                                        text_property
-                                    , part_field
-                                        { id = "showCellAnswerState"
-                                        , label = "Show choice feedback state?"
-                                        , help = Just "choice feedback state"
-                                        }
-                                        boolean_property
+                        "m_n_2" ->
+                            let
+                                interpretedAnswerForm_field = part_field
+                                    { id = "interpretedAnswerForm"
+                                    , label = "Form of the interpreted answer"
+                                    , help = Just "form of the interpreted answer"
+                                    }
+                                    (select_property
+                                        [ ("list of list of boolean", "2D array of booleans")
+                                        , ("list of boolean", "List of booleans")
+                                        , ("indices of choices", "Indices of selected choices")
+                                        , ("text of choices", "Text of selected choices")
+                                        ]
+                                    )
+                            in
+                                { contents = 
+                                    [ H.fieldset [] <| List.concat
+                                        [ minMarks_field.view
+                                        , maxMarks_field.view
+                                        , showCellAnswerState_field.view
+                                        ]
+                                    , H.fieldset [] <| List.concat
+                                        [ showCorrectAnswer_field.view
+                                        , showFeedbackIcon_field.view
+                                        ]
+                                    , H.fieldset [] <| List.concat
+                                        [ [ H.legend [] [H.text "Advanced settings"] ]
+                                        , displayColumns_field.view
+                                        , minAnswers_field.view
+                                        , maxAnswers_field.view
+                                        , visibleIf (pfloat "minAnswers" /= 0 || pfloat "maxAnswers" /= 0) <| warningType_field.view
+                                        , customMCQMarking_field.view
+                                        , visibleIf customMCQMarking <| customMCQMatrix_field.view
+                                        , interpretedAnswerForm_field.view
+                                        ]
                                     ]
-                                , H.fieldset [] show_feedback_fields
-                                , H.fieldset [] <| List.concat
-                                    [ [ H.legend [] [H.text "Advanced settings"] ]
-                                    , part_field
-                                        { id = "displayColumns"
-                                        , label = "Number of display columns"
-                                        , help = Just "display columns"
-                                        }
-                                        text_property
-                                    , part_field
-                                        { id = "minAnswers"
-                                        , label = "Minimum answers"
-                                        , help = Just "minimum answers"
-                                        }
-                                        text_property
-                                    , part_field
-                                        { id = "maxAnswers"
-                                        , label = "Maximum answers"
-                                        , help = Just "maximum answers"
-                                        }
-                                        text_property
-                                    , visibleIf (pfloat "minAnswers" /= 0 || pfloat "maxAnswers" /= 0) <|
-                                        part_field
-                                            { id = "warningType"
-                                            , label = "What to do if wrong number of answers selected"
-                                            , help = Just "wrong number of answers"
-                                            }
-                                            (select_property
-                                                [ ("none", "Do nothing")
-                                                , ("warn", "Warn")
-                                                , ("prevent", "Prevent submission")
-                                                ]
-                                            )
-                                    , labelled_field
-                                        ui
-                                        { id = "customMCQMarking"
-                                        , label = "Custom marking matrix?"
-                                        , help = Just "custom marking matrix"
-                                        , settings = part.settings
-                                        , setter = pset
-                                        }
-                                        (\_ o -> 
-                                            [ H.input
-                                                [ HA.type_ "checkbox"
-                                                , HA.checked <| customMCQMarking
-                                                , HE.onCheck <| \b -> if b then pset (JE.string "", [S.field "matrix"]) else psetList identity (pfield "matrix") []
-                                                , HA.id o.id
-                                                ]
-                                                []
-                                            ]
-                                        )
-                                    , visibleIf customMCQMarking <|
-                                        part_field
-                                            { id = "matrix"
-                                            , label = "Custom matrix expression"
-                                            , help = Just "custom matrix expression"
-                                            }
-                                            text_property
-                                    , part_field
-                                        { id = "interpretedAnswerForm"
-                                        , label = "Form of the interpreted answer"
-                                        , help = Just "form of the interpreted answer"
-                                        }
-                                        (select_property
-                                            [ ("list of list of boolean", "2D array of booleans")
-                                            , ("list of boolean", "List of booleans")
-                                            , ("indices of choices", "Indices of selected choices")
-                                            , ("text of choices", "Text of selected choices")
-                                            ]
-                                        )
-                                    ]
+                            , attributes = []
+                            , fields = 
+                                [ minMarks_field
+                                , maxMarks_field
+                                , showCellAnswerState_field
+                                , showCorrectAnswer_field
+                                , showFeedbackIcon_field
+                                , displayColumns_field
+                                , minAnswers_field
+                                , maxAnswers_field
+                                , warningType_field 
+                                , customMCQMarking_field
+                                , customMCQMatrix_field
+                                , interpretedAnswerForm_field
                                 ]
+                            }
 
-                            "m_n_x" ->
-                                let
-                                    displayType = pstring "displayType"
+                        "m_n_x" ->
+                            let
+                                displayType = pstring "displayType"
 
-                                    layoutType = pstring "layoutType"
-                                in
-                                    [ H.fieldset [] <| List.concat
-                                        [ part_field
-                                            { id = "minMarks"
-                                            , label = "Minimum marks"
-                                            , help = Just "minimum marks"
-                                            }
-                                            text_property
-                                        , part_field
-                                            { id = "maxMarks"
-                                            , label = "Maximum marks"
-                                            , help = Just "maximum marks"
-                                            }
-                                            text_property
-                                        , part_field
-                                            { id = "showCellAnswerState"
-                                            , label = "Show choice feedback state?"
-                                            , help = Just "choice feedback state"
-                                            }
-                                            boolean_property
+                                layoutType = pstring "layoutType"
+
+                                displayType_field = part_field
+                                    { id = "displayType"
+                                    , label = "Selection type"
+                                    , help = Just "selection type"
+                                    }
+                                    (select_property 
+                                        [ ("radiogroup", "One from each row")
+                                        , ("checkbox", "Checkboxes")
                                         ]
-                                    , H.fieldset [] show_feedback_fields
+                                    )
+
+                                layoutType_field = part_field
+                                    { id = "layoutType"
+                                    , label = "Layout"
+                                    , help = Just "layout"
+                                    }
+                                    (select_property
+                                        [ ("all", "Show all options")
+                                        , ("lowertriangle", "Lower triangle")
+                                        , ("strictlowertriangle", "Lower triangle (no diagonal)")
+                                        , ("uppertriangle", "Upper triangle")
+                                        , ("strictuppertriangle", "Upper triangle (no diagonal)")
+                                        , ("expression", "Custom expression")
+                                        ]
+                                    )
+
+                                layoutExpression_field = part_field
+                                    { id = "layoutExpression"
+                                    , label = "Custom layout expression"
+                                    , help = Nothing
+                                    }
+                                    text_property
+
+                                interpretedAnswerForm_field = part_field
+                                    { id = "interpretedAnswerForm"
+                                    , label = "Form of the interpreted answer"
+                                    , help = Just "form of the interpreted answer"
+                                    }
+                                    (select_property
+                                        [ ("list of list of boolean", "2D array of booleans")
+                                        , ("indices of pairs", "List of chosen pair indices")
+                                        , ("text of choices", "Text of chosen pairs")
+                                        ]
+                                    )
+                            in
+                                { contents = 
+                                    [ H.fieldset [] <| List.concat
+                                        [ minMarks_field.view
+                                        , maxMarks_field.view
+                                        , showCellAnswerState_field.view
+                                        ]
+                                    , H.fieldset [] <| List.concat
+                                        [ showCorrectAnswer_field.view
+                                        , showFeedbackIcon_field.view
+                                        ]
                                     , H.fieldset [] <| List.concat
                                         [ [ H.legend [] [H.text "Advanced settings"] ]
-                                        , part_field
-                                            { id = "minAnswers"
-                                            , label = "Minimum answers"
-                                            , help = Just "minimum answers"
-                                            }
-                                            text_property
-                                        , part_field
-                                            { id = "maxAnswers"
-                                            , label = "Maximum answers"
-                                            , help = Just "maximum answers"
-                                            }
-                                            text_property
-                                        , visibleIf (pfloat "minAnswers" /= 0 || pfloat "maxAnswers" /= 0) <|
-                                            part_field
-                                                { id = "warningType"
-                                                , label = "What to do if wrong number of answers selected"
-                                                , help = Just "wrong number of answers"
-                                                }
-                                                (select_property
-                                                    [ ("none", "Do nothing")
-                                                    , ("warn", "Warn")
-                                                    , ("prevent", "Prevent submission")
-                                                    ]
-                                                )
-                                        , part_field
-                                            { id = "displayType"
-                                            , label = "Selection type"
-                                            , help = Just "selection type"
-                                            }
-                                            (select_property 
-                                                [ ("radiogroup", "One from each row")
-                                                , ("checkbox", "Checkboxes")
-                                                ]
-                                            )
-                                        , part_field
-                                            { id = "layoutType"
-                                            , label = "Layout"
-                                            , help = Just "layout"
-                                            }
-                                            (select_property
-                                                [ ("all", "Show all options")
-                                                , ("lowertriangle", "Lower triangle")
-                                                , ("strictlowertriangle", "Lower triangle (no diagonal)")
-                                                , ("uppertriangle", "Upper triangle")
-                                                , ("strictuppertriangle", "Upper triangle (no diagonal)")
-                                                , ("expression", "Custom expression")
-                                                ]
-                                            )
-                                        , visibleIf (layoutType == "expression") <|
-                                            part_field
-                                                { id = "layoutExpression"
-                                                , label = "Custom layout expression"
-                                                , help = Nothing
-                                                }
-                                                text_property
-                                        , part_field
-                                            { id = "interpretedAnswerForm"
-                                            , label = "Form of the interpreted answer"
-                                            , help = Just "form of the interpreted answer"
-                                            }
-                                            (select_property
-                                                [ ("list of list of boolean", "2D array of booleans")
-                                                , ("indices of pairs", "List of chosen pair indices")
-                                                , ("text of choices", "Text of chosen pairs")
-                                                ]
-                                            )
+                                        , minAnswers_field.view
+                                        , maxAnswers_field.view
+                                        , visibleIf (pfloat "minAnswers" /= 0 || pfloat "maxAnswers" /= 0) <| warningType_field.view
+                                        , displayType_field.view
+                                        , layoutType_field.view
+                                        , visibleIf (layoutType == "expression") <| layoutExpression_field.view
+                                        , interpretedAnswerForm_field.view
                                         ]
                                     ]
-
-                            "gapfill" -> 
-                                let
-                                    gap_types =
-                                        gaps
-                                        |> List.map (\g -> g.type_.name)
-                                        |> Set.fromList
-
-                                    all_gaps_same_type = 
-                                        gaps
-                                        |> List.map (\g -> g.type_.name)
-                                        |> Set.fromList
-                                        |> Set.size
-                                        |> (>=) 1
-                                in
-                                    [ H.fieldset [] <| List.concat
-                                        [ visibleIf all_gaps_same_type <| part_field
-                                            { id = "sortAnswers"
-                                            , label = "Sort student's answers before marking?"
-                                            , help = Just "sorting answers"
-                                            }
-                                            boolean_property
-                                        , part_field
-                                            { id = "inlineCorrectAnswer"
-                                            , label = "Show expected answers inline?"
-                                            , help = Just "showing expected answers inline"
-                                            }
-                                            boolean_property
-                                        ]
-                                    , H.fieldset [] show_feedback_fields
+                                , attributes = []
+                                , fields = 
+                                    [ minMarks_field
+                                    , maxMarks_field
+                                    , showCellAnswerState_field
+                                    , showCorrectAnswer_field
+                                    , showFeedbackIcon_field
+                                    , minAnswers_field
+                                    , maxAnswers_field
+                                    , warningType_field
+                                    , displayType_field
+                                    , layoutType_field
+                                    , layoutExpression_field
+                                    , interpretedAnswerForm_field
                                     ]
+                                }
 
-                            "matrix" -> 
-                                let
-                                    allowResize = pbool "allowResize"
+                        "gapfill" -> 
+                            let
+                                gap_types =
+                                    gaps
+                                    |> List.map (\g -> g.type_.name)
+                                    |> Set.fromList
 
-                                    precisionType = pstring "precisionType"
+                                all_gaps_same_type = 
+                                    gaps
+                                    |> List.map (\g -> g.type_.name)
+                                    |> Set.fromList
+                                    |> Set.size
+                                    |> (>=) 1
 
-                                    precisionWord = case precisionType of
-                                        "dp" -> "Digits"
-                                        "sigfig" -> "Significant figures"
-                                        _ -> ""
+                                sortAnswers_field = part_field
+                                    { id = "sortAnswers"
+                                    , label = "Sort student's answers before marking?"
+                                    , help = Just "sorting answers"
+                                    }
+                                    boolean_property
 
-                                    gridlines = pstring "gridlines"
-                                in
+                                inlineCorrectAnswer_field = part_field
+                                    { id = "inlineCorrectAnswer"
+                                    , label = "Show expected answers inline?"
+                                    , help = Just "showing expected answers inline"
+                                    }
+                                    boolean_property
+                            in
+                                { contents = 
                                     [ H.fieldset [] <| List.concat
-                                        [ marks_field
-                                        , part_field
-                                            { id = "correctAnswer"
-                                            , label = "Correct answer"
-                                            , help = Nothing
-                                            }
-                                            code_property
+                                        [ visibleIf all_gaps_same_type <| sortAnswers_field.view
+                                        , inlineCorrectAnswer_field.view
                                         ]
-                                    , H.fieldset [] show_feedback_fields
+                                    , H.fieldset [] <| List.concat
+                                        [ showCorrectAnswer_field.view
+                                        , showFeedbackIcon_field.view
+                                        ]
+                                    ]
+                                , attributes = []
+                                , fields = 
+                                    [ sortAnswers_field
+                                    , inlineCorrectAnswer_field
+                                    , showCorrectAnswer_field
+                                    , showFeedbackIcon_field
+                                    ]
+                                }
+
+                        "matrix" -> 
+                            let
+                                allowResize = pbool "allowResize"
+
+                                gridlines = pstring "gridlines"
+
+                                correctAnswer_field = part_field
+                                    { id = "correctAnswer"
+                                    , label = "Correct answer"
+                                    , help = Nothing
+                                    }
+                                    code_property
+
+                                numRows_field = part_field
+                                    { id = "numRows"
+                                    , label = "Number of rows"
+                                    , help = Just "number of rows"
+                                    }
+                                    text_property
+
+                                numColumns_field = part_field
+                                    { id = "numColumns"
+                                    , label = "Number of columns"
+                                    , help = Just "number of columns"
+                                    }
+                                    text_property
+
+                                allowResize_field = part_field
+                                    { id = "allowResize"
+                                    , label = "Allow student to change size of matrix?"
+                                    , help = Just "resizing the matrix"
+                                    }
+                                    boolean_property
+
+                                minRows_field = part_field
+                                    { id = "minRows"
+                                    , label = "Minimum number of rows"
+                                    , help = Just "minimum number of rows"
+                                    }
+                                    text_property
+
+                                maxRows_field = part_field
+                                    { id = "maxRows"
+                                    , label = "Maximum number of rows"
+                                    , help = Just "maximum number of rows"
+                                    }
+                                    text_property
+
+                                minColumns_field = part_field
+                                    { id = "minColumns"
+                                    , label = "Minimum number of columns"
+                                    , help = Just "minimum number of columns"
+                                    }
+
+                                    text_property
+
+                                maxColumns_field = part_field
+                                    { id = "maxColumns"
+                                    , label = "Maximum number of columns"
+                                    , help = Just "maximum number of columns"
+                                    }
+                                    text_property
+
+                                tolerance_field = part_field
+                                    { id = "tolerance"
+                                    , label = "Margin of error allowed in each cell"
+                                    , help = Just "margin of error"
+                                    }
+                                    text_property
+
+                                markPerCell_field = part_field
+                                    { id = "markPerCell"
+                                    , label = "Gain marks for each correct cell?"
+                                    , help = Just "marks per correct cell"
+                                    }
+                                    boolean_property
+
+                                precisionType_field = part_field
+                                    { id = "precisionType"
+                                    , label = "Precision restriction"
+                                    , help = Just "precision restriction"
+                                    }
+                                    (select_property
+                                        [ ("none", "None")
+                                        , ("dp", "Decimal places")
+                                        , ("sigfig", "Significant figures")
+                                        ]
+                                    )
+
+                                prefilledCells_field = part_field
+                                    { id = "prefilledCells"
+                                    , label = "Pre-filled cells"
+                                    , help = Just "pre-filled cells"
+                                    }
+                                    code_property
+
+                                gridlines_field = part_field
+                                    { id = "gridlines"
+                                    , label = "Grid lines"
+                                    , help = Just "grid lines"
+                                    }
+                                    (select_property
+                                        [ ("none", "None")
+                                        , ("afterFirstRow", "After first row")
+                                        , ("beforeLastRow", "Before last row")
+                                        , ("afterFirstColumn", "After first column")
+                                        , ("beforeLastColumn", "Before last column")
+                                        , ("custom", "Custom expression")
+                                        ]
+                                    )
+
+                                gridlinesCustomRows_field = part_field
+                                    { id = "gridlinesCustomRows"
+                                    , label = "Rows with lines"
+                                    , help = Just "rows with lines"
+                                    }
+                                    code_property
+
+                                gridlinesCustomColumns_field = part_field
+                                    { id = "gridlinesCustomColumns"
+                                    , label = "Columns with lines"
+                                    , help = Just "columns with lines"
+                                    }
+                                    code_property
+                            in
+                                { contents = 
+                                    [ H.fieldset [] <| List.concat
+                                        [ marks_field.view
+                                        , correctAnswer_field.view
+                                        ]
+                                    , H.fieldset [] <| List.concat
+                                        [ showCorrectAnswer_field.view
+                                        , showFeedbackIcon_field.view
+                                        ]
                                     , H.fieldset [] <| List.concat
                                         [ [H.legend [] [H.text "Size of the matrix"]]
-                                        , part_field
-                                            { id = "numRows"
-                                            , label = "Number of rows"
-                                            , help = Just "number of rows"
-                                            }
-                                            text_property
-                                        , part_field
-                                            { id = "numColumns"
-                                            , label = "Number of columns"
-                                            , help = Just "number of columns"
-                                            }
-                                            text_property
-                                        , part_field
-                                            { id = "allowResize"
-                                            , label = "Allow student to change size of matrix?"
-                                            , help = Just "resizing the matrix"
-                                            }
-                                            boolean_property
+                                        , numRows_field.view
+                                        , numColumns_field.view
+                                        , allowResize_field.view
                                         , visibleIf allowResize <| List.concat
-                                            [ part_field
-                                                { id = "minRows"
-                                                , label = "Minimum number of rows"
-                                                , help = Just "minimum number of rows"
-                                                }
-                                                text_property
-                                            , part_field
-                                                { id = "maxRows"
-                                                , label = "Maximum number of rows"
-                                                , help = Just "maximum number of rows"
-                                                }
-                                                text_property
-                                            , part_field
-                                                { id = "minColumns"
-                                                , label = "Minimum number of columns"
-                                                , help = Just "minimum number of columns"
-                                                }
-                                                text_property
-                                            , part_field
-                                                { id = "maxColumns"
-                                                , label = "Maximum number of columns"
-                                                , help = Just "maximum number of columns"
-                                                }
-                                                text_property
+                                            [ minRows_field.view
+                                            , maxRows_field.view
+                                            , minColumns_field.view
+                                            , maxColumns_field.view
                                             ]
                                         ]
                                     , H.fieldset [] <| List.concat
                                         [ [H.legend [] [H.text "Precision"]]
-                                        , part_field
-                                            { id = "tolerance"
-                                            , label = "Margin of error allowed in each cell"
-                                            , help = Just "margin of error"
-                                            }
-                                            text_property
-                                        , part_field
-                                            { id = "markPerCell"
-                                            , label = "Gain marks for each correct cell?"
-                                            , help = Just "marks per correct cell"
-                                            }
-                                            boolean_property
-                                        , part_field
-                                            { id = "precisionType"
-                                            , label = "Precision restriction"
-                                            , help = Just "precision restriction"
-                                            }
-                                            (select_property
-                                                [ ("none", "None")
-                                                , ("dp", "Decimal places")
-                                                , ("sigfig", "Significant figures")
-                                                ]
-                                            )
+                                        , tolerance_field.view
+                                        , markPerCell_field.view
+                                        , precisionType_field.view
                                         , visibleIf (precisionType /= "none") <| List.concat
-                                            [ part_field
-                                                { id = "precision"
-                                                , label = precisionWord
-                                                , help = Nothing
-                                                }
-                                                text_property
-                                            , part_field
-                                                { id = "strictPrecision"
-                                                , label = "Require trailing zeros?"
-                                                , help = Just "trailing zeros"
-                                                }
-                                                boolean_property
-                                            , part_field
-                                                { id = "precisionPartialCredit"
-                                                , label = "Partial credit for wrong precision"
-                                                , help = Nothing
-                                                }
-                                                percent_property
-                                            , part_field
-                                                { id = "precisionMessage"
-                                                , label = "Message if wrong precision"
-                                                , help = Nothing
-                                                }
-                                                content_property
+                                            [ precision_field.view
+                                            , strictPrecision_field.view
+                                            , precisionPartialCredit_field.view
+                                            , precisionMessage_field.view
                                             ]
                                         ]
                                     , H.fieldset [] <| List.concat
                                         [ [H.legend [] [H.text "Pre-filled cells"]]
-                                        , part_field
-                                            { id = "prefilledCells"
-                                            , label = "Pre-filled cells"
-                                            , help = Just "pre-filled cells"
-                                            }
-                                            code_property
+                                        , prefilledCells_field.view
                                         ]
                                     , H.fieldset [] <| List.concat
                                         [ [H.legend [] [H.text "Grid lines"]]
-                                        , part_field
-                                            { id = "gridlines"
-                                            , label = "Grid lines"
-                                            , help = Just "grid lines"
-                                            }
-                                            (select_property
-                                                [ ("none", "None")
-                                                , ("afterFirstRow", "After first row")
-                                                , ("beforeLastRow", "Before last row")
-                                                , ("afterFirstColumn", "After first column")
-                                                , ("beforeLastColumn", "Before last column")
-                                                , ("custom", "Custom expression")
-                                                ]
-                                            )
+                                        , gridlines_field.view
                                         , visibleIf (gridlines == "custom") <| List.concat
-                                            [ part_field
-                                                { id = "gridlinesCustomRows"
-                                                , label = "Rows with lines"
-                                                , help = Just "rows with lines"
-                                                }
-                                                code_property
-                                            , part_field
-                                                { id = "gridlinesCustomColumns"
-                                                , label = "Columns with lines"
-                                                , help = Just "columns with lines"
-                                                }
-                                                code_property
+                                            [ gridlinesCustomRows_field.view
+                                            , gridlinesCustomColumns_field.view
                                             ]
                                         ]
                                     ]
+                                , attributes = []
+                                , fields = 
+                                    [ marks_field
+                                    , correctAnswer_field
+                                    , showCorrectAnswer_field
+                                    , showFeedbackIcon_field
+                                    , numRows_field
+                                    , numColumns_field
+                                    , allowResize_field
+                                    , minRows_field
+                                    , maxRows_field
+                                    , minColumns_field
+                                    , maxColumns_field
+                                    , tolerance_field
+                                    , markPerCell_field
+                                    , precisionType_field
+                                    , precision_field
+                                    , strictPrecision_field
+                                    , precisionPartialCredit_field
+                                    , precisionMessage_field
+                                    , prefilledCells_field
+                                    , gridlines_field
+                                    , gridlinesCustomRows_field
+                                    , gridlinesCustomColumns_field
+                                    ]
+                                }
 
-                            "patternmatch" ->
-                                let
-                                    showCorrectAnswer = pbool "showCorrectAnswer"
+                        "patternmatch" ->
+                            let
+                                showCorrectAnswer = pbool "showCorrectAnswer"
 
-                                    matchMode = pstring "matchMode"
-                                in
-                                    [ H.fieldset [] <| List.concat
-                                        [ marks_field
-                                        , part_field
-                                            { id = "matchMode"
-                                            , label = "Match test"
-                                            , help = Just "match test"
-                                            }
-                                            (select_property
-                                                [ ("regex", "Regular expression")
-                                                , ("exact", "Exact match")
-                                                ]
-                                            )
-                                        , part_field
-                                            { id = "answer"
-                                            , label = "Answer pattern"
-                                            , help = Just "answer pattern"
-                                            }
-                                            text_property
-                                        , part_field
-                                            { id = "allowEmpty"
-                                            , label = "Allow the student to submit an empty answer?"
-                                            , help = Just "empty answers"
-                                            }
-                                            boolean_property
-                                        , visibleIf (showCorrectAnswer && matchMode == "regex") <|
-                                            part_field
-                                                { id = "displayAnswer"
-                                                , label = "Display answer"
-                                                , help = Just "display answer"
-                                                }
-                                                text_property
+                                matchMode = pstring "matchMode"
+
+                                matchMode_field = part_field
+                                    { id = "matchMode"
+                                    , label = "Match test"
+                                    , help = Just "match test"
+                                    }
+                                    (select_property
+                                        [ ("regex", "Regular expression")
+                                        , ("exact", "Exact match")
                                         ]
-                                    , H.fieldset [] show_feedback_fields
+                                    )
+
+                                answer_field = part_field
+                                    { id = "answer"
+                                    , label = "Answer pattern"
+                                    , help = Just "answer pattern"
+                                    }
+                                    text_property
+
+                                allowEmpty_field = part_field
+                                    { id = "allowEmpty"
+                                    , label = "Allow the student to submit an empty answer?"
+                                    , help = Just "empty answers"
+                                    }
+                                    boolean_property
+
+
+                                displayAnswer_field = part_field
+                                    { id = "displayAnswer"
+                                    , label = "Display answer"
+                                    , help = Just "display answer"
+                                    }
+                                    text_property
+
+                                caseSensitive_field = part_field
+                                    { id = "caseSensitive"
+                                    , label = "Must the answer be in the correct case?"
+                                    , help = Just "case sensitivity"
+                                    }
+                                    boolean_property
+
+                                partialCredit_field = part_field
+                                    { id = "partialCredit"
+                                    , label = "Partial credit for answer not matching case"
+                                    , help = Nothing
+                                    }
+                                    percent_property
+                            in
+                                { contents = 
+                                    [ H.fieldset [] <| List.concat
+                                        [ marks_field.view
+                                        , matchMode_field.view
+                                        , answer_field.view
+                                        , allowEmpty_field.view
+                                        , visibleIf (showCorrectAnswer && matchMode == "regex") <| displayAnswer_field.view
+                                        ]
+                                    , H.fieldset [] <| List.concat
+                                        [ showCorrectAnswer_field.view
+                                        , showFeedbackIcon_field.view
+                                        ]
                                     , H.fieldset [] <| List.concat
                                         [ [H.legend [] [H.text "Advanced settings"] ]
-                                        , part_field
-                                            { id = "caseSensitive"
-                                            , label = "Must the answer be in the correct case?"
-                                            , help = Just "case sensitivity"
-                                            }
-                                            boolean_property
-                                        , visibleIf (pbool "caseSensitive") <| part_field
-                                            { id = "partialCredit"
-                                            , label = "Partial credit for answer not matching case"
-                                            , help = Nothing
-                                            }
-                                            percent_property
+                                        , caseSensitive_field.view
+                                        , visibleIf (pbool "caseSensitive") <| partialCredit_field.view
                                         ]
                                     ]
+                                , attributes = []
+                                , fields = 
+                                    [ marks_field
+                                    , matchMode_field
+                                    , answer_field
+                                    , allowEmpty_field
+                                    , displayAnswer_field
+                                    , showCorrectAnswer_field
+                                    , showFeedbackIcon_field
+                                    , caseSensitive_field
+                                    , partialCredit_field
+                                    ]
+                                }
 
 
-                            _ -> [] -- TODO: custom
-                        , attributes = []
-                        }
+                        _ -> -- TODO: custom
+                            { contents = []
+                            , attributes = []
+                            , fields = 
+                                [
+                                ]
+                            }
                     }
 
                 alternative_feedback_tab =
-                    { id = "alternative-feedback-message"
-                    , label = SimpleLabel "Feedback message"
-                    , icon = Just "feedback"
-                    , view =
-                        { contents = 
-                            [ H.fieldset [] <| List.concat
-                                [ part_field
-                                    { id = "useAlternativeFeedback"
-                                    , label = "Show all feedback?"
-                                    , help = Just "using all alternative feedback"
-                                    }
-                                    boolean_property
-                                , part_field
-                                    { id = "alternativeFeedbackMessage"
-                                    , label = "Message if this alternative is used"
-                                    , help = Just "alternative feedback message"
-                                    }
-                                    content_property
+                    let
+                        useAlternativeFeedback_field = part_field
+                            { id = "useAlternativeFeedback"
+                            , label = "Show all feedback?"
+                            , help = Just "using all alternative feedback"
+                            }
+                            boolean_property
+
+                        alternativeFeedbackMessage_field = part_field
+                            { id = "alternativeFeedbackMessage"
+                            , label = "Message if this alternative is used"
+                            , help = Just "alternative feedback message"
+                            }
+                            content_property
+                    in
+                        { id = "alternative-feedback-message"
+                        , label = SimpleLabel "Feedback message"
+                        , icon = Just "feedback"
+                        , tabbers = []
+                        , view =
+                            { contents = 
+                                [ H.fieldset [] <| List.concat
+                                    [ useAlternativeFeedback_field.view
+                                    , alternativeFeedbackMessage_field.view
+                                    ]
+                                ] 
+                            , attributes = []
+                            , fields = 
+                                [ useAlternativeFeedback_field
+                                , alternativeFeedbackMessage_field
                                 ]
-                            ] 
-                        , attributes = []
+                            }
                         }
-                    }
 
                 marking_algorithm_tab =
                     let
@@ -4622,10 +5040,28 @@ view_active model =
                                     , setter = nset
                                     }
 
+                                note_name_field = note_field
+                                    { id = "name"
+                                    , label = "Name"
+                                    }
+                                    text_property
+
+                                note_definition_field = note_field
+                                    { id = "definition"
+                                    , label = "Definition"
+                                    }
+                                    code_property
+
+                                note_description_field = note_field
+                                    { id = "description"
+                                    , label = "Description"
+                                    }
+                                    content_property
                             in
                                 { id = fi i
                                 , label = SimpleLabel <| if String.trim name /= "" then name else "Unnamed note"
                                 , icon = Nothing
+                                , tabbers = []
                                 , view =
                                     { contents = 
                                         [ H.fieldset [ HA.class "vertical" ] <| List.concat
@@ -4633,48 +5069,44 @@ view_active model =
                                                     [ HE.onClick <| update_algo <| DeleteMarkingAlgorithmNote i ]
                                                     [ ui.icon "remove", H.text "Delete this note" ]
                                               ]
-                                            , note_field
-                                                { id = "name"
-                                                , label = "Name"
-                                                }
-                                                text_property
-                                            , note_field
-                                                { id = "definition"
-                                                , label = "Definition"
-                                                }
-                                                code_property
-                                            , note_field
-                                                { id = "description"
-                                                , label = "Description"
-                                                }
-                                                content_property
+                                            , note_name_field.view
+                                            , note_definition_field.view
+                                            , note_description_field.view
                                             ]
                                         ]
                                         , attributes = []
+                                        , fields = 
+                                            [ note_name_field
+                                            , note_definition_field
+                                            , note_description_field
+                                            ]
                                     }
                                 }
                             )
 
-                        notes_tabber = 
+                        notes_tabber = Tabber
                             { name = prefix_id "marking-algorithm-notes"
                             , allow_empty = False
                             , tabs = note_tabs
                             }
 
                         add_note = AddMarkingAlgorithmNote |> update_algo
+
+                        extendBaseMarkingAlgorithm_field = part_field
+                            { id = "extendBaseMarkingAlgorithm"
+                            , label = "Extend base marking algorithm?"
+                            , help = Just "extending the base marking algorithm"
+                            }
+                            boolean_property
                     in
                         { id = "marking-algorithm"
                         , label = SimpleLabel "Marking algorithm"
                         , icon = Just "ok"
+                        , tabbers = [notes_tabber]
                         , view =
                             { contents =
                                 [ H.fieldset [] <| List.concat
-                                    [ visibleIf (part.type_.name /= "extension") <| part_field
-                                        { id = "extendBaseMarkingAlgorithm"
-                                        , label = "Extend base marking algorithm?"
-                                        , help = Just "extending the base marking algorithm"
-                                        }
-                                        boolean_property
+                                    [ visibleIf (part.type_.name /= "extension") <| extendBaseMarkingAlgorithm_field.view
                                     ]
                                 , H.section [HA.class "tabbed-sidebar"]
                                     [ H.nav []
@@ -4690,6 +5122,7 @@ view_active model =
                                     ]
                                 ]
                             , attributes = []
+                            , fields = [ extendBaseMarkingAlgorithm_field ]
                             }
                         }
 
@@ -4714,10 +5147,21 @@ view_active model =
                             ]
                         mresult =
                             S.maybe_get decode_submit_result (S.atField "submit_answer" part.computed)
+
+                        test_answer_field = labelled_field
+                            ui
+                            { id = prefix_id "testing_answer"
+                            , label = "Answer"
+                            , help = Nothing
+                            , settings = S.atField "testing_answer" part.computed
+                            , setter = ChangePartSetting ComputedSetting >> pmsg
+                            }
+                            text_property
                     in
                         { id = "testing"
                         , label = SimpleLabel "Testing"
                         , icon = Just "check"
+                        , tabbers = []
                         , view =
                             { contents = List.concat
                                 [ [ H.h4 [] [H.text "Test that the marking algorithm works"]
@@ -4737,15 +5181,7 @@ view_active model =
                                                 [ H.text "Expected answer" ]
                                               , H.pre [] [H.text <| S.getters.string (S.atField "expectedAnswer" part.computed)]
                                               ]
-                                            , labelled_field
-                                                ui
-                                                { id = prefix_id "testing_answer"
-                                                , label = "Answer"
-                                                , help = Nothing
-                                                , settings = S.atField "testing_answer" part.computed
-                                                , setter = ChangePartSetting ComputedSetting >> pmsg
-                                                }
-                                                text_property
+                                            , test_answer_field.view
                                             , [ H.button 
                                                 [ HA.class "btn primary"
                                                 , HA.type_ "submit"
@@ -4766,6 +5202,7 @@ view_active model =
 
                                 ]
                             , attributes = []
+                            , fields = [ test_answer_field ]
                             }
                         }
 
@@ -4783,9 +5220,8 @@ view_active model =
                             }
 
                         when_run script label = 
-                            [H.p [] <| List.concat
-                                [ [H.text <| "Run the "++label++" script "]
-                                , custom_select_property
+                            let
+                                when_run_field = custom_select_property
                                     [ Aria.label <| "When to run the "++label++" script"
                                     , HA.class "inline"
                                     ]
@@ -4800,13 +5236,43 @@ view_active model =
                                     , label = ""
                                     , help = Nothing
                                     }
-                                , [H.text " the built-in script."]
-                                ]
-                            ]
+
+                                nview = 
+                                    [ H.p [] <| List.concat
+                                        [ [H.text <| "Run the "++label++" script "]
+                                        , when_run_field.view
+                                        , [H.text " the built-in script."]
+                                        ]
+                                    ]
+                            in
+                                { when_run_field | view = nview }
+
+                        mark_when_run_field = when_run "mark" "marking"
+
+                        validate_when_run_field = when_run "validate" "validation"
+
+                        script_constructor_field = script_field "constructor"
+                            { id = "script"
+                            , label = "When the part is created"
+                            }
+                            code_property
+
+                        script_mark_field = script_field "mark"
+                            { id = "script"
+                            , label = "Mark student's answer"
+                            }
+                            code_property
+
+                        script_validate_field = script_field "validate"
+                            { id = "script"
+                            , label = "Validate student's answer"
+                            }
+                            code_property
                     in
                         { id = "scripts"
                         , label = SimpleLabel "Scripts"
                         , icon = Just "file"
+                        , tabbers = []
                         , view =
                             { contents = 
                                 [ ui.help_block 
@@ -4814,27 +5280,21 @@ view_active model =
                                     , H.text "When you need to change the way this part works beyond the available options, you can write JavaScript code to be executed at the times described below." 
                                     ]
                                 , H.fieldset [] <| List.concat
-                                    [ script_field "constructor"
-                                        { id = "script"
-                                        , label = "When the part is created"
-                                        }
-                                        code_property
-                                    , script_field "mark"
-                                        { id = "script"
-                                        , label = "Mark student's answer"
-                                        }
-                                        code_property
-                                    , when_run "mark" "marking"
-                                    , script_field "validate"
-                                        { id = "script"
-                                        , label = "Validate student's answer"
-                                        }
-                                        code_property
-                                    , when_run "validate" "validation"
+                                    [ script_constructor_field.view
+                                    , script_mark_field.view
+                                    , mark_when_run_field.view
+                                    , script_validate_field.view
+                                    , validate_when_run_field.view
                                     ]
 
                                 ]
                             , attributes = []
+                            , fields = 
+                                [ script_constructor_field
+                                , script_mark_field
+                                , mark_when_run_field
+                                , validate_when_run_field
+                                ]
                             }
                         }
 
@@ -4913,10 +5373,70 @@ view_active model =
                             |> LE.unique
                             |> List.map second
                             |> List.filter variable_is_random
+
+                        variable_replacement_fields = variable_replacements |> List.indexedMap (\i (vrsettings,v) ->
+                            let
+                                variable = S.getters.string (S.atField "variable" vrsettings)
+
+                                vr_prefix_id id = prefix_id <| "variable-replacement-"++(fi i)++"-"++id
+                            in
+                                { variable = variable
+                                , part_field = select_property
+                                    part_options
+                                    ui
+                                    { id = vr_prefix_id "part"
+                                    , label = ""
+                                    , help = Nothing
+                                    , settings = vrsettings |> S.atField "part"
+                                    , setter = pset
+                                    }
+                                , must_go_first_field = boolean_property
+                                    ui
+                                    { id = vr_prefix_id "must_go_first"
+                                    , label = ""
+                                    , help = Nothing
+                                    , settings = vrsettings |> S.atField "must_go_first"
+                                    , setter = pset
+                                    }
+                                }
+                            )
+
+                        variableReplacementStrategy_field = part_field
+                            { id = "variableReplacementStrategy"
+                            , label = "Variable replacement strategy"
+                            , help = Just "variable replacement strategy"
+                            }
+                            (select_property
+                                [ ("originalfirst", "Try without replacements first")
+                                , ("alwaysreplace", "Always replace variables")
+                                ]
+                            )
+
+                        adaptiveMarkingPenalty_field = part_field
+                            { id = "adaptiveMarkingPenalty"
+                            , label = "Penalty when adaptive marking is used"
+                            , help = Just "adaptive marking penalty"
+                            }
+                            text_property
+
+                        adaptiveMarkingUseCondition_field = part_field
+                            { id = "adaptiveMarkingUseCondition"
+                            , label = "Condition for using this part's answer in adaptive marking"
+                            , help = Just "adaptive marking use condition"
+                            }
+                            text_property
+
+                        adaptiveMarkingNotUsedMessage_field = part_field
+                            { id = "adaptiveMarkingNotUsedMessage"
+                            , label = "Message when this part's answer is not used"
+                            , help = Just "adaptive marking use message"
+                            }
+                            content_property
                     in
                         { id = "adaptive-marking"
                         , label = SimpleLabel "Adaptive marking"
                         , icon = Just "transfer"
+                        , tabbers = []
                         , view =
                             { contents = List.concat
                                 [ [ ui.help_block
@@ -4945,45 +5465,19 @@ view_active model =
                                             ]
                                         , H.tbody
                                             []
-                                            (variable_replacements |> List.indexedMap (\i (vrsettings,v) ->
-                                                let
-                                                    variable = S.getters.string (S.atField "variable" vrsettings)
-
-                                                    vr_prefix_id id = prefix_id <| "variable-replacement-"++(fi i)++"-"++id
-                                                in
+                                            (variable_replacement_fields |> List.indexedMap (\i v ->
                                                     H.tr
                                                         []
                                                         [ H.td
                                                             [ HA.class "monospace" ]
-                                                            [ H.text variable ]
-                                                        , H.td
-                                                            [ ]
-                                                            (select_property
-                                                                part_options
-                                                                ui
-                                                                { id = vr_prefix_id "part"
-                                                                , label = ""
-                                                                , help = Nothing
-                                                                , settings = vrsettings |> S.atField "part"
-                                                                , setter = pset
-                                                                }
-                                                            )
-                                                        , H.td
-                                                            []
-                                                            (boolean_property
-                                                                ui
-                                                                { id = vr_prefix_id "must_go_first"
-                                                                , label = ""
-                                                                , help = Nothing
-                                                                , settings = vrsettings |> S.atField "must_go_first"
-                                                                , setter = pset
-                                                                }
-                                                            )
+                                                            [ H.text v.variable ]
+                                                        , H.td [] v.part_field.view
+                                                        , H.td [] v.must_go_first_field.view
                                                         , H.td
                                                             []
                                                             [ ui.button "danger"
                                                                 [ HE.onClick <| remove_variable_replacement i
-                                                                , Aria.label <| "Remove replacement of variable "++variable
+                                                                , Aria.label <| "Remove replacement of variable " ++ v.variable
                                                                 ]
                                                                 [ ui.icon "remove"
                                                                 ]
@@ -5019,44 +5513,27 @@ view_active model =
                                                 ]
                                         ))
                                 , [H.fieldset [] <| List.concat
-                                    [ part_field
-                                        { id = "variableReplacementStrategy"
-                                        , label = "Variable replacement strategy"
-                                        , help = Just "variable replacement strategy"
-                                        }
-                                        (select_property
-                                            [ ("originalfirst", "Try without replacements first")
-                                            , ("alwaysreplace", "Always replace variables")
-                                            ]
-                                        )
-                                    , part_field
-                                        { id = "adaptiveMarkingPenalty"
-                                        , label = "Penalty when adaptive marking is used"
-                                        , help = Just "adaptive marking penalty"
-                                        }
-                                        text_property
+                                    [ variableReplacementStrategy_field.view
+                                    , adaptiveMarkingPenalty_field.view
                                     ]
                                   ]
                                 , visibleIf (back_references /= []) <|
                                     [ H.p [] [H.text "The answer to this part is used to replace variables in the following other parts:"]
                                     , H.ul [] (back_references |> List.map (\(ppath, pp) -> part_link ppath pp))
                                     , H.fieldset [] <| List.concat
-                                        [ part_field
-                                            { id = "adaptiveMarkingUseCondition"
-                                            , label = "Condition for using this part's answer in adaptive marking"
-                                            , help = Just "adaptive marking use condition"
-                                            }
-                                            text_property
-                                        , part_field
-                                            { id = "adaptiveMarkingNotUsedMessage"
-                                            , label = "Message when this part's answer is not used"
-                                            , help = Just "adaptive marking use message"
-                                            }
-                                            content_property
+                                        [ adaptiveMarkingUseCondition_field.view
+                                        , adaptiveMarkingNotUsedMessage_field.view
                                         ]
                                     ]
                                 ]
                             , attributes = []
+                            , fields = 
+                                [ variableReplacementStrategy_field
+                                , adaptiveMarkingPenalty_field
+                                , adaptiveMarkingUseCondition_field
+                                , adaptiveMarkingNotUsedMessage_field
+                                ]
+                                ++ (variable_replacement_fields |> List.concatMap (\v -> [v.part_field, v.must_go_first_field]))
                             }
                         }
 
@@ -5105,10 +5582,301 @@ view_active model =
 
                         remove_next_part : Int -> Msg
                         remove_next_part i = set_next_parts (LE.removeAt i next_part_values)
+
+                        suggestGoingBack_field = part_field
+                            { id = "suggestGoingBack"
+                            , label = "Suggest going back to the previous part?"
+                            , help = Just "going back"
+                            }
+                            boolean_property
+
+                        next_parts_views = next_parts |> List.map (\(i, npat, (npath, np)) ->
+                            let
+                                npsettings = S.at npat part.settings
+                                npcomputed = S.at npat part.computed
+
+                                npprefix_id id = prefix_id <| "next-part-"++(fi i)++"-"++id
+
+                                npfield k = S.atField k npsettings
+
+                                availabilityCondition = S.getters.string (npfield "availabilityCondition")
+
+                                penalty = S.getters.string (npfield "penalty")
+
+
+                                variable_replacements : List (Int, S.Address, JE.Value)
+                                variable_replacements =
+                                    S.getters.list (npfield "variableReplacements")
+                                    |> List.indexedMap (\vi v -> (vi, [S.field "variableReplacements", S.index vi], v))
+
+                                set_variable_replacements = psetList identity (S.atField "variableReplacements" npsettings)
+
+                                replaced_variables : List String
+                                replaced_variables = variable_replacements |> List.map ((\(_,s,_) -> S.at s npsettings) >> S.atField "variable" >> S.getters.string)
+
+                                unreplaced_variables : List String
+                                unreplaced_variables = 
+                                    all_variables
+                                    |> List.map (second >> name_of)
+                                    |> (\s -> Set.diff (Set.fromList s) (Set.fromList replaced_variables))
+                                    |> Set.toList
+                                    |> List.sort
+
+                                add_variable_replacement : String -> Msg
+                                add_variable_replacement name =
+                                    (List.map third variable_replacements)++[JE.object [("variable", JE.string name), ("definition", JE.string "interpreted_answer")]]
+                                    |> set_variable_replacements
+
+                                remove_variable_replacement : Int -> Msg
+                                remove_variable_replacement vi =
+                                    variable_replacements
+                                    |> List.map third
+                                    |> LE.removeAt vi
+                                    |> set_variable_replacements
+
+                                can_make_variable_replacements = all_variables /= []
+
+                                availabilityConditions =
+                                    [ (Just "", "Always")
+                                    , (Just "answered", "When answer submitted")
+                                    , (Just "not (answered and correct)", "When unanswered or incorrect")
+                                    , (Just "answered and credit<1", "When incorrect")
+                                    , (Just "answered and credit=1", "When correct")
+                                    , (Nothing, "Depending on expression")
+                                    ]
+
+                                custom_availabilityCondition =
+                                    S.get
+                                        JD.bool
+                                        (not <| List.member (Just availabilityCondition) (List.map first <| dropRight 1 availabilityConditions))
+                                        (S.atField "availabilityCondition" part.computed)
+
+                                next_part_field o = labelled_field
+                                    ui
+                                    { id = npprefix_id o.id
+                                    , label = o.label
+                                    , help = o.help
+                                    , settings = npfield o.id
+                                    , setter = pset
+                                    }
+
+                                rawLabel_field = next_part_field
+                                    { id = "rawLabel"
+                                    , label = "Label"
+                                    , help = Just "label"
+                                    }
+                                    text_property
+
+                                lockAfterLeaving_field = next_part_field
+                                    { id = "lockAfterLeaving"
+                                    , label = "Lock this part?"
+                                    , help = Just "locking after leaving this part"
+                                    }
+                                    boolean_property
+
+                                availabilityCondition_field = labelled_field
+                                    ui
+                                    { id = npprefix_id "availabilityCondition"
+                                    , label = "Availability"
+                                    , help = Just "availability condition"
+                                    , settings = npfield "availabilityCondition"
+                                    , setter = ChangePartSetting CustomisableFinalSetting >> pmsg
+                                    }
+                                    (select_or_custom_property custom_availabilityCondition availabilityConditions [])
+
+                                availabilityCondition_expression_field = next_part_field
+                                    { id = "availabilityCondition"
+                                    , label = "Available if"
+                                    , help = Just "expression for availability"
+                                    }
+                                    text_property
+
+                                penalty_field = next_part_field
+                                    { id = "penalty"
+                                    , label = "Penalty to apply when visited"
+                                    , help = Just "penalty for visiting"
+                                    }
+                                    (select_property <| ("","")::explore_penalty_options)
+
+                                penaltyAmount_field = next_part_field
+                                    { id = "penaltyAmount"
+                                    , label = "Amount of penalty"
+                                    , help = Just "penalty amount"
+                                    }
+                                    text_property
+
+                                showPenaltyHint_field = next_part_field
+                                    { id = "showPenaltyHint"
+                                    , label = "Show penalty hint?"
+                                    , help = Just "penalty hint"
+                                    }
+                                    boolean_property
+
+
+                                variable_replacements_rows = variable_replacements |> List.map (\(vi, vrat, _) -> 
+                                    let
+                                        vrsettings = S.at vrat npsettings
+                                        vrcomputed = S.at vrat npcomputed
+
+                                        variable = S.getters.string (S.atField "variable" vrsettings)
+
+                                        definition = S.getters.string (S.atField "definition" vrsettings)
+
+                                        vr_prefix_id id = npprefix_id <| "variable-replacement-"++(fi i)++"-"++id
+
+                                        custom_definition =
+                                            S.get
+                                                JD.bool
+                                                (not <| List.member (Just definition) (List.map first <| dropRight 1 definitions))
+                                                (S.atField "availabilityCondition" part.computed)
+
+                                        gap_definitions = 
+                                            gaps
+                                            |> List.indexedMap (\gi gap -> 
+                                                let
+                                                    gpath = path ++ [(Gap, gi)]
+
+                                                    gname = part_name gpath gap
+                                                in
+                                                    (Just <| "interpreted_answer["++(fi gi)++"]", "Student's answer to \"" ++ gname ++ "\"")
+                                              )
+
+                                        definitions =
+                                            [ (Just "interpreted_answer", "Student's answer to this part") ]
+                                            ++ gap_definitions
+                                            ++
+                                            [ (Just "credit", "Credit awarded")
+                                            , (Nothing, "JME expression")
+                                            ]
+
+                                        definition_field = unlabelled_field
+                                            ui
+                                            { id = vr_prefix_id "definition"
+                                            , label = "Value for replaced value of "++variable
+                                            , help = Nothing
+                                            , settings = S.atField "definition" vrsettings
+                                            , setter = ChangePartSetting CustomisableFinalSetting >> pmsg
+                                            }
+                                            (select_or_custom_property custom_definition definitions)
+
+                                        custom_definition_field = 
+                                            unlabelled_field
+                                                ui
+                                                { id = vr_prefix_id "definition-jme"
+                                                , label = "JME expression for replaced value of "++variable
+                                                , help = Nothing
+                                                , settings = S.atField "definition" vrsettings
+                                                , setter = pset
+                                                }
+                                                custom_text_property
+                                    in
+                                        { view = H.tr
+                                            []
+                                            [ H.td [HA.class "monospace"] [H.text variable]
+                                            , H.td [] <| List.concat
+                                                [ definition_field.view
+                                                , visibleIf custom_definition <| custom_definition_field.view
+                                                ]
+                                            , H.td []
+                                                [ ui.button "danger"
+                                                    [ HE.onClick <| remove_variable_replacement vi
+                                                    , Aria.label <| "Remove replacement of variable " ++ variable
+                                                    ]
+                                                    [ ui.icon "remove"
+                                                    ]
+                                                ]
+                                            ]
+                                        , fields =
+                                            [ definition_field
+                                            , custom_definition_field
+                                            ]
+                                        }
+                                    )
+                            in
+                                { view = H.article []
+                                    [ H.h4 [] [H.text <| part_name npath np]
+                                    , H.p [] [H.text <| Debug.toString npath]
+                                    , ui.button "danger"
+                                        [ HE.onClick <| remove_next_part i
+                                        ]
+                                        [ ui.icon "remove"
+                                        , H.text "Remove this next part option"
+                                        ]
+                                    , H.fieldset [] <| List.concat
+                                        [ rawLabel_field.view
+                                        , lockAfterLeaving_field.view
+                                        , availabilityCondition_field.view
+                                        , visibleIf custom_availabilityCondition <| availabilityCondition_expression_field.view
+                                        , penalty_field.view
+                                        , visibleIf (penalty /= "") <| List.concat
+                                            [ penaltyAmount_field.view
+                                            , showPrecisionHint_field.view
+                                            , showPenaltyHint_field.view
+                                            ]
+                                        ]
+                                    , H.fieldset [] <| List.concat
+                                        [ [H.legend [] [H.text "Variable replacements"]]
+                                        , if variable_replacements == [] then
+                                            [ H.p [ HA.class "nothing-here" ] [H.text "No variable replacements have been defined for this next part option."] ]
+                                          else
+                                            [ H.table
+                                                []
+                                                [ H.colgroup
+                                                    []
+                                                    [ H.col [HA.class "name"] []
+                                                    , H.col [HA.class "value"] []
+                                                    , H.col [HA.class "controls"] []
+                                                    ]
+                                                , H.thead
+                                                    []
+                                                    [ H.tr []
+                                                        [ H.th [] [H.text "Variable"]
+                                                        , H.th [] [H.text "Value"]
+                                                        , H.td [] []
+                                                        ]
+                                                    ]
+                                                , H.tbody
+                                                    []
+                                                    (List.map (.view) variable_replacements_rows)
+                                              ]
+                                            ]
+                                        , visibleIf (unreplaced_variables /= []) <|
+                                            ui.dropdown 
+                                                "add-variable-replacement" 
+                                                [ ui.icon "add"
+                                                , H.text "Add a variable replacement"
+                                                ]
+                                                (unreplaced_variables |> List.map (\name -> 
+                                                    H.li
+                                                        []
+                                                        [ ui.button "monospace"
+                                                            [ HE.onClick <| add_variable_replacement name
+                                                            , HA.attribute "command" "hide-popover"
+                                                            , HA.attribute "commandfor" "add-variable-replacement-menu"
+                                                            ]
+                                                            [ H.text name ]
+                                                        ]
+                                                ))
+                                        ]
+                                    ]
+                                , fields =
+                                    [ rawLabel_field
+                                    , lockAfterLeaving_field
+                                    , availabilityCondition_field
+                                    , availabilityCondition_expression_field
+                                    , penalty_field
+                                    , penaltyAmount_field
+                                    , showPenaltyHint_field
+                                    ]
+                                    ++ (variable_replacements_rows |> List.concatMap (.fields))
+                                }
+                          )
+
                     in
                         { id = "next-parts"
                         , label = SimpleLabel "Next parts"
                         , icon = Just "next"
+                        , tabbers = []
                         , view =
                             { contents = List.concat
                                 [ visibleIf (not reachable) <|
@@ -5122,12 +5890,7 @@ view_active model =
                                     ]
                                 , visibleIf (not is_first_part)
                                     [ H.fieldset [] <| List.concat
-                                        [ part_field
-                                            { id = "suggestGoingBack"
-                                            , label = "Suggest going back to the previous part?"
-                                            , help = Just "going back"
-                                            }
-                                            boolean_property
+                                        [ suggestGoingBack_field.view
                                         ]
                                     ]
                                 , [ H.h3 [] [H.text "Next part options"]
@@ -5136,251 +5899,7 @@ view_active model =
                                       , H.text "Define the list of parts that the student can visit after this one."
                                       ]
                                   ]
-                                , next_parts |> List.map (\(i, npat, (npath, np)) ->
-                                    let
-                                        npsettings = S.at npat part.settings
-                                        npcomputed = S.at npat part.computed
-
-                                        npprefix_id id = prefix_id <| "next-part-"++(fi i)++"-"++id
-
-                                        npfield k = S.atField k npsettings
-
-                                        availabilityCondition = S.getters.string (npfield "availabilityCondition")
-
-                                        penalty = S.getters.string (npfield "penalty")
-
-
-                                        variable_replacements : List (Int, S.Address, JE.Value)
-                                        variable_replacements =
-                                            S.getters.list (npfield "variableReplacements")
-                                            |> List.indexedMap (\vi v -> (vi, [S.field "variableReplacements", S.index vi], v))
-
-                                        set_variable_replacements = psetList identity (S.atField "variableReplacements" npsettings)
-
-                                        replaced_variables : List String
-                                        replaced_variables = variable_replacements |> List.map ((\(_,s,_) -> S.at s npsettings) >> S.atField "variable" >> S.getters.string)
-
-                                        unreplaced_variables : List String
-                                        unreplaced_variables = 
-                                            all_variables
-                                            |> List.map (second >> name_of)
-                                            |> (\s -> Set.diff (Set.fromList s) (Set.fromList replaced_variables))
-                                            |> Set.toList
-                                            |> List.sort
-
-                                        add_variable_replacement : String -> Msg
-                                        add_variable_replacement name =
-                                            (List.map third variable_replacements)++[JE.object [("variable", JE.string name), ("definition", JE.string "interpreted_answer")]]
-                                            |> set_variable_replacements
-
-                                        remove_variable_replacement : Int -> Msg
-                                        remove_variable_replacement vi =
-                                            variable_replacements
-                                            |> List.map third
-                                            |> LE.removeAt vi
-                                            |> set_variable_replacements
-
-                                        can_make_variable_replacements = all_variables /= []
-
-                                        availabilityConditions =
-                                            [ (Just "", "Always")
-                                            , (Just "answered", "When answer submitted")
-                                            , (Just "not (answered and correct)", "When unanswered or incorrect")
-                                            , (Just "answered and credit<1", "When incorrect")
-                                            , (Just "answered and credit=1", "When correct")
-                                            , (Nothing, "Depending on expression")
-                                            ]
-
-                                        custom_availabilityCondition =
-                                            S.get
-                                                JD.bool
-                                                (not <| List.member (Just availabilityCondition) (List.map first <| dropRight 1 availabilityConditions))
-                                                (S.atField "availabilityCondition" part.computed)
-
-                                        next_part_field o = labelled_field
-                                            ui
-                                            { id = npprefix_id o.id
-                                            , label = o.label
-                                            , help = o.help
-                                            , settings = npfield o.id
-                                            , setter = pset
-                                            }
-                                    in
-                                        H.article []
-                                            [ H.h4 [] [H.text <| part_name npath np]
-                                            , H.p [] [H.text <| Debug.toString npath]
-                                            , ui.button "danger"
-                                                [ HE.onClick <| remove_next_part i
-                                                ]
-                                                [ ui.icon "remove"
-                                                , H.text "Remove this next part option"
-                                                ]
-                                            , H.fieldset [] <| List.concat
-                                                [ next_part_field
-                                                    { id = "rawLabel"
-                                                    , label = "Label"
-                                                    , help = Just "label"
-                                                    }
-                                                    text_property
-                                                , next_part_field
-                                                    { id = "lockAfterLeaving"
-                                                    , label = "Lock this part?"
-                                                    , help = Just "locking after leaving this part"
-                                                    }
-                                                    boolean_property
-                                                , labelled_field
-                                                    ui
-                                                    { id = npprefix_id "availabilityCondition"
-                                                    , label = "Availability"
-                                                    , help = Just "availability condition"
-                                                    , settings = npfield "availabilityCondition"
-                                                    , setter = ChangePartSetting CustomisableFinalSetting >> pmsg
-                                                    }
-                                                    (select_or_custom_property custom_availabilityCondition availabilityConditions [])
-                                                , visibleIf custom_availabilityCondition <|
-                                                    next_part_field
-                                                        { id = "availabilityCondition"
-                                                        , label = "Available if"
-                                                        , help = Just "expression for availability"
-                                                        }
-                                                        text_property
-                                                , next_part_field
-                                                    { id = "penalty"
-                                                    , label = "Penalty to apply when visited"
-                                                    , help = Just "penalty for visiting"
-                                                    }
-                                                    (select_property <| ("","")::explore_penalty_options)
-                                                , visibleIf (penalty /= "") <| List.concat
-                                                    [ next_part_field
-                                                        { id = "penaltyAmount"
-                                                        , label = "Amount of penalty"
-                                                        , help = Just "penalty amount"
-                                                        }
-                                                        text_property
-                                                    , next_part_field
-                                                        { id = "showPenaltyHint"
-                                                        , label = "Show penalty hint?"
-                                                        , help = Just "penalty hint"
-                                                        }
-                                                        boolean_property
-                                                    ]
-                                                ]
-                                            , H.fieldset [] <| List.concat
-                                                [ [H.legend [] [H.text "Variable replacements"]]
-                                                , if variable_replacements == [] then
-                                                    [ H.p [ HA.class "nothing-here" ] [H.text "No variable replacements have been defined for this next part option."] ]
-                                                  else
-                                                    [ H.table
-                                                        []
-                                                        [ H.colgroup
-                                                            []
-                                                            [ H.col [HA.class "name"] []
-                                                            , H.col [HA.class "value"] []
-                                                            , H.col [HA.class "controls"] []
-                                                            ]
-                                                        , H.thead
-                                                            []
-                                                            [ H.tr []
-                                                                [ H.th [] [H.text "Variable"]
-                                                                , H.th [] [H.text "Value"]
-                                                                , H.td [] []
-                                                                ]
-                                                            ]
-                                                        , H.tbody
-                                                            []
-                                                            (variable_replacements |> List.map (\(vi, vrat, _) -> 
-                                                                let
-                                                                    vrsettings = S.at vrat npsettings
-                                                                    vrcomputed = S.at vrat npcomputed
-
-                                                                    variable = S.getters.string (S.atField "variable" vrsettings)
-
-                                                                    definition = S.getters.string (S.atField "definition" vrsettings)
-
-                                                                    vr_prefix_id id = npprefix_id <| "variable-replacement-"++(fi i)++"-"++id
-
-                                                                    custom_definition =
-                                                                        S.get
-                                                                            JD.bool
-                                                                            (not <| List.member (Just definition) (List.map first <| dropRight 1 definitions))
-                                                                            (S.atField "availabilityCondition" part.computed)
-
-                                                                    gap_definitions = 
-                                                                        gaps
-                                                                        |> List.indexedMap (\gi gap -> 
-                                                                            let
-                                                                                gpath = path ++ [(Gap, gi)]
-
-                                                                                gname = part_name gpath gap
-                                                                            in
-                                                                                (Just <| "interpreted_answer["++(fi gi)++"]", "Student's answer to \"" ++ gname ++ "\"")
-                                                                          )
-
-                                                                    definitions =
-                                                                        [ (Just "interpreted_answer", "Student's answer to this part") ]
-                                                                        ++ gap_definitions
-                                                                        ++
-                                                                        [ (Just "credit", "Credit awarded")
-                                                                        , (Nothing, "JME expression")
-                                                                        ]
-                                                                in
-                                                                    H.tr
-                                                                        []
-                                                                        [ H.td [HA.class "monospace"] [H.text variable]
-                                                                        , H.td [] <| List.concat
-                                                                            [ unlabelled_field
-                                                                                ui
-                                                                                { id = vr_prefix_id "definition"
-                                                                                , label = "Value for replaced value of "++variable
-                                                                                , help = Nothing
-                                                                                , settings = S.atField "definition" vrsettings
-                                                                                , setter = ChangePartSetting CustomisableFinalSetting >> pmsg
-                                                                                }
-                                                                                (select_or_custom_property custom_definition definitions)
-                                                                            , visibleIf custom_definition <|
-                                                                                unlabelled_field
-                                                                                    ui
-                                                                                    { id = vr_prefix_id "definition-jme"
-                                                                                    , label = "JME expression for replaced value of "++variable
-                                                                                    , help = Nothing
-                                                                                    , settings = S.atField "definition" vrsettings
-                                                                                    , setter = pset
-                                                                                    }
-                                                                                    custom_text_property
-                                                                            ]
-                                                                        , H.td []
-                                                                            [ ui.button "danger"
-                                                                                [ HE.onClick <| remove_variable_replacement vi
-                                                                                , Aria.label <| "Remove replacement of variable " ++ variable
-                                                                                ]
-                                                                                [ ui.icon "remove"
-                                                                                ]
-                                                                            ]
-                                                                        ]
-                                                            ))
-                                                      ]
-                                                    ]
-                                                , visibleIf (unreplaced_variables /= []) <|
-                                                    ui.dropdown 
-                                                        "add-variable-replacement" 
-                                                        [ ui.icon "add"
-                                                        , H.text "Add a variable replacement"
-                                                        ]
-                                                        (unreplaced_variables |> List.map (\name -> 
-                                                            H.li
-                                                                []
-                                                                [ ui.button "monospace"
-                                                                    [ HE.onClick <| add_variable_replacement name
-                                                                    , HA.attribute "command" "hide-popover"
-                                                                    , HA.attribute "commandfor" "add-variable-replacement-menu"
-                                                                    ]
-                                                                    [ H.text name ]
-                                                                ]
-                                                        ))
-                                                ]
-                                            ]
-
-                                  )
+                                , List.map (.view) next_parts_views
                                 , visibleIf (top_parts /= []) <|
                                     ui.dropdown
                                         "add-next-part"
@@ -5400,6 +5919,10 @@ view_active model =
                                         ))
                                 ]
                             , attributes = []
+                            , fields = 
+                                [ suggestGoingBack_field
+                                ]
+                                ++ (List.concatMap (.fields) next_parts_views)
                             }
                         }
 
@@ -5472,8 +5995,8 @@ view_active model =
                         , view_tabpanel part_tabber
                         ]
                     , attributes = [ HA.class "part" ]
+                    , fields = []
                     }
-
 
             in
                 { id = part_tab_id path
@@ -5490,8 +6013,10 @@ view_active model =
                             ]
                         ]
                     , extra_contents = []
+                    , plain_text = part_name path part
                     }
                 , icon = Nothing
+                , tabbers = [part_tabber]
                 , view = pview
                 }
 
@@ -5575,6 +6100,7 @@ view_active model =
                     , [ extension_toggle_list other_extensions ]
                     ]
                 , attributes = []
+                , fields = []
                 }
 
         constants_tab =
@@ -5629,6 +6155,49 @@ view_active model =
                     |> UpdateQuestion
 
                 add_custom_constant = set_custom_constants (custom_constants ++ [JE.null])
+
+                constant_rows = custom_constants |> List.indexedMap (\i constant ->
+                    let
+                        cprefix_id id = "custom-constant-" ++ (fi i) ++ "-" ++ id
+
+                        cat = [S.field "constants", S.index i]
+
+                        csettings = S.at cat question.settings
+                        
+                        constant_name_field = text_property
+                            -- TODO nameError
+                            ui
+                            { id = cprefix_id "name"
+                            , label = ""
+                            , help = Nothing
+                            , settings = csettings |> S.atField "name"
+                            , setter = qset
+                            }
+
+                        constant_value_field = jme_property
+                            { notation = "standard" }
+                            ui
+                            { id = cprefix_id "value"
+                            , label = ""
+                            , help = Nothing
+                            , settings = csettings |> S.atField "value"
+                            , setter = qset
+                            }
+
+                        constant_tex_field = latex_property
+                            ui
+                            { id = cprefix_id "tex"
+                            , label = ""
+                            , help = Nothing
+                            , settings = csettings |> S.atField "tex"
+                            , setter = qset
+                            }
+                    in
+                        { name = constant_name_field
+                        , value = constant_value_field 
+                        , tex = constant_tex_field
+                        }
+                    )
             in
                 { contents = 
                     [ H.fieldset
@@ -5660,47 +6229,11 @@ view_active model =
                                         , H.th [] []
                                         ]
                                     ]
-                                , H.tbody [] (custom_constants |> List.indexedMap (\i constant ->
-                                    let
-                                        cprefix_id id = "custom-constant-" ++ (fi i) ++ "-" ++ id
-
-                                        cat = [S.field "constants", S.index i]
-
-                                        csettings = S.at cat question.settings
-                                    in
+                                , H.tbody [] (constant_rows |> List.indexedMap (\i row ->
                                         H.tr []
-                                            [ H.td [] 
-                                                (text_property
-                                                    ui
-                                                    { id = cprefix_id "name"
-                                                    , label = ""
-                                                    , help = Nothing
-                                                    , settings = csettings |> S.atField "name"
-                                                    , setter = qset
-                                                    }
-                                                )
-                                                -- TODO nameError
-                                            , H.td [] 
-                                                (jme_property
-                                                    { notation = "standard" }
-                                                    ui
-                                                    { id = cprefix_id "value"
-                                                    , label = ""
-                                                    , help = Nothing
-                                                    , settings = csettings |> S.atField "value"
-                                                    , setter = qset
-                                                    }
-                                                )
-                                            , H.td [] 
-                                                (latex_property
-                                                    ui
-                                                    { id = cprefix_id "tex"
-                                                    , label = ""
-                                                    , help = Nothing
-                                                    , settings = csettings |> S.atField "tex"
-                                                    , setter = qset
-                                                    }
-                                                )
+                                            [ H.td [] row.name.view
+                                            , H.td [] row.value.view
+                                            , H.td [] row.tex.view
                                             , H.td []
                                                 [ ui.button "danger xs"
                                                     [ HE.onClick <| set_custom_constants <| LE.removeAt i custom_constants
@@ -5723,6 +6256,7 @@ view_active model =
                         ]
                     ]
                 , attributes = []
+                , fields = constant_rows |> List.concatMap (\r -> [r.name, r.value, r.tex])
                 }
 
         rulesets_tab =
@@ -5766,31 +6300,31 @@ view_active model =
                                         |> S.at [S.field "rulesets", S.index i]
 
                                     rset = ChangeQuestionSetting ComputedSetting >> UpdateQuestion
+
+                                    name_field = 
+                                        text_property
+                                            ui
+                                            { id = rprefix_id "name"
+                                            , label = ""
+                                            , help = Nothing
+                                            , settings = rsettings |> S.atField "name"
+                                            , setter = rset
+                                            }
+
+                                    definition_field =
+                                        text_property
+                                            ui
+                                            { id = rprefix_id "definition"
+                                            , label = ""
+                                            , help = Nothing
+                                            , settings = rsettings |> S.atField "definition"
+                                            , setter = rset
+                                            }
                                 in
                                     H.tr
                                         []
-                                        [ H.td
-                                            []
-                                            (text_property
-                                                ui
-                                                { id = rprefix_id "name"
-                                                , label = ""
-                                                , help = Nothing
-                                                , settings = rsettings |> S.atField "name"
-                                                , setter = rset
-                                                }
-                                            )
-                                        , H.td
-                                            []
-                                            (text_property
-                                                ui
-                                                { id = rprefix_id "definition"
-                                                , label = ""
-                                                , help = Nothing
-                                                , settings = rsettings |> S.atField "definition"
-                                                , setter = rset
-                                                }
-                                            )
+                                        [ H.td [] name_field.view
+                                        , H.td [] definition_field.view
                                         , H.td [] 
                                             [ ui.button "danger xs"
                                              [ HE.onClick <| set_rulesets <| LE.removeAt i rulesets ]
@@ -5811,228 +6345,268 @@ view_active model =
                       ]
                     ]
                 , attributes = []
+                , fields = []
                 }
 
-        functions_tab =
+        functions = S.getters.list (S.atField "functions" question.settings)
+
+        set_functions = S.setList qset identity (S.atField "functions" question.settings) 
+
+        add_function = AddFunction |> UpdateQuestion
+
+        remove_function i = set_functions <| LE.removeAt i functions
+
+        function_tabs = functions |> List.indexedMap (\i function ->
             let
-                functions = S.getters.list (S.atField "functions" question.settings)
+                fsettings = S.at [S.field "functions", S.index i] question.settings
+                fcomputed = S.at [S.field "functions", S.index i] question.computed
 
-                set_functions = S.setList qset identity (S.atField "functions" question.settings) 
+                ffield k = S.atField k fsettings
 
-                add_function = AddFunction |> UpdateQuestion
+                function_field : { id : String, label : String } -> PropertyWidget -> PropertyField
+                function_field o = 
+                    labelled_field
+                        ui
+                        { id = fprefix_id o.id
+                        , label = o.label
+                        , help = Nothing
+                        , settings = ffield o.id
+                        , setter = qset
+                        }
 
-                remove_function i = set_functions <| LE.removeAt i functions
+                name = S.getters.string (ffield "name")
 
-                function_tabs = functions |> List.indexedMap (\i function ->
+                fprefix_id id = "function-" ++ (fi i) ++ "-" ++ id
+
+                parameters = S.getters.list (S.atField "parameters" fsettings)
+
+                set_parameters = S.setList qset identity (S.atField "parameters" fsettings)
+
+                add_parameter = set_parameters <| parameters++[JE.null]
+
+                remove_parameter pi = set_parameters <| LE.removeAt pi parameters
+
+                type_options = 
+                    (("?", "anything")::(List.map (\t -> (t,t)) model.jme_types))
+                    |> LE.unique
+                    |> List.sort
+
+                function_name_field = function_field
+                    { id = "name"
+                    , label = "Name"
+                    }
+                    text_property
+
+                function_output_field = function_field
+                    { id = "outtype"
+                    , label = "Output type"
+                    }
+                    (select_property (type_options))
+
+                function_language_field = function_field
+                    { id = "language"
+                    , label = "Language"
+                    }
+                    (select_property 
+                        [ ("jme", "JME")
+                        , ("javascript", "JavaScript")
+                        ]
+                    )
+
+                function_definition_field = function_field
+                    { id = "definition"
+                    , label = "Definition"
+                    }
+                    code_property
+
+                function_fields = 
+                    [ function_name_field
+                    , function_output_field
+                    , function_language_field
+                    , function_definition_field
+                    ]
+
+                parameter_rows = parameters |> List.indexedMap (\pi parameter -> 
                     let
-                        fsettings = S.at [S.field "functions", S.index i] question.settings
-                        fcomputed = S.at [S.field "functions", S.index i] question.computed
+                        psettings = S.at [S.field "parameters", S.index pi] fsettings
+                        pcomputed = S.at [S.field "parameters", S.index pi] fcomputed
 
-                        ffield k = S.atField k fsettings
+                        pprefix_id id = fprefix_id <| "parameter-"++(fi pi)++"-"++id
 
-                        function_field o = 
-                            labelled_field
+                        type_ = S.getters.string (S.atField "type" psettings)
+
+                        is_custom_type =
+                            S.get
+                                JD.bool
+                                (not <| List.member type_ <| List.map first type_options)
+                                (S.atField "type" pcomputed)
+
+                        parameter_name_field = text_property
+                            ui
+                            { id = pprefix_id "name"
+                            , label = "Name"
+                            , help = Nothing
+                            , settings = S.atField "name" psettings
+                            , setter = qset
+                            }
+                        
+                        parameter_type_field = select_or_custom_property is_custom_type
+                            ((type_options |> List.map (\(t,l) -> (Just t,l)))++[(Nothing, "custom")])
+                            []
+                            ui
+                            { id = pprefix_id "type"
+                            , label = "Type"
+                            , help = Nothing
+                            , settings = S.atField "type" psettings
+                            , setter = ChangeQuestionSetting CustomisableFinalSetting >> UpdateQuestion
+                            }
+
+                        parameter_custom_type_field = Property.visibleIf is_custom_type <| 
+                            text_property
                                 ui
-                                { id = fprefix_id o.id
-                                , label = o.label
+                                { id = pprefix_id "customType"
+                                , label = "Custom type"
                                 , help = Nothing
-                                , settings = ffield o.id
+                                , settings = S.atField "customType" psettings
                                 , setter = qset
                                 }
-
-                        name = S.getters.string (ffield "name")
-
-                        fprefix_id id = "function-" ++ (fi i) ++ "-" ++ id
-
-                        parameters = S.getters.list (S.atField "parameters" fsettings)
-
-                        set_parameters = S.setList qset identity (S.atField "parameters" fsettings)
-
-                        add_parameter = set_parameters <| parameters++[JE.null]
-
-                        remove_parameter pi = set_parameters <| LE.removeAt pi parameters
-
-                        type_options = 
-                            (("?", "anything")::(List.map (\t -> (t,t)) model.jme_types))
-                            |> LE.unique
-                            |> List.sort
-
-                        fview =
-                            { contents = 
-                                [ H.fieldset [HA.class "vertical"] <| List.concat
-                                    [ [ ui.button "danger"
-                                        [ HE.onClick <| remove_function i ]
-                                        [ ui.icon "remove"
-                                        , H.text "Delete this function"
-                                        ]
-                                      ]
-                                    , function_field
-                                        { id = "name"
-                                        , label = "Name"
-                                        }
-                                        text_property
-                                    , visibleIf (parameters /= [])
-                                        [ H.table
-                                            [ HA.class "parameters" ]
-                                            [ H.caption [] [H.text "Parameters"]
-                                            , H.thead []
-                                                [ H.tr []
-                                                    [ H.th [] [H.text "Name"]
-                                                    , H.th [] [H.text "Type"]
-                                                    , H.th [] []
-                                                    ]
-                                                ]
-                                            , H.tbody [] (parameters |> List.indexedMap (\pi parameter ->
-                                                let
-                                                    psettings = S.at [S.field "parameters", S.index pi] fsettings
-                                                    pcomputed = S.at [S.field "parameters", S.index pi] fcomputed
-
-                                                    pprefix_id id = fprefix_id <| "parameter-"++(fi pi)++"-"++id
-
-                                                    type_ = S.getters.string (S.atField "type" psettings)
-
-                                                    is_custom_type =
-                                                        S.get
-                                                            JD.bool
-                                                            (not <| List.member type_ <| List.map first type_options)
-                                                            (S.atField "type" pcomputed)
-                                                in
-                                                    H.tr []
-                                                        [ H.td []
-                                                            (text_property
-                                                                ui
-                                                                { id = pprefix_id "name"
-                                                                , label = "Name"
-                                                                , help = Nothing
-                                                                , settings = S.atField "name" psettings
-                                                                , setter = qset
-                                                                }
-                                                            )
-                                                        , H.td [] <| List.concat
-                                                            [ (select_or_custom_property is_custom_type
-                                                                ((type_options |> List.map (\(t,l) -> (Just t,l)))++[(Nothing, "custom")])
-                                                                []
-                                                                ui
-                                                                { id = pprefix_id "type"
-                                                                , label = "Type"
-                                                                , help = Nothing
-                                                                , settings = S.atField "type" psettings
-                                                                , setter = ChangeQuestionSetting CustomisableFinalSetting >> UpdateQuestion
-                                                                }
-                                                              )
-                                                            , visibleIf is_custom_type
-                                                                (text_property
-                                                                    ui
-                                                                    { id = pprefix_id "customType"
-                                                                    , label = "Custom type"
-                                                                    , help = Nothing
-                                                                    , settings = S.atField "customType" psettings
-                                                                    , setter = qset
-                                                                    }
-                                                                )
-                                                            ]
-                                                        , H.td []
-                                                            [ ui.button "danger xs"
-                                                                [ HE.onClick <| remove_parameter pi ]
-                                                                [ ui.icon "remove"
-                                                                , H.text "Delete this parameter"
-                                                                ]
-                                                            ]
-                                                        ]
-                                                ))
-                                            ]
-                                        ]
-                                    , [ ui.button "default"
-                                        [ HE.onClick add_parameter ]
-                                        [ ui.icon "add"
-                                        , H.text "Add a parameter"
-                                        ]
-                                      ]
-                                    , function_field
-                                        { id = "outtype"
-                                        , label = "Output type"
-                                        }
-                                        (select_property (type_options))
-                                    , function_field
-                                        { id = "language"
-                                        , label = "Language"
-                                        }
-                                        (select_property 
-                                            [ ("jme", "JME")
-                                            , ("javascript", "JavaScript")
-                                            ]
-                                        )
-                                    , function_field
-                                        { id = "definition"
-                                        , label = "Definition"
-                                        }
-                                        code_property
-                                    ]
-                                ]
-                            , attributes = []
-                            }
                     in
-                        { id = function_tab_id i
-                        , label = SimpleLabel <| if String.trim name /= "" then name else "Unnamed function"
-                        , icon = Nothing
-                        , view = fview
+                        { name = parameter_name_field
+                        , type_ = parameter_type_field
+                        , custom_type = parameter_custom_type_field
                         }
                     )
 
-                functions_tabber =
-                    { name = "functions"
-                    , allow_empty = True
-                    , tabs = function_tabs
-                    }
-            in
-                { contents = 
-                    [ H.nav
-                        [ HA.id "functions" ]
-                        [ H.h2 [] [ H.text "Functions" ]
-                        , view_tablist functions_tabber [HA.class "vertical"]
-                        , ui.button "primary"
-                            [ HE.onClick add_function ]
-                            [ ui.icon "add"
-                            , H.text "Add a function"
+                parameter_fields = parameter_rows |> List.concatMap (\row ->
+                    [ row.name
+                    , row.type_
+                    , row.custom_type
+                    ])
+
+                fview =
+                    { contents = 
+                        [ H.fieldset [HA.class "vertical"] <| List.concat
+                            [ [ ui.button "danger"
+                                [ HE.onClick <| remove_function i ]
+                                [ ui.icon "remove"
+                                , H.text "Delete this function"
+                                ]
+                              ]
+                            , function_name_field.view
+                            , visibleIf (parameters /= [])
+                                [ H.table
+                                    [ HA.class "parameters" ]
+                                    [ H.caption [] [H.text "Parameters"]
+                                    , H.thead []
+                                        [ H.tr []
+                                            [ H.th [] [H.text "Name"]
+                                            , H.th [] [H.text "Type"]
+                                            , H.th [] []
+                                            ]
+                                        ]
+                                    , H.tbody [] (parameter_rows |> List.indexedMap (\pi prow ->
+                                            H.tr []
+                                                [ H.td [] prow.name.view
+                                                , H.td [] <| List.concat
+                                                    [ prow.type_.view
+                                                    , prow.custom_type.view
+                                                    ]
+                                                , H.td []
+                                                    [ ui.button "danger xs"
+                                                        [ HE.onClick <| remove_parameter pi ]
+                                                        [ ui.icon "remove"
+                                                        , H.text "Delete this parameter"
+                                                        ]
+                                                    ]
+                                                ]
+                                        ))
+                                    ]
+                                ]
+                            , [ ui.button "default"
+                                [ HE.onClick add_parameter ]
+                                [ ui.icon "add"
+                                , H.text "Add a parameter"
+                                ]
+                              ]
+                            , function_output_field.view
+                            , function_language_field.view
+                            , function_definition_field.view
                             ]
                         ]
-                    , view_tabpanel functions_tabber
-                    ]
-                , attributes = [ HA.class "tabbed-sidebar" ]
+                    , attributes = []
+                    , fields = function_fields ++ parameter_fields
+                    }
+            in
+                { id = function_tab_id i
+                , label = SimpleLabel <| if String.trim name /= "" then name else "Unnamed function"
+                , icon = Nothing
+                , tabbers = []
+                , view = fview
                 }
+            )
+
+        functions_tabber = Tabber
+            { name = "functions"
+            , allow_empty = True
+            , tabs = function_tabs
+            }
+
+        functions_tab_view =
+            { contents = 
+                [ H.nav
+                    [ HA.id "functions" ]
+                    [ H.h2 [] [ H.text "Functions" ]
+                    , view_tablist functions_tabber [HA.class "vertical"]
+                    , ui.button "primary"
+                        [ HE.onClick add_function ]
+                        [ ui.icon "add"
+                        , H.text "Add a function"
+                        ]
+                    ]
+                , view_tabpanel functions_tabber
+                ]
+            , attributes = [ HA.class "tabbed-sidebar" ]
+            , fields = []
+            }
 
         preamble_tab =
             { contents = [] -- TODO
             , attributes = []
+            , fields = []
             }
 
-        extensions_tabber =
+        extensions_tabber = Tabber
             { name = "parts"
             , allow_empty = True
             , tabs = 
                 [ { id = "extensions"
                   , label = SimpleLabel "Extensions"
                   , icon = Nothing
+                  , tabbers = []
                   , view = extensions_tab
                   }
                 , { id = "constants"
                   , label = SimpleLabel "Constants"
                   , icon = Nothing
+                  , tabbers = []
                   , view = constants_tab
                   }
                 , { id = "rulesets"
                   , label = SimpleLabel "Rulesets"
                   , icon = Nothing
+                  , tabbers = []
                   , view = rulesets_tab
                   }
                 , { id = "functions"
                   , label = SimpleLabel "Functions"
                   , icon = Nothing
-                  , view = functions_tab
+                  , tabbers = [functions_tabber]
+                  , view = functions_tab_view
                   }
                 , { id = "preamble"
                   , label = SimpleLabel "Preamble"
                   , icon = Nothing
+                  , tabbers = []
                   , view = preamble_tab
                   }
                 ]
@@ -6048,6 +6622,7 @@ view_active model =
                 , view_tabpanel extensions_tabber
                 ]
             , attributes = []
+            , fields = []
             }
         
 
@@ -6230,6 +6805,30 @@ view_active model =
                 ]
                 )
             , view_tabpanel main_tabber
+
+            , let
+                show_tabbers : Tabber msg -> List (List (String, String))
+                show_tabbers tabber = 
+                    let
+                        name = tabber_name tabber
+                        tabs = tabber_tabs tabber
+
+                        show_label : Tab msg -> String
+                        show_label tab = case tab.label of
+                            SimpleLabel t -> t
+                            HtmlLabel r -> r.plain_text
+                    in
+                        tabs |> List.concatMap (\tab ->
+                            ([[]] ++ (tab.tabbers |> List.concatMap show_tabbers))
+                            |> List.map ((++) [(name, show_label tab)])
+                        )
+              in
+                  H.node "dialog"
+                    [ HA.attribute "open" "" ]
+                    [ H.ul [] (show_tabbers main_tabber |> List.map (\p ->
+                        H.li [] [H.text <| Debug.toString p]
+                      ))
+                    ]
             ]
 
 

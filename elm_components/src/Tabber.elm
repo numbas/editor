@@ -1,10 +1,14 @@
 port module Tabber exposing 
-    ( Tabber
+    ( Tabber(..)
     , TabView
     , Msg(..)
     , State
     , TabLabel(..)
     , Tab
+    , unwrap_tabber
+    , tabber_name
+    , tabber_tabs
+    , tabber_allow_empty
     , decode_state
     , update
     , set_tab
@@ -24,20 +28,39 @@ import Html.Events as HE
 import Json.Decode as JD
 import Json.Encode as JE
 import List.Extra as LE
+import Property exposing (Field)
 import Task exposing (Task)
 import Ui exposing (Ui)
 
 port save_tab_state : JE.Value -> Cmd msg
 
-type alias Tabber msg = 
+type alias TabberDef msg =
     { name : String
     , allow_empty : Bool
     , tabs : List (Tab msg)
     }
 
+type Tabber msg = 
+    Tabber (TabberDef msg)
+        
+
+unwrap_tabber : Tabber msg -> TabberDef msg
+unwrap_tabber t = case t of
+    Tabber def -> def
+
+tabber_name : Tabber msg -> String
+tabber_name = unwrap_tabber >> .name
+
+tabber_tabs : Tabber msg -> List (Tab msg)
+tabber_tabs = unwrap_tabber >> .tabs
+
+tabber_allow_empty : Tabber msg -> Bool
+tabber_allow_empty = unwrap_tabber >> .allow_empty
+
 type alias TabView msg =
     { attributes : List (H.Attribute msg)
     , contents : List (Html msg)
+    , fields : List (Field msg)
     }
 
 type Msg
@@ -50,6 +73,7 @@ type TabLabel msg
         { button_contents : List (Html msg)
         , button_attributes : List (H.Attribute msg)
         , extra_contents : List (Html msg) -- extra contents to show after the button when this tab is selected
+        , plain_text : String
         }
 
 type alias Tab msg =
@@ -57,15 +81,16 @@ type alias Tab msg =
     , label : TabLabel msg
     , icon : Maybe String
     , view : TabView msg
+    , tabbers : List (Tabber msg)
     }
 
 type alias State = Dict String String
 
 tab_id : Tabber msg -> Tab msg -> String
-tab_id tabber tab = tabber.name++"-tab-"++tab.id
+tab_id tabber tab = (tabber_name tabber)++"-tab-"++tab.id
 
 tabpanel_id : Tabber msg -> Tab msg -> String
-tabpanel_id tabber tab = tabber.name++"-tabpanel-"++tab.id
+tabpanel_id tabber tab = (tabber_name tabber)++"-tabpanel-"++tab.id
 
 initial_state = Dict.empty
 
@@ -104,21 +129,21 @@ tab_link tabber tab text =
 
 current_tab : State -> Tabber msg -> Maybe (Tab msg)
 current_tab state tabber = 
-    Dict.get tabber.name state
-    |> Maybe.andThen (\id -> List.filter (.id >> (==) id) tabber.tabs |> List.head)
-    |> if tabber.allow_empty then 
+    Dict.get (tabber_name tabber) state
+    |> Maybe.andThen (\id -> List.filter (.id >> (==) id) (tabber_tabs tabber) |> List.head)
+    |> if tabber_allow_empty tabber then 
         identity
        else
         (\mc -> case mc of
             Just c -> Just c
-            Nothing -> tabber.tabs |> List.head
+            Nothing -> (tabber_tabs tabber) |> List.head
         )
 
 view_tablist : Ui msg -> (Msg -> msg) -> State -> Tabber msg -> List (H.Attribute msg) -> Html msg
 view_tablist ui wrap_msg state tabber tabber_attrs =
     H.menu
         ([ Aria.role "tablist" ] ++ tabber_attrs)
-        (tabber.tabs |> List.indexedMap (\index tab ->
+        (tabber_tabs tabber |> List.indexedMap (\index tab ->
             let
                 selected = (==) (Just tab.id) <| Maybe.map .id <| current_tab state tabber
 
@@ -143,11 +168,11 @@ tab_button ui wrap_msg state tabber tab index =
     let
         selected = (==) (Just tab.id) <| Maybe.map .id <| current_tab state tabber
 
-        nth_tab i = LE.getAt i tabber.tabs
+        nth_tab i = LE.getAt i (tabber_tabs tabber)
 
         move_to_tab i =
             nth_tab i
-            |> Maybe.map (\ntab -> SetTab tabber.name ntab.id)
+            |> Maybe.map (\ntab -> SetTab (tabber_name tabber) ntab.id)
             |> Maybe.map JD.succeed
             |> Maybe.withDefault (JD.fail "that tab doesn't exist")
 
@@ -159,7 +184,7 @@ tab_button ui wrap_msg state tabber tab index =
                 "ArrowRight" -> move_to_tab (index + 1)
                 "ArrowDown" -> move_to_tab (index + 1)
                 "Home" -> move_to_tab 0
-                "End" -> move_to_tab <| (List.length tabber.tabs) - 1
+                "End" -> move_to_tab <| (List.length (tabber_tabs tabber)) - 1
                 _ -> JD.fail "unhandled key"
                )
 
@@ -172,7 +197,7 @@ tab_button ui wrap_msg state tabber tab index =
             , HA.tabindex <| if selected then 0 else -1
             , Aria.selected <| selected
             , Aria.controls <| tabpanel_id tabber tab
-            , HE.onClick <| wrap_msg <| SetTab tabber.name tab.id
+            , HE.onClick <| wrap_msg <| SetTab (tabber_name tabber) tab.id
             , HE.preventDefaultOn "keydown" (handle_keypress |> JD.map (\m -> (wrap_msg m, True)))
             ]
             (case tab.label of

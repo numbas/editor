@@ -724,7 +724,7 @@
                     "type": "array"
                 },
                 "variables": {
-                    "title": "Variable definitions",
+                    "title": "Variables",
                     "type": "object",
                     "additionalProperties": {
                         "type": "object",

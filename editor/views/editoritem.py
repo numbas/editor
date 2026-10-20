@@ -534,7 +534,7 @@ class CompileObject(MustHaveAccessMixin):
             theme_path = Path(NUMBAS_PATH / 'themes' / 'question')
 
         compiler = 'default' if theme.compiler is None else theme.compiler.pk
-        return (f'{compiler}-{theme.pk}-{theme.slug}', theme_path, theme.compiler_path())
+        return (f'{compiler}-{theme.pk}-{theme.slug[:20]}', theme_path, theme.compiler_path())
 
 
     def theme_dir(self):

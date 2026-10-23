@@ -1,0 +1,10 @@
+{
+  "name": "numbas-editor-model-tests",
+  "private": true,
+  "scripts": {
+    "test": "node --test js/*.test.cjs"
+  },
+  "devDependencies": {
+    "jsdom": "^20.0.0"
+  }
+}

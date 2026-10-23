@@ -3320,6 +3320,15 @@ $(document).ready(function() {
         }
 
         this.addUnitTest = function(test) {
+            if(!test.name() || !test.name().trim()) {
+                const studentAnswer = test.marking_parameters().find(parameter => parameter.name=='studentAnswer');
+                const result = test.last_run();
+                if(studentAnswer && result && !result.error && Number.isFinite(result.credit)) {
+                    const answer = Numbas.jme.display.treeToJME({tok: studentAnswer.value}, {bareExpression: false, ignorestringattributes: true});
+                    const outcome = result.credit==1 ? 'correct' : result.credit==0 ? 'incorrect' : 'partially correct';
+                    test.name(answer+' is marked '+outcome);
+                }
+            }
             test.editing(false);
             test.last_variables = null;
             p.unit_tests.push(test);

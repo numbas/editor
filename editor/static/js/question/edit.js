@@ -918,7 +918,7 @@ $(document).ready(function() {
                     Editor.nonempty_task('Select a licence defining usage rights.',this.licence, '#licence-select')
                 ],
                 'statement': [
-                    Editor.nonempty_task('Write a question statement.',this.statement,'#statement-input .wmTextArea')
+                    Editor.nonempty_task('Write a question statement.',ko.pureComputed(function() { return this.partsMode().value=='explore' || this.statement(); },this),'#statement-input .wmTextArea')
                 ],
                 'variables': [
                     {text: 'Add one or more variables to randomise the question', done: ko.pureComputed(function() { return this.variables().length>0 && !this.variableErrors(); },this), focus_on: '#add-variable-button'}
@@ -927,7 +927,7 @@ $(document).ready(function() {
                     {text: 'Create at least one part.', done: ko.pureComputed(function(){ return this.parts().length>0 },this), focus_on: '#add-part-button'}
                 ],
                 'advice': [
-                    Editor.nonempty_task('Write a worked solution to the question.',this.advice, '#advice-input .wmTextArea')
+                    Editor.nonempty_task('Write a worked solution to the question.',ko.pureComputed(function() { return this.partsMode().value=='explore' || this.advice(); },this), '#advice-input .wmTextArea')
                 ]
             }
 

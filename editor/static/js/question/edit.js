@@ -559,6 +559,7 @@ $(document).ready(function() {
             p.setType(type.name);
             adding.parentList.push(p);
             q.currentPart(p);
+            q.part_search('');
             q.addingPart(null);
             return p;
         }

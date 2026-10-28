@@ -937,6 +937,10 @@ class PublishView(generic.UpdateView):
 
     def post(self, request, *args, **kwargs):
         ei = self.get_object()
+
+        if not ei.can_be_edited_by(self.request.user):
+            return http.HttpResponseForbidden("You don't have permission to edit this item.")
+
         ei.publish()
         ei.save()
         editor.models.ItemChangedTimelineItem.objects.create(user=self.request.user, object=ei, verb='published')
@@ -946,6 +950,10 @@ class PublishView(generic.UpdateView):
 class UnPublishView(PublishView):
     def post(self, request, *args, **kwargs):
         ei = self.get_object()
+
+        if not ei.can_be_edited_by(self.request.user):
+            return http.HttpResponseForbidden("You don't have permission to edit this item.")
+
         ei.unpublish()
         ei.save()
         messages.add_message(self.request, messages.INFO, 'This {} has been unpublished from the public database.'.format(ei.item_type))

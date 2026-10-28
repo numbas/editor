@@ -184,4 +184,8 @@ jme-preview {
     }
 }
 
+#debug-tabbers ul {
+    padding-left: var(--spacing);
+}
+
 }

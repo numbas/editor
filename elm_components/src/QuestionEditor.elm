@@ -5221,8 +5221,10 @@ view_active model =
 
                         when_run script label = 
                             let
+                                long_label = "When to run the "++label++" script"
+
                                 when_run_field = custom_select_property
-                                    [ Aria.label <| "When to run the "++label++" script"
+                                    [ Aria.label <| label
                                     , HA.class "inline"
                                     ]
                                     [ ("instead", "instead of")
@@ -5233,7 +5235,7 @@ view_active model =
                                     { id = prefix_id "mark-order"
                                     , settings = script_setting script "order"
                                     , setter = pset
-                                    , label = ""
+                                    , label = long_label
                                     , help = Nothing
                                     }
 
@@ -5385,7 +5387,7 @@ view_active model =
                                     part_options
                                     ui
                                     { id = vr_prefix_id "part"
-                                    , label = ""
+                                    , label = "Answer to use"
                                     , help = Nothing
                                     , settings = vrsettings |> S.atField "part"
                                     , setter = pset
@@ -5393,7 +5395,7 @@ view_active model =
                                 , must_go_first_field = boolean_property
                                     ui
                                     { id = vr_prefix_id "must_go_first"
-                                    , label = ""
+                                    , label = "Must be answered?"
                                     , help = Nothing
                                     , settings = vrsettings |> S.atField "must_go_first"
                                     , setter = pset
@@ -6168,7 +6170,7 @@ view_active model =
                             -- TODO nameError
                             ui
                             { id = cprefix_id "name"
-                            , label = ""
+                            , label = "Name"
                             , help = Nothing
                             , settings = csettings |> S.atField "name"
                             , setter = qset
@@ -6178,7 +6180,7 @@ view_active model =
                             { notation = "standard" }
                             ui
                             { id = cprefix_id "value"
-                            , label = ""
+                            , label = "Value"
                             , help = Nothing
                             , settings = csettings |> S.atField "value"
                             , setter = qset
@@ -6187,7 +6189,7 @@ view_active model =
                         constant_tex_field = latex_property
                             ui
                             { id = cprefix_id "tex"
-                            , label = ""
+                            , label = "LaTeX"
                             , help = Nothing
                             , settings = csettings |> S.atField "tex"
                             , setter = qset
@@ -6305,7 +6307,7 @@ view_active model =
                                         text_property
                                             ui
                                             { id = rprefix_id "name"
-                                            , label = ""
+                                            , label = "Name"
                                             , help = Nothing
                                             , settings = rsettings |> S.atField "name"
                                             , setter = rset
@@ -6315,7 +6317,7 @@ view_active model =
                                         text_property
                                             ui
                                             { id = rprefix_id "definition"
-                                            , label = ""
+                                            , label = "Definition"
                                             , help = Nothing
                                             , settings = rsettings |> S.atField "definition"
                                             , setter = rset
@@ -6576,7 +6578,7 @@ view_active model =
             }
 
         extensions_tabber = Tabber
-            { name = "parts"
+            { name = "extensions"
             , allow_empty = True
             , tabs = 
                 [ { id = "extensions"
@@ -6807,27 +6809,58 @@ view_active model =
             , view_tabpanel main_tabber
 
             , let
-                show_tabbers : Tabber msg -> List (List (String, String))
-                show_tabbers tabber = 
+                show_label : Tab msg -> String
+                show_label tab = case tab.label of
+                    SimpleLabel t -> t
+                    HtmlLabel r -> r.plain_text
+
+                show_tabber tabber =
                     let
                         name = tabber_name tabber
                         tabs = tabber_tabs tabber
 
-                        show_label : Tab msg -> String
-                        show_label tab = case tab.label of
-                            SimpleLabel t -> t
-                            HtmlLabel r -> r.plain_text
                     in
-                        tabs |> List.concatMap (\tab ->
-                            ([[]] ++ (tab.tabbers |> List.concatMap show_tabbers))
-                            |> List.map ((++) [(name, show_label tab)])
-                        )
+                        H.li
+                            []
+                            [ H.text <| "Tabber " ++name
+                            , H.ul [] (tabs |> List.map show_tab)
+                            ]
+
+                show_tab tab =
+                    H.li
+                        []
+                        [ tab.icon |> Maybe.map (ui.icon) |> Maybe.withDefault (H.text "")
+                        , H.text <| show_label tab
+                        , H.ul [] (tab.view.fields |> List.map show_field)
+                        , H.ul [] (tab.tabbers |> List.map show_tabber)
+                        ]
+
+                show_at : Address -> String
+                show_at addr =
+                    let
+                        show_item : S.AddressItem -> String
+                        show_item item = case item of
+                            S.Index i -> fi i
+                            S.Field f -> f
+                            S.Key k -> k
+                            _ -> "?"
+                    in
+                        addr
+                        |> List.map show_item
+                        |> String.join "."
+
+                show_field field =
+                    H.li
+                        []
+                        [ H.text field.options.label
+                        , H.code [] [H.text <| show_at field.options.settings.at]
+                        ]
               in
                   H.node "dialog"
-                    [ HA.attribute "open" "" ]
-                    [ H.ul [] (show_tabbers main_tabber |> List.map (\p ->
-                        H.li [] [H.text <| Debug.toString p]
-                      ))
+                    [ HA.attribute "open" ""
+                    , HA.attribute "style" "position: absolute;top: 0;z-index: 10000;max-height: 90svh;overflow: auto;"
+                    ]
+                    [ H.ul [ HA.id "debug-tabbers" ] [show_tabber main_tabber]
                     ]
             ]
 

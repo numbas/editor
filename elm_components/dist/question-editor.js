@@ -12018,6 +12018,7 @@ var $elm$html$Html$Attributes$classList = function (classes) {
 				$elm$core$Tuple$first,
 				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
 };
+var $elm$html$Html$code = _VirtualDom_node('code');
 var $elm$virtual_dom$VirtualDom$node = function (tag) {
 	return _VirtualDom_node(
 		_VirtualDom_noScript(tag));
@@ -13326,8 +13327,8 @@ var $author$project$QuestionEditor$view_active = function (model) {
 	var view_tablist = A3($author$project$Tabber$view_tablist, ui, $author$project$QuestionEditor$UpdateTab, model.tab_state);
 	var view_tabpanel = A2($author$project$Tabber$view_tabpanel, ui, model.tab_state);
 	var saving_class = function () {
-		var _v52 = model.saving;
-		switch (_v52.$) {
+		var _v53 = model.saving;
+		switch (_v53.$) {
 			case 'Saved':
 				return 'saved';
 			case 'Changed':
@@ -13445,7 +13446,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 														{
 															help: $elm$core$Maybe$Nothing,
 															id: rprefix_id('name'),
-															label: '',
+															label: 'Name',
 															setter: rset,
 															settings: A2($author$project$Settings$atField, 'name', rsettings)
 														});
@@ -13455,7 +13456,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 														{
 															help: $elm$core$Maybe$Nothing,
 															id: rprefix_id('definition'),
-															label: '',
+															label: 'Definition',
 															setter: rset,
 															settings: A2($author$project$Settings$atField, 'definition', rsettings)
 														});
@@ -13511,8 +13512,8 @@ var $author$project$QuestionEditor$view_active = function (model) {
 		};
 	}();
 	var top_parts = function () {
-		var _v51 = question.parts;
-		var parts = _v51.a;
+		var _v52 = question.parts;
+		var parts = _v52.a;
 		return A2(
 			$elm$core$List$indexedMap,
 			F2(
@@ -13652,9 +13653,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 					if (!queue.b) {
 						return seen;
 					} else {
-						var _v49 = queue.a;
-						var ppath = _v49.a;
-						var pp = _v49.b;
+						var _v50 = queue.a;
+						var ppath = _v50.a;
+						var pp = _v50.b;
 						var rest = queue.b;
 						if (A2($elm$core$List$member, ppath, seen)) {
 							var $temp$seen = seen,
@@ -13834,9 +13835,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 								_Utils_ap(
 									A2(
 										$elm$core$List$map,
-										function (_v47) {
-											var t = _v47.a;
-											var l = _v47.b;
+										function (_v48) {
+											var t = _v48.a;
+											var l = _v48.b;
 											return _Utils_Tuple2(
 												$elm$core$Maybe$Just(t),
 												l);
@@ -14108,14 +14109,14 @@ var $author$project$QuestionEditor$view_active = function (model) {
 				view_item: view_extension
 			},
 			ui);
-		var _v45 = A2(
+		var _v46 = A2(
 			$elm$core$List$partition,
 			function (e) {
 				return A2($elm$core$List$member, e, shown_extensions);
 			},
 			model.extensions);
-		var searched_extensions = _v45.a;
-		var other_extensions = _v45.b;
+		var searched_extensions = _v46.a;
+		var other_extensions = _v46.b;
 		return {
 			attributes: _List_Nil,
 			contents: $elm$core$List$concat(
@@ -14227,7 +14228,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 						{
 							help: $elm$core$Maybe$Nothing,
 							id: cprefix_id('name'),
-							label: '',
+							label: 'Name',
 							setter: qset,
 							settings: A2($author$project$Settings$atField, 'name', csettings)
 						});
@@ -14237,7 +14238,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 						{
 							help: $elm$core$Maybe$Nothing,
 							id: cprefix_id('tex'),
-							label: '',
+							label: 'LaTeX',
 							setter: qset,
 							settings: A2($author$project$Settings$atField, 'tex', csettings)
 						});
@@ -14248,7 +14249,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 						{
 							help: $elm$core$Maybe$Nothing,
 							id: cprefix_id('value'),
-							label: '',
+							label: 'Value',
 							setter: qset,
 							settings: A2($author$project$Settings$atField, 'value', csettings)
 						});
@@ -15221,9 +15222,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 																	$elm$html$Html$Attributes$class('datatype')
 																]),
 															function () {
-																var _v39 = $author$project$QuestionEditor$variable_type(variable);
-																if (_v39.$ === 'Just') {
-																	var type_ = _v39.a;
+																var _v40 = $author$project$QuestionEditor$variable_type(variable);
+																if (_v40.$ === 'Just') {
+																	var type_ = _v40.a;
 																	return _List_fromArray(
 																		[
 																			$elm$html$Html$text(type_)
@@ -15522,9 +15523,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 									A2(
 									$elm$core$List$indexedMap,
 									F2(
-										function (gi, _v33) {
-											var group = _v33.a;
-											var variable_tabs = _v33.b;
+										function (gi, _v34) {
+											var group = _v34.a;
+											var variable_tabs = _v34.b;
 											return A2(
 												$elm$html$Html$li,
 												_List_fromArray(
@@ -15604,11 +15605,11 @@ var $author$project$QuestionEditor$view_active = function (model) {
 																A2(
 																	$elm$core$List$indexedMap,
 																	F2(
-																		function (vi, _v34) {
-																			var tab_index = _v34.a;
-																			var _v35 = _v34.b;
-																			var variable = _v35.a;
-																			var vtab = _v35.b;
+																		function (vi, _v35) {
+																			var tab_index = _v35.a;
+																			var _v36 = _v35.b;
+																			var variable = _v36.a;
+																			var vtab = _v36.b;
 																			var vfield = function (k) {
 																				return A2($author$project$Settings$atField, k, variable.settings);
 																			};
@@ -15699,17 +15700,17 @@ var $author$project$QuestionEditor$view_active = function (model) {
 																								$elm$html$Html$Attributes$class('value')
 																							]),
 																						function () {
-																							var _v37 = variable.value;
-																							if (_v37.$ === 'Just') {
-																								if (_v37.a.$ === 'Ok') {
-																									var value = _v37.a.a;
+																							var _v38 = variable.value;
+																							if (_v38.$ === 'Just') {
+																								if (_v38.a.$ === 'Ok') {
+																									var value = _v38.a.a;
 																									return _List_fromArray(
 																										[
 																											$author$project$Ui$jme_value(
 																											{abbreviate: true, value: value})
 																										]);
 																								} else {
-																									var err = _v37.a.a;
+																									var err = _v38.a.a;
 																									return _List_fromArray(
 																										[
 																											A2(
@@ -15787,9 +15788,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 		fields: _List_Nil
 	};
 	var all_parts = $author$project$QuestionEditor$unwrap_part_container(question.parts);
-	var part_tab = function (_v32) {
-		var path = _v32.a;
-		var part = _v32.b;
+	var part_tab = function (_v33) {
+		var path = _v33.a;
+		var part = _v33.b;
 		var term_to_url = A2($elm$core$String$replace, ' ', '-');
 		var pmsg = A2(
 			$elm$core$Basics$composeR,
@@ -15842,11 +15843,12 @@ var $author$project$QuestionEditor$view_active = function (model) {
 				});
 			var when_run = F2(
 				function (script, label) {
+					var long_label = 'When to run the ' + (label + ' script');
 					var when_run_field = A4(
 						$author$project$QuestionEditor$custom_select_property,
 						_List_fromArray(
 							[
-								$author$project$Aria$label('When to run the ' + (label + ' script')),
+								$author$project$Aria$label(label),
 								$elm$html$Html$Attributes$class('inline')
 							]),
 						_List_fromArray(
@@ -15859,7 +15861,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 						{
 							help: $elm$core$Maybe$Nothing,
 							id: prefix_id('mark-order'),
-							label: '',
+							label: long_label,
 							setter: pset,
 							settings: A2(script_setting, script, 'order')
 						});
@@ -16355,9 +16357,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 				notes);
 			var note_tabs = A2(
 				$elm$core$List$map,
-				function (_v29) {
-					var i = _v29.a;
-					var note = _v29.b;
+				function (_v30) {
+					var i = _v30.a;
+					var note = _v30.b;
 					var nset = A2(
 						$elm$core$Basics$composeR,
 						$author$project$QuestionEditor$ChangeMarkingAlgorithmNote(i),
@@ -16440,8 +16442,8 @@ var $author$project$QuestionEditor$view_active = function (model) {
 				},
 				A2(
 					$elm$core$List$filter,
-					function (_v28) {
-						var note = _v28.b;
+					function (_v29) {
+						var note = _v29.b;
 						return note.changed || extendBaseMarkingAlgorithm;
 					},
 					A2($elm$core$List$indexedMap, $elm$core$Tuple$pair, shown_notes)));
@@ -16539,9 +16541,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 				pfield('nextParts'));
 			var references = A2(
 				$elm$core$List$filter,
-				function (_v27) {
-					var ppath = _v27.a;
-					var pp = _v27.b;
+				function (_v28) {
+					var ppath = _v28.a;
+					var pp = _v28.b;
 					return A2(
 						$elm$core$List$member,
 						path,
@@ -16560,7 +16562,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 				A2(
 					$elm$core$List$indexedMap,
 					F2(
-						function (i, _v26) {
+						function (i, _v27) {
 							var npat = _List_fromArray(
 								[
 									$author$project$Settings$field('nextParts'),
@@ -16590,12 +16592,12 @@ var $author$project$QuestionEditor$view_active = function (model) {
 			};
 			var next_parts_views = A2(
 				$elm$core$List$map,
-				function (_v22) {
-					var i = _v22.a;
-					var npat = _v22.b;
-					var _v23 = _v22.c;
-					var npath = _v23.a;
-					var np = _v23.b;
+				function (_v23) {
+					var i = _v23.a;
+					var npat = _v23.b;
+					var _v24 = _v23.c;
+					var npath = _v24.a;
+					var np = _v24.b;
 					var npsettings = A2($author$project$Settings$at, npat, part.settings);
 					var set_variable_replacements = A2(
 						psetList,
@@ -16636,8 +16638,8 @@ var $author$project$QuestionEditor$view_active = function (model) {
 						$elm$core$List$map,
 						A2(
 							$elm$core$Basics$composeR,
-							function (_v25) {
-								var s = _v25.b;
+							function (_v26) {
+								var s = _v26.b;
 								return A2($author$project$Settings$at, s, npsettings);
 							},
 							A2(
@@ -16660,9 +16662,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 					var npcomputed = A2($author$project$Settings$at, npat, part.computed);
 					var variable_replacements_rows = A2(
 						$elm$core$List$map,
-						function (_v24) {
-							var vi = _v24.a;
-							var vrat = _v24.b;
+						function (_v25) {
+							var vi = _v25.a;
+							var vrat = _v25.b;
 							var vrsettings = A2($author$project$Settings$at, vrat, npsettings);
 							var vrcomputed = A2($author$project$Settings$at, vrat, npcomputed);
 							var vr_prefix_id = function (id) {
@@ -17235,9 +17237,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 									A2(
 										$elm$core$List$indexedMap,
 										F2(
-											function (j, _v21) {
-												var ppath = _v21.a;
-												var pp = _v21.b;
+											function (j, _v22) {
+												var ppath = _v22.a;
+												var pp = _v22.b;
 												return A2(
 													$elm$html$Html$li,
 													_List_Nil,
@@ -17296,7 +17298,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 					settings: part.settings
 				},
 				F2(
-					function (_v20, o) {
+					function (_v21, o) {
 						return A2(
 							$author$project$QuestionEditor$property_field,
 							o,
@@ -17635,8 +17637,8 @@ var $author$project$QuestionEditor$view_active = function (model) {
 										_List_fromArray(
 											[
 												function () {
-												var _v18 = part.type_.name;
-												if (_v18 === 'm_n_2') {
+												var _v19 = part.type_.name;
+												if (_v19 === 'm_n_2') {
 													return _Utils_ap(
 														markingMethod_field.view,
 														_Utils_ap(
@@ -17798,8 +17800,8 @@ var $author$project$QuestionEditor$view_active = function (model) {
 			label: $author$project$Tabber$SimpleLabel('Marking settings'),
 			tabbers: _List_Nil,
 			view: function () {
-				var _v17 = part.type_.name;
-				switch (_v17) {
+				var _v18 = part.type_.name;
+				switch (_v18) {
 					case 'jme':
 						var showPreview_field = A2(
 							part_field,
@@ -18763,8 +18765,8 @@ var $author$project$QuestionEditor$view_active = function (model) {
 			}()
 		};
 		var type_tabs = function () {
-			var _v12 = part.type_.name;
-			switch (_v12) {
+			var _v13 = part.type_.name;
+			switch (_v13) {
 				case 'jme':
 					var vsetRangeStart_field = A3(
 						$author$project$QuestionEditor$labelled_field,
@@ -18969,9 +18971,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 						cfield('findvars'));
 					var value_generator_fields = A2(
 						$elm$core$List$map,
-						function (_v13) {
-							var name = _v13.a;
-							var minferredType = _v13.b;
+						function (_v14) {
+							var name = _v14.a;
+							var minferredType = _v14.b;
 							return A2(
 								$author$project$QuestionEditor$map_property_field,
 								function (v) {
@@ -19474,7 +19476,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 									A2(
 										$elm$core$List$indexedMap,
 										F2(
-											function (j, _v16) {
+											function (j, _v17) {
 												return A3(
 													$author$project$QuestionEditor$custom_text_property,
 													_List_fromArray(
@@ -19849,9 +19851,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 																		A2(
 																		$elm$core$List$indexedMap,
 																		F2(
-																			function (i, _v15) {
-																				var choice = _v15.a;
-																				var answer_fields = _v15.b;
+																			function (i, _v16) {
+																				var choice = _v16.a;
+																				var answer_fields = _v16.b;
 																				return A2(
 																					$elm$html$Html$tr,
 																					_List_Nil,
@@ -20018,9 +20020,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 								A2($elm$core$List$filterMap, variables.get, replaced_variables))))));
 			var part_options = A2(
 				$elm$core$List$map,
-				function (_v11) {
-					var ppath = _v11.a;
-					var pp = _v11.b;
+				function (_v12) {
+					var ppath = _v12.a;
+					var pp = _v12.b;
 					return _Utils_Tuple2(
 						$author$project$QuestionEditor$part_path_toString(ppath),
 						_Utils_ap(
@@ -20032,9 +20034,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 				},
 				A2(
 					$elm$core$List$filter,
-					function (_v10) {
-						var ppath = _v10.a;
-						var pp = _v10.b;
+					function (_v11) {
+						var ppath = _v11.a;
+						var pp = _v11.b;
 						var pkind = A2(
 							$elm$core$Maybe$withDefault,
 							$author$project$QuestionEditor$TopPart,
@@ -20051,9 +20053,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 			var variable_replacement_fields = A2(
 				$elm$core$List$indexedMap,
 				F2(
-					function (i, _v9) {
-						var vrsettings = _v9.a;
-						var v = _v9.b;
+					function (i, _v10) {
+						var vrsettings = _v10.a;
+						var v = _v10.b;
 						var vr_prefix_id = function (id) {
 							return prefix_id(
 								'variable-replacement-' + ($author$project$Util$fi(i) + ('-' + id)));
@@ -20067,7 +20069,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 								{
 									help: $elm$core$Maybe$Nothing,
 									id: vr_prefix_id('must_go_first'),
-									label: '',
+									label: 'Must be answered?',
 									setter: pset,
 									settings: A2($author$project$Settings$atField, 'must_go_first', vrsettings)
 								}),
@@ -20078,7 +20080,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 								{
 									help: $elm$core$Maybe$Nothing,
 									id: vr_prefix_id('part'),
-									label: '',
+									label: 'Answer to use',
 									setter: pset,
 									settings: A2($author$project$Settings$atField, 'part', vrsettings)
 								}),
@@ -20089,9 +20091,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 			var can_make_variable_replacements = (!_Utils_eq(all_variables, _List_Nil)) && (!_Utils_eq(part_options, _List_Nil));
 			var back_references = A2(
 				$elm$core$List$filter,
-				function (_v8) {
-					var ppath = _v8.a;
-					var pp = _v8.b;
+				function (_v9) {
+					var ppath = _v9.a;
+					var pp = _v9.b;
 					return A2(
 						$elm$core$List$member,
 						$elm$core$Maybe$Just(path_string),
@@ -20404,9 +20406,9 @@ var $author$project$QuestionEditor$view_active = function (model) {
 										_List_Nil,
 										A2(
 											$elm$core$List$map,
-											function (_v7) {
-												var ppath = _v7.a;
-												var pp = _v7.b;
+											function (_v8) {
+												var ppath = _v8.a;
+												var pp = _v8.b;
 												return A2($author$project$QuestionEditor$part_link, ppath, pp);
 											},
 											back_references)),
@@ -20631,7 +20633,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 	var extensions_tabber = $author$project$Tabber$Tabber(
 		{
 			allow_empty: true,
-			name: 'parts',
+			name: 'extensions',
 			tabs: _List_fromArray(
 				[
 					{
@@ -20707,8 +20709,8 @@ var $author$project$QuestionEditor$view_active = function (model) {
 							A2($elm$html$Html$Attributes$attribute, 'closedby', 'any')
 						]),
 						function () {
-						var _v4 = model.adding_part;
-						if (_v4.$ === 'Just') {
+						var _v5 = model.adding_part;
+						if (_v5.$ === 'Just') {
 							return _List_fromArray(
 								[
 									A2($elm$html$Html$Attributes$attribute, 'open', '')
@@ -20810,7 +20812,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 													])),
 												A2(
 												$elm$html$Html$map,
-												function (_v6) {
+												function (_v7) {
 													return $author$project$QuestionEditor$NoOp;
 												},
 												ui.help_block(
@@ -21267,63 +21269,111 @@ var $author$project$QuestionEditor$view_active = function (model) {
 								]))))),
 				view_tabpanel(main_tabber),
 				function () {
-				var show_tabbers = function (tabber) {
-					var tabs = $author$project$Tabber$tabber_tabs(tabber);
-					var show_label = function (tab) {
-						var _v3 = tab.label;
-						if (_v3.$ === 'SimpleLabel') {
-							var t = _v3.a;
-							return t;
-						} else {
-							var r = _v3.a;
-							return r.plain_text;
+				var show_label = function (tab) {
+					var _v4 = tab.label;
+					if (_v4.$ === 'SimpleLabel') {
+						var t = _v4.a;
+						return t;
+					} else {
+						var r = _v4.a;
+						return r.plain_text;
+					}
+				};
+				var show_at = function (addr) {
+					var show_item = function (item) {
+						switch (item.$) {
+							case 'Index':
+								var i = item.a;
+								return $author$project$Util$fi(i);
+							case 'Field':
+								var f = item.a;
+								return f;
+							case 'Key':
+								var k = item.a;
+								return k;
+							default:
+								return '?';
 						}
 					};
+					return A2(
+						$elm$core$String$join,
+						'.',
+						A2($elm$core$List$map, show_item, addr));
+				};
+				var show_field = function (field) {
+					return A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(field.options.label),
+								A2(
+								$elm$html$Html$code,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										show_at(field.options.settings.at))
+									]))
+							]));
+				};
+				var show_tab = function (tab) {
+					return A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2(
+								$elm$core$Maybe$withDefault,
+								$elm$html$Html$text(''),
+								A2($elm$core$Maybe$map, ui.icon, tab.icon)),
+								$elm$html$Html$text(
+								show_label(tab)),
+								A2(
+								$elm$html$Html$ul,
+								_List_Nil,
+								A2($elm$core$List$map, show_field, tab.view.fields)),
+								A2(
+								$elm$html$Html$ul,
+								_List_Nil,
+								A2($elm$core$List$map, show_tabber, tab.tabbers))
+							]));
+				};
+				var show_tabber = function (tabber) {
+					var tabs = $author$project$Tabber$tabber_tabs(tabber);
 					var name = $author$project$Tabber$tabber_name(tabber);
 					return A2(
-						$elm$core$List$concatMap,
-						function (tab) {
-							return A2(
-								$elm$core$List$map,
-								$elm$core$Basics$append(
-									_List_fromArray(
-										[
-											_Utils_Tuple2(
-											name,
-											show_label(tab))
-										])),
-								_Utils_ap(
-									_List_fromArray(
-										[_List_Nil]),
-									A2($elm$core$List$concatMap, show_tabbers, tab.tabbers)));
-						},
-						tabs);
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Tabber ' + name),
+								A2(
+								$elm$html$Html$ul,
+								_List_Nil,
+								A2($elm$core$List$map, show_tab, tabs))
+							]));
 				};
 				return A3(
 					$elm$html$Html$node,
 					'dialog',
 					_List_fromArray(
 						[
-							A2($elm$html$Html$Attributes$attribute, 'open', '')
+							A2($elm$html$Html$Attributes$attribute, 'open', ''),
+							A2($elm$html$Html$Attributes$attribute, 'style', 'position: absolute;top: 0;z-index: 10000;max-height: 90svh;overflow: auto;')
 						]),
 					_List_fromArray(
 						[
 							A2(
 							$elm$html$Html$ul,
-							_List_Nil,
-							A2(
-								$elm$core$List$map,
-								function (p) {
-									return A2(
-										$elm$html$Html$li,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text(
-												$elm$core$Debug$toString(p))
-											]));
-								},
-								show_tabbers(main_tabber)))
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$id('debug-tabbers')
+								]),
+							_List_fromArray(
+								[
+									show_tabber(main_tabber)
+								]))
 						]));
 			}()
 			]));

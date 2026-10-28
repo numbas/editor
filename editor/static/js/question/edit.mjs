@@ -51,7 +51,7 @@ function visit_schema(schema, obj, callback, path=[]) {
     if(schema.type == 'object') {
         if(schema.additionalProperties) {
             Object.entries(obj).forEach(([k,v]) => {
-                visit_schema(schema.additionalProperties, v, callback, path.concat([{key: k, title: schema.title}]));
+                visit_schema(schema.additionalProperties, v, callback, path.concat([{key: k, title: k}]));
             });
         }
         Object.entries(schema.properties || {}).forEach(([k,pschema]) => {
@@ -59,7 +59,12 @@ function visit_schema(schema, obj, callback, path=[]) {
         })
     }
     if(schema.type == 'array' && Array.isArray(obj)) {
-        obj.forEach((item, i) => {
+        if(schema.prefixItems) {
+            schema.prefixItems.forEach((pitem,i) => {
+                visit_schema(pitem, obj[i], callback, path.concat([i]));
+            });
+        }
+        obj.slice(schema.prefixItems?.length || 0).forEach((item, i) => {
             visit_schema(schema.items, item, callback, path.concat([i]));
         })
     }
@@ -131,6 +136,9 @@ function resolve_relative_reference(path, obj, ref) {
         path = path.concat(bits);
         let out = obj;
         path.forEach(bit => {
+            if(typeof bit == 'object') {
+                bit = bit.key;
+            }
             out = out[bit];
         });
         return out;
@@ -722,7 +730,7 @@ const ask_numbas_handlers = {
         document.body.jme_scope = scope;
         document.body.dataset.showSubstitutions = true;
 
-        const functionsTodo = question.functions;
+        const functionsTodo = question.functions || [];
 
         // Feedback for individual functions - show any errors in the definition.
         result.functions = functionsTodo.forEach(def => {
@@ -829,7 +837,7 @@ const ask_numbas_handlers = {
 
         Numbas.jme.variables.makeConstants(Numbas.jme.builtin_constants, scope, question.builtin_constants || {});
 
-        Numbas.jme.variables.makeConstants(question.constants, scope);
+        Numbas.jme.variables.makeConstants(question.constants || [], scope);
 
         const scope_variable_names = Object.keys(scope.allVariables());
 

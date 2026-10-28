@@ -12182,6 +12182,7 @@ var $author$project$QuestionEditor$describe_reference = function (ref) {
 		return $elm$core$Debug$toString(ref);
 	}
 };
+var $elm$html$Html$details = _VirtualDom_node('details');
 var $elm$core$Dict$diff = F2(
 	function (t1, t2) {
 		return A3(
@@ -12907,6 +12908,7 @@ var $elm$core$List$sortBy = _List_sortBy;
 var $elm$core$List$sort = function (xs) {
 	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
 };
+var $elm$html$Html$summary = _VirtualDom_node('summary');
 var $author$project$Aria$controls = $elm$html$Html$Attributes$attribute('aria-controls');
 var $author$project$Tabber$unwrap_tabber = function (t) {
 	var def = t.a;
@@ -21324,19 +21326,31 @@ var $author$project$QuestionEditor$view_active = function (model) {
 						_List_fromArray(
 							[
 								A2(
-								$elm$core$Maybe$withDefault,
-								$elm$html$Html$text(''),
-								A2($elm$core$Maybe$map, ui.icon, tab.icon)),
-								$elm$html$Html$text(
-								show_label(tab)),
-								A2(
-								$elm$html$Html$ul,
+								$elm$html$Html$details,
 								_List_Nil,
-								A2($elm$core$List$map, show_field, tab.view.fields)),
-								A2(
-								$elm$html$Html$ul,
-								_List_Nil,
-								A2($elm$core$List$map, show_tabber, tab.tabbers))
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$summary,
+										_List_Nil,
+										_List_fromArray(
+											[
+												A2(
+												$elm$core$Maybe$withDefault,
+												$elm$html$Html$text(''),
+												A2($elm$core$Maybe$map, ui.icon, tab.icon)),
+												$elm$html$Html$text(
+												show_label(tab))
+											])),
+										A2(
+										$elm$html$Html$ul,
+										_List_Nil,
+										A2($elm$core$List$map, show_field, tab.view.fields)),
+										A2(
+										$elm$html$Html$ul,
+										_List_Nil,
+										A2($elm$core$List$map, show_tabber, tab.tabbers))
+									]))
 							]));
 				};
 				var show_tabber = function (tabber) {

@@ -577,6 +577,18 @@ parse_part_path =
     in
         P.run part_path_parser >> Result.toMaybe
 
+part_path_to_address : PartPath -> Address
+part_path_to_address path = 
+    let
+        translate_item : ChildPart -> String
+        translate_item cp = case cp of
+            TopPart -> "parts"
+            Gap -> "gaps"
+            Step -> "steps"
+            Alternative -> "alternatives"
+    in
+        path |> List.concatMap (\(cp,i) -> [S.key (translate_item cp), S.index i])
+
 update_part_container : PartPath -> (PartContainer -> PartContainer) -> PartContainer -> PartContainer
 update_part_container path fn container = case path of
     [] -> fn container
@@ -969,7 +981,10 @@ decode_part default_settings =
 decode_child_parts : JE.Value -> JD.Decoder PartContainer
 decode_child_parts default_settings = 
     let
-        doer key = JD.oneOf [JD.field key (JD.list (JD.lazy (\_ -> decode_part default_settings))), JD.succeed []]
+        doer key = JD.oneOf 
+            [ JD.field key (JD.list (JD.lazy (\_ -> decode_part default_settings)))
+            , JD.succeed []
+            ]
     in
         (JD.succeed Parts)
         |> andMap (doer "parts")
@@ -6829,10 +6844,16 @@ view_active model =
                 show_tab tab =
                     H.li
                         []
-                        [ tab.icon |> Maybe.map (ui.icon) |> Maybe.withDefault (H.text "")
-                        , H.text <| show_label tab
-                        , H.ul [] (tab.view.fields |> List.map show_field)
-                        , H.ul [] (tab.tabbers |> List.map show_tabber)
+                        [ H.details
+                            []
+                            [ H.summary
+                                []
+                                [ tab.icon |> Maybe.map (ui.icon) |> Maybe.withDefault (H.text "")
+                                , H.text <| show_label tab
+                                ]
+                            , H.ul [] (tab.view.fields |> List.map show_field)
+                            , H.ul [] (tab.tabbers |> List.map show_tabber)
+                            ]
                         ]
 
                 show_at : Address -> String

@@ -27,6 +27,9 @@ module Settings exposing
     , setters
     , setList
     , setAt
+    , decode_address
+    , address_item_to_string
+    , address_to_string
     )
 
 import Dict exposing (Dict)
@@ -250,3 +253,23 @@ setAt at_ v settings =
     in
         { settings | value = setValue at_ settings.value }
 
+decode_address : JD.Decoder Address
+decode_address =
+    JD.list
+        (JD.oneOf
+            [ JD.string |> JD.map Field
+            , JD.int |> JD.map Index
+            ]
+        )
+
+address_item_to_string : AddressItem -> String
+address_item_to_string item = case item of
+    Field f -> f
+    Key f -> f
+    Index i -> String.fromInt i
+    IndexWhere _ _ -> ""
+
+address_to_string : Address -> String
+address_to_string =
+    List.map (address_item_to_string)
+    >> String.join "."

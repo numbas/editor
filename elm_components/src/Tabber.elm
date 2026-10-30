@@ -5,6 +5,7 @@ port module Tabber exposing
     , State
     , TabLabel(..)
     , Tab
+    , FieldReference
     , unwrap_tabber
     , tabber_name
     , tabber_tabs
@@ -17,6 +18,8 @@ port module Tabber exposing
     , tab_button
     , view_tabpanel
     , initial_state
+    , all_fields_in_tabber
+    , fields_dict
     )
 
 import Aria
@@ -28,8 +31,10 @@ import Html.Events as HE
 import Json.Decode as JD
 import Json.Encode as JE
 import List.Extra as LE
-import Property exposing (Field)
+import Property exposing (Field, path_to_field)
+import Settings as S
 import Task exposing (Task)
+import Tuple exposing (pair)
 import Ui exposing (Ui)
 
 port save_tab_state : JE.Value -> Cmd msg
@@ -59,9 +64,11 @@ tabber_allow_empty = unwrap_tabber >> .allow_empty
 
 type alias TabView msg =
     { attributes : List (H.Attribute msg)
-    , contents : List (Html msg)
+    , contents : () -> List (Html msg)
     , fields : List (Field msg)
     }
+
+type alias FieldReference msg = (List (Tabber msg, Tab msg), Field msg)
 
 type Msg
     = SetTab String String
@@ -222,4 +229,28 @@ view_tabpanel ui state tabber = case current_tab state tabber of
                 , Aria.labelledBy <| tab_id tabber tab
                 ]++v.attributes
                 )
-                v.contents
+                (v.contents ())
+
+all_fields_in_tabber : Tabber msg -> List (FieldReference msg)
+all_fields_in_tabber tabber =
+    let
+        name = tabber_name tabber
+        tabs = tabber_tabs tabber
+
+        visit_tab tab =
+            let
+                subtabbers = 
+                    List.concatMap all_fields_in_tabber tab.tabbers
+                    |> List.map (\(path, field) -> ((tabber, tab)::path, field))
+
+                fields = tab.view.fields |> List.map (pair [(tabber, tab)])
+            in
+                subtabbers ++ fields
+    in
+        tabs |> List.concatMap visit_tab
+
+fields_dict : Tabber msg -> Dict String (FieldReference msg)
+fields_dict =
+    all_fields_in_tabber
+    >> List.map (\(tabs, field) -> (path_to_field field, (tabs, field)))
+    >> Dict.fromList

@@ -55,7 +55,7 @@ body.editor {
         display: flex;
         flex-direction: column;
         align-items: center;
-        container: variables / size;
+        container: variables / inline-size;
         
         & > menu {
             width: 100%;

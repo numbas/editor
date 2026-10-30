@@ -1087,7 +1087,7 @@ class TaggedItem(taggit.models.GenericTaggedItemBase):
 class TaggedQuestion(taggit.models.GenericTaggedItemBase):
     tag = models.ForeignKey(EditorTag, related_name='tagged_items', on_delete=models.CASCADE)
 
-NUMBAS_FILE_VERSION = 'exam_results_page_options'
+NUMBAS_FILE_VERSION = 'list_marking_algorithm_notes'
 
 @deconstructible
 class NumbasObject(object):

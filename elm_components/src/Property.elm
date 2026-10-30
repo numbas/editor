@@ -3,6 +3,7 @@ module Property exposing
     , Widget
     , Field
     , visibleIf
+    , path_to_field
     )
 
 import Html as H exposing (Html)
@@ -15,6 +16,7 @@ type alias Options msg =
     , id : String {- id attribute for the input -}
     , label : String {- displayed label text -}
     , settings : Settings
+    , settings_prefix : Address
     , setter : (JE.Value, Address) -> msg
     }
 
@@ -28,3 +30,8 @@ type alias Field msg =
 visibleIf : Bool -> Field msg -> Field msg
 visibleIf visible field =
     { field | view = Ui.visibleIf visible field.view }
+
+path_to_field : Field msg -> String
+path_to_field field = 
+    (field.options.settings_prefix ++ field.options.settings.at)
+    |> Settings.address_to_string

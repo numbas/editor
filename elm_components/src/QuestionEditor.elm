@@ -17,10 +17,10 @@ import Parser as P exposing (Parser, Step(..), (|.), (|=))
 import Property
 import Set exposing (Set)
 import Settings as S exposing (Settings, Address)
-import Tabber exposing (Tabber(..), Tab, TabView, Msg(..), TabLabel(..), tab_button, tabber_name, tabber_tabs)
+import Tabber exposing (Tabber(..), Tab, TabView, Msg(..), TabLabel(..), tab_button, tabber_name, tabber_tabs, all_fields_in_tabber)
 import Task
 import Tuple exposing (pair, mapFirst, first, second)
-import Ui exposing (Ui, UiConfig, visibleIf, jme_preview, raw_html)
+import Ui exposing (UiConfig, visibleIf, jme_preview, raw_html)
 import History exposing (History)
 import Util exposing 
     ( fi
@@ -68,6 +68,8 @@ type alias Preview =
     , target : String
     }
 
+type alias Ui = Ui.Ui Msg
+
 type alias ActiveModelRecord = 
     { generate_variables_debouncer : Debouncer Msg
     , find_variable_references_debouncer : Debouncer Msg
@@ -83,7 +85,7 @@ type alias ActiveModelRecord =
     , share : ShareTokens
     , extensions : List Extension
     , jme_types : List String
-    , ui : Ui Msg
+    , ui : Ui
     , numbas : JE.Value
     , default_settings : JE.Value
     , history : History Question
@@ -183,6 +185,7 @@ type alias Variable =
     { value : Maybe (Result (List VariableError) JE.Value)
     , automatically_created: Bool
     , locked : Bool
+    , references : List VariableReference
     , computed : Settings
     , settings : Settings
     , template : String
@@ -304,14 +307,10 @@ type alias VariableGenerationResult =
     , result : Dict String JE.Value
     }
 
-type VariableReferenceSegment
-    = StringRef String String
-    | IntRef Int
-
-type alias VariableReference = List VariableReferenceSegment
+type alias VariableReference = (Address, FieldReference)
 
 type alias VariableReferencesResult =
-    { references : Dict String (List JE.Value)
+    { references : Dict String (List JE.Value) -- for each variable, the list of references to it
     , undefined_variables : List String
     }
 
@@ -366,6 +365,8 @@ type alias PropertyOptions = Property.Options Msg
 type alias PropertyWidget = Property.Widget Msg
 type alias PropertyField = Property.Field Msg
 
+type alias FieldReference = Tabber.FieldReference Msg
+
 type Msg
     = UpdateQuestion QuestionMsg
     | UpdateTab Tabber.Msg
@@ -400,10 +401,10 @@ type QuestionMsg
     | RegenerateVariables
     | FindVariableReferences
     | AddFunction
-    | ShowVariable String
+    | ShowVariable (List String)
     | ShowPart PartPath
     | GenerateQuestion
-    | GoToVariableReference VariableReference
+    | GoToVariableReference FieldReference
 
 type PartMsg
     = ChangePartSetting SettingChangeKind (JE.Value, S.Address)
@@ -473,6 +474,7 @@ blank_variable =
     { value = Nothing
     , locked = False
     , automatically_created = False
+    , references = []
     , computed = S.empty
     , settings = S.empty
     , template = "anything"
@@ -1007,7 +1009,7 @@ decode_variable default_settings =
     let
         variable_defaults = get_default_settings ["question", "variables", "additionalProperties"] default_settings
     in
-        JD.succeed (Variable Nothing False False S.empty)
+        JD.succeed (Variable Nothing False False [] S.empty)
         |> andMap (JD.value |> JD.map (S.fromValue variable_defaults))
         |> andMap (JD.oneOf [JD.field "templateType" JD.string, JD.succeed "anything"])
 
@@ -1284,7 +1286,7 @@ update_active msg model = case msg of
     UpdateQuestion qmsg -> 
         let
             oq = model.history.current
-            (nq, (mchange, cmd)) = update_question qmsg oq
+            (nq, (mchange, cmd)) = update_question model qmsg oq
             change = case mchange of
                 NoChange -> History.no_change
                 SmallChange -> History.small_change
@@ -1353,32 +1355,14 @@ update_active msg model = case msg of
 
     NoOp -> model |> nocmd
 
-decode_variable_reference : JD.Decoder VariableReference
-decode_variable_reference =
-    JD.list
-        (JD.oneOf
-            [ JD.succeed StringRef
-              |> andMap (JD.field "key" JD.string)
-              |> andMap (JD.field "title" (JD.oneOf [JD.string, JD.succeed ""]))
-
-            , JD.int |> JD.map IntRef
-            , JD.value |> JD.andThen (\v ->
-                let
-                    q = Debug.log "???" (JE.encode 2 v)
-                in
-                    JD.fail "poo"
-                )
-            ]
-        )
-
 decode_variable_references_result : JD.Decoder VariableReferencesResult
 decode_variable_references_result =
     JD.succeed VariableReferencesResult
     |> andMap (JD.field "references" (JD.dict (JD.list JD.value)))
     |> andMap (JD.field "undefined_names" (JD.list JD.string))
 
-update_question : QuestionMsg -> Question -> ChangeSideEffect Question
-update_question msg question = case msg of
+update_question : ActiveModelRecord -> QuestionMsg -> Question -> ChangeSideEffect Question
+update_question model msg question = case msg of
     ChangeQuestionSetting ComputedSetting (value, at) -> case at of
         (S.Field "findVariableReferences")::_ -> 
             case JD.decodeValue decode_variable_references_result value of
@@ -1388,11 +1372,26 @@ update_question msg question = case msg of
                     let
                         variables = variable_manager question.variable_groups
 
-                        references : List (String, List (Result JD.Error VariableReference))
+                        field_dict : Dict String FieldReference
+                        field_dict = Tabber.fields_dict (main_tabber model)
+
+                        decode_variable_reference : JD.Decoder VariableReference
+                        decode_variable_reference = 
+                            S.decode_address
+                            |> JD.andThen (\address -> 
+                                let
+                                    s = S.address_to_string address
+                                    mf = Dict.get s field_dict
+                                in
+                                    case mf of
+                                        Just f -> JD.succeed (address, f)
+                                        Nothing -> JD.fail s
+                               )
+
+                        references : Dict String (List VariableReference) -- for each variable, the list of references to it
                         references = 
                             refdata.references
-                            |> Dict.toList
-                            |> List.map (Tuple.mapSecond (List.map (JD.decodeValue decode_variable_reference)))
+                            |> Dict.map (\_ -> List.filterMap (JD.decodeValue decode_variable_reference >> Result.toMaybe))
 
                         undefined_variables =
                             refdata.undefined_variables
@@ -1404,7 +1403,8 @@ update_question msg question = case msg of
                             |> LE.updateAt 0 (\group -> { group | variables = group.variables ++ undefined_variables })
 
                         referenced_variable_names =
-                            references
+                            refdata.references
+                            |> Dict.toList
                             |> List.filter (second >> (/=) [])
                             |> List.map first
                             |> Set.fromList
@@ -1424,12 +1424,10 @@ update_question msg question = case msg of
                             (variable_manager variable_groups).update (\(_,v) ->
                                 let
                                     refs = 
-                                        refdata.references
-                                        |> Dict.toList
-                                        |> List.filter (first >> (==) (name_of v))
-                                        |> List.concatMap second
+                                        Dict.get (name_of v) references
+                                        |> Maybe.withDefault []
                                 in
-                                    { v | computed = S.setAt [S.field "references"] (JE.list identity refs) v.computed }
+                                    { v | references = refs }
                             )
 
 
@@ -1553,11 +1551,15 @@ update_question msg question = case msg of
                 rulesets_value = JE.dict identity identity rulesets_dict
 
             in
-                update_question (ChangeQuestionSetting FinalSetting (rulesets_value, [S.field "rulesets"])) nq
+                update_question model (ChangeQuestionSetting FinalSetting (rulesets_value, [S.field "rulesets"])) nq
 
         _ -> update_setting question_setting_computed ComputedSetting (value, at) () question
 
-    ChangeQuestionSetting kind (v,at) -> update_setting question_setting_computed kind (v,at) () question
+    ChangeQuestionSetting kind (v,at) -> 
+        let
+            q = Debug.log "change" (kind, (v, at))
+        in
+            update_setting question_setting_computed kind (v,at) () question
 
     AddPart parent_path kind part -> 
         let
@@ -1685,7 +1687,7 @@ update_question msg question = case msg of
             in
                 (question, (NoChange, cmd))
 
-    ShowVariable name ->
+    ShowVariable names ->
         let
             all_variables : Dict String VariablePath
             all_variables =
@@ -1701,7 +1703,7 @@ update_question msg question = case msg of
                 |> List.concat
                 |> Dict.fromList
 
-            mpath = Dict.get name all_variables
+            mpath = names |> List.filterMap (\name -> Dict.get name all_variables) |> List.head
         in
             case mpath of
                 Just path -> (question, (NoChange, Cmd.batch [set_tab "main" "variables", set_tab "variables" (variable_tab_id path)]))
@@ -1946,7 +1948,7 @@ update_variable msg path variable = case msg of
             { variable | computed = ncomputed } |> nochange
             
 
-labelled_field : Ui Msg -> PropertyOptions -> PropertyWidget -> PropertyField
+labelled_field : Ui -> PropertyOptions -> PropertyWidget -> PropertyField
 labelled_field ui o make_input =
     let
         field = make_input ui o
@@ -1972,7 +1974,7 @@ labelled_field ui o make_input =
     in
         { field | view = nview }
 
-unlabelled_field : Ui Msg -> PropertyOptions -> (List (H.Attribute Msg) -> PropertyWidget) -> PropertyField
+unlabelled_field : Ui -> PropertyOptions -> (List (H.Attribute Msg) -> PropertyWidget) -> PropertyField
 unlabelled_field ui o make_input =
     let
         field = make_input [Aria.label o.label] ui o
@@ -2172,6 +2174,37 @@ multi_select_property choices ui o =
                 ))
             ]
 
+string_list_property : Ui -> PropertyOptions -> List PropertyField
+string_list_property ui options =
+    let
+        stored_values = S.get (JD.list JD.string) [] options.settings
+
+        last_thing = stored_values |> List.reverse |> List.head |> Maybe.withDefault ""
+
+        values = stored_values ++ (if last_thing == "" && stored_values /= [] then [] else [""])
+
+        z = Debug.log "settings" options.settings
+    in
+        values |> List.indexedMap (\i v ->
+            property_field
+                { id = options.id++"-value-"++(fi i)
+                , label = "Number "++(fi i)
+                , help = Nothing
+                , settings = options.settings
+                , settings_prefix = options.settings_prefix
+                , setter = options.setter
+                }
+                [ H.input
+                    [ HA.value v
+                    , HE.onInput <| (\x -> (S.setters options.settings options.setter).value <| (JE.list JE.string) <| Debug.log "set" <| LE.setAt i x values)
+                    , HA.id <| options.id ++ "-value-" ++ (fi i)
+                    , HA.class "monospace"
+                    ]
+                    []
+                ]
+            )
+
+
 mathjax_span : String -> Html msg
 mathjax_span content = H.node "mathjax-span" [HA.attribute "text" content] []
 
@@ -2232,7 +2265,7 @@ variable_link : String -> Html Msg
 variable_link name = 
     H.a
         [ HA.href "#"
-        , HE.onClick (ShowVariable name |> UpdateQuestion)
+        , HE.onClick (ShowVariable [name] |> UpdateQuestion)
         , HA.class "monospace btn"
         ]
         [ H.text name ]
@@ -2286,24 +2319,18 @@ numberNotationStyles =
       }
     ]
 
-go_to_reference : VariableReference -> List (String, String)
-go_to_reference ref = case ref of
-    (StringRef "advice" _)::_ -> [("main", "advice")]
-    (StringRef "statement" _)::_ -> [("main", "statement")]
-    _ -> []
+go_to_reference : FieldReference -> List (String, String)
+go_to_reference (tabs, field) = 
+    List.map (\(tabber,tab) -> (Tabber.tabber_name tabber, tab.id)) tabs
 
--- list of (icon, text)
-describe_reference : VariableReference -> String
-describe_reference ref = case ref of
-    (StringRef _ title)::[] -> title
-    _ -> Debug.toString ref
-
-view_active : ActiveModelRecord -> Html Msg
-view_active model = 
+main_tabber : ActiveModelRecord -> Tabber Msg
+main_tabber model =
     let
         question = model.history.current
 
         ui = model.ui
+
+        icon = ui.icon
 
         qfield k = S.atField k question.settings
 
@@ -2315,50 +2342,7 @@ view_active model =
         parts_mode = S.getters.string (qfield "partsMode") |> \s -> case s of
             "explore" -> ExploreMode
             _ -> AllPartsMode
-
-        main_tabber = Tabber
-            { name = "main"
-            , allow_empty = False
-            , tabs = 
-                [ { id = "statement"
-                  , label = SimpleLabel "Statement"
-                  , icon = Just "text"
-                  , view = statement_tab
-                  , tabbers = []
-                  }
-                , { id = "variables"
-                  , label = SimpleLabel "Variables"
-                  , icon = Just "list"
-                  , view = variables_tab
-                  , tabbers = [variables_tabber]
-                  }
-                , { id = "parts"
-                  , label = SimpleLabel "Parts"
-                  , icon = Just "correct"
-                  , view = parts_tab
-                  , tabbers = [parts_tabber]
-                  }
-                , { id = "advice"
-                  , label = SimpleLabel "Advice"
-                  , icon = Just "advice"
-                  , view = advice_tab
-                  , tabbers = []
-                  }
-                , { id = "extensions"
-                  , label = SimpleLabel "Extensions & scripts"
-                  , icon = Just "extension"
-                  , view = extensions_scripts_tab
-                  , tabbers = [extensions_tabber]
-                  }
-                , { id = "settings"
-                  , label = SimpleLabel "Settings"
-                  , icon = Just "settings"
-                  , view = settings_tab
-                  , tabbers = []
-                  }
-                ]
-            }
-
+        
         qset = ChangeQuestionSetting FinalSetting >> UpdateQuestion
 
         question_field : { id : String, label : String, help : Maybe String } -> PropertyWidget -> PropertyField
@@ -2368,6 +2352,7 @@ view_active model =
             , label = o.label
             , help = o.help
             , settings = qfield o.id
+            , settings_prefix = []
             , setter = qset
             }
 
@@ -2393,7 +2378,7 @@ view_active model =
                     }
                     content_property
             in
-                { contents = 
+                { contents = \_ -> 
                     [ H.fieldset [] <| statement_field.view
                     ]
                 , attributes = []
@@ -2410,7 +2395,7 @@ view_active model =
                     }
                     content_property
             in
-                { contents = 
+                { contents = \_ -> 
                     [ H.fieldset [] <| advice_field.view
                     ]
                 , attributes = []
@@ -2424,6 +2409,8 @@ view_active model =
 
                 vfield k = S.atField k variable.settings
                 cfield k = S.atField k variable.computed
+
+                vsettings_prefix = [S.field "variables", S.field <| name_of variable]
 
                 vstring = vfield >> S.getters.string
                 vbool = vfield >> S.getters.bool
@@ -2440,15 +2427,14 @@ view_active model =
 
                 names = variable_names variable |> Set.fromList
 
-                used_by : List String
+                used_by : List (List String)
                 used_by =
                     all_variables
                     |> List.filter (second >> dependencies_of >> Set.fromList >> Set.intersect names >> (/=) Set.empty)
-                    |> List.map (second >> variable_names >> String.join ", ")
+                    |> List.map (second >> variable_names)
 
                 references : List VariableReference
-                references =
-                    S.get (JD.list decode_variable_reference) [] (S.atField "references" variable.computed)
+                references = variable.references
 
                 variable_field : { id : String, label : String, help : Maybe String } -> PropertyWidget -> PropertyField
                 variable_field o = labelled_field
@@ -2457,6 +2443,7 @@ view_active model =
                     , label = o.label
                     , help = o.help
                     , settings = vfield o.id
+                    , settings_prefix = vsettings_prefix
                     , setter = vset
                     }
 
@@ -2467,6 +2454,7 @@ view_active model =
                     , label = o.label
                     , help = o.help
                     , settings = S.at [S.field "template", S.field o.id] variable.computed
+                    , settings_prefix = vsettings_prefix
                     , setter = tset
                     }
 
@@ -2479,6 +2467,7 @@ view_active model =
                         , label = o.label
                         , help = o.help
                         , settings = S.at [S.field "template", S.field o.id] variable.computed
+                        , settings_prefix = vsettings_prefix
                         , setter = tset
                         }
 
@@ -2568,10 +2557,11 @@ view_active model =
                                     custom_text_property
                                         [ Aria.label <| "Number "++(fi i) ]
                                         ui
-                                        { id = "value-"++(fi i)
+                                        { id = prefix_id <| "value-"++(fi i)
                                         , label = "Number "++(fi i)
                                         , help = Nothing
                                         , settings = S.at [S.field "template", S.field "values", S.index i] variable.computed
+                                        , settings_prefix = vsettings_prefix
                                         , setter = tset
                                         }
                                 )
@@ -2590,10 +2580,11 @@ view_active model =
                                     custom_text_property
                                         [ Aria.label <| "Number "++(fi i) ]
                                         ui
-                                        { id = "value-"++(fi i)
+                                        { id = prefix_id <| "value-"++(fi i)
                                         , label = "Number "++(fi i)
                                         , help = Nothing
                                         , settings = S.at [S.field "template", S.field "values", S.index i] variable.computed
+                                        , settings_prefix = vsettings_prefix
                                         , setter = tset
                                         }
                                 )
@@ -2753,7 +2744,7 @@ view_active model =
                     boolean_property
 
                 vview =
-                    { contents = List.concat
+                    { contents = \_ -> List.concat
                         [ [H.fieldset [ HA.class "vertical" ] <| List.concat
                             [ [ ui.button "danger"
                                 [ HE.onClick <| UpdateQuestion <| DeleteVariable path
@@ -2807,7 +2798,7 @@ view_active model =
                                         [ HA.class "dependencies" ]
                                         [ H.h3 [] 
                                             [ ui.icon "from"
-                                            , H.text "Depends on"
+                                            , H.text " Depends on"
                                             ]
                                         , H.ul
                                             [ HA.class "list-inline" ]
@@ -2823,7 +2814,7 @@ view_active model =
                                 _ -> [H.section
                                         [ HA.class "used-by" ]
                                         [ H.h3 [] 
-                                            [ H.text "Used by"
+                                            [ H.text "Used by "
                                             , ui.icon "to"
                                             ]
                                         , H.ul
@@ -2835,7 +2826,7 @@ view_active model =
                                                         , HE.onClick (ShowVariable d |> UpdateQuestion)
                                                         , HA.class "monospace btn info"
                                                         ]
-                                                        [ H.text d ]
+                                                        [ H.text <| String.join ", " d ]
                                                     ]
                                             ))
                                         ]
@@ -2845,27 +2836,26 @@ view_active model =
                                 _ -> [H.section
                                         [ HA.class "references" ]
                                         [ H.h3 [] 
-                                            [ H.text "References"
+                                            [ H.text "References "
                                             , ui.icon "to"
                                             ]
                                         , H.ul
                                             [ HA.class "list-inline" ]
-                                            (references |> List.map (\refpath -> 
+                                            (references |> List.map (\(address, field_ref) -> 
                                                 let
-                                                    tab_changes = go_to_reference refpath
+                                                    (_,field) = field_ref
                                                 in
                                                     H.li [] 
                                                         [ H.a
-                                                            [ HA.href "#"
-                                                            , HE.onClick (GoToVariableReference refpath |> UpdateQuestion)
-                                                            , HA.class "monospace btn info"
+                                                            [ HA.href <| "#"++field.options.id
+                                                            , HE.onClick (GoToVariableReference field_ref |> UpdateQuestion)
+                                                            , HA.class "btn info"
                                                             ]
-                                                            [ H.text <| describe_reference refpath ]
+                                                            (field_breadcrumbs ui field_ref)
                                                         ]
                                             ))
                                         ]
                                      ]
-                        , [H.pre [] [H.text "refs", H.text <| Debug.toString references]]
                         ]
                     , attributes = []
                     , fields = 
@@ -2908,7 +2898,7 @@ view_active model =
 
         variables_tab : TabView Msg
         variables_tab =
-            { contents =
+            { contents = \_ ->
                 [ H.nav
                     [ HA.id "variables" ]
                     [ H.h2 [] [ H.text "Variables" ]
@@ -3020,16 +3010,58 @@ view_active model =
                 ]
             )
 
-        settings_tab =
-            { contents =
-                [ H.fieldset [] <| List.concat
-                    [ question_name_field.view
-                    , question_parts_mode_field.view
-                    ]
-                ]
-            , attributes = []
-            , fields = [question_name_field, question_parts_mode_field]
+        question_description_field = question_field
+            { id = "description"
+            , label = "Description"
+            , help = Nothing
             }
+            content_property
+
+        settings_tab =
+            let
+                tags_fields = string_list_property ui
+                    { id = "tags"
+                    , label = "Tags"
+                    , help = Nothing
+                    , settings = qfield "tags"
+                    , settings_prefix = []
+                    , setter = qset
+                    }
+
+                tags = S.get (JD.list JD.string) [] (qfield "tags")
+
+            in
+
+                { contents = \_ ->
+                    [ H.fieldset [] <| List.concat
+                        [ question_name_field.view
+                        , question_parts_mode_field.view
+                        , question_description_field.view
+                        , [ui.help_block
+                            [ H.p []
+                                [ ui.helplink "Description" "the description field"
+                                , H.text "Try to answer the following questions here:"
+                                ]
+                            , H.ul []
+                                [ H.li [] [H.text "What is this question used for?"]
+                                , H.li [] [H.text "What does this question assess?"]
+                                , H.li [] [H.text "What does the student have to do?"]
+                                , H.li [] [H.text "How is the question randomised?"]
+                                , H.li [] [H.text "Are there any implementation details that editors should be aware of?"]
+                                ]
+                            ]
+                          ]
+                        ]
+                    , H.fieldset [] <| List.concat
+                        [ [ H.legend [] [H.text "Tags"] ]
+                        , List.concatMap (.view) tags_fields
+                        , [H.p [] [H.text <| fi <| List.length tags_fields]]
+                        , [H.pre [] [H.text <| Debug.toString tags]]
+                        ]
+                    ]
+                , attributes = []
+                , fields = [question_name_field, question_parts_mode_field] ++ tags_fields
+                }
 
         all_parts : List (PartPath, Part)
         all_parts = unwrap_part_container question.parts
@@ -3070,7 +3102,7 @@ view_active model =
             }
 
         parts_tab =
-            { contents = 
+            { contents = \_ -> 
                 [ H.nav
                     []
                     [ H.h2 [] [ H.text "Parts" ]
@@ -3156,6 +3188,8 @@ view_active model =
             let
                 path_string = part_path_toString path
 
+                psettings_prefix = part_path_to_address path
+
                 prefix_id : String -> String
                 prefix_id id = path_string++"-"++id
 
@@ -3202,6 +3236,7 @@ view_active model =
                     , label = o.label
                     , help = o.help
                     , settings = pfield o.id
+                    , settings_prefix = psettings_prefix
                     , setter = pset
                     }
 
@@ -3213,6 +3248,7 @@ view_active model =
                         , label = eo.label
                         , help = eo.help
                         , settings = part.settings
+                        , settings_prefix = psettings_prefix
                         , setter = pset
                         }
                         (\_ o -> 
@@ -3311,6 +3347,7 @@ view_active model =
                                     , label = "Content"
                                     , help = Nothing
                                     , settings = S.at [S.field "choices", S.index i] part.settings
+                                    , settings_prefix = psettings_prefix
                                     , setter = pset
                                     }
                                     content_property -- TODO : smaller
@@ -3320,6 +3357,7 @@ view_active model =
                                     , label = "Marks"
                                     , help = Nothing
                                     , settings = S.at [S.field "matrix", S.index i] part.settings
+                                    , settings_prefix = psettings_prefix
                                     , setter = pset
                                     }
                                     text_property
@@ -3329,6 +3367,7 @@ view_active model =
                                     , label = "Distractor message"
                                     , help = Nothing
                                     , settings = S.at [S.field "distractors", S.index i] part.settings
+                                    , settings_prefix = psettings_prefix
                                     , setter = pset
                                     }
                                     text_property
@@ -3340,7 +3379,7 @@ view_active model =
                           , icon = Just "list"
                           , tabbers = []
                           , view =
-                              { contents = List.concat
+                              { contents = \_ -> List.concat
                                   [ [H.fieldset [] <| List.concat
                                     [ case part.type_.name of
                                         "m_n_2" ->
@@ -3442,6 +3481,7 @@ view_active model =
                                 , label = "Pattern student's answer must match"
                                 , help = Just "pattern restriction"
                                 , settings = S.at [S.field "mustmatchpattern", S.field "pattern"] part.settings
+                                , settings_prefix = psettings_prefix
                                 , setter = pset
                                 }
                                 (jme_property { notation = "pattern_matching" })
@@ -3463,6 +3503,7 @@ view_active model =
                                 , label = "Part of expression to mark"
                                 , help = Just "part of expression to mark"
                                 , settings = S.at [S.field "mustmatchpattern", S.field "nameToCompare"] part.settings
+                                , settings_prefix = psettings_prefix
                                 , setter = pset
                                 }
                                 (select_property capturedNameOptions)
@@ -3473,6 +3514,7 @@ view_active model =
                                 , label = "Partial credit for not matching pattern"
                                 , help = Just "partial credit for not matching pattern"
                                 , settings = S.at [S.field "mustmatchpattern", S.field "partialCredit"] part.settings
+                                , settings_prefix = psettings_prefix
                                 , setter = pset
                                 }
                                 percent_property
@@ -3483,6 +3525,7 @@ view_active model =
                                 , label = "When to warn the student if their answer does not match the pattern"
                                 , help = Just "pattern warning time"
                                 , settings = S.at [S.field "mustmatchpattern", S.field "warningTime"] part.settings
+                                , settings_prefix = psettings_prefix
                                 , setter = pset
                                 }
                                 (select_property
@@ -3498,6 +3541,7 @@ view_active model =
                                 , label = "Warning message"
                                 , help = Nothing
                                 , settings = S.at [S.field "mustmatchpattern", S.field "message"] part.settings
+                                , settings_prefix = psettings_prefix
                                 , setter = pset
                                 }
                                 content_property
@@ -3563,6 +3607,7 @@ view_active model =
                                 , label = "Checking range start"
                                 , help = Just "checking range start"
                                 , settings = S.at [S.field "vsetRange", S.index 0] part.settings
+                                , settings_prefix = psettings_prefix
                                 , setter = pset
                                 }
                                 text_property
@@ -3572,6 +3617,7 @@ view_active model =
                                 , label = "Checking range end"
                                 , help = Just "checking range end"
                                 , settings = S.at [S.field "vsetRange", S.index 1] part.settings
+                                , settings_prefix = psettings_prefix
                                 , setter = pset
                                 }
                                 text_property
@@ -3585,6 +3631,7 @@ view_active model =
                                     , label = name
                                     , help = Nothing
                                     , settings = S.at [S.field "valuegenerators", S.indexWhereName name, S.field "value"] part.settings
+                                    , settings_prefix = psettings_prefix
                                     , setter = pset
                                     }
                                     text_property
@@ -3601,7 +3648,7 @@ view_active model =
                               , icon = Just "restriction"
                               , tabbers = []
                               , view =
-                                  { contents = 
+                                  { contents = \_ -> 
                                       [ H.fieldset [] <| List.concat
                                         [ [ H.legend [] [H.text "Pattern restriction"] ]
                                         , mustMatchPattern_field.view
@@ -3640,7 +3687,7 @@ view_active model =
                               , tabbers = []
                               , view =
                                   { attributes = []
-                                  , contents = 
+                                  , contents = \_ -> 
                                       [ H.fieldset [] <| List.concat
                                         [ [ H.legend [] [H.text "Checking accuracy"]
                                           , ui.help_block 
@@ -3768,6 +3815,7 @@ view_active model =
                                     , label = "Content"
                                     , help = Nothing
                                     , settings = S.at [S.field "choices", S.index i] part.settings
+                                    , settings_prefix = psettings_prefix
                                     , setter = pset
                                     }
                                     content_property -- TODO : smaller
@@ -3808,6 +3856,7 @@ view_active model =
                                     , label = "Content"
                                     , help = Nothing
                                     , settings = S.at [S.field "answers", S.index i] part.settings
+                                    , settings_prefix = psettings_prefix
                                     , setter = pset
                                     }
                                     content_property -- TODO : smaller
@@ -3839,6 +3888,7 @@ view_active model =
                                                 , label = "Choice "++(fi i)++", answer "++(fi j)
                                                 , help = Nothing
                                                 , settings = S.at [S.field "matrix", S.index i, S.index j] part.settings
+                                                , settings_prefix = psettings_prefix
                                                 , setter = pset
                                                 }
                                             )
@@ -3850,7 +3900,7 @@ view_active model =
                               , icon = Just "list"
                               , tabbers = []
                               , view =
-                                  { contents = List.concat
+                                  { contents = \_ -> List.concat
                                       [ [H.fieldset [] <| List.concat
                                             [ choices_field.view
                                             , visibleIf customChoices <| customChoices_field.view
@@ -3902,7 +3952,7 @@ view_active model =
                               , icon = Just "list"
                               , tabbers = []
                               , view =
-                                  { contents = List.concat
+                                  { contents = \_ -> List.concat
                                       [ [H.fieldset [] <| List.concat
                                         [ answers_field.view
                                         , visibleIf customAnswers <| customAnswers_field.view
@@ -3953,7 +4003,7 @@ view_active model =
                               , icon = Just "grid"
                               , tabbers = []
                               , view =
-                                  { contents = List.concat
+                                  { contents = \_ -> List.concat
                                     [ [H.fieldset [] <| List.concat
                                         [ visibleIf (displayType == "checkbox") <| markingMethod_field.view
                                         , visibleIf (displayType == "checkbox" && needsMaxMarks && (String.toFloat (pstring "maxMarks") |> Maybe.withDefault 0) <= 0 ) <|
@@ -4044,7 +4094,7 @@ view_active model =
                     , icon = Just "text"
                     , tabbers = []
                     , view =
-                        { contents = 
+                        { contents = \_ -> 
                             [ H.fieldset [ HA.class "vertical" ] <| prompt_field.view
                             ]
                         , attributes = []
@@ -4236,7 +4286,7 @@ view_active model =
                                     }
                                     boolean_property
                             in
-                                { contents = 
+                                { contents = \_ -> 
                                     [ H.fieldset [] <| List.concat
                                         [ marks_field.view
                                         , answer_field.view
@@ -4373,7 +4423,7 @@ view_active model =
                                     }
                                     (select_property (numberNotationStyles |> List.map (\s -> (s.value, s.label))))
                             in
-                                { contents = 
+                                { contents = \_ -> 
                                     [ H.fieldset [] <| List.concat
                                         [ marks_field.view
                                         , minValue_field.view
@@ -4466,7 +4516,7 @@ view_active model =
                                         ]
                                     )
                             in
-                                { contents = 
+                                { contents = \_ -> 
                                     [ H.fieldset [] <| List.concat
                                         [ showCellAnswerState_field.view
                                         ]
@@ -4512,7 +4562,7 @@ view_active model =
                                         ]
                                     )
                             in
-                                { contents = 
+                                { contents = \_ -> 
                                     [ H.fieldset [] <| List.concat
                                         [ minMarks_field.view
                                         , maxMarks_field.view
@@ -4601,7 +4651,7 @@ view_active model =
                                         ]
                                     )
                             in
-                                { contents = 
+                                { contents = \_ -> 
                                     [ H.fieldset [] <| List.concat
                                         [ minMarks_field.view
                                         , maxMarks_field.view
@@ -4667,7 +4717,7 @@ view_active model =
                                     }
                                     boolean_property
                             in
-                                { contents = 
+                                { contents = \_ -> 
                                     [ H.fieldset [] <| List.concat
                                         [ visibleIf all_gaps_same_type <| sortAnswers_field.view
                                         , inlineCorrectAnswer_field.view
@@ -4811,7 +4861,7 @@ view_active model =
                                     }
                                     code_property
                             in
-                                { contents = 
+                                { contents = \_ -> 
                                     [ H.fieldset [] <| List.concat
                                         [ marks_field.view
                                         , correctAnswer_field.view
@@ -4937,7 +4987,7 @@ view_active model =
                                     }
                                     percent_property
                             in
-                                { contents = 
+                                { contents = \_ -> 
                                     [ H.fieldset [] <| List.concat
                                         [ marks_field.view
                                         , matchMode_field.view
@@ -4971,7 +5021,7 @@ view_active model =
 
 
                         _ -> -- TODO: custom
-                            { contents = []
+                            { contents = \_ -> []
                             , attributes = []
                             , fields = 
                                 [
@@ -5000,7 +5050,7 @@ view_active model =
                         , icon = Just "feedback"
                         , tabbers = []
                         , view =
-                            { contents = 
+                            { contents = \_ -> 
                                 [ H.fieldset [] <| List.concat
                                     [ useAlternativeFeedback_field.view
                                     , alternativeFeedbackMessage_field.view
@@ -5044,6 +5094,8 @@ view_active model =
                                 nstring = nfield >> S.getters.string
                                 name = nstring "name"
 
+                                nsettings_prefix = psettings_prefix ++ [S.field "customMarkingAlgorithm", S.field "notes", S.index i]
+
                                 nset = ChangeMarkingAlgorithmNote i >> update_algo
 
                                 note_field o = labelled_field
@@ -5052,6 +5104,7 @@ view_active model =
                                     , label = o.label
                                     , help = Nothing
                                     , settings = nfield o.id
+                                    , settings_prefix = nsettings_prefix
                                     , setter = nset
                                     }
 
@@ -5078,7 +5131,7 @@ view_active model =
                                 , icon = Nothing
                                 , tabbers = []
                                 , view =
-                                    { contents = 
+                                    { contents = \_ -> 
                                         [ H.fieldset [ HA.class "vertical" ] <| List.concat
                                             [ [ ui.button "danger" 
                                                     [ HE.onClick <| update_algo <| DeleteMarkingAlgorithmNote i ]
@@ -5119,7 +5172,7 @@ view_active model =
                         , icon = Just "ok"
                         , tabbers = [notes_tabber]
                         , view =
-                            { contents =
+                            { contents = \_ ->
                                 [ H.fieldset [] <| List.concat
                                     [ visibleIf (part.type_.name /= "extension") <| extendBaseMarkingAlgorithm_field.view
                                     ]
@@ -5169,6 +5222,7 @@ view_active model =
                             , label = "Answer"
                             , help = Nothing
                             , settings = S.atField "testing_answer" part.computed
+                            , settings_prefix = psettings_prefix
                             , setter = ChangePartSetting ComputedSetting >> pmsg
                             }
                             text_property
@@ -5178,7 +5232,7 @@ view_active model =
                         , icon = Just "check"
                         , tabbers = []
                         , view =
-                            { contents = List.concat
+                            { contents = \_ -> List.concat
                                 [ [ H.h4 [] [H.text "Test that the marking algorithm works"]
                                   , ui.help_block
                                       [ H.p [] [H.text "Check that the marking algorithm works with different sets of variables and student answers using the interface below."]
@@ -5231,6 +5285,7 @@ view_active model =
                             , label = o.label
                             , help = Nothing
                             , settings = script_setting script o.id
+                            , settings_prefix = psettings_prefix
                             , setter = pset
                             }
 
@@ -5249,6 +5304,7 @@ view_active model =
                                     ui
                                     { id = prefix_id "mark-order"
                                     , settings = script_setting script "order"
+                                    , settings_prefix = psettings_prefix
                                     , setter = pset
                                     , label = long_label
                                     , help = Nothing
@@ -5291,7 +5347,7 @@ view_active model =
                         , icon = Just "file"
                         , tabbers = []
                         , view =
-                            { contents = 
+                            { contents = \_ -> 
                                 [ ui.help_block 
                                     [ ui.helplink "part-scripts" "part scripts"
                                     , H.text "When you need to change the way this part works beyond the available options, you can write JavaScript code to be executed at the times described below." 
@@ -5405,6 +5461,7 @@ view_active model =
                                     , label = "Answer to use"
                                     , help = Nothing
                                     , settings = vrsettings |> S.atField "part"
+                                    , settings_prefix = psettings_prefix
                                     , setter = pset
                                     }
                                 , must_go_first_field = boolean_property
@@ -5413,6 +5470,7 @@ view_active model =
                                     , label = "Must be answered?"
                                     , help = Nothing
                                     , settings = vrsettings |> S.atField "must_go_first"
+                                    , settings_prefix = psettings_prefix
                                     , setter = pset
                                     }
                                 }
@@ -5455,7 +5513,7 @@ view_active model =
                         , icon = Just "transfer"
                         , tabbers = []
                         , view =
-                            { contents = List.concat
+                            { contents = \_ -> List.concat
                                 [ [ ui.help_block
                                     [ ui.helplink "adaptive-marking" "adaptive marking"
                                     , H.text "To account for errors made by the student in earlier calculations, replace question variables with answers to earlier parts."
@@ -5674,6 +5732,7 @@ view_active model =
                                     , label = o.label
                                     , help = o.help
                                     , settings = npfield o.id
+                                    , settings_prefix = psettings_prefix
                                     , setter = pset
                                     }
 
@@ -5697,6 +5756,7 @@ view_active model =
                                     , label = "Availability"
                                     , help = Just "availability condition"
                                     , settings = npfield "availabilityCondition"
+                                    , settings_prefix = psettings_prefix
                                     , setter = ChangePartSetting CustomisableFinalSetting >> pmsg
                                     }
                                     (select_or_custom_property custom_availabilityCondition availabilityConditions [])
@@ -5772,6 +5832,7 @@ view_active model =
                                             , label = "Value for replaced value of "++variable
                                             , help = Nothing
                                             , settings = S.atField "definition" vrsettings
+                                            , settings_prefix = psettings_prefix
                                             , setter = ChangePartSetting CustomisableFinalSetting >> pmsg
                                             }
                                             (select_or_custom_property custom_definition definitions)
@@ -5783,6 +5844,7 @@ view_active model =
                                                 , label = "JME expression for replaced value of "++variable
                                                 , help = Nothing
                                                 , settings = S.atField "definition" vrsettings
+                                                , settings_prefix = psettings_prefix
                                                 , setter = pset
                                                 }
                                                 custom_text_property
@@ -5812,7 +5874,6 @@ view_active model =
                             in
                                 { view = H.article []
                                     [ H.h4 [] [H.text <| part_name npath np]
-                                    , H.p [] [H.text <| Debug.toString npath]
                                     , ui.button "danger"
                                         [ HE.onClick <| remove_next_part i
                                         ]
@@ -5895,7 +5956,7 @@ view_active model =
                         , icon = Just "next"
                         , tabbers = []
                         , view =
-                            { contents = List.concat
+                            { contents = \_ -> List.concat
                                 [ visibleIf (not reachable) <|
                                     [ ui.alert "warning"
                                         [ H.p [] [H.text "This part can't be reached by the student."]
@@ -5990,19 +6051,25 @@ view_active model =
                     |> List.filter first
                     |> List.map second
 
+                customName_field = unlabelled_field
+                    ui
+                    { id = prefix_id "customName"
+                    , label = "Name"
+                    , help = Nothing
+                    , settings = pfield "customName"
+                    , settings_prefix = psettings_prefix
+                    , setter = pset
+                    }
+                    custom_text_property
+
                 pview =
-                    { contents = 
+                    { contents = \_ -> 
                         [ H.header
                             []
                             [ H.h3 
                                 []
-                                [ H.input 
-                                    [ HA.value <| pstring "customName"
-                                    , HA.placeholder <| part_name path part
-                                    , HE.onInput <| (S.setters (pfield "customName") pset).string
-                                    ]
-                                    []
-                                ]
+                                ( customName_field.view
+                                )
                             , H.small [ HA.class "muted" ] [H.text part.type_.nice_name]
                             , H.div
                                 [ HA.class "part-controls" ]
@@ -6012,7 +6079,7 @@ view_active model =
                         , view_tabpanel part_tabber
                         ]
                     , attributes = [ HA.class "part" ]
-                    , fields = []
+                    , fields = [customName_field]
                     }
 
             in
@@ -6091,7 +6158,7 @@ view_active model =
                         }
                         ui
             in
-                { contents = List.concat
+                { contents = \_ -> List.concat
                     [ [ ui.help_block 
                         [ ui.helplink "question-extensions" "extensions"
                         , H.text "Select extensions to use in this question."
@@ -6188,6 +6255,7 @@ view_active model =
                             , label = "Name"
                             , help = Nothing
                             , settings = csettings |> S.atField "name"
+                            , settings_prefix = []
                             , setter = qset
                             }
 
@@ -6198,6 +6266,7 @@ view_active model =
                             , label = "Value"
                             , help = Nothing
                             , settings = csettings |> S.atField "value"
+                            , settings_prefix = []
                             , setter = qset
                             }
 
@@ -6207,6 +6276,7 @@ view_active model =
                             , label = "LaTeX"
                             , help = Nothing
                             , settings = csettings |> S.atField "tex"
+                            , settings_prefix = []
                             , setter = qset
                             }
                     in
@@ -6216,7 +6286,7 @@ view_active model =
                         }
                     )
             in
-                { contents = 
+                { contents = \_ -> 
                     [ H.fieldset
                         [ HA.class "vertical" ]
                         [ H.legend [] [H.text "Built-in constants"]
@@ -6287,11 +6357,13 @@ view_active model =
                     (rulesets ++ [JE.null])
                     |> set_rulesets
 
+                rsettings_prefix = []
+
                 rcomputed =
                     question.computed
                     |> S.insert "rulesets" (JE.list identity rulesets)
             in
-                { contents = List.concat
+                { contents = \_ -> List.concat
                     [ [ ui.help_block 
                         [ ui.helplink "rulesets" "rulesets"
                         , H.text "Define rulesets for simplification and display of mathematical expressions."
@@ -6325,6 +6397,7 @@ view_active model =
                                             , label = "Name"
                                             , help = Nothing
                                             , settings = rsettings |> S.atField "name"
+                                            , settings_prefix = rsettings_prefix
                                             , setter = rset
                                             }
 
@@ -6335,6 +6408,7 @@ view_active model =
                                             , label = "Definition"
                                             , help = Nothing
                                             , settings = rsettings |> S.atField "definition"
+                                            , settings_prefix = rsettings_prefix
                                             , setter = rset
                                             }
                                 in
@@ -6388,6 +6462,7 @@ view_active model =
                         , label = o.label
                         , help = Nothing
                         , settings = ffield o.id
+                        , settings_prefix = []
                         , setter = qset
                         }
 
@@ -6464,6 +6539,7 @@ view_active model =
                             , label = "Name"
                             , help = Nothing
                             , settings = S.atField "name" psettings
+                            , settings_prefix = []
                             , setter = qset
                             }
                         
@@ -6475,6 +6551,7 @@ view_active model =
                             , label = "Type"
                             , help = Nothing
                             , settings = S.atField "type" psettings
+                            , settings_prefix = []
                             , setter = ChangeQuestionSetting CustomisableFinalSetting >> UpdateQuestion
                             }
 
@@ -6485,6 +6562,7 @@ view_active model =
                                 , label = "Custom type"
                                 , help = Nothing
                                 , settings = S.atField "customType" psettings
+                                , settings_prefix = []
                                 , setter = qset
                                 }
                     in
@@ -6501,7 +6579,7 @@ view_active model =
                     ])
 
                 fview =
-                    { contents = 
+                    { contents = \_ -> 
                         [ H.fieldset [HA.class "vertical"] <| List.concat
                             [ [ ui.button "danger"
                                 [ HE.onClick <| remove_function i ]
@@ -6569,7 +6647,7 @@ view_active model =
             }
 
         functions_tab_view =
-            { contents = 
+            { contents = \_ -> 
                 [ H.nav
                     [ HA.id "functions" ]
                     [ H.h2 [] [ H.text "Functions" ]
@@ -6587,14 +6665,50 @@ view_active model =
             }
 
         preamble_tab =
-            { contents = [] -- TODO
-            , attributes = []
-            , fields = []
-            }
+            let
+                javascript_preamble_field = labelled_field
+                    ui
+                    { id = "preamble-js"
+                    , label = "JavaScript"
+                    , help = Nothing
+                    , settings = S.at [S.field "preamble", S.field "js"] question.settings
+                    , settings_prefix = []
+                    , setter = qset
+                    }
+                    code_property
+
+                css_preamble_field = labelled_field
+                    ui
+                    { id = "preamble-css"
+                    , label = "CSS"
+                    , help = Nothing
+                    , settings = S.at [S.field "preamble", S.field "css"] question.settings
+                    , settings_prefix = []
+                    , setter = qset
+                    }
+                    code_property
+            in
+                { contents = \_ -> 
+                    [ ui.help_block 
+                        [ ui.helplink "preamble" "the preamble"
+                        , H.text "Add styling to the question's display and write a script to run when the question is created."
+                        ]
+                    , H.fieldset [] <| List.concat
+                        [ javascript_preamble_field.view
+                        , css_preamble_field.view
+                        ]
+                        
+                    ]
+                , attributes = []
+                , fields = 
+                    [ javascript_preamble_field
+                    , css_preamble_field
+                    ]
+                }
 
         extensions_tabber = Tabber
             { name = "extensions"
-            , allow_empty = True
+            , allow_empty = False
             , tabs = 
                 [ { id = "extensions"
                   , label = SimpleLabel "Extensions"
@@ -6631,7 +6745,7 @@ view_active model =
 
         extensions_scripts_tab : TabView Msg
         extensions_scripts_tab = 
-            { contents = 
+            { contents = \_ -> 
                 [ H.nav
                     []
                     [ view_tablist extensions_tabber []
@@ -6641,8 +6755,6 @@ view_active model =
             , attributes = []
             , fields = []
             }
-        
-
 
         view_tablist : Tabber Msg -> List (H.Attribute Msg) -> Html Msg
         view_tablist = Tabber.view_tablist ui UpdateTab model.tab_state
@@ -6650,7 +6762,146 @@ view_active model =
         view_tabpanel : Tabber Msg -> Html Msg
         view_tabpanel = Tabber.view_tabpanel ui model.tab_state
 
+    in
+        Tabber <|
+        { name = "main"
+        , allow_empty = False
+        , tabs = 
+            [ { id = "statement"
+              , label = SimpleLabel "Statement"
+              , icon = Just "text"
+              , view = statement_tab
+              , tabbers = []
+              }
+            , { id = "variables"
+              , label = SimpleLabel "Variables"
+              , icon = Just "list"
+              , view = variables_tab
+              , tabbers = [variables_tabber]
+              }
+            , { id = "parts"
+              , label = SimpleLabel "Parts"
+              , icon = Just "correct"
+              , view = parts_tab
+              , tabbers = [parts_tabber]
+              }
+            , { id = "advice"
+              , label = SimpleLabel "Advice"
+              , icon = Just "advice"
+              , view = advice_tab
+              , tabbers = []
+              }
+            , { id = "extensions"
+              , label = SimpleLabel "Extensions & scripts"
+              , icon = Just "extension"
+              , view = extensions_scripts_tab
+              , tabbers = [extensions_tabber]
+              }
+            , { id = "settings"
+              , label = SimpleLabel "Settings"
+              , icon = Just "settings"
+              , view = settings_tab
+              , tabbers = []
+              }
+            ]
+        }
+
+
+-- Breadcrumbs for a field
+field_breadcrumbs : Ui -> FieldReference -> List (Html Msg)
+field_breadcrumbs ui (tabs, field) =
+    let
+        show_label : Tab msg -> String
+        show_label tab = case tab.label of
+            SimpleLabel t -> t
+            HtmlLabel r -> r.plain_text
+
+        tab_bits = 
+            tabs |> List.map (\(tabber, tab) -> 
+                [ tab.icon |> Maybe.map (ui.icon) |> Maybe.withDefault (H.text "")
+                , H.text <| show_label tab
+                ]
+            )
+
+        field_bit = [H.text field.options.label]
+    in
+        LE.intercalate [H.text " → "] (tab_bits++[field_bit])
+
+view_active : ActiveModelRecord -> Html Msg
+view_active model = 
+    let
+        question = model.history.current
+
+        ui = model.ui
+
         icon = ui.icon
+
+        mt = main_tabber model
+
+        debug_tab =
+            let
+                show_label : Tab msg -> String
+                show_label tab = case tab.label of
+                    SimpleLabel t -> t
+                    HtmlLabel r -> r.plain_text
+
+                show_tabber tabber =
+                    let
+                        name = tabber_name tabber
+                        tabs = tabber_tabs tabber
+
+                    in
+                        H.li
+                            []
+                            [ H.text <| "Tabber " ++name
+                            , H.ul [] (tabs |> List.map show_tab)
+                            ]
+
+                show_tab tab =
+                    H.li
+                        []
+                        [ H.details
+                            []
+                            [ H.summary
+                                []
+                                [ tab.icon |> Maybe.map (ui.icon) |> Maybe.withDefault (H.text "")
+                                , H.text <| show_label tab
+                                ]
+                            , H.ul [] (tab.view.fields |> List.map show_field)
+                            , H.ul [] (tab.tabbers |> List.map show_tabber)
+                            ]
+                        ]
+
+                show_at : Address -> String
+                show_at addr =
+                    let
+                        show_item : S.AddressItem -> String
+                        show_item item = case item of
+                            S.Index i -> fi i
+                            S.Field f -> f
+                            S.Key k -> k
+                            _ -> "?"
+                    in
+                        addr
+                        |> List.map show_item
+                        |> String.join "."
+
+                show_field field =
+                    H.li
+                        []
+                        [ H.text field.options.label
+                        , H.code [] [H.text <| show_at <| field.options.settings_prefix ++ field.options.settings.at]
+                        ]
+
+                all_fields : List FieldReference
+                all_fields = all_fields_in_tabber mt
+
+            in
+                H.div
+                    []
+                    [ H.ul [ HA.id "debug-fields" ] (List.map (\f -> H.li [] (field_breadcrumbs ui f)) all_fields)
+                    , H.ul [ HA.id "debug-tabbers" ] [show_tabber mt]
+                    ]
 
         saving_class = case model.saving of
             Saved _ -> "saved"
@@ -6658,6 +6909,15 @@ view_active model =
             Saving _ -> "saving"
 
         ready_to_download = Ok () -- TODO
+
+        view_tablist : Tabber Msg -> List (H.Attribute Msg) -> Html Msg
+        view_tablist = Tabber.view_tablist ui UpdateTab model.tab_state
+
+        view_tabpanel : Tabber Msg -> Html Msg
+        view_tabpanel = Tabber.view_tabpanel ui model.tab_state
+
+        qfield k = S.atField k question.settings
+
     in
         H.main_
             [ HA.id "loaded-content" ]
@@ -6818,74 +7078,15 @@ view_active model =
                         ]
                     ]
                 )
-                ++[ view_tablist main_tabber []
+                ++[ view_tablist (main_tabber model) []
                 ]
                 )
-            , view_tabpanel main_tabber
-
-            , let
-                show_label : Tab msg -> String
-                show_label tab = case tab.label of
-                    SimpleLabel t -> t
-                    HtmlLabel r -> r.plain_text
-
-                show_tabber tabber =
-                    let
-                        name = tabber_name tabber
-                        tabs = tabber_tabs tabber
-
-                    in
-                        H.li
-                            []
-                            [ H.text <| "Tabber " ++name
-                            , H.ul [] (tabs |> List.map show_tab)
-                            ]
-
-                show_tab tab =
-                    H.li
-                        []
-                        [ H.details
-                            []
-                            [ H.summary
-                                []
-                                [ tab.icon |> Maybe.map (ui.icon) |> Maybe.withDefault (H.text "")
-                                , H.text <| show_label tab
-                                ]
-                            , H.ul [] (tab.view.fields |> List.map show_field)
-                            , H.ul [] (tab.tabbers |> List.map show_tabber)
-                            ]
-                        ]
-
-                show_at : Address -> String
-                show_at addr =
-                    let
-                        show_item : S.AddressItem -> String
-                        show_item item = case item of
-                            S.Index i -> fi i
-                            S.Field f -> f
-                            S.Key k -> k
-                            _ -> "?"
-                    in
-                        addr
-                        |> List.map show_item
-                        |> String.join "."
-
-                show_field field =
-                    H.li
-                        []
-                        [ H.text field.options.label
-                        , H.code [] [H.text <| show_at field.options.settings.at]
-                        ]
-              in
-                  H.node "dialog"
-                    [ HA.attribute "open" ""
-                    , HA.attribute "style" "position: absolute;top: 0;z-index: 10000;max-height: 90svh;overflow: auto;"
-                    ]
-                    [ H.ul [ HA.id "debug-tabbers" ] [show_tabber main_tabber]
-                    ]
+            , view_tabpanel (main_tabber model)
             ]
 
 
 subscriptions : Model -> Sub Msg
 subscriptions _ = Sub.batch
     [ answer_numbas AnswerNumbas ]
+
+

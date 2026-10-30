@@ -15820,7 +15820,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         fn.paramNames = paramNames;
         fn.definition = def.definition;
         fn.name = jme.normaliseName(def.name, scope);
-        fn.language = def.language || 'jme';
+        fn.language = def.language;
         try {
             switch(fn.language) {
             case 'jme':
@@ -16481,30 +16481,25 @@ var re_note = /^(\$?[a-zA-Z_][a-zA-Z0-9_]*'*)(?:\s*\(([^)]*)\))?\s*:\s*((?:.|\n)
  * @property {Numbas.jme.tree} tree - The compiled form of the expression.
  * @property {string[]} vars - The names of the variables this note depends on.
  *
- * @param {string|object} source
+ * @param {JME} source
  * @param {Numbas.jme.Scope} scope - The scope to use for normalising names.
  *
  */
 var ScriptNote = jme.variables.ScriptNote = function(source, scope) {
-    if(typeof source == 'string') {
-        source = source.trim();
-        var m = re_note.exec(source);
-        if(!m) {
-            var hint;
-            if(/^[a-zA-Z_][a-zA-Z0-9+]*'*(?:\s*\(([^)]*)\))?$/.test(source)) {
-                hint = R('jme.script.note.invalid definition.missing colon');
-            } else if(/^[a-zA-Z_][a-zA-Z0-9+]*'*\s*\(/.test(source)) {
-                hint = R('jme.script.note.invalid definition.description missing closing bracket');
-            }
-            throw(new Numbas.Error("jme.script.note.invalid definition", {source: source, hint: hint}));
+    source = source.trim();
+    var m = re_note.exec(source);
+    if(!m) {
+        var hint;
+        if(/^[a-zA-Z_][a-zA-Z0-9+]*'*(?:\s*\(([^)]*)\))?$/.test(source)) {
+            hint = R('jme.script.note.invalid definition.missing colon');
+        } else if(/^[a-zA-Z_][a-zA-Z0-9+]*'*\s*\(/.test(source)) {
+            hint = R('jme.script.note.invalid definition.description missing closing bracket');
         }
-        this.name = m[1];
-        this.description = m[2];
-        this.expr = m[3];
-    } else {
-        this.name = source.name;
-        this.expr = source.definition;
+        throw(new Numbas.Error("jme.script.note.invalid definition", {source: source, hint: hint}));
     }
+    this.name = m[1];
+    this.description = m[2];
+    this.expr = m[3];
     if(!this.expr) {
         throw(new Numbas.Error("jme.script.note.empty expression", {name:this.name}));
     }
@@ -16535,7 +16530,7 @@ jme.variables.note_script_constructor = function(construct_scope, process_result
     /**
      * A notes script.
      *
-     * @param {string|object} source - The source of the script.
+     * @param {string} source - The source of the script.
      * @param {Numbas.jme.variables.Script} base - A base script to extend.
      * @param {Numbas.jme.Scope} scope
      * @memberof Numbas.jme.variables
@@ -16545,24 +16540,16 @@ jme.variables.note_script_constructor = function(construct_scope, process_result
         this.source = source;
         scope = construct_scope(scope || Numbas.jme.builtinScope);
         try {
+            var notes = source.replace(/^\/\/.*$/gm, '').split(/\n(?:\s*\n)+(?!\s)/);
             var ntodo = {};
             var todo = {};
-            if(typeof source == 'string') {
-                let notes;
-                notes = source.replace(/^\/\/.*$/gm, '').split(/\n(?:\s*\n)+(?!\s)/);
-                notes.forEach(function(note) {
-                    if(note.trim().length) {
-                        var res = new ScriptNote(note, scope);
-                        var name = jme.normaliseName(res.name, scope);
-                        ntodo[name] = todo[name] = res;
-                    }
-                });
-            } else {
-                source.notes.forEach(note => {
-                    const name = jme.normaliseName(note.name, scope);
-                    ntodo[name] = todo[name] = new ScriptNote(note);
-                });
-            }
+            notes.forEach(function(note) {
+                if(note.trim().length) {
+                    var res = new ScriptNote(note, scope);
+                    var name = jme.normaliseName(res.name, scope);
+                    ntodo[name] = todo[name] = res;
+                }
+            });
             if(base) {
                 Object.keys(base.notes).forEach(function(name) {
                     if(name in ntodo) {
@@ -17352,6 +17339,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @type {object}
      */
     json: null,
+
     /** Load the part's settings from a JSON object.
      *
      * @param {object} data
@@ -17537,7 +17525,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @param {string} markingScriptString
      * @param {boolean} extend_base - Does this script extend the built-in script?
      */
-    setMarkingScript: function(markingScriptDefinition, extend_base) {
+    setMarkingScript: function(markingScriptString, extend_base) {
         if(!this.doesMarking) {
             return;
         }
@@ -17545,8 +17533,8 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         var p = this;
 
         var algo = this.baseMarkingScript();
-        if(markingScriptDefinition) {
-            algo = new marking.MarkingScript(markingScriptDefinition, extend_base ? algo : undefined, this.getScope());
+        if(markingScriptString) {
+            algo = new marking.MarkingScript(markingScriptString, extend_base ? algo : undefined, this.getScope());
         }
         this.markingScript = algo;
 
@@ -18487,7 +18475,7 @@ if(res) { \
         function mark_alternative(alt, exec_path) {
             part.events.trigger('mark_alternative', alt, exec_path);
             alt.restore_feedback(feedback);
-            var values = {};
+            var values;
             var finalised_result = {states: [], valid: false, credit: 0};
             var script_result;
             try {
@@ -19800,25 +19788,21 @@ Question.prototype = /** @lends Numbas.Question.prototype */
 
         var functions = tryGet(data, 'functions');
         if(functions) {
-            if(Array.isArray(functions)) {
-                q.functionsTodo = functions.slice();
-            } else {
-                q.functionsTodo = Object.keys(functions).map(function(name) {
-                    var fd = functions[name];
-                    return {
-                        name: name,
-                        definition: fd.definition,
-                        language: fd.language,
-                        outtype: fd.type,
-                        parameters: fd.parameters.map(function(p) {
-                            return {
-                                name: p[0],
-                                type: p[1]
-                            }
-                        })
-                    };
-                });
-            }
+            q.functionsTodo = Object.keys(functions).map(function(name) {
+                var fd = functions[name];
+                return {
+                    name: name,
+                    definition: fd.definition,
+                    language: fd.language,
+                    outtype: fd.type,
+                    parameters: fd.parameters.map(function(p) {
+                        return {
+                            name: p[0],
+                            type: p[1]
+                        }
+                    })
+                };
+            });
         }
         q.signals.trigger('functionsLoaded');
         var rulesets = tryGet(data, 'rulesets');
@@ -29149,13 +29133,13 @@ Numbas.signals.on('localisation initialised', () => {
             this.part = params.part;
             this.id = params.id;
             this.options = Knockout.unwrap(params.options);
-            this.returnString = defaultObservable(this.options.returnString, false);
-            this.allowFractions = defaultObservable(this.options.allowFractions, false);
-            this.allowedNotationStyles = defaultObservable(this.options.allowedNotationStyles, ['plain', 'en', 'si-en']);
-            this.mustBeInteger = defaultObservable(this.options.mustBeInteger, false);
+            this.returnString = this.options.returnString || false;
+            this.allowFractions = this.options.allowFractions || false;
+            this.allowedNotationStyles = this.options.allowedNotationStyles || ['plain', 'en', 'si-en'];
+            this.mustBeInteger = this.options.mustBeInteger || false;
             this.disable = params.disable;
             this.events = params.events;
-            this.title = defaultObservable(params.title, '');
+            this.title = params.title || '';
             var init = Knockout.unwrap(this.answerJSON) || {valid: false};
             /** Clean up a number, to be set as the value for the input widget.
              * It's run through {@link Numbas.math.niceNumber} with the first allowed notation style.
@@ -29171,7 +29155,7 @@ Numbas.signals.on('localisation initialised', () => {
                 if(n === undefined) {
                     return '';
                 }
-                if(util.isNumber(n, vm.allowFractions(), vm.allowedNotationStyles())) {
+                if(util.isNumber(n, vm.allowFractions, vm.allowedNotationStyles)) {
                     return n + '';
                 }
                 return Numbas.math.niceNumber(n, {style: vm.allowedNotationStyles[0]}) || '';
@@ -29187,10 +29171,10 @@ Numbas.signals.on('localisation initialised', () => {
                     return {valid:false, empty: true};
                 }
 
-                const n = Numbas.util.parseNumber(input, this.allowFractions(), this.allowedNotationStyles());
-                const value = Knockout.unwrap(this.returnString) ? input : n;
+                const n = Numbas.util.parseNumber(input, this.allowFractions, this.allowedNotationStyles);
+                const value = this.returnString ? input : n;
 
-                if(!util.isNumber(input, this.allowFractions(), this.allowedNotationStyles())) {
+                if(!util.isNumber(input, this.allowFractions, this.allowedNotationStyles)) {
                     if(util.isNumber(input, true, this.allowedNotationStyles)) {
                         valid = false;
                         warnings.push(R('answer.number.fractions not allowed'));
@@ -29468,7 +29452,7 @@ Numbas.signals.on('localisation initialised', () => {
                 this.numColumns(value.columns || (value || [[]])[0].length);
                 value = value.map(function(r) {
                     return r.map(function(c) {
-                        return vm.parseCells() ? Numbas.math.niceNumber(c, {style: vm.allowedNotationStyles[0]}) || '' : c
+                        return vm.parseCells ? Numbas.math.niceNumber(c, {style: vm.allowedNotationStyles[0]}) || '' : c
                     })
                 });
             }
@@ -29502,9 +29486,9 @@ Numbas.signals.on('localisation initialised', () => {
                 if(empty) {
                     return {valid: false, empty: true};
                 }
-                if(this.parseCells()) {
+                if(this.parseCells) {
                     var valid = cells.every(function(cell) {
-                        return cell.trim() && util.isNumber(cell, vm.allowFractions(), vm.allowedNotationStyles())
+                        return cell.trim() && util.isNumber(cell, vm.allowFractions, vm.allowedNotationStyles)
                     });
                     if(!valid) {
                         var validFractions = cells.every(function(cell) {
@@ -29516,7 +29500,7 @@ Numbas.signals.on('localisation initialised', () => {
                             return {valid:false, warnings: [R('answer.matrix.some cell not a number')]};
                         }
                     } else {
-                        var matrix = value.map((row) => row.map((cell) => Numbas.util.parseNumber(cell, this.allowFractions(), this.allowedNotationStyles())));
+                        var matrix = value.map((row) => row.map((cell) => Numbas.util.parseNumber(cell, this.allowFractions, this.allowedNotationStyles)));
                         matrix.rows = value.length;
                         matrix.columns = matrix.rows > 0 ? value[0].length : 0;
                         return {valid:true, value: matrix};
@@ -31929,7 +31913,7 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
             var value = scope.evaluate(expr);
             settings[setting] = value === null ? value : jme.unwrapValue(value);
         }
-        ['numRows', 'numColumns', 'tolerance'].map(eval_setting);
+        ['numRows', 'numColumns', 'tolerance', 'prefilledCells'].map(eval_setting);
         if(settings.allowResize) {
             ['minColumns', 'maxColumns', 'minRows', 'maxRows'].map(eval_setting);
         }

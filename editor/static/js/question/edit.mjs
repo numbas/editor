@@ -51,11 +51,11 @@ function visit_schema(schema, obj, callback, path=[]) {
     if(schema.type == 'object') {
         if(schema.additionalProperties) {
             Object.entries(obj).forEach(([k,v]) => {
-                visit_schema(schema.additionalProperties, v, callback, path.concat([{key: k, title: k}]));
+                visit_schema(schema.additionalProperties, v, callback, path.concat([k]));
             });
         }
         Object.entries(schema.properties || {}).forEach(([k,pschema]) => {
-            visit_schema(pschema, obj[k], callback, path.concat([{key: k, title: pschema.title}]));
+            visit_schema(pschema, obj[k], callback, path.concat([k]));
         })
     }
     if(schema.type == 'array' && Array.isArray(obj)) {
@@ -149,6 +149,13 @@ function resolve_relative_reference(path, obj, ref) {
 
 class DefaultsArray extends Array {
     constructor(contents, items) {
+        if(typeof contents == 'number') {
+            super(...arguments);
+            return;
+        }
+        if(typeof contents[Symbol.iterator] != 'function') {
+            console.log(contents);
+        }
         super(...contents);
         this.items = items;
     }
@@ -854,26 +861,30 @@ const ask_numbas_handlers = {
 
             const vout = result.variables[v.name];
 
+            const names = jme.variables.splitVariableNames(v.name);
+
             // Check the name
             try {
                 if(v.name.match(/^\s|\s$/)) {
                     throw(new Error('extra space'));
                 }
-                const re_name = jme.standardParser.re.re_name;
-                const m = re_name.exec(v.name);
-                if(!m || m[0]!=v.name) {
-                    throw(new Error('invalid'));
-                }
-                const tokens = Numbas.jme.tokenise(v.name);
-                if(tokens.length != 1) {
-                    throw(new Error('not a single token'));
-                }
-                if(tokens[0].type != 'name') {
-                    throw(new Error('reserved'));
-                }
-                if(Numbas.jme.builtinScope.getVariable(v.name) !== undefined) {
-                    throw(new Error('reserved'));
-                }
+                names.forEach((name) => {
+                    const re_name = jme.standardParser.re.re_name;
+                    const m = re_name.exec(name);
+                    if(!m || m[0]!=name) {
+                        throw(new Error('invalid'));
+                    }
+                    const tokens = Numbas.jme.tokenise(name);
+                    if(tokens.length != 1) {
+                        throw(new Error('not a single token'));
+                    }
+                    if(tokens[0].type != 'name') {
+                        throw(new Error('reserved'));
+                    }
+                    if(Numbas.jme.builtinScope.getVariable(name) !== undefined) {
+                        throw(new Error('reserved'));
+                    }
+                });
             } catch(error) {
                 vout.errors.push({aspect: 'name', message: `The variable name <code>${v.name}</code> is invalid.`});
             }
@@ -886,7 +897,7 @@ const ask_numbas_handlers = {
                 Object.assign(result.variables[v.name],
                     {
                         dependencies: vars,
-                        names: jme.variables.splitVariableNames(v.name),
+                        names: names,
                     }
                 );
             } catch(error) {

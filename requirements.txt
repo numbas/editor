@@ -14,7 +14,7 @@ git+https://github.com/numbas/django-thumbs@1cc56a7efab78c51cee6323b761e835d480a
 packaging==24.2
 python-slugify==8.0.4
 six==1.17.0
-mistune==3.1.3
+mistune==3.3.4
 emoji==2.14.1
 pycryptodome==3.22.0
 setuptools==78.1.0

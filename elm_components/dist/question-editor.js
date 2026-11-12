@@ -6285,22 +6285,24 @@ var $author$project$QuestionEditor$compute_all = function (model) {
 var $author$project$QuestionEditor$ActiveModelRecord = function (generate_variables_debouncer) {
 	return function (find_variable_references_debouncer) {
 		return function (extension_search) {
-			return function (saving) {
-				return function (last_saved) {
-					return function (adding_part) {
-						return function (tab_state) {
-							return function (pk) {
-								return function (preview) {
-									return function (project) {
-										return function (urls) {
-											return function (share) {
-												return function (extensions) {
-													return function (jme_types) {
-														return function (ui) {
-															return function (numbas) {
-																return function (default_settings) {
-																	return function (history) {
-																		return {adding_part: adding_part, default_settings: default_settings, extension_search: extension_search, extensions: extensions, find_variable_references_debouncer: find_variable_references_debouncer, generate_variables_debouncer: generate_variables_debouncer, history: history, jme_types: jme_types, last_saved: last_saved, numbas: numbas, pk: pk, preview: preview, project: project, saving: saving, share: share, tab_state: tab_state, ui: ui, urls: urls};
+			return function (field_search) {
+				return function (saving) {
+					return function (last_saved) {
+						return function (adding_part) {
+							return function (tab_state) {
+								return function (pk) {
+									return function (preview) {
+										return function (project) {
+											return function (urls) {
+												return function (share) {
+													return function (extensions) {
+														return function (jme_types) {
+															return function (ui) {
+																return function (numbas) {
+																	return function (default_settings) {
+																		return function (history) {
+																			return {adding_part: adding_part, default_settings: default_settings, extension_search: extension_search, extensions: extensions, field_search: field_search, find_variable_references_debouncer: find_variable_references_debouncer, generate_variables_debouncer: generate_variables_debouncer, history: history, jme_types: jme_types, last_saved: last_saved, numbas: numbas, pk: pk, preview: preview, project: project, saving: saving, share: share, tab_state: tab_state, ui: ui, urls: urls};
+																		};
 																	};
 																};
 															};
@@ -6992,6 +6994,7 @@ var $author$project$QuestionEditor$decode_question = function (default_settings)
 									var name = _v1.a;
 									var vnames = _v1.b;
 									return {
+										locked_name: false,
 										name: name,
 										variables: A2(
 											$elm$core$List$filterMap,
@@ -7012,7 +7015,7 @@ var $author$project$QuestionEditor$decode_question = function (default_settings)
 									return !A2($elm$core$Set$member, name, grouped_variables);
 								},
 								$elm$core$Dict$values(variable_dict));
-							var ungrouped = {name: 'Ungrouped variables', variables: ungrouped_variables};
+							var ungrouped = {locked_name: true, name: 'Ungrouped variables', variables: ungrouped_variables};
 							return A2($elm$core$List$cons, ungrouped, groups);
 						}),
 					$elm$json$Json$Decode$oneOf(
@@ -7574,12 +7577,13 @@ var $author$project$QuestionEditor$decode_flags = A2(
 										$elm_community$json_extra$Json$Decode$Extra$andMap,
 										A2($elm$json$Json$Decode$field, 'tab_state', $author$project$Tabber$decode_state),
 										$elm$json$Json$Decode$succeed(
-											A6(
+											A7(
 												$author$project$QuestionEditor$ActiveModelRecord,
 												$Gizra$elm_debouncer$Debouncer$Messages$toDebouncer(
 													$Gizra$elm_debouncer$Debouncer$Messages$debounce(500)),
 												$Gizra$elm_debouncer$Debouncer$Messages$toDebouncer(
 													$Gizra$elm_debouncer$Debouncer$Messages$debounce(500)),
+												$author$project$FilterList$init,
 												$author$project$FilterList$init,
 												$author$project$QuestionEditor$Saved(
 													$elm$core$Result$Ok(_Utils_Tuple0)),
@@ -7899,6 +7903,7 @@ var $elm_community$json_extra$Json$Decode$Extra$fromMaybe = F2(
 			return $elm$json$Json$Decode$fail(error);
 		}
 	});
+var $elm$core$Debug$log = _Debug_log;
 var $elm$core$Platform$Cmd$map = _Platform_map;
 var $author$project$History$no_change = F2(
 	function (state, history) {
@@ -9560,26 +9565,29 @@ var $elm$browser$Browser$Dom$focus = _Browser_call('focus');
 var $author$project$Tabber$save_tab_state = _Platform_outgoingPort('save_tab_state', $elm$core$Basics$identity);
 var $author$project$Tabber$update = F2(
 	function (msg, state) {
-		if (msg.$ === 'SetTab') {
-			var key = msg.a;
-			var id = msg.b;
-			var nstate = A3($elm$core$Dict$insert, key, id, state);
-			return _Utils_Tuple2(
-				nstate,
-				$elm$core$Platform$Cmd$batch(
-					_List_fromArray(
-						[
-							$author$project$Tabber$save_tab_state(
-							A3($elm$json$Json$Encode$dict, $elm$core$Basics$identity, $elm$json$Json$Encode$string, nstate)),
-							A2(
-							$elm$core$Task$attempt,
-							function (_v1) {
-								return $author$project$Tabber$NoOp;
-							},
-							$elm$browser$Browser$Dom$focus(key + ('-tab-' + id)))
-						])));
-		} else {
-			return _Utils_Tuple2(state, $elm$core$Platform$Cmd$none);
+		switch (msg.$) {
+			case 'SetTab':
+				var key = msg.a;
+				var id = msg.b;
+				var nstate = A3($elm$core$Dict$insert, key, id, state);
+				return _Utils_Tuple2(
+					nstate,
+					$elm$core$Platform$Cmd$batch(
+						_List_fromArray(
+							[
+								$author$project$Tabber$save_tab_state(
+								A3($elm$json$Json$Encode$dict, $elm$core$Basics$identity, $elm$json$Json$Encode$string, nstate)),
+								A2(
+								$elm$core$Task$attempt,
+								function (_v1) {
+									return $author$project$Tabber$NoOp;
+								},
+								$elm$browser$Browser$Dom$focus(key + ('-tab-' + id)))
+							])));
+			case 'MoveTab':
+				return _Utils_Tuple2(state, $elm$core$Platform$Cmd$none);
+			default:
+				return _Utils_Tuple2(state, $elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$QuestionEditor$BigChange = {$: 'BigChange'};
@@ -9587,6 +9595,7 @@ var $author$project$QuestionEditor$FinalSetting = {$: 'FinalSetting'};
 var $author$project$QuestionEditor$GeneratedPartInfo = function (answer) {
 	return {answer: answer};
 };
+var $author$project$QuestionEditor$SmallChange = {$: 'SmallChange'};
 var $author$project$QuestionEditor$VariableGenerationResult = F2(
 	function (value, result) {
 		return {result: result, value: value};
@@ -10050,7 +10059,6 @@ var $author$project$QuestionEditor$go_to_reference = function (_v0) {
 		},
 		tabs);
 };
-var $elm$core$Debug$log = _Debug_log;
 var $author$project$QuestionEditor$AddFunction = {$: 'AddFunction'};
 var $author$project$QuestionEditor$AddMarkingAlgorithmNote = {$: 'AddMarkingAlgorithmNote'};
 var $author$project$QuestionEditor$AddPart = F3(
@@ -10095,9 +10103,6 @@ var $author$project$QuestionEditor$FeedbackMessage = F6(
 		return {credit: credit, credit_change: credit_change, message: message, op: op, reason: reason, scope: scope};
 	});
 var $author$project$QuestionEditor$GenerateQuestion = {$: 'GenerateQuestion'};
-var $author$project$QuestionEditor$GoToVariableReference = function (a) {
-	return {$: 'GoToVariableReference', a: a};
-};
 var $author$project$Tabber$HtmlLabel = function (a) {
 	return {$: 'HtmlLabel', a: a};
 };
@@ -10117,6 +10122,10 @@ var $author$project$QuestionEditor$SetExtensionSearch = function (a) {
 var $author$project$Tabber$SetTab = F2(
 	function (a, b) {
 		return {$: 'SetTab', a: a, b: b};
+	});
+var $author$project$QuestionEditor$SetVariableGroupName = F2(
+	function (a, b) {
+		return {$: 'SetVariableGroupName', a: a, b: b};
 	});
 var $author$project$QuestionEditor$ShowVariable = function (a) {
 	return {$: 'ShowVariable', a: a};
@@ -10375,6 +10384,7 @@ var $elm$core$Set$diff = F2(
 		return $elm$core$Set$Set_elm_builtin(
 			A2($elm$core$Dict$diff, dict1, dict2));
 	});
+var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $author$project$Util$dropRight = function (n) {
 	return A2(
 		$elm$core$Basics$composeR,
@@ -10409,6 +10419,9 @@ var $elm$html$Html$em = _VirtualDom_node('em');
 var $author$project$QuestionEditor$empty_part_container = $author$project$QuestionEditor$PartContainer(
 	{alternatives: _List_Nil, gaps: _List_Nil, parts: _List_Nil, steps: _List_Nil});
 var $author$project$Util$ff = $elm$core$String$fromFloat;
+var $author$project$QuestionEditor$GoToVariableReference = function (a) {
+	return {$: 'GoToVariableReference', a: a};
+};
 var $elm$core$List$intersperse = F2(
 	function (sep, xs) {
 		if (!xs.b) {
@@ -10478,20 +10491,57 @@ var $author$project$QuestionEditor$field_breadcrumbs = F2(
 				_List_fromArray(
 					[field_bit])));
 	});
+var $elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'click',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $author$project$QuestionEditor$field_link = F2(
+	function (ui, field_ref) {
+		var _v0 = field_ref;
+		var field = _v0.b;
+		return A2(
+			$elm$html$Html$a,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$href('#' + field.options.id),
+					$elm$html$Html$Events$onClick(
+					$author$project$QuestionEditor$UpdateQuestion(
+						$author$project$QuestionEditor$GoToVariableReference(field_ref))),
+					$elm$html$Html$Attributes$class('btn info')
+				]),
+			A2($author$project$QuestionEditor$field_breadcrumbs, ui, field_ref));
+	});
 var $elm$html$Html$fieldset = _VirtualDom_node('fieldset');
+var $elm$core$List$all = F2(
+	function (isOkay, list) {
+		return !A2(
+			$elm$core$List$any,
+			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isOkay),
+			list);
+	});
 var $author$project$FilterList$filter = F3(
 	function (strings_of, items, query) {
 		var clean = $elm$core$String$toLower;
-		var qq = clean(query);
+		var query_bits = A2(
+			$elm$core$String$split,
+			' ',
+			clean(query));
 		var matches = function (a) {
 			var strings = A2(
 				$elm$core$List$map,
 				clean,
 				strings_of(a));
 			return A2(
-				$elm$core$List$any,
-				$elm$core$String$contains(qq),
-				strings);
+				$elm$core$List$all,
+				function (qq) {
+					return A2(
+						$elm$core$List$any,
+						$elm$core$String$contains(qq),
+						strings);
+				},
+				query_bits);
 		};
 		return A2($elm$core$List$filter, matches, items);
 	});
@@ -10888,12 +10938,6 @@ var $author$project$QuestionEditor$numberNotationStyles = _List_fromArray(
 		{description: 'A significand followed by the letter \u0022e\u0022 and an integer exponent.', label: 'Scientific', value: 'scientific'}
 	]);
 var $elm$html$Html$ol = _VirtualDom_node('ol');
-var $elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'click',
-		$elm$json$Json$Decode$succeed(msg));
-};
 var $elm$html$Html$Events$alwaysPreventDefault = function (msg) {
 	return _Utils_Tuple2(msg, true);
 };
@@ -11059,6 +11103,7 @@ var $author$project$QuestionEditor$percent_property = F2(
 						]))
 				]));
 	});
+var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $elm$html$Html$pre = _VirtualDom_node('pre');
 var $author$project$Aria$bool_str = function (v) {
 	return v ? 'true' : 'false';
@@ -11393,7 +11438,6 @@ var $elm_community$list_extra$List$Extra$setAt = F2(
 	});
 var $author$project$QuestionEditor$string_list_property = F2(
 	function (ui, options) {
-		var z = A2($elm$core$Debug$log, 'settings', options.settings);
 		var stored_values = A3(
 			$author$project$Settings$get,
 			$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
@@ -11435,10 +11479,7 @@ var $author$project$QuestionEditor$string_list_property = F2(
 												A2(
 													$elm$json$Json$Encode$list,
 													$elm$json$Json$Encode$string,
-													A2(
-														$elm$core$Debug$log,
-														'set',
-														A3($elm_community$list_extra$List$Extra$setAt, i, x, values))));
+													A3($elm_community$list_extra$List$Extra$setAt, i, x, values)));
 										}),
 										$elm$html$Html$Attributes$id(
 										options.id + ('-value-' + $author$project$Util$fi(i))),
@@ -11449,6 +11490,14 @@ var $author$project$QuestionEditor$string_list_property = F2(
 				}),
 			values);
 	});
+var $author$project$Tabber$First = {$: 'First'};
+var $author$project$Tabber$Last = {$: 'Last'};
+var $author$project$Tabber$MoveTab = F3(
+	function (a, b, c) {
+		return {$: 'MoveTab', a: a, b: b, c: c};
+	});
+var $author$project$Tabber$Next = {$: 'Next'};
+var $author$project$Tabber$Previous = {$: 'Previous'};
 var $author$project$Aria$controls = $elm$html$Html$Attributes$attribute('aria-controls');
 var $author$project$Tabber$tabber_allow_empty = A2(
 	$elm$core$Basics$composeR,
@@ -11486,6 +11535,29 @@ var $author$project$Tabber$current_tab = F2(
 					$author$project$Tabber$tabber_name(tabber),
 					state)));
 	});
+var $author$project$Ui$KeyPress = F6(
+	function (key, shift, ctrl, alt, meta, repeat) {
+		return {alt: alt, ctrl: ctrl, key: key, meta: meta, repeat: repeat, shift: shift};
+	});
+var $author$project$Ui$decode_keypress = A2(
+	$elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2($elm$json$Json$Decode$field, 'repeat', $elm$json$Json$Decode$bool),
+	A2(
+		$elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2($elm$json$Json$Decode$field, 'metaKey', $elm$json$Json$Decode$bool),
+		A2(
+			$elm_community$json_extra$Json$Decode$Extra$andMap,
+			A2($elm$json$Json$Decode$field, 'altKey', $elm$json$Json$Decode$bool),
+			A2(
+				$elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2($elm$json$Json$Decode$field, 'ctrlKey', $elm$json$Json$Decode$bool),
+				A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2($elm$json$Json$Decode$field, 'shiftKey', $elm$json$Json$Decode$bool),
+					A2(
+						$elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string),
+						$elm$json$Json$Decode$succeed($author$project$Ui$KeyPress)))))));
 var $author$project$Aria$role = $elm$html$Html$Attributes$attribute('role');
 var $author$project$Aria$selected = A2(
 	$elm$core$Basics$composeL,
@@ -11507,21 +11579,32 @@ var $author$project$Tabber$tabpanel_id = F2(
 	});
 var $author$project$Tabber$tab_button = F6(
 	function (ui, wrap_msg, state, tabber, tab, index) {
-		var selected = _Utils_eq(
-			$elm$core$Maybe$Just(tab.id),
-			A2(
-				$elm$core$Maybe$map,
-				function ($) {
-					return $.id;
-				},
-				A2($author$project$Tabber$current_tab, state, tabber)));
+		var selected_id = A2(
+			$elm$core$Maybe$map,
+			function ($) {
+				return $.id;
+			},
+			A2($author$project$Tabber$current_tab, state, tabber));
 		var nth_tab = function (i) {
 			return A2(
 				$elm_community$list_extra$List$Extra$getAt,
 				i,
 				$author$project$Tabber$tabber_tabs(tabber));
 		};
-		var move_to_tab = function (i) {
+		var switch_to_tab = function (direction) {
+			var i = function () {
+				switch (direction.$) {
+					case 'Previous':
+						return index - 1;
+					case 'Next':
+						return index + 1;
+					case 'First':
+						return 0;
+					default:
+						return $elm$core$List$length(
+							$author$project$Tabber$tabber_tabs(tabber)) - 1;
+				}
+			}();
 			return A2(
 				$elm$core$Maybe$withDefault,
 				$elm$json$Json$Decode$fail('that tab doesn\u0027t exist'),
@@ -11538,29 +11621,41 @@ var $author$project$Tabber$tab_button = F6(
 						},
 						nth_tab(i))));
 		};
+		var move_tab = function (direction) {
+			return $elm$json$Json$Decode$succeed(
+				A3(
+					$author$project$Tabber$MoveTab,
+					$author$project$Tabber$tabber_name(tabber),
+					index,
+					direction));
+		};
+		var is_selected = _Utils_eq(
+			$elm$core$Maybe$Just(tab.id),
+			selected_id);
 		var handle_keypress = A2(
 			$elm$json$Json$Decode$andThen,
-			function (key) {
-				switch (key) {
-					case 'ArrowUp':
-						return move_to_tab(index - 1);
-					case 'ArrowLeft':
-						return move_to_tab(index - 1);
-					case 'ArrowRight':
-						return move_to_tab(index + 1);
-					case 'ArrowDown':
-						return move_to_tab(index + 1);
-					case 'Home':
-						return move_to_tab(0);
-					case 'End':
-						return move_to_tab(
-							$elm$core$List$length(
-								$author$project$Tabber$tabber_tabs(tabber)) - 1);
-					default:
-						return $elm$json$Json$Decode$fail('unhandled key');
-				}
+			function (press) {
+				var fn = press.shift ? move_tab : switch_to_tab;
+				var direction_map = $elm$core$Dict$fromList(
+					_List_fromArray(
+						[
+							_Utils_Tuple2('ArrowUp', $author$project$Tabber$Previous),
+							_Utils_Tuple2('ArrowLeft', $author$project$Tabber$Previous),
+							_Utils_Tuple2('ArrowRight', $author$project$Tabber$Next),
+							_Utils_Tuple2('ArrowDown', $author$project$Tabber$Next),
+							_Utils_Tuple2('Home', $author$project$Tabber$First),
+							_Utils_Tuple2('End', $author$project$Tabber$Last)
+						]));
+				var direction = A2(
+					$elm$core$Maybe$withDefault,
+					$elm$json$Json$Decode$fail('unhandled key'),
+					A2(
+						$elm$core$Maybe$map,
+						$elm$json$Json$Decode$succeed,
+						A2($elm$core$Dict$get, press.key, direction_map)));
+				return A2($elm$json$Json$Decode$andThen, fn, direction);
 			},
-			A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string));
+			$author$project$Ui$decode_keypress);
 		return A2(
 			$elm$html$Html$button,
 			_List_fromArray(
@@ -11571,8 +11666,8 @@ var $author$project$Tabber$tab_button = F6(
 					$elm$html$Html$Attributes$id(
 					A2($author$project$Tabber$tab_id, tabber, tab)),
 					$elm$html$Html$Attributes$tabindex(
-					selected ? 0 : (-1)),
-					$author$project$Aria$selected(selected),
+					is_selected ? 0 : (-1)),
+					$author$project$Aria$selected(is_selected),
 					$author$project$Aria$controls(
 					A2($author$project$Tabber$tabpanel_id, tabber, tab)),
 					$elm$html$Html$Events$onClick(
@@ -12043,7 +12138,7 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 					[$elm$json$Json$Encode$null])));
 		return {
 			attributes: _List_Nil,
-			contents: function (_v87) {
+			contents: function (_v86) {
 				return $elm$core$List$concat(
 					_List_fromArray(
 						[
@@ -12193,8 +12288,8 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 		};
 	}();
 	var top_parts = function () {
-		var _v86 = question.parts;
-		var parts = _v86.a;
+		var _v85 = question.parts;
+		var parts = _v85.a;
 		return A2(
 			$elm$core$List$indexedMap,
 			F2(
@@ -12268,7 +12363,7 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 			$author$project$QuestionEditor$content_property);
 		return {
 			attributes: _List_Nil,
-			contents: function (_v85) {
+			contents: function (_v84) {
 				return _List_fromArray(
 					[
 						A2($elm$html$Html$fieldset, _List_Nil, statement_field.view)
@@ -12297,7 +12392,7 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 			qfield('tags'));
 		return {
 			attributes: _List_Nil,
-			contents: function (_v84) {
+			contents: function (_v83) {
 				return _List_fromArray(
 					[
 						A2(
@@ -12461,7 +12556,7 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 			$author$project$QuestionEditor$code_property);
 		return {
 			attributes: _List_Nil,
-			contents: function (_v83) {
+			contents: function (_v82) {
 				return _List_fromArray(
 					[
 						ui.help_block(
@@ -12530,9 +12625,9 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 					if (!queue.b) {
 						return seen;
 					} else {
-						var _v81 = queue.a;
-						var ppath = _v81.a;
-						var pp = _v81.b;
+						var _v80 = queue.a;
+						var ppath = _v80.a;
+						var pp = _v80.b;
 						var rest = queue.b;
 						if (A2($elm$core$List$member, ppath, seen)) {
 							var $temp$seen = seen,
@@ -12715,9 +12810,9 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 								_Utils_ap(
 									A2(
 										$elm$core$List$map,
-										function (_v79) {
-											var t = _v79.a;
-											var l = _v79.b;
+										function (_v78) {
+											var t = _v78.a;
+											var l = _v78.b;
 											return _Utils_Tuple2(
 												$elm$core$Maybe$Just(t),
 												l);
@@ -12757,7 +12852,7 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 							[$elm$json$Json$Encode$null])));
 				var fview = {
 					attributes: _List_Nil,
-					contents: function (_v78) {
+					contents: function (_v77) {
 						return _List_fromArray(
 							[
 								A2(
@@ -12910,7 +13005,7 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 			}),
 		functions);
 	var functions_tabber = $author$project$Tabber$Tabber(
-		{allow_empty: true, name: 'functions', tabs: function_tabs});
+		{allow_empty: true, name: 'functions', reorderable: true, tabs: function_tabs});
 	var extensions_tab = function () {
 		var view_extension = function (extension) {
 			var id = 'use-extension-' + $author$project$Util$fi(extension.pk);
@@ -12992,17 +13087,17 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 				view_item: view_extension
 			},
 			ui);
-		var _v75 = A2(
+		var _v74 = A2(
 			$elm$core$List$partition,
 			function (e) {
 				return A2($elm$core$List$member, e, shown_extensions);
 			},
 			model.extensions);
-		var searched_extensions = _v75.a;
-		var other_extensions = _v75.b;
+		var searched_extensions = _v74.a;
+		var other_extensions = _v74.b;
 		return {
 			attributes: _List_Nil,
-			contents: function (_v76) {
+			contents: function (_v75) {
 				return $elm$core$List$concat(
 					_List_fromArray(
 						[
@@ -13248,7 +13343,7 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 					[$elm$json$Json$Encode$null])));
 		return {
 			attributes: _List_Nil,
-			contents: function (_v74) {
+			contents: function (_v73) {
 				return _List_fromArray(
 					[
 						A2(
@@ -14299,24 +14394,12 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 														function (_v71) {
 															var address = _v71.a;
 															var field_ref = _v71.b;
-															var _v72 = field_ref;
-															var field = _v72.b;
 															return A2(
 																$elm$html$Html$li,
 																_List_Nil,
 																_List_fromArray(
 																	[
-																		A2(
-																		$elm$html$Html$a,
-																		_List_fromArray(
-																			[
-																				$elm$html$Html$Attributes$href('#' + field.options.id),
-																				$elm$html$Html$Events$onClick(
-																				$author$project$QuestionEditor$UpdateQuestion(
-																					$author$project$QuestionEditor$GoToVariableReference(field_ref))),
-																				$elm$html$Html$Attributes$class('btn info')
-																			]),
-																		A2($author$project$QuestionEditor$field_breadcrumbs, ui, field_ref))
+																		A2($author$project$QuestionEditor$field_link, ui, field_ref)
 																	]));
 														},
 														references))
@@ -14366,6 +14449,7 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 		{
 			allow_empty: true,
 			name: 'variables',
+			reorderable: true,
 			tabs: A2(
 				$elm$core$List$map,
 				A2($elm$core$Basics$composeR, $elm$core$Tuple$second, $elm$core$Tuple$second),
@@ -14424,12 +14508,19 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 															_List_fromArray(
 																[
 																	A2(
-																	$elm$html$Html$h3,
-																	_List_Nil,
+																	$elm$html$Html$input,
 																	_List_fromArray(
 																		[
-																			$elm$html$Html$text(group.name)
-																		]))
+																			$elm$html$Html$Attributes$value(group.name),
+																			$elm$html$Html$Events$onInput(
+																			A2(
+																				$elm$core$Basics$composeR,
+																				$author$project$QuestionEditor$SetVariableGroupName(gi),
+																				$author$project$QuestionEditor$UpdateQuestion)),
+																			$elm$html$Html$Attributes$disabled(group.locked_name),
+																			$elm$html$Html$Attributes$placeholder('Unnamed group')
+																		]),
+																	_List_Nil)
 																])),
 															A2(
 															$elm$html$Html$table,
@@ -15358,6 +15449,7 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 				{
 					allow_empty: false,
 					name: prefix_id('marking-algorithm-notes'),
+					reorderable: true,
 					tabs: note_tabs
 				});
 			var add_note = update_algo($author$project$QuestionEditor$AddMarkingAlgorithmNote);
@@ -19440,7 +19532,7 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 								is_top_level && _Utils_eq(parts_mode, $author$project$QuestionEditor$ExploreMode))
 							])))));
 		var part_tabber = $author$project$Tabber$Tabber(
-			{allow_empty: false, name: part_tabber_name, tabs: tabs});
+			{allow_empty: false, name: part_tabber_name, reorderable: false, tabs: tabs});
 		var pview = {
 			attributes: _List_fromArray(
 				[
@@ -19519,6 +19611,7 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 		{
 			allow_empty: true,
 			name: 'parts',
+			reorderable: true,
 			tabs: A2($elm$core$List$map, part_tab, all_parts)
 		});
 	var advice_tab = function () {
@@ -19595,6 +19688,7 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 		{
 			allow_empty: false,
 			name: 'extensions',
+			reorderable: false,
 			tabs: _List_fromArray(
 				[
 					{
@@ -19843,6 +19937,7 @@ var $author$project$QuestionEditor$main_tabber = function (model) {
 		{
 			allow_empty: false,
 			name: 'main',
+			reorderable: false,
 			tabs: _List_fromArray(
 				[
 					{
@@ -20010,7 +20105,6 @@ var $author$project$QuestionEditor$set_tab = F2(
 			$author$project$QuestionEditor$UpdateTab,
 			A2($author$project$Tabber$set_tab, tabber_id, tab_id));
 	});
-var $author$project$QuestionEditor$SmallChange = {$: 'SmallChange'};
 var $author$project$QuestionEditor$blank_note = {changed: true, settings: $author$project$Settings$empty};
 var $author$project$QuestionEditor$update_marking_algorithm = F3(
 	function (msg, path, part) {
@@ -20788,12 +20882,6 @@ var $author$project$QuestionEditor$update_question = F3(
 						var _v12 = msg.b;
 						var v = _v12.a;
 						var at = _v12.b;
-						var q = A2(
-							$elm$core$Debug$log,
-							'change',
-							_Utils_Tuple2(
-								kind,
-								_Utils_Tuple2(v, at)));
 						return A5(
 							$author$project$QuestionEditor$update_setting,
 							$author$project$QuestionEditor$question_setting_computed,
@@ -20855,10 +20943,27 @@ var $author$project$QuestionEditor$update_question = F3(
 							{
 								variable_groups: A2(
 									$elm$core$List$cons,
-									{name: '', variables: _List_Nil},
+									{locked_name: false, name: '', variables: _List_Nil},
 									question.variable_groups)
 							}),
 						$author$project$QuestionEditor$nocmd($author$project$QuestionEditor$BigChange));
+				case 'SetVariableGroupName':
+					var gi = msg.a;
+					var name = msg.b;
+					var ngroups = A3(
+						$elm_community$list_extra$List$Extra$updateAt,
+						gi,
+						function (g) {
+							return g.locked_name ? g : _Utils_update(
+								g,
+								{name: name});
+						},
+						question.variable_groups);
+					return _Utils_Tuple2(
+						_Utils_update(
+							question,
+							{variable_groups: ngroups}),
+						$author$project$QuestionEditor$nocmd($author$project$QuestionEditor$SmallChange));
 				case 'AddVariable':
 					var gi = msg.a;
 					var vi = A2(
@@ -21234,15 +21339,29 @@ var $author$project$QuestionEditor$update_active = F2(
 				var dmsg = msg.a;
 				return A4($Gizra$elm_debouncer$Debouncer$Messages$update, $author$project$QuestionEditor$update_active, $author$project$QuestionEditor$find_variable_references_debouncer_config, dmsg, model);
 			case 'UpdateTab':
-				var tab_msg = msg.a;
-				var _v4 = A2($author$project$Tabber$update, tab_msg, model.tab_state);
-				var state = _v4.a;
-				var tabcmd = _v4.b;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{tab_state: state}),
-					A2($elm$core$Platform$Cmd$map, $author$project$QuestionEditor$UpdateTab, tabcmd));
+				if (msg.a.$ === 'MoveTab') {
+					var _v4 = msg.a;
+					var tabber_id = _v4.a;
+					var i = _v4.b;
+					var direction = _v4.c;
+					var _v5 = A2($elm$core$Debug$log, 'swap', tabber_id);
+					if (_v5 === 'variables') {
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					} else {
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					}
+				} else {
+					var tab_msg = msg.a;
+					var q = A2($elm$core$Debug$log, 'tab', tab_msg);
+					var _v6 = A2($author$project$Tabber$update, tab_msg, model.tab_state);
+					var state = _v6.a;
+					var tabcmd = _v6.b;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{tab_state: state}),
+						A2($elm$core$Platform$Cmd$map, $author$project$QuestionEditor$UpdateTab, tabcmd));
+				}
 			case 'AnswerNumbas':
 				var res = msg.a;
 				return A2(
@@ -21257,9 +21376,9 @@ var $author$project$QuestionEditor$update_active = F2(
 							},
 							A2(
 								$elm$json$Json$Decode$andThen,
-								function (_v5) {
-									var command = _v5.a;
-									var value = _v5.b;
+								function (_v7) {
+									var command = _v7.a;
+									var value = _v7.b;
 									return A2(
 										$elm$json$Json$Decode$field,
 										'key',
@@ -21352,9 +21471,9 @@ var $author$project$QuestionEditor$update_active = F2(
 					A2($author$project$QuestionEditor$save_question, encoded_model, model)) : _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 			case 'FinishedSaving':
 				var res = msg.a;
-				var _v6 = model.saving;
-				if (_v6.$ === 'Saving') {
-					var str = _v6.a;
+				var _v8 = model.saving;
+				if (_v8.$ === 'Saving') {
+					var str = _v8.a;
 					return $author$project$QuestionEditor$nocmd(
 						_Utils_update(
 							model,
@@ -21397,6 +21516,14 @@ var $author$project$QuestionEditor$update_active = F2(
 						{
 							extension_search: A2($author$project$FilterList$update, model.extension_search, s)
 						}));
+			case 'SetFieldSearch':
+				var s = msg.a;
+				return $author$project$QuestionEditor$nocmd(
+					_Utils_update(
+						model,
+						{
+							field_search: A2($author$project$FilterList$update, model.field_search, s)
+						}));
 			default:
 				return $author$project$QuestionEditor$nocmd(model);
 		}
@@ -21414,6 +21541,9 @@ var $author$project$QuestionEditor$update = F2(
 		}
 	});
 var $author$project$QuestionEditor$Redo = {$: 'Redo'};
+var $author$project$QuestionEditor$SetFieldSearch = function (a) {
+	return {$: 'SetFieldSearch', a: a};
+};
 var $author$project$QuestionEditor$Undo = {$: 'Undo'};
 var $author$project$History$can_redo = function (history) {
 	return !_Utils_eq(history.future, _List_Nil);
@@ -21423,7 +21553,27 @@ var $author$project$History$can_undo = function (history) {
 };
 var $elm$html$Html$code = _VirtualDom_node('code');
 var $elm$html$Html$details = _VirtualDom_node('details');
-var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
+var $author$project$QuestionEditor$field_strings = function (_v0) {
+	var tabs = _v0.a;
+	var field = _v0.b;
+	var plain_label = function (tab) {
+		var _v1 = tab.label;
+		if (_v1.$ === 'SimpleLabel') {
+			var t = _v1.a;
+			return t;
+		} else {
+			var r = _v1.a;
+			return r.plain_text;
+		}
+	};
+	return _Utils_ap(
+		A2(
+			$elm$core$List$map,
+			A2($elm$core$Basics$composeR, $elm$core$Tuple$second, plain_label),
+			tabs),
+		_List_fromArray(
+			[field.options.label]));
+};
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$main_ = _VirtualDom_node('main');
 var $elm$html$Html$summary = _VirtualDom_node('summary');
@@ -21449,6 +21599,7 @@ var $author$project$QuestionEditor$view_active = function (model) {
 	};
 	var mt = $author$project$QuestionEditor$main_tabber(model);
 	var icon = ui.icon;
+	var all_fields = $author$project$Tabber$all_fields_in_tabber(mt);
 	var debug_tab = function () {
 		var show_label = function (tab) {
 			var _v3 = tab.label;
@@ -21548,7 +21699,6 @@ var $author$project$QuestionEditor$view_active = function (model) {
 						A2($elm$core$List$map, show_tab, tabs))
 					]));
 		};
-		var all_fields = $author$project$Tabber$all_fields_in_tabber(mt);
 		return A2(
 			$elm$html$Html$div,
 			_List_Nil,
@@ -21578,6 +21728,85 @@ var $author$project$QuestionEditor$view_active = function (model) {
 					_List_fromArray(
 						[
 							show_tabber(mt)
+						]))
+				]));
+	}();
+	var field_search_modal = function () {
+		var shown_fields = A3($author$project$FilterList$filter, $author$project$QuestionEditor$field_strings, all_fields, model.field_search);
+		return A3(
+			$elm$html$Html$node,
+			'dialog',
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$id('field-search'),
+					A2($elm$html$Html$Attributes$attribute, 'closedby', 'any')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$header,
+					_List_Nil,
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$h2,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Search for a field')
+								]))
+						])),
+					A2(
+					$elm$html$Html$form,
+					_List_fromArray(
+						[
+							$elm$html$Html$Events$onSubmit($author$project$QuestionEditor$NoOp)
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$p,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$label,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$for('field-search-query')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Search')
+										])),
+									$elm$html$Html$text(' '),
+									A2(
+									$elm$html$Html$input,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$type_('search'),
+											$elm$html$Html$Attributes$id('field-search-query'),
+											$elm$html$Html$Attributes$value(
+											$author$project$FilterList$get_query(model.field_search)),
+											$elm$html$Html$Events$onInput($author$project$QuestionEditor$SetFieldSearch)
+										]),
+									_List_Nil)
+								])),
+							A2(
+							$elm$html$Html$ul,
+							_List_Nil,
+							A2(
+								$elm$core$List$map,
+								function (fref) {
+									return A2(
+										$elm$html$Html$li,
+										_List_Nil,
+										_List_fromArray(
+											[
+												A2($author$project$QuestionEditor$field_link, ui, fref)
+											]));
+								},
+								shown_fields))
 						]))
 				]));
 	}();
@@ -21658,6 +21887,19 @@ var $author$project$QuestionEditor$view_active = function (model) {
 									qfield('name')))
 							])),
 						A2($elm$html$Html$hr, _List_Nil, _List_Nil),
+						A3(
+						ui.button,
+						'info',
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$attribute, 'commandfor', 'field-search'),
+								A2($elm$html$Html$Attributes$attribute, 'command', 'show-modal')
+							]),
+						_List_fromArray(
+							[
+								ui.icon('search'),
+								$elm$html$Html$text('Search for a field')
+							])),
 						A2(
 						$elm$html$Html$span,
 						_List_fromArray(
@@ -21919,13 +22161,10 @@ var $author$project$QuestionEditor$view_active = function (model) {
 									])),
 							_List_fromArray(
 								[
-									A2(
-									view_tablist,
-									$author$project$QuestionEditor$main_tabber(model),
-									_List_Nil)
+									A2(view_tablist, mt, _List_Nil)
 								]))))),
-				view_tabpanel(
-				$author$project$QuestionEditor$main_tabber(model))
+				view_tabpanel(mt),
+				field_search_modal
 			]));
 };
 var $author$project$QuestionEditor$view_error = function (error) {

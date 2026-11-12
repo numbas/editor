@@ -1,6 +1,7 @@
 module Ui exposing
     ( Ui
     , UiConfig
+    , KeyPress
     , ui
     , visibleIf
     , raw_html
@@ -9,6 +10,7 @@ module Ui exposing
     , jme_value
     , sr_only
     , toggle_list
+    , decode_keypress
     )
 
 import Aria
@@ -16,12 +18,23 @@ import Dict exposing (Dict)
 import Html as H exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
+import Json.Decode as JD
+import Json.Decode.Extra exposing (andMap)
 import Json.Encode as JE
 
 type alias BooleanInputOptions msg =
     { checked : Bool
     , onCheck : Bool -> msg
     , id : String
+    }
+
+type alias KeyPress =
+    { key : String
+    , shift : Bool
+    , ctrl : Bool
+    , alt : Bool
+    , meta : Bool
+    , repeat: Bool
     }
 
 type alias ToggleListOptions a msg =
@@ -218,3 +231,13 @@ toggle_list o ui_ items =
                 , o.view_item item
                 ]
         ))
+
+decode_keypress : JD.Decoder KeyPress
+decode_keypress =
+    JD.succeed KeyPress
+    |> andMap (JD.field "key" JD.string)
+    |> andMap (JD.field "shiftKey" JD.bool)
+    |> andMap (JD.field "ctrlKey" JD.bool)
+    |> andMap (JD.field "altKey" JD.bool)
+    |> andMap (JD.field "metaKey" JD.bool)
+    |> andMap (JD.field "repeat" JD.bool)

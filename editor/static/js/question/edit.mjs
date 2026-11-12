@@ -117,10 +117,6 @@ function find_all_possible_subbed_fields() {
         }
         
     }
-
-
-    console.log([...visit(defs.question)])
-    console.log([...visit(defs.part)])
 }
 
 
@@ -152,9 +148,6 @@ class DefaultsArray extends Array {
         if(typeof contents == 'number') {
             super(...arguments);
             return;
-        }
-        if(typeof contents[Symbol.iterator] != 'function') {
-            console.log(contents);
         }
         super(...contents);
         this.items = items;
@@ -701,8 +694,6 @@ const ask_numbas_handlers = {
 
         const all_names = new Set(Object.keys(references).map(jme.normaliseName));
         const undefined_names = [...all_names.difference(defined_names)];
-
-        console.log(references);
 
         return {references, undefined_names};
     },

@@ -6,6 +6,7 @@ port module Tabber exposing
     , TabLabel(..)
     , Tab
     , FieldReference
+    , MoveDirection(..)
     , unwrap_tabber
     , tabber_name
     , tabber_tabs
@@ -42,11 +43,19 @@ port save_tab_state : JE.Value -> Cmd msg
 type alias TabberDef msg =
     { name : String
     , allow_empty : Bool
+    , reorderable: Bool
     , tabs : List (Tab msg)
     }
 
 type Tabber msg = 
     Tabber (TabberDef msg)
+
+
+type MoveDirection
+    = Previous
+    | Next
+    | First
+    | Last
         
 
 unwrap_tabber : Tabber msg -> TabberDef msg
@@ -72,6 +81,7 @@ type alias FieldReference msg = (List (Tabber msg, Tab msg), Field msg)
 
 type Msg
     = SetTab String String
+    | MoveTab String Int MoveDirection
     | NoOp
 
 type TabLabel msg
@@ -119,6 +129,8 @@ update msg state = case msg of
                 , Task.attempt (\_ -> NoOp) <| Browser.Dom.focus <| key++"-tab-"++id
                 ]
             )
+
+    MoveTab _ _ _ -> (state, Cmd.none) -- handled higher up
 
     NoOp -> (state, Cmd.none)
 
@@ -173,26 +185,52 @@ view_tablist ui wrap_msg state tabber tabber_attrs =
 tab_button : Ui msg -> (Msg -> msg) -> State -> Tabber msg -> Tab msg -> Int -> Html msg
 tab_button ui wrap_msg state tabber tab index =
     let
-        selected = (==) (Just tab.id) <| Maybe.map .id <| current_tab state tabber
+        selected_id : Maybe String
+        selected_id = Maybe.map .id <| current_tab state tabber
+
+        is_selected = (==) (Just tab.id) <| selected_id
 
         nth_tab i = LE.getAt i (tabber_tabs tabber)
 
-        move_to_tab i =
-            nth_tab i
-            |> Maybe.map (\ntab -> SetTab (tabber_name tabber) ntab.id)
-            |> Maybe.map JD.succeed
-            |> Maybe.withDefault (JD.fail "that tab doesn't exist")
+        switch_to_tab : MoveDirection -> JD.Decoder Msg
+        switch_to_tab direction =
+            let
+                i = case direction of
+                    Previous -> index - 1
+                    Next -> index + 1
+                    First -> 0
+                    Last -> (List.length (tabber_tabs tabber)) - 1
+            in
+                nth_tab i
+                |> Maybe.map (\ntab -> SetTab (tabber_name tabber) ntab.id)
+                |> Maybe.map JD.succeed
+                |> Maybe.withDefault (JD.fail "that tab doesn't exist")
 
+        move_tab direction = JD.succeed (MoveTab (tabber_name tabber) index direction)
+
+        handle_keypress : JD.Decoder Msg
         handle_keypress =
-            JD.field "key" JD.string
-            |> JD.andThen (\key -> case key of
-                "ArrowUp" -> move_to_tab (index - 1)
-                "ArrowLeft" -> move_to_tab (index - 1)
-                "ArrowRight" -> move_to_tab (index + 1)
-                "ArrowDown" -> move_to_tab (index + 1)
-                "Home" -> move_to_tab 0
-                "End" -> move_to_tab <| (List.length (tabber_tabs tabber)) - 1
-                _ -> JD.fail "unhandled key"
+            Ui.decode_keypress
+            |> JD.andThen (\press -> 
+                let
+                    fn = if press.shift then move_tab else switch_to_tab
+
+                    direction_map = Dict.fromList
+                        [ ("ArrowUp",  Previous)
+                        , ("ArrowLeft",  Previous)
+                        , ("ArrowRight",  Next)
+                        , ("ArrowDown",  Next)
+                        , ("Home",  First)
+                        , ("End",  Last)
+                        ]
+
+                    direction = 
+                        Dict.get press.key direction_map 
+                        |> Maybe.map JD.succeed
+                        |> Maybe.withDefault (JD.fail "unhandled key")
+
+                in
+                    direction |> JD.andThen fn
                )
 
     in
@@ -201,8 +239,8 @@ tab_button ui wrap_msg state tabber tab index =
             , HA.class "btn"
             , Aria.role "tab"
             , HA.id <| tab_id tabber tab
-            , HA.tabindex <| if selected then 0 else -1
-            , Aria.selected <| selected
+            , HA.tabindex <| if is_selected then 0 else -1
+            , Aria.selected <| is_selected
             , Aria.controls <| tabpanel_id tabber tab
             , HE.onClick <| wrap_msg <| SetTab (tabber_name tabber) tab.id
             , HE.preventDefaultOn "keydown" (handle_keypress |> JD.map (\m -> (wrap_msg m, True)))

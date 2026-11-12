@@ -6,6 +6,7 @@ import json
 register = template.Library()
 
 icon_map = {
+    'search': '🔍',
     'question': '📄',
     'exam': '📔',
     'project': '🏗',

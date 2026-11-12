@@ -74,6 +74,7 @@ type alias ActiveModelRecord =
     { generate_variables_debouncer : Debouncer Msg
     , find_variable_references_debouncer : Debouncer Msg
     , extension_search : FilterList.State
+    , field_search : FilterList.State
     , saving : Saving
     , last_saved : Maybe String
     , adding_part : Maybe (PartPath, ChildPart)
@@ -178,6 +179,7 @@ type alias VariablePath = (Int, Int)
 
 type alias VariableGroup =
     { name : String
+    , locked_name : Bool
     , variables : List Variable
     }
 
@@ -380,6 +382,7 @@ type Msg
     | GenerateVariableDebouncer (Debouncer.Msg Msg)
     | FindVariableReferencesDebouncer (Debouncer.Msg Msg)
     | SetExtensionSearch String
+    | SetFieldSearch String
 
 type alias SettingWatchers path a = List (S.Address, path -> { a | settings : Settings, computed : Settings } -> JE.Value -> Maybe (Cmd Msg))
 
@@ -394,6 +397,7 @@ type QuestionMsg
     | AddPart PartPath ChildPart Part
     | DeletePart PartPath
     | AddVariableGroup
+    | SetVariableGroupName Int String
     | AddVariable Int
     | DeleteVariable VariablePath
     | UpdateVariable VariablePath VariableMsg
@@ -937,11 +941,12 @@ decode_question default_settings =
                     in
                         not (Set.member name grouped_variables))
 
-                ungrouped = { name = "Ungrouped variables", variables = ungrouped_variables }
+                ungrouped = { name = "Ungrouped variables", locked_name = True, variables = ungrouped_variables }
 
                 groups : List VariableGroup
                 groups = group_defs |> List.map (\(name, vnames) ->
                     { name = name
+                    , locked_name = False
                     , variables = vnames |> List.filterMap (\n -> Dict.get n variable_dict)
                     }
                     )
@@ -1097,12 +1102,13 @@ decode_flags : JD.Decoder ActiveModelRecord
 decode_flags =
     JD.succeed ( 
         ActiveModelRecord 
-            (Debouncer.debounce 500 |> toDebouncer)
-            (Debouncer.debounce 500 |> toDebouncer)
-            FilterList.init
-            (Saved (Ok ()))
-            Nothing
-            Nothing
+            (Debouncer.debounce 500 |> toDebouncer) -- generate_variables_debouncer
+            (Debouncer.debounce 500 |> toDebouncer) -- find_variable_references_debouncer
+            FilterList.init -- extension_search
+            FilterList.init -- field_search
+            (Saved (Ok ())) -- saving
+            Nothing -- last_saved
+            Nothing -- adding_part
     )
     |> andMap (JD.field "tab_state" Tabber.decode_state)
     |> andMap (JD.at ["item_json", "itemJSON", "id"] JD.int)
@@ -1307,9 +1313,15 @@ update_active msg model = case msg of
     FindVariableReferencesDebouncer dmsg ->
         Debouncer.update update_active find_variable_references_debouncer_config dmsg model
 
+    UpdateTab (MoveTab tabber_id i direction) -> case Debug.log "swap" tabber_id of
+        "variables" -> (model, Cmd.none)
+        _ -> (model, Cmd.none)
+
     UpdateTab tab_msg -> 
         let
             (state, tabcmd) = Tabber.update tab_msg model.tab_state
+
+            q = Debug.log "tab" tab_msg
         in
             ({model | tab_state = state}, Cmd.map UpdateTab tabcmd)
 
@@ -1352,6 +1364,9 @@ update_active msg model = case msg of
     Redo -> { model | history = History.redo model.history } |> compute_all
 
     SetExtensionSearch s -> { model | extension_search = FilterList.update model.extension_search s } |> nocmd
+    
+    SetFieldSearch s -> { model | field_search = FilterList.update model.field_search s } |> nocmd
+    
 
     NoOp -> model |> nocmd
 
@@ -1556,10 +1571,7 @@ update_question model msg question = case msg of
         _ -> update_setting question_setting_computed ComputedSetting (value, at) () question
 
     ChangeQuestionSetting kind (v,at) -> 
-        let
-            q = Debug.log "change" (kind, (v, at))
-        in
-            update_setting question_setting_computed kind (v,at) () question
+        update_setting question_setting_computed kind (v,at) () question
 
     AddPart parent_path kind part -> 
         let
@@ -1579,7 +1591,13 @@ update_question model msg question = case msg of
     DeletePart path -> ({ question | parts = delete_part_at path question.parts }, nocmd BigChange)
 
     AddVariableGroup ->
-        ({ question | variable_groups = { name = "", variables = [] }::question.variable_groups }, nocmd BigChange)
+        ({ question | variable_groups = { name = "", locked_name = False, variables = [] }::question.variable_groups }, nocmd BigChange)
+
+    SetVariableGroupName gi name ->
+        let
+            ngroups = LE.updateAt gi (\g -> if g.locked_name then g else { g | name = name }) question.variable_groups
+        in
+            ({ question | variable_groups = ngroups }, nocmd SmallChange)
 
     AddVariable gi -> 
         let
@@ -2182,8 +2200,6 @@ string_list_property ui options =
         last_thing = stored_values |> List.reverse |> List.head |> Maybe.withDefault ""
 
         values = stored_values ++ (if last_thing == "" && stored_values /= [] then [] else [""])
-
-        z = Debug.log "settings" options.settings
     in
         values |> List.indexedMap (\i v ->
             property_field
@@ -2196,7 +2212,7 @@ string_list_property ui options =
                 }
                 [ H.input
                     [ HA.value v
-                    , HE.onInput <| (\x -> (S.setters options.settings options.setter).value <| (JE.list JE.string) <| Debug.log "set" <| LE.setAt i x values)
+                    , HE.onInput <| (\x -> (S.setters options.settings options.setter).value <| (JE.list JE.string) <| LE.setAt i x values)
                     , HA.id <| options.id ++ "-value-" ++ (fi i)
                     , HA.class "monospace"
                     ]
@@ -2842,17 +2858,7 @@ main_tabber model =
                                         , H.ul
                                             [ HA.class "list-inline" ]
                                             (references |> List.map (\(address, field_ref) -> 
-                                                let
-                                                    (_,field) = field_ref
-                                                in
-                                                    H.li [] 
-                                                        [ H.a
-                                                            [ HA.href <| "#"++field.options.id
-                                                            , HE.onClick (GoToVariableReference field_ref |> UpdateQuestion)
-                                                            , HA.class "btn info"
-                                                            ]
-                                                            (field_breadcrumbs ui field_ref)
-                                                        ]
+                                                H.li [] [ field_link ui field_ref ]
                                             ))
                                         ]
                                      ]
@@ -2893,6 +2899,7 @@ main_tabber model =
         variables_tabber = Tabber
             { name = "variables"
             , allow_empty = True
+            , reorderable = True
             , tabs = grouped_variable_tabs |> List.map second |> List.concat |> List.map (second >> second)
             }
 
@@ -2906,7 +2913,13 @@ main_tabber model =
                         [ (grouped_variable_tabs |> List.indexedMap (\gi (group, variable_tabs) ->
                             H.li [ HA.class "variable-group" ]
                                 [ H.header []
-                                    [ H.h3 [] [H.text group.name]
+                                    [ H.input
+                                        [ HA.value group.name
+                                        , HE.onInput (SetVariableGroupName gi >> UpdateQuestion)
+                                        , HA.disabled group.locked_name
+                                        , HA.placeholder "Unnamed group"
+                                        ]
+                                        []
                                     ]
                                 , H.table []
                                     [ H.thead [] [H.tr []
@@ -3098,6 +3111,7 @@ main_tabber model =
         parts_tabber = Tabber
             { name = "parts"
             , allow_empty = True
+            , reorderable = True
             , tabs = all_parts |> List.map part_tab
             }
 
@@ -4069,6 +4083,7 @@ main_tabber model =
                 part_tabber = Tabber
                     { name = part_tabber_name
                     , allow_empty = False
+                    , reorderable = False
                     , tabs = tabs
                     }
 
@@ -5155,6 +5170,7 @@ main_tabber model =
                         notes_tabber = Tabber
                             { name = prefix_id "marking-algorithm-notes"
                             , allow_empty = False
+                            , reorderable = True
                             , tabs = note_tabs
                             }
 
@@ -6643,6 +6659,7 @@ main_tabber model =
         functions_tabber = Tabber
             { name = "functions"
             , allow_empty = True
+            , reorderable = True
             , tabs = function_tabs
             }
 
@@ -6709,6 +6726,7 @@ main_tabber model =
         extensions_tabber = Tabber
             { name = "extensions"
             , allow_empty = False
+            , reorderable = False
             , tabs = 
                 [ { id = "extensions"
                   , label = SimpleLabel "Extensions"
@@ -6766,6 +6784,7 @@ main_tabber model =
         Tabber <|
         { name = "main"
         , allow_empty = False
+        , reorderable = False
         , tabs = 
             [ { id = "statement"
               , label = SimpleLabel "Statement"
@@ -6827,6 +6846,29 @@ field_breadcrumbs ui (tabs, field) =
     in
         LE.intercalate [H.text " → "] (tab_bits++[field_bit])
 
+-- A link to a referenced field
+field_link : Ui -> FieldReference -> Html Msg
+field_link ui field_ref = 
+    let
+        (_,field) = field_ref
+    in
+        H.a
+            [ HA.href <| "#"++field.options.id
+            , HE.onClick (GoToVariableReference field_ref |> UpdateQuestion)
+            , HA.class "btn info"
+            ]
+            (field_breadcrumbs ui field_ref)
+
+-- Searchable text strings for a field
+field_strings : FieldReference -> List String
+field_strings (tabs, field) =
+    let
+        plain_label tab = case tab.label of
+            SimpleLabel t -> t
+            HtmlLabel r -> r.plain_text
+    in
+        (List.map (second >> plain_label) tabs) ++ [ field.options.label ]
+
 view_active : ActiveModelRecord -> Html Msg
 view_active model = 
     let
@@ -6837,6 +6879,9 @@ view_active model =
         icon = ui.icon
 
         mt = main_tabber model
+
+        all_fields : List FieldReference
+        all_fields = all_fields_in_tabber mt
 
         debug_tab =
             let
@@ -6893,9 +6938,6 @@ view_active model =
                         , H.code [] [H.text <| show_at <| field.options.settings_prefix ++ field.options.settings.at]
                         ]
 
-                all_fields : List FieldReference
-                all_fields = all_fields_in_tabber mt
-
             in
                 H.div
                     []
@@ -6918,6 +6960,44 @@ view_active model =
 
         qfield k = S.atField k question.settings
 
+        field_search_modal : Html Msg
+        field_search_modal =
+            let
+                shown_fields = FilterList.filter
+                    field_strings
+                    all_fields
+                    model.field_search
+            in
+
+                H.node "dialog"
+                    [ HA.id "field-search" 
+                    , HA.attribute "closedby" "any"
+                    ]
+                    [ H.header
+                        []
+                        [ H.h2 [] [H.text "Search for a field"]
+                        ]
+                    , H.form
+                        [ HE.onSubmit NoOp]
+                        [ H.p
+                            []
+                            [ H.label
+                                [ HA.for "field-search-query" ]
+                                [ H.text "Search" ]
+                            , H.text " "
+                            , H.input
+                                [ HA.type_ "search"
+                                , HA.id "field-search-query"
+                                , HA.value <| FilterList.get_query model.field_search
+                                , HE.onInput SetFieldSearch
+                                ]
+                                []
+                            ]
+                        , H.ul
+                            []
+                            (List.map (\fref -> H.li [] [field_link ui fref]) shown_fields )
+                        ]
+                    ]
     in
         H.main_
             [ HA.id "loaded-content" ]
@@ -6943,6 +7023,13 @@ view_active model =
                     , mathjax_span (S.getters.string (qfield "name"))
                     ]
                 , H.hr [] []
+                , ui.button "info"
+                    [ HA.attribute "commandfor" "field-search"
+                    , HA.attribute "command" "show-modal"
+                    ]
+                    [ ui.icon "search"
+                    , H.text "Search for a field"
+                    ]
                 , H.span
                     [ HA.class saving_class
                     , HA.id "saving"
@@ -7078,10 +7165,11 @@ view_active model =
                         ]
                     ]
                 )
-                ++[ view_tablist (main_tabber model) []
+                ++[ view_tablist mt []
                 ]
                 )
-            , view_tabpanel (main_tabber model)
+            , view_tabpanel mt
+            , field_search_modal
             ]
 
 

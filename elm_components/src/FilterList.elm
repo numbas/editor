@@ -22,7 +22,7 @@ filter strings_of items query =
     let
         clean = String.toLower
 
-        qq = clean query
+        query_bits = clean query |> String.split " "
 
         matches : a -> Bool
         matches a =
@@ -31,7 +31,7 @@ filter strings_of items query =
                     strings_of a
                     |> List.map clean
             in
-                List.any (String.contains qq) strings
+                List.all (\qq -> List.any (String.contains qq) strings) query_bits
 
     in
         List.filter matches items

@@ -64,4 +64,3 @@ nested_count list =
        )
        (0, [])
     |> second
-

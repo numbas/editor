@@ -18,7 +18,7 @@
                 <input name="query" type="text" class="form-control" id="top-search-bar" placeholder="Search by name or keyword{% if in_project %} in this project{% endif %}" value="{{search_query}}"/>
                 <div class="input-group-btn">
                 {% if search_query %}
-                    <a class="btn btn-default" href="{% querystring "query"="" %}">
+                    <a class="btn btn-default" href="{% querystring query="" %}">
                         <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
                     </a>
                 {% endif %}

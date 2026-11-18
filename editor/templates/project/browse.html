@@ -138,7 +138,7 @@
                     <th {{column.attrs.th.as_html}}>
                         <span class="glyphicon glyphicon-sort-by-attributes"></span>
                         <span class="glyphicon glyphicon-sort-by-attributes-alt"></span>
-                        <a href="{% querystring items.prefixed_order_by_field=column.order_by_alias.next %}">{{ column.header }}</a>
+                        <a href="{% querystring_replace items.prefixed_order_by_field=column.order_by_alias.next %}">{{ column.header }}</a>
                     </th>
                     {% endif %}
                     {% endfor %}

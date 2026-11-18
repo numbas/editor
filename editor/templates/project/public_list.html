@@ -17,10 +17,10 @@
 <section>
 <p>
 {% with num_results=results.page.paginator.count %}{{num_results}} public project{{num_results|pluralize}}{% endwith %}, ordered by
-{% if results.order_by == "name" %}
-name. Or <a href="{% querystring "order_by"="num_items" %}">order by number of items</a> instead.
+{% if results.order_by.0 == "name" %}
+name. Or <a href="{% querystring order_by="num_items" %}">order by number of items</a> instead.
 {% else %}
-number of items. Or <a href="{% querystring "order_by"="name" %}">order by name</a> instead.
+number of items. Or <a href="{% querystring order_by="name" %}">order by name</a> instead.
 {% endif %}
 <ol class="list-unstyled">
 {% for row in projects %}

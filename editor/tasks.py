@@ -3,7 +3,7 @@ from django.core.files.base import ContentFile
 from django.contrib import messages
 from django.http import HttpRequest
 from editor.models import Project
-from editor.slugify import slugify
+from editor.util import slugify
 from huey.contrib.djhuey import db_task, task
 import os
 import zipfile

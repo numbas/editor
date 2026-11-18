@@ -11,7 +11,7 @@ from django.template.response import TemplateResponse
 import reversion
 from zipfile import ZipFile
 
-from editor.slugify import slugify
+from editor.util import slugify
 from editor.models import NewStampOfApproval, Comment, RestorePoint, EditorItem, IndividualAccess
 
 from accounts.util import user_json

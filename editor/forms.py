@@ -23,7 +23,7 @@ from accounts.forms import UserField
 from accounts.util import find_users
 from editor import jsonfield
 
-from .slugify import slugify
+from .util import slugify
 import json
 
 class FixedSelectMultiple(SelectMultiple):

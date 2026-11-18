@@ -71,7 +71,7 @@
                                 <input type="text" class="form-control" id="{{form.tags.auto_id}}" name="tags" value="{{form.tags.value}}" placeholder="Tags separated by commas">
                                 {% if form.tags.value %}
                                     <div class="input-group-btn">
-                                        <a class="btn btn-default" href="{% querystring "tags"="" %}"><span class="glyphicon glyphicon-remove"></span></a>
+                                        <a class="btn btn-default" href="{% querystring tags="" %}"><span class="glyphicon glyphicon-remove"></span></a>
                                     </div>
                                 {% endif %}
                             {% if form.tags.value %}</div>{% endif %}

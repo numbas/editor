@@ -2391,7 +2391,8 @@ $(document).ready(function() {
             }
         }
 
-        document.getElementById('notifications').addEventListener('click', ({target}) => {
+        document.getElementById('notifications').addEventListener('click', (e) => {
+            const {target} = e;
             if(!target.classList.contains('mark-all-as-read')) {
                 return;
             }
@@ -2402,7 +2403,7 @@ $(document).ready(function() {
             e.preventDefault();
 
             var url = target.getAttribute('href');
-            fetch(url, {method: 'POST', body: CSRFFormData()}).then(response => response.json()).then(update_notifications);
+            fetch(url, {method: 'POST', body: CSRFFormData()});
         });
 
         var last_notification = null;

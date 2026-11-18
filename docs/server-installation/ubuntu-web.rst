@@ -95,8 +95,7 @@ Clone the editor and compiler repositories
 
 #.  Install the Python module dependencies of the editor (in the virtualenv)::
 
-        pip install -r /srv/numbas/editor/requirements.txt
-        pip install -r /srv/numbas/compiler/requirements.txt
+        pip install .
         pip install mysqlclient gunicorn
 
 Configuration
@@ -201,12 +200,11 @@ To keep the editor up to date, run the following script::
     source /opt/numbas_python/bin/activate
     cd /srv/numbas/compiler
     git pull origin master
-    pip install -r requirements.txt
     cd /srv/numbas/editor
     git pull origin master
     python manage.py migrate
     python manage.py collectstatic --noinput
-    pip install -r requirements.txt
+    pip install .
     supervisorctl restart numbas_editor
 
 Note that if any changes are made to the editor code, including

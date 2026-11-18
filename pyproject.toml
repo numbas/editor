@@ -7,13 +7,13 @@ dependencies = [
     "bleach>=6.4.0",
     "django>=6.1",
     "django-el-pagination>=4.1.2",
-    "django-html-sanitizer>=0.1.7",
+    "django-html-sanitizer @ git+https://github.com/christianp/django-html_sanitizer.git@django4compat#egg=django-html_sanitizer",
     "django-notifications-community>=1.12.3",
     "django-registration-redux>=2.13",
     "django-reversion>=6.5.2",
     "django-tables2>=3.0.1",
     "django-taggit>=7.0.0",
-    "django-thumbs>=0.4.1",
+    "django-thumbs @ git+https://github.com/numbas/django-thumbs@1cc56a7efab78c51cee6323b761e835d480a9cf1#egg=django-thumbs",
     "emoji>=2.16.0",
     "html5lib>=1.1",
     "huey>=3.5.4",
@@ -28,3 +28,7 @@ dependencies = [
 [tool.uv.sources]
 django-html-sanitizer = { git = "https://github.com/christianp/django-html_sanitizer.git", rev = "django4compat" }
 django-thumbs = { git = "https://github.com/numbas/django-thumbs", rev = "1cc56a7efab78c51cee6323b761e835d480a9cf1" }
+
+[tool.setuptools.packages.find]
+where = ["editor/", "accounts/"]
+include = []

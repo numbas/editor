@@ -22,7 +22,7 @@ dependencies = [
     "mistune>=3.4.0",
     "pillow>=13.0.0",
     "pycryptodome>=4.5.0",
-    "python-slugify>=8.0.4",
+    "python-slugify>=9.0",
 ]
 
 [tool.uv.sources]

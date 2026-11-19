@@ -1,3 +1,4 @@
+PYTHON?=python3
 # Location of the Numbas runtime repository
 NUMBAS_RUNTIME_PATH ?= ../compiler
 
@@ -58,7 +59,7 @@ export MARKING_INTRO
 export MARKING_END
 
 define encode_marking
-echo "        \"$(notdir $(basename $(f)))\": " >> $@; cat $(f) | python -c 'import json,sys; sys.stdout.write(json.dumps(sys.stdin.read()))' >> $@;
+echo "        \"$(notdir $(basename $(f)))\": " >> $@; cat $(f) | $(PYTHON) -c 'import json,sys; sys.stdout.write(json.dumps(sys.stdin.read()))' >> $@;
 endef
 
 # Collect the built-in part marking scripts from the Numbas runtime repository
@@ -87,7 +88,7 @@ export DIAGNOSTIC_INTRO
 export DIAGNOSTIC_END
 
 define encode_diagnostic
-echo "        \"$(notdir $(basename $(f)))\": " >> $@; cat $(f) | python -c 'import json,sys; sys.stdout.write(json.dumps(sys.stdin.read()))' >> $@;
+echo "        \"$(notdir $(basename $(f)))\": " >> $@; cat $(f) | $(PYTHON) -c 'import json,sys; sys.stdout.write(json.dumps(sys.stdin.read()))' >> $@;
 endef
 
 $(NUMBAS_SCRIPT_DIR)/diagnostic_scripts.js: $(DIAGNOSTIC_SCRIPTS)
@@ -114,11 +115,11 @@ docs_%:
 	$(MAKE) -f docs.mk $*
 
 check_help_links:
-	@python check_help_links.py
+	@$(PYTHON) check_help_links.py
 
 editor/static/js/numbas/jme_function_hints.js: $(wildcard docs/*.rst) $(wildcard docs/**/*.rst)
 	@echo "var jme_function_hints = " > $@
-	@python make_jme_reference_data.py >> $@
+	@$(PYTHON) make_jme_reference_data.py >> $@
 	@echo ";" >> $@
 	$(created)
 

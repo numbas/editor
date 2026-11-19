@@ -17132,6 +17132,8 @@ Numbas.queueScript('localisation', ['i18next', 'localisation-resources'], functi
                 format: function(value, format) {
                     if(format == 'niceNumber') {
                         return Numbas.math.niceNumber(value);
+                    } else if(format == 'numMarks') {
+                        return Numbas.util.numMarks(value);
                     }
                 }
             },
@@ -27065,6 +27067,13 @@ var util = Numbas.util = /** @lends Numbas.util */ {
         }
     },
 
+    /** Convert a number of marks to a string.
+     */
+    numMarks: function(value) {
+        const x = Numbas.math.niceNumber(value, {precisionType: 'dp', precision: 3}).replace(/\.?0+$/,'');
+        return x;
+    },
+
     /** Write a number with every three digits separated by the given separator character.
      *
      * @example
@@ -30559,7 +30568,7 @@ Numbas.queueScript('display-util', ['math'], function() {
      * @returns {Numbas.display_util.scoreFeedback}
      */
     function showScoreFeedback(obj, settings) {
-        var niceNumber = Numbas.math.niceNumber;
+        var niceNumber = Numbas.util.numMarks;
         var newScore = Knockout.observable(false);
         var answered = Knockout.computed(function() {
             return obj.answered && obj.answered();

@@ -119,6 +119,11 @@ class UploadView(editor.views.editoritem.CreateView):
                         path = filename
                     else:
                         zippath = 'resources/question-resources/' + path
+                        try:
+                            z.getinfo(zippath)
+                        except KeyError:
+                            zippath = 'resources/' + filename
+
                     short_filename = filename
 
                     if short_filename.startswith('question-resources/'):

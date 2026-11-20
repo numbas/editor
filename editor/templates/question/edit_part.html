@@ -14,7 +14,7 @@
 
 <!-- ko with: currentPart -->
     <h3>
-        <input type="text" class="custom-name" data-bind="textInput: customName, autosize: name, attr: {placeholder: standardName}">
+        <input type="text" class="custom-name" data-bind="textInput: customName, attr: {placeholder: standardName}, autosize: name">
         <span data-bind="text: type().niceName"></span>
         {% if editable %}
         <div class="pull-right">
@@ -135,7 +135,7 @@
                                 Expected answer
                             </label>
                             <div class="col-sm-12 col-md-9">
-                                <div data-bind="component: {name: 'answer-widget', params: {answer: correctAnswer, part: runtime_part, disable: true, id: 'input-marking-test-correctAnswer'}}"></div>
+                                <div data-bind="component: {name: 'answer-widget', params: {answer: correctAnswer, part: runtime_part, widget: runtime_part().display.input_widget, widget_options: runtime_part().display.input_options, disable: true, id: 'input-marking-test-correctAnswer'}}"></div>
                             </div>
                         </div>
                         <div class="form-group">
@@ -143,7 +143,7 @@
                                 Student's answer
                             </label>
                             <div class="col-sm-12 col-md-9">
-                                <div data-bind="component: {name: 'answer-widget', params: {answer: answer, part: runtime_part, id: 'input-marking-test-answer'}}"></div>
+                                <div data-bind="component: {name: 'answer-widget', params: {answer: answer, part: runtime_part, widget: runtime_part().display.input_widget, widget_options: runtime_part().display.input_options, id: 'input-marking-test-answer'}}"></div>
                             </div>
                         </div>
                         <div class="form-group">
@@ -193,10 +193,14 @@
                                 <tr>
                                     <td data-bind="text: name"></td>
                                     <td data-bind="with: marking_test">
-                                        <div data-bind="component: {name: 'answer-widget', params: {answer: correctAnswer, part: runtime_part, disable: true}}"></div>
+                                        <!-- ko if: runtime_part -->
+                                        <div data-bind="component: {name: 'answer-widget', params: {answer: correctAnswer, widget: runtime_part().display.input_widget, widget_options: runtime_part().display.input_options, part: runtime_part, disable: true}}"></div>
+                                        <!-- /ko -->
                                     </td>
                                     <td data-bind="with: marking_test">
-                                        <div data-bind="component: {name: 'answer-widget', params: {answer: answer, part: runtime_part}}"></div>
+                                        <!-- ko if: runtime_part -->
+                                        <div data-bind="component: {name: 'answer-widget', params: {answer: answer, widget: runtime_part().display.input_widget, widget_options: runtime_part().display.input_options, part: runtime_part}}"></div>
+                                        <!-- /ko -->
                                     </td>
                                 </tr>
                             </tbody>

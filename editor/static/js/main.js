@@ -153,43 +153,6 @@ $(document).ready(function() {
         }
     }    
 
-    //automatically resize a text input to fit its contents
-    ko.bindingHandlers.autosize = {
-        update: function(element,valueAccessor) {
-            var settings = { max: null, min: 60, padding: 30, useValue: true };
-            var str = '';
-            var placeholder = element.getAttribute('placeholder') || '';
-
-            function resizeF(str) {
-                var w = Math.max(measureText(element, str).width, measureText(element, placeholder).width);
-                w = Math.max(w, settings.min || 0);
-                if(settings.max !== null) {
-                    w = Math.min(w, settings.max);
-                }
-                const style = getComputedStyle(element);
-                w = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) + w;
-                element.style['width'] = w+'px';
-                element.style['max-width'] = '100%';
-            };
-
-            var value = ko.unwrap(valueAccessor());
-            if(value !== true) {
-                var str = value+'';
-                if(typeof value == 'object') {
-                    settings = Object.assign(settings,value);
-                    value = ko.unwrap(settings.value);
-                    str = settings.useValue ? value : '';
-                }
-                resizeF(str);
-            } else {
-                ['keypress','keydown','keyup','change'].forEach(evt => {
-                    element.addEventListener(evt, resizeF);
-                });
-                resizeF(element.value);
-            }
-        }
-    }
-
     ko.bindingHandlers.editableHTML = {
         init: function(element, valueAccessor,allBindingsAccessor) {
             var initialValue = ko.unwrap(valueAccessor());

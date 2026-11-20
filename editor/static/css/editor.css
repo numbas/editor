@@ -2,6 +2,21 @@ summary {
     display: revert;
 }
 
+.invisible {
+    position: absolute !important;
+    left: -2000000px;
+    top: -2000000px;
+    max-height: 100vh;
+    overflow-y: scroll;
+    visibility: hidden;
+}
+
+@media screen {
+    .print-only {
+        display: none;
+    }
+}
+
 .nothing-here {
     font-style: italic;
 }

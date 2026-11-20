@@ -2068,13 +2068,6 @@ $(document).ready(function() {
         }
     }
 
-    ko.bindingHandlers.latex = {
-        update: function(element,valueAccessor) {
-            ko.bindingHandlers.html.update.apply(this,arguments);
-            mathjax_typeset_element(element);
-        }
-    }
-
     ko.bindingHandlers.inline_latex = {
         update: function(element,valueAccessor) {
             element.innerHTML = '$' + ko.unwrap(valueAccessor()) + '$';
@@ -2290,13 +2283,6 @@ $(document).ready(function() {
             })
         ;
     });
-
-    ko.bindingHandlers.jmescope = {
-        update: function(element, valueAccessor) {
-            const scope = Knockout.unwrap(valueAccessor());
-            Numbas.display_util.set_jme_scope(element, scope);
-        }
-    };
 
     ko.bindingHandlers.upload_resource = {
         init: function(element, valueAccessor, allBindingsAccessor) {

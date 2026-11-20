@@ -13,11 +13,11 @@ update_from_runtime: runtime marking_scripts diagnostic_scripts locales extensio
 update_from_docs: jme_function_hints
 
 SCRIPTS_DIR = runtime/scripts
-RUNTIME_SOURCES = numbas.js jme.js jme-builtins.js jme-display.js jme-notations.js jme-rules.js jme-variables.js jme-calculus.js localisation.js part.js question.js schedule.js diagnostic.js marking.js math.js util.js csv.js i18next/i18next.js json.js decimal/decimal.js evaluate-settings.js unicode-mappings.js parsel/parsel.js seedrandom/seedrandom.js
+RUNTIME_SOURCES = numbas.js jme.js jme-builtins.js jme-display.js jme-notations.js jme-rules.js jme-variables.js jme-calculus.js localisation.js part.js question.js schedule.js diagnostic.js marking.js math.js util.js csv.js i18next/i18next.js json.js decimal/decimal.js evaluate-settings.js unicode-mappings.js controls.js timing.js parsel/parsel.js seedrandom/seedrandom.js
 PART_SOURCES = $(patsubst $(NUMBAS_RUNTIME_PATH)/%, %, $(wildcard $(NUMBAS_RUNTIME_PATH)/$(SCRIPTS_DIR)/parts/*.js))
 THEME_DIR = themes/default/files/scripts
-THEME_SOURCES = answer-widgets.js display-util.js
-ALL_SOURCES = $(patsubst %, $(SCRIPTS_DIR)/%, $(RUNTIME_SOURCES)) $(patsubst %, $(THEME_DIR)/%, $(THEME_SOURCES)) $(PART_SOURCES)
+THEME_SOURCES = $(patsubst %, $(THEME_DIR)/%, answer-widgets.js display-util.js display-base.js display-color.js display.js knockout-handlers.js part-display.js question-display.js exam-display.js) $(patsubst $(NUMBAS_RUNTIME_PATH)/%, %, $(wildcard $(NUMBAS_RUNTIME_PATH)/$(THEME_DIR)/parts/*.js))
+ALL_SOURCES = $(patsubst %, $(SCRIPTS_DIR)/%, $(RUNTIME_SOURCES)) $(THEME_SOURCES) $(PART_SOURCES)
 
 EXTENSIONS_DIR = $(NUMBAS_RUNTIME_PATH)/extensions
 EXTENSIONS = $(foreach f,$(shell find $(EXTENSIONS_DIR) -maxdepth 1 -mindepth 1 -type d 2> /dev/null),$(notdir $(f:%/=%)))

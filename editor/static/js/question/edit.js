@@ -4022,7 +4022,9 @@ $(document).ready(function() {
         this.last_variables = null;
         this.question_error = ko.observable(null);
         this.make_question = function(force) {
-            if(!force && mt.part.q.currentPart()!=mt.part) {
+            const currentPart = mt.part.q.currentPart();
+            const isCurrentPart = currentPart == mt.part || currentPart == mt.part.parent();
+            if(!force && !isCurrentPart) {
                 return;
             }
             if(!mt.variablesReady()) {
@@ -4065,6 +4067,16 @@ $(document).ready(function() {
                         return;
                     }
                     mt.question_error(null);
+                    function initPartDisplay(p) {
+                        for(let pp of [].concat(p.gaps, p.steps, p.alternatives)) {
+                            initPartDisplay(pp);
+                        }
+                        p.initDisplay();
+                    }
+                    for(let p of q.parts) {
+                        initPartDisplay(p);
+                    }
+
                     mt.question(q);
                 }).catch(function(e) {
                     mt.question_error(e);

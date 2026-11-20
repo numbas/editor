@@ -1,4 +1,4 @@
-// Compiled using  runtime/scripts/numbas.js  runtime/scripts/jme.js  runtime/scripts/jme-builtins.js  runtime/scripts/jme-display.js  runtime/scripts/jme-notations.js  runtime/scripts/jme-rules.js  runtime/scripts/jme-variables.js  runtime/scripts/jme-calculus.js  runtime/scripts/localisation.js  runtime/scripts/part.js  runtime/scripts/question.js  runtime/scripts/schedule.js  runtime/scripts/diagnostic.js  runtime/scripts/marking.js  runtime/scripts/math.js  runtime/scripts/util.js  runtime/scripts/csv.js  runtime/scripts/i18next/i18next.js  runtime/scripts/json.js  runtime/scripts/decimal/decimal.js  runtime/scripts/evaluate-settings.js  runtime/scripts/unicode-mappings.js  runtime/scripts/parsel/parsel.js  runtime/scripts/seedrandom/seedrandom.js  themes/default/files/scripts/answer-widgets.js  themes/default/files/scripts/display-util.js  runtime/scripts/parts/custom_part_type.js  runtime/scripts/parts/extension.js  runtime/scripts/parts/gapfill.js  runtime/scripts/parts/information.js  runtime/scripts/parts/jme.js  runtime/scripts/parts/matrixentry.js  runtime/scripts/parts/multipleresponse.js  runtime/scripts/parts/numberentry.js  runtime/scripts/parts/patternmatch.js
+// Compiled using  runtime/scripts/numbas.js  runtime/scripts/jme.js  runtime/scripts/jme-builtins.js  runtime/scripts/jme-display.js  runtime/scripts/jme-notations.js  runtime/scripts/jme-rules.js  runtime/scripts/jme-variables.js  runtime/scripts/jme-calculus.js  runtime/scripts/localisation.js  runtime/scripts/part.js  runtime/scripts/question.js  runtime/scripts/schedule.js  runtime/scripts/diagnostic.js  runtime/scripts/marking.js  runtime/scripts/math.js  runtime/scripts/util.js  runtime/scripts/csv.js  runtime/scripts/i18next/i18next.js  runtime/scripts/json.js  runtime/scripts/decimal/decimal.js  runtime/scripts/evaluate-settings.js  runtime/scripts/unicode-mappings.js  runtime/scripts/controls.js  runtime/scripts/timing.js  runtime/scripts/parsel/parsel.js  runtime/scripts/seedrandom/seedrandom.js  themes/default/files/scripts/answer-widgets.js  themes/default/files/scripts/display-util.js  themes/default/files/scripts/display-base.js  themes/default/files/scripts/display-color.js  themes/default/files/scripts/display.js  themes/default/files/scripts/knockout-handlers.js  themes/default/files/scripts/part-display.js  themes/default/files/scripts/question-display.js  themes/default/files/scripts/exam-display.js  themes/default/files/scripts/parts/custom-display.js  themes/default/files/scripts/parts/extension-display.js  themes/default/files/scripts/parts/gapfill-display.js  themes/default/files/scripts/parts/information-display.js  themes/default/files/scripts/parts/jme-display.js  themes/default/files/scripts/parts/matrix-display.js  themes/default/files/scripts/parts/multipleresponse-display.js  themes/default/files/scripts/parts/numberentry-display.js  themes/default/files/scripts/parts/patternmatch-display.js  runtime/scripts/parts/custom_part_type.js  runtime/scripts/parts/extension.js  runtime/scripts/parts/gapfill.js  runtime/scripts/parts/information.js  runtime/scripts/parts/jme.js  runtime/scripts/parts/matrixentry.js  runtime/scripts/parts/multipleresponse.js  runtime/scripts/parts/numberentry.js  runtime/scripts/parts/patternmatch.js
 // From the Numbas compiler directory
 /*
 Copyright 2011-14 Newcastle University
@@ -28314,6 +28314,386 @@ Numbas.queueScript('unicode-mappings', [], function() {
     Numbas.unicode_mappings = {"greek": {"\u0391": "Alpha", "\u0392": "Beta", "\u03a7": "Chi", "\u0394": "Delta", "\u0395": "Epsilon", "\u0397": "Eta", "\u0393": "Gamma", "\u0370": "Heta", "\u0399": "Iota", "\u039a": "Kappa", "\u039b": "Lambda", "\u039c": "Mu", "\u039d": "Nu", "\u03a9": "Omega", "\u039f": "Omicron", "\u03a6": "Phi", "\u03a0": "Pi", "\u03a8": "Psi", "\u03a1": "Rho", "\u03fa": "San", "\u03f7": "Sho", "\u03a3": "Sigma", "\u03a4": "Tau", "\u0398": "Theta", "\u03a5": "Upsilon", "\u039e": "Xi", "\u037f": "Yot", "\u0396": "Zeta", "\u1d26": "Gamma", "\u1d27": "Lambda", "\uab65": "Omega", "\u1d28": "Pi", "\u1d2a": "Psi", "\u1d29": "Rho", "\u03b1": "alpha", "\u03b2": "beta", "\u03c7": "chi", "\u03b4": "delta", "\u03dd": "digamma", "\u03b5": "epsilon", "\u03b7": "eta", "\u03c2": "sigma", "\u03b3": "gamma", "\u0371": "heta", "\u03b9": "iota", "\u03ba": "kappa", "\u03df": "koppa", "\u03bb": "lambda", "\u03bc": "mu", "\u03bd": "nu", "\u03c9": "omega", "\u03bf": "omicron", "\u03c6": "phi", "\u03c0": "pi", "\u03c8": "psi", "\u03c1": "rho", "\u03e1": "sampi", "\u03fb": "san", "\u03f8": "sho", "\u03c3": "sigma", "\u03db": "stigma", "\u03c4": "tau", "\u03b8": "theta", "\u03c5": "upsilon", "\u03be": "xi", "\u03b6": "zeta"}, "subscripts": {"\u1d62": "i", "\u1d63": "r", "\u1d64": "u", "\u1d65": "v", "\u1d66": "\u03b2", "\u1d67": "\u03b3", "\u1d68": "\u03c1", "\u1d69": "\u03c6", "\u1d6a": "\u03c7", "\u2080": "0", "\u2081": "1", "\u2082": "2", "\u2083": "3", "\u2084": "4", "\u2085": "5", "\u2086": "6", "\u2087": "7", "\u2088": "8", "\u2089": "9", "\u208a": "+", "\u208b": "-", "\u208c": "=", "\u208d": "(", "\u208e": ")", "\u2090": "a", "\u2091": "e", "\u2092": "o", "\u2093": "x", "\u2095": "h", "\u2096": "k", "\u2097": "l", "\u2098": "m", "\u2099": "n", "\u209a": "p", "\u209b": "s", "\u209c": "t", "\u2c7c": "j"}, "superscripts": {"\u00b2": "2", "\u00b3": "3", "\u00b9": "1", "\u2070": "0", "\u2071": "i", "\u2074": "4", "\u2075": "5", "\u2076": "6", "\u2077": "7", "\u2078": "8", "\u2079": "9", "\u207a": "+", "\u207b": "-", "\u207c": "=", "\u207d": "(", "\u207e": ")", "\u207f": "n"}, "letters": {"\ud835\udc00": ["A", ["BOLD"]], "\ud835\udc01": ["B", ["BOLD"]], "\ud835\udc02": ["C", ["BOLD"]], "\ud835\udc03": ["D", ["BOLD"]], "\ud835\udc04": ["E", ["BOLD"]], "\ud835\udc05": ["F", ["BOLD"]], "\ud835\udc06": ["G", ["BOLD"]], "\ud835\udc07": ["H", ["BOLD"]], "\ud835\udc08": ["I", ["BOLD"]], "\ud835\udc09": ["J", ["BOLD"]], "\ud835\udc0a": ["K", ["BOLD"]], "\ud835\udc0b": ["L", ["BOLD"]], "\ud835\udc0c": ["M", ["BOLD"]], "\ud835\udc0d": ["N", ["BOLD"]], "\ud835\udc0e": ["O", ["BOLD"]], "\ud835\udc0f": ["P", ["BOLD"]], "\ud835\udc10": ["Q", ["BOLD"]], "\ud835\udc11": ["R", ["BOLD"]], "\ud835\udc12": ["S", ["BOLD"]], "\ud835\udc13": ["T", ["BOLD"]], "\ud835\udc14": ["U", ["BOLD"]], "\ud835\udc15": ["V", ["BOLD"]], "\ud835\udc16": ["W", ["BOLD"]], "\ud835\udc17": ["X", ["BOLD"]], "\ud835\udc18": ["Y", ["BOLD"]], "\ud835\udc19": ["Z", ["BOLD"]], "\ud835\udc1a": ["a", ["BOLD"]], "\ud835\udc1b": ["b", ["BOLD"]], "\ud835\udc1c": ["c", ["BOLD"]], "\ud835\udc1d": ["d", ["BOLD"]], "\ud835\udc1e": ["e", ["BOLD"]], "\ud835\udc1f": ["f", ["BOLD"]], "\ud835\udc20": ["g", ["BOLD"]], "\ud835\udc21": ["h", ["BOLD"]], "\ud835\udc22": ["i", ["BOLD"]], "\ud835\udc23": ["j", ["BOLD"]], "\ud835\udc24": ["k", ["BOLD"]], "\ud835\udc25": ["l", ["BOLD"]], "\ud835\udc26": ["m", ["BOLD"]], "\ud835\udc27": ["n", ["BOLD"]], "\ud835\udc28": ["o", ["BOLD"]], "\ud835\udc29": ["p", ["BOLD"]], "\ud835\udc2a": ["q", ["BOLD"]], "\ud835\udc2b": ["r", ["BOLD"]], "\ud835\udc2c": ["s", ["BOLD"]], "\ud835\udc2d": ["t", ["BOLD"]], "\ud835\udc2e": ["u", ["BOLD"]], "\ud835\udc2f": ["v", ["BOLD"]], "\ud835\udc30": ["w", ["BOLD"]], "\ud835\udc31": ["x", ["BOLD"]], "\ud835\udc32": ["y", ["BOLD"]], "\ud835\udc33": ["z", ["BOLD"]], "\ud835\udc34": ["A", ["ITALIC"]], "\ud835\udc35": ["B", ["ITALIC"]], "\ud835\udc36": ["C", ["ITALIC"]], "\ud835\udc37": ["D", ["ITALIC"]], "\ud835\udc38": ["E", ["ITALIC"]], "\ud835\udc39": ["F", ["ITALIC"]], "\ud835\udc3a": ["G", ["ITALIC"]], "\ud835\udc3b": ["H", ["ITALIC"]], "\ud835\udc3c": ["I", ["ITALIC"]], "\ud835\udc3d": ["J", ["ITALIC"]], "\ud835\udc3e": ["K", ["ITALIC"]], "\ud835\udc3f": ["L", ["ITALIC"]], "\ud835\udc40": ["M", ["ITALIC"]], "\ud835\udc41": ["N", ["ITALIC"]], "\ud835\udc42": ["O", ["ITALIC"]], "\ud835\udc43": ["P", ["ITALIC"]], "\ud835\udc44": ["Q", ["ITALIC"]], "\ud835\udc45": ["R", ["ITALIC"]], "\ud835\udc46": ["S", ["ITALIC"]], "\ud835\udc47": ["T", ["ITALIC"]], "\ud835\udc48": ["U", ["ITALIC"]], "\ud835\udc49": ["V", ["ITALIC"]], "\ud835\udc4a": ["W", ["ITALIC"]], "\ud835\udc4b": ["X", ["ITALIC"]], "\ud835\udc4c": ["Y", ["ITALIC"]], "\ud835\udc4d": ["Z", ["ITALIC"]], "\ud835\udc4e": ["a", ["ITALIC"]], "\ud835\udc4f": ["b", ["ITALIC"]], "\ud835\udc50": ["c", ["ITALIC"]], "\ud835\udc51": ["d", ["ITALIC"]], "\ud835\udc52": ["e", ["ITALIC"]], "\ud835\udc53": ["f", ["ITALIC"]], "\ud835\udc54": ["g", ["ITALIC"]], "\ud835\udc56": ["i", ["ITALIC"]], "\ud835\udc57": ["j", ["ITALIC"]], "\ud835\udc58": ["k", ["ITALIC"]], "\ud835\udc59": ["l", ["ITALIC"]], "\ud835\udc5a": ["m", ["ITALIC"]], "\ud835\udc5b": ["n", ["ITALIC"]], "\ud835\udc5c": ["o", ["ITALIC"]], "\ud835\udc5d": ["p", ["ITALIC"]], "\ud835\udc5e": ["q", ["ITALIC"]], "\ud835\udc5f": ["r", ["ITALIC"]], "\ud835\udc60": ["s", ["ITALIC"]], "\ud835\udc61": ["t", ["ITALIC"]], "\ud835\udc62": ["u", ["ITALIC"]], "\ud835\udc63": ["v", ["ITALIC"]], "\ud835\udc64": ["w", ["ITALIC"]], "\ud835\udc65": ["x", ["ITALIC"]], "\ud835\udc66": ["y", ["ITALIC"]], "\ud835\udc67": ["z", ["ITALIC"]], "\ud835\udc68": ["A", ["BOLD", "ITALIC"]], "\ud835\udc69": ["B", ["BOLD", "ITALIC"]], "\ud835\udc6a": ["C", ["BOLD", "ITALIC"]], "\ud835\udc6b": ["D", ["BOLD", "ITALIC"]], "\ud835\udc6c": ["E", ["BOLD", "ITALIC"]], "\ud835\udc6d": ["F", ["BOLD", "ITALIC"]], "\ud835\udc6e": ["G", ["BOLD", "ITALIC"]], "\ud835\udc6f": ["H", ["BOLD", "ITALIC"]], "\ud835\udc70": ["I", ["BOLD", "ITALIC"]], "\ud835\udc71": ["J", ["BOLD", "ITALIC"]], "\ud835\udc72": ["K", ["BOLD", "ITALIC"]], "\ud835\udc73": ["L", ["BOLD", "ITALIC"]], "\ud835\udc74": ["M", ["BOLD", "ITALIC"]], "\ud835\udc75": ["N", ["BOLD", "ITALIC"]], "\ud835\udc76": ["O", ["BOLD", "ITALIC"]], "\ud835\udc77": ["P", ["BOLD", "ITALIC"]], "\ud835\udc78": ["Q", ["BOLD", "ITALIC"]], "\ud835\udc79": ["R", ["BOLD", "ITALIC"]], "\ud835\udc7a": ["S", ["BOLD", "ITALIC"]], "\ud835\udc7b": ["T", ["BOLD", "ITALIC"]], "\ud835\udc7c": ["U", ["BOLD", "ITALIC"]], "\ud835\udc7d": ["V", ["BOLD", "ITALIC"]], "\ud835\udc7e": ["W", ["BOLD", "ITALIC"]], "\ud835\udc7f": ["X", ["BOLD", "ITALIC"]], "\ud835\udc80": ["Y", ["BOLD", "ITALIC"]], "\ud835\udc81": ["Z", ["BOLD", "ITALIC"]], "\ud835\udc82": ["a", ["BOLD", "ITALIC"]], "\ud835\udc83": ["b", ["BOLD", "ITALIC"]], "\ud835\udc84": ["c", ["BOLD", "ITALIC"]], "\ud835\udc85": ["d", ["BOLD", "ITALIC"]], "\ud835\udc86": ["e", ["BOLD", "ITALIC"]], "\ud835\udc87": ["f", ["BOLD", "ITALIC"]], "\ud835\udc88": ["g", ["BOLD", "ITALIC"]], "\ud835\udc89": ["h", ["BOLD", "ITALIC"]], "\ud835\udc8a": ["i", ["BOLD", "ITALIC"]], "\ud835\udc8b": ["j", ["BOLD", "ITALIC"]], "\ud835\udc8c": ["k", ["BOLD", "ITALIC"]], "\ud835\udc8d": ["l", ["BOLD", "ITALIC"]], "\ud835\udc8e": ["m", ["BOLD", "ITALIC"]], "\ud835\udc8f": ["n", ["BOLD", "ITALIC"]], "\ud835\udc90": ["o", ["BOLD", "ITALIC"]], "\ud835\udc91": ["p", ["BOLD", "ITALIC"]], "\ud835\udc92": ["q", ["BOLD", "ITALIC"]], "\ud835\udc93": ["r", ["BOLD", "ITALIC"]], "\ud835\udc94": ["s", ["BOLD", "ITALIC"]], "\ud835\udc95": ["t", ["BOLD", "ITALIC"]], "\ud835\udc96": ["u", ["BOLD", "ITALIC"]], "\ud835\udc97": ["v", ["BOLD", "ITALIC"]], "\ud835\udc98": ["w", ["BOLD", "ITALIC"]], "\ud835\udc99": ["x", ["BOLD", "ITALIC"]], "\ud835\udc9a": ["y", ["BOLD", "ITALIC"]], "\ud835\udc9b": ["z", ["BOLD", "ITALIC"]], "\ud835\udc9c": ["A", ["SCRIPT"]], "\ud835\udc9e": ["C", ["SCRIPT"]], "\ud835\udc9f": ["D", ["SCRIPT"]], "\ud835\udca2": ["G", ["SCRIPT"]], "\ud835\udca5": ["J", ["SCRIPT"]], "\ud835\udca6": ["K", ["SCRIPT"]], "\ud835\udca9": ["N", ["SCRIPT"]], "\ud835\udcaa": ["O", ["SCRIPT"]], "\ud835\udcab": ["P", ["SCRIPT"]], "\ud835\udcac": ["Q", ["SCRIPT"]], "\ud835\udcae": ["S", ["SCRIPT"]], "\ud835\udcaf": ["T", ["SCRIPT"]], "\ud835\udcb0": ["U", ["SCRIPT"]], "\ud835\udcb1": ["V", ["SCRIPT"]], "\ud835\udcb2": ["W", ["SCRIPT"]], "\ud835\udcb3": ["X", ["SCRIPT"]], "\ud835\udcb4": ["Y", ["SCRIPT"]], "\ud835\udcb5": ["Z", ["SCRIPT"]], "\ud835\udcb6": ["a", ["SCRIPT"]], "\ud835\udcb7": ["b", ["SCRIPT"]], "\ud835\udcb8": ["c", ["SCRIPT"]], "\ud835\udcb9": ["d", ["SCRIPT"]], "\ud835\udcbb": ["f", ["SCRIPT"]], "\ud835\udcbd": ["h", ["SCRIPT"]], "\ud835\udcbe": ["i", ["SCRIPT"]], "\ud835\udcbf": ["j", ["SCRIPT"]], "\ud835\udcc0": ["k", ["SCRIPT"]], "\ud835\udcc1": ["l", ["SCRIPT"]], "\ud835\udcc2": ["m", ["SCRIPT"]], "\ud835\udcc3": ["n", ["SCRIPT"]], "\ud835\udcc5": ["p", ["SCRIPT"]], "\ud835\udcc6": ["q", ["SCRIPT"]], "\ud835\udcc7": ["r", ["SCRIPT"]], "\ud835\udcc8": ["s", ["SCRIPT"]], "\ud835\udcc9": ["t", ["SCRIPT"]], "\ud835\udcca": ["u", ["SCRIPT"]], "\ud835\udccb": ["v", ["SCRIPT"]], "\ud835\udccc": ["w", ["SCRIPT"]], "\ud835\udccd": ["x", ["SCRIPT"]], "\ud835\udcce": ["y", ["SCRIPT"]], "\ud835\udccf": ["z", ["SCRIPT"]], "\ud835\udcd0": ["A", ["BOLD", "SCRIPT"]], "\ud835\udcd1": ["B", ["BOLD", "SCRIPT"]], "\ud835\udcd2": ["C", ["BOLD", "SCRIPT"]], "\ud835\udcd3": ["D", ["BOLD", "SCRIPT"]], "\ud835\udcd4": ["E", ["BOLD", "SCRIPT"]], "\ud835\udcd5": ["F", ["BOLD", "SCRIPT"]], "\ud835\udcd6": ["G", ["BOLD", "SCRIPT"]], "\ud835\udcd7": ["H", ["BOLD", "SCRIPT"]], "\ud835\udcd8": ["I", ["BOLD", "SCRIPT"]], "\ud835\udcd9": ["J", ["BOLD", "SCRIPT"]], "\ud835\udcda": ["K", ["BOLD", "SCRIPT"]], "\ud835\udcdb": ["L", ["BOLD", "SCRIPT"]], "\ud835\udcdc": ["M", ["BOLD", "SCRIPT"]], "\ud835\udcdd": ["N", ["BOLD", "SCRIPT"]], "\ud835\udcde": ["O", ["BOLD", "SCRIPT"]], "\ud835\udcdf": ["P", ["BOLD", "SCRIPT"]], "\ud835\udce0": ["Q", ["BOLD", "SCRIPT"]], "\ud835\udce1": ["R", ["BOLD", "SCRIPT"]], "\ud835\udce2": ["S", ["BOLD", "SCRIPT"]], "\ud835\udce3": ["T", ["BOLD", "SCRIPT"]], "\ud835\udce4": ["U", ["BOLD", "SCRIPT"]], "\ud835\udce5": ["V", ["BOLD", "SCRIPT"]], "\ud835\udce6": ["W", ["BOLD", "SCRIPT"]], "\ud835\udce7": ["X", ["BOLD", "SCRIPT"]], "\ud835\udce8": ["Y", ["BOLD", "SCRIPT"]], "\ud835\udce9": ["Z", ["BOLD", "SCRIPT"]], "\ud835\udcea": ["a", ["BOLD", "SCRIPT"]], "\ud835\udceb": ["b", ["BOLD", "SCRIPT"]], "\ud835\udcec": ["c", ["BOLD", "SCRIPT"]], "\ud835\udced": ["d", ["BOLD", "SCRIPT"]], "\ud835\udcee": ["e", ["BOLD", "SCRIPT"]], "\ud835\udcef": ["f", ["BOLD", "SCRIPT"]], "\ud835\udcf0": ["g", ["BOLD", "SCRIPT"]], "\ud835\udcf1": ["h", ["BOLD", "SCRIPT"]], "\ud835\udcf2": ["i", ["BOLD", "SCRIPT"]], "\ud835\udcf3": ["j", ["BOLD", "SCRIPT"]], "\ud835\udcf4": ["k", ["BOLD", "SCRIPT"]], "\ud835\udcf5": ["l", ["BOLD", "SCRIPT"]], "\ud835\udcf6": ["m", ["BOLD", "SCRIPT"]], "\ud835\udcf7": ["n", ["BOLD", "SCRIPT"]], "\ud835\udcf8": ["o", ["BOLD", "SCRIPT"]], "\ud835\udcf9": ["p", ["BOLD", "SCRIPT"]], "\ud835\udcfa": ["q", ["BOLD", "SCRIPT"]], "\ud835\udcfb": ["r", ["BOLD", "SCRIPT"]], "\ud835\udcfc": ["s", ["BOLD", "SCRIPT"]], "\ud835\udcfd": ["t", ["BOLD", "SCRIPT"]], "\ud835\udcfe": ["u", ["BOLD", "SCRIPT"]], "\ud835\udcff": ["v", ["BOLD", "SCRIPT"]], "\ud835\udd00": ["w", ["BOLD", "SCRIPT"]], "\ud835\udd01": ["x", ["BOLD", "SCRIPT"]], "\ud835\udd02": ["y", ["BOLD", "SCRIPT"]], "\ud835\udd03": ["z", ["BOLD", "SCRIPT"]], "\ud835\udd04": ["A", ["FRAKTUR"]], "\ud835\udd05": ["B", ["FRAKTUR"]], "\ud835\udd07": ["D", ["FRAKTUR"]], "\ud835\udd08": ["E", ["FRAKTUR"]], "\ud835\udd09": ["F", ["FRAKTUR"]], "\ud835\udd0a": ["G", ["FRAKTUR"]], "\ud835\udd0d": ["J", ["FRAKTUR"]], "\ud835\udd0e": ["K", ["FRAKTUR"]], "\ud835\udd0f": ["L", ["FRAKTUR"]], "\ud835\udd10": ["M", ["FRAKTUR"]], "\ud835\udd11": ["N", ["FRAKTUR"]], "\ud835\udd12": ["O", ["FRAKTUR"]], "\ud835\udd13": ["P", ["FRAKTUR"]], "\ud835\udd14": ["Q", ["FRAKTUR"]], "\ud835\udd16": ["S", ["FRAKTUR"]], "\ud835\udd17": ["T", ["FRAKTUR"]], "\ud835\udd18": ["U", ["FRAKTUR"]], "\ud835\udd19": ["V", ["FRAKTUR"]], "\ud835\udd1a": ["W", ["FRAKTUR"]], "\ud835\udd1b": ["X", ["FRAKTUR"]], "\ud835\udd1c": ["Y", ["FRAKTUR"]], "\ud835\udd1e": ["a", ["FRAKTUR"]], "\ud835\udd1f": ["b", ["FRAKTUR"]], "\ud835\udd20": ["c", ["FRAKTUR"]], "\ud835\udd21": ["d", ["FRAKTUR"]], "\ud835\udd22": ["e", ["FRAKTUR"]], "\ud835\udd23": ["f", ["FRAKTUR"]], "\ud835\udd24": ["g", ["FRAKTUR"]], "\ud835\udd25": ["h", ["FRAKTUR"]], "\ud835\udd26": ["i", ["FRAKTUR"]], "\ud835\udd27": ["j", ["FRAKTUR"]], "\ud835\udd28": ["k", ["FRAKTUR"]], "\ud835\udd29": ["l", ["FRAKTUR"]], "\ud835\udd2a": ["m", ["FRAKTUR"]], "\ud835\udd2b": ["n", ["FRAKTUR"]], "\ud835\udd2c": ["o", ["FRAKTUR"]], "\ud835\udd2d": ["p", ["FRAKTUR"]], "\ud835\udd2e": ["q", ["FRAKTUR"]], "\ud835\udd2f": ["r", ["FRAKTUR"]], "\ud835\udd30": ["s", ["FRAKTUR"]], "\ud835\udd31": ["t", ["FRAKTUR"]], "\ud835\udd32": ["u", ["FRAKTUR"]], "\ud835\udd33": ["v", ["FRAKTUR"]], "\ud835\udd34": ["w", ["FRAKTUR"]], "\ud835\udd35": ["x", ["FRAKTUR"]], "\ud835\udd36": ["y", ["FRAKTUR"]], "\ud835\udd37": ["z", ["FRAKTUR"]], "\ud835\udd38": ["A", ["DOUBLE-STRUCK"]], "\ud835\udd39": ["B", ["DOUBLE-STRUCK"]], "\ud835\udd3b": ["D", ["DOUBLE-STRUCK"]], "\ud835\udd3c": ["E", ["DOUBLE-STRUCK"]], "\ud835\udd3d": ["F", ["DOUBLE-STRUCK"]], "\ud835\udd3e": ["G", ["DOUBLE-STRUCK"]], "\ud835\udd40": ["I", ["DOUBLE-STRUCK"]], "\ud835\udd41": ["J", ["DOUBLE-STRUCK"]], "\ud835\udd42": ["K", ["DOUBLE-STRUCK"]], "\ud835\udd43": ["L", ["DOUBLE-STRUCK"]], "\ud835\udd44": ["M", ["DOUBLE-STRUCK"]], "\ud835\udd46": ["O", ["DOUBLE-STRUCK"]], "\ud835\udd4a": ["S", ["DOUBLE-STRUCK"]], "\ud835\udd4b": ["T", ["DOUBLE-STRUCK"]], "\ud835\udd4c": ["U", ["DOUBLE-STRUCK"]], "\ud835\udd4d": ["V", ["DOUBLE-STRUCK"]], "\ud835\udd4e": ["W", ["DOUBLE-STRUCK"]], "\ud835\udd4f": ["X", ["DOUBLE-STRUCK"]], "\ud835\udd50": ["Y", ["DOUBLE-STRUCK"]], "\ud835\udd52": ["a", ["DOUBLE-STRUCK"]], "\ud835\udd53": ["b", ["DOUBLE-STRUCK"]], "\ud835\udd54": ["c", ["DOUBLE-STRUCK"]], "\ud835\udd55": ["d", ["DOUBLE-STRUCK"]], "\ud835\udd56": ["e", ["DOUBLE-STRUCK"]], "\ud835\udd57": ["f", ["DOUBLE-STRUCK"]], "\ud835\udd58": ["g", ["DOUBLE-STRUCK"]], "\ud835\udd59": ["h", ["DOUBLE-STRUCK"]], "\ud835\udd5a": ["i", ["DOUBLE-STRUCK"]], "\ud835\udd5b": ["j", ["DOUBLE-STRUCK"]], "\ud835\udd5c": ["k", ["DOUBLE-STRUCK"]], "\ud835\udd5d": ["l", ["DOUBLE-STRUCK"]], "\ud835\udd5e": ["m", ["DOUBLE-STRUCK"]], "\ud835\udd5f": ["n", ["DOUBLE-STRUCK"]], "\ud835\udd60": ["o", ["DOUBLE-STRUCK"]], "\ud835\udd61": ["p", ["DOUBLE-STRUCK"]], "\ud835\udd62": ["q", ["DOUBLE-STRUCK"]], "\ud835\udd63": ["r", ["DOUBLE-STRUCK"]], "\ud835\udd64": ["s", ["DOUBLE-STRUCK"]], "\ud835\udd65": ["t", ["DOUBLE-STRUCK"]], "\ud835\udd66": ["u", ["DOUBLE-STRUCK"]], "\ud835\udd67": ["v", ["DOUBLE-STRUCK"]], "\ud835\udd68": ["w", ["DOUBLE-STRUCK"]], "\ud835\udd69": ["x", ["DOUBLE-STRUCK"]], "\ud835\udd6a": ["y", ["DOUBLE-STRUCK"]], "\ud835\udd6b": ["z", ["DOUBLE-STRUCK"]], "\ud835\udd6c": ["A", ["BOLD", "FRAKTUR"]], "\ud835\udd6d": ["B", ["BOLD", "FRAKTUR"]], "\ud835\udd6e": ["C", ["BOLD", "FRAKTUR"]], "\ud835\udd6f": ["D", ["BOLD", "FRAKTUR"]], "\ud835\udd70": ["E", ["BOLD", "FRAKTUR"]], "\ud835\udd71": ["F", ["BOLD", "FRAKTUR"]], "\ud835\udd72": ["G", ["BOLD", "FRAKTUR"]], "\ud835\udd73": ["H", ["BOLD", "FRAKTUR"]], "\ud835\udd74": ["I", ["BOLD", "FRAKTUR"]], "\ud835\udd75": ["J", ["BOLD", "FRAKTUR"]], "\ud835\udd76": ["K", ["BOLD", "FRAKTUR"]], "\ud835\udd77": ["L", ["BOLD", "FRAKTUR"]], "\ud835\udd78": ["M", ["BOLD", "FRAKTUR"]], "\ud835\udd79": ["N", ["BOLD", "FRAKTUR"]], "\ud835\udd7a": ["O", ["BOLD", "FRAKTUR"]], "\ud835\udd7b": ["P", ["BOLD", "FRAKTUR"]], "\ud835\udd7c": ["Q", ["BOLD", "FRAKTUR"]], "\ud835\udd7d": ["R", ["BOLD", "FRAKTUR"]], "\ud835\udd7e": ["S", ["BOLD", "FRAKTUR"]], "\ud835\udd7f": ["T", ["BOLD", "FRAKTUR"]], "\ud835\udd80": ["U", ["BOLD", "FRAKTUR"]], "\ud835\udd81": ["V", ["BOLD", "FRAKTUR"]], "\ud835\udd82": ["W", ["BOLD", "FRAKTUR"]], "\ud835\udd83": ["X", ["BOLD", "FRAKTUR"]], "\ud835\udd84": ["Y", ["BOLD", "FRAKTUR"]], "\ud835\udd85": ["Z", ["BOLD", "FRAKTUR"]], "\ud835\udd86": ["a", ["BOLD", "FRAKTUR"]], "\ud835\udd87": ["b", ["BOLD", "FRAKTUR"]], "\ud835\udd88": ["c", ["BOLD", "FRAKTUR"]], "\ud835\udd89": ["d", ["BOLD", "FRAKTUR"]], "\ud835\udd8a": ["e", ["BOLD", "FRAKTUR"]], "\ud835\udd8b": ["f", ["BOLD", "FRAKTUR"]], "\ud835\udd8c": ["g", ["BOLD", "FRAKTUR"]], "\ud835\udd8d": ["h", ["BOLD", "FRAKTUR"]], "\ud835\udd8e": ["i", ["BOLD", "FRAKTUR"]], "\ud835\udd8f": ["j", ["BOLD", "FRAKTUR"]], "\ud835\udd90": ["k", ["BOLD", "FRAKTUR"]], "\ud835\udd91": ["l", ["BOLD", "FRAKTUR"]], "\ud835\udd92": ["m", ["BOLD", "FRAKTUR"]], "\ud835\udd93": ["n", ["BOLD", "FRAKTUR"]], "\ud835\udd94": ["o", ["BOLD", "FRAKTUR"]], "\ud835\udd95": ["p", ["BOLD", "FRAKTUR"]], "\ud835\udd96": ["q", ["BOLD", "FRAKTUR"]], "\ud835\udd97": ["r", ["BOLD", "FRAKTUR"]], "\ud835\udd98": ["s", ["BOLD", "FRAKTUR"]], "\ud835\udd99": ["t", ["BOLD", "FRAKTUR"]], "\ud835\udd9a": ["u", ["BOLD", "FRAKTUR"]], "\ud835\udd9b": ["v", ["BOLD", "FRAKTUR"]], "\ud835\udd9c": ["w", ["BOLD", "FRAKTUR"]], "\ud835\udd9d": ["x", ["BOLD", "FRAKTUR"]], "\ud835\udd9e": ["y", ["BOLD", "FRAKTUR"]], "\ud835\udd9f": ["z", ["BOLD", "FRAKTUR"]], "\ud835\udda0": ["A", ["SANS-SERIF"]], "\ud835\udda1": ["B", ["SANS-SERIF"]], "\ud835\udda2": ["C", ["SANS-SERIF"]], "\ud835\udda3": ["D", ["SANS-SERIF"]], "\ud835\udda4": ["E", ["SANS-SERIF"]], "\ud835\udda5": ["F", ["SANS-SERIF"]], "\ud835\udda6": ["G", ["SANS-SERIF"]], "\ud835\udda7": ["H", ["SANS-SERIF"]], "\ud835\udda8": ["I", ["SANS-SERIF"]], "\ud835\udda9": ["J", ["SANS-SERIF"]], "\ud835\uddaa": ["K", ["SANS-SERIF"]], "\ud835\uddab": ["L", ["SANS-SERIF"]], "\ud835\uddac": ["M", ["SANS-SERIF"]], "\ud835\uddad": ["N", ["SANS-SERIF"]], "\ud835\uddae": ["O", ["SANS-SERIF"]], "\ud835\uddaf": ["P", ["SANS-SERIF"]], "\ud835\uddb0": ["Q", ["SANS-SERIF"]], "\ud835\uddb1": ["R", ["SANS-SERIF"]], "\ud835\uddb2": ["S", ["SANS-SERIF"]], "\ud835\uddb3": ["T", ["SANS-SERIF"]], "\ud835\uddb4": ["U", ["SANS-SERIF"]], "\ud835\uddb5": ["V", ["SANS-SERIF"]], "\ud835\uddb6": ["W", ["SANS-SERIF"]], "\ud835\uddb7": ["X", ["SANS-SERIF"]], "\ud835\uddb8": ["Y", ["SANS-SERIF"]], "\ud835\uddb9": ["Z", ["SANS-SERIF"]], "\ud835\uddba": ["a", ["SANS-SERIF"]], "\ud835\uddbb": ["b", ["SANS-SERIF"]], "\ud835\uddbc": ["c", ["SANS-SERIF"]], "\ud835\uddbd": ["d", ["SANS-SERIF"]], "\ud835\uddbe": ["e", ["SANS-SERIF"]], "\ud835\uddbf": ["f", ["SANS-SERIF"]], "\ud835\uddc0": ["g", ["SANS-SERIF"]], "\ud835\uddc1": ["h", ["SANS-SERIF"]], "\ud835\uddc2": ["i", ["SANS-SERIF"]], "\ud835\uddc3": ["j", ["SANS-SERIF"]], "\ud835\uddc4": ["k", ["SANS-SERIF"]], "\ud835\uddc5": ["l", ["SANS-SERIF"]], "\ud835\uddc6": ["m", ["SANS-SERIF"]], "\ud835\uddc7": ["n", ["SANS-SERIF"]], "\ud835\uddc8": ["o", ["SANS-SERIF"]], "\ud835\uddc9": ["p", ["SANS-SERIF"]], "\ud835\uddca": ["q", ["SANS-SERIF"]], "\ud835\uddcb": ["r", ["SANS-SERIF"]], "\ud835\uddcc": ["s", ["SANS-SERIF"]], "\ud835\uddcd": ["t", ["SANS-SERIF"]], "\ud835\uddce": ["u", ["SANS-SERIF"]], "\ud835\uddcf": ["v", ["SANS-SERIF"]], "\ud835\uddd0": ["w", ["SANS-SERIF"]], "\ud835\uddd1": ["x", ["SANS-SERIF"]], "\ud835\uddd2": ["y", ["SANS-SERIF"]], "\ud835\uddd3": ["z", ["SANS-SERIF"]], "\ud835\uddd4": ["A", ["SANS-SERIF", "BOLD"]], "\ud835\uddd5": ["B", ["SANS-SERIF", "BOLD"]], "\ud835\uddd6": ["C", ["SANS-SERIF", "BOLD"]], "\ud835\uddd7": ["D", ["SANS-SERIF", "BOLD"]], "\ud835\uddd8": ["E", ["SANS-SERIF", "BOLD"]], "\ud835\uddd9": ["F", ["SANS-SERIF", "BOLD"]], "\ud835\uddda": ["G", ["SANS-SERIF", "BOLD"]], "\ud835\udddb": ["H", ["SANS-SERIF", "BOLD"]], "\ud835\udddc": ["I", ["SANS-SERIF", "BOLD"]], "\ud835\udddd": ["J", ["SANS-SERIF", "BOLD"]], "\ud835\uddde": ["K", ["SANS-SERIF", "BOLD"]], "\ud835\udddf": ["L", ["SANS-SERIF", "BOLD"]], "\ud835\udde0": ["M", ["SANS-SERIF", "BOLD"]], "\ud835\udde1": ["N", ["SANS-SERIF", "BOLD"]], "\ud835\udde2": ["O", ["SANS-SERIF", "BOLD"]], "\ud835\udde3": ["P", ["SANS-SERIF", "BOLD"]], "\ud835\udde4": ["Q", ["SANS-SERIF", "BOLD"]], "\ud835\udde5": ["R", ["SANS-SERIF", "BOLD"]], "\ud835\udde6": ["S", ["SANS-SERIF", "BOLD"]], "\ud835\udde7": ["T", ["SANS-SERIF", "BOLD"]], "\ud835\udde8": ["U", ["SANS-SERIF", "BOLD"]], "\ud835\udde9": ["V", ["SANS-SERIF", "BOLD"]], "\ud835\uddea": ["W", ["SANS-SERIF", "BOLD"]], "\ud835\uddeb": ["X", ["SANS-SERIF", "BOLD"]], "\ud835\uddec": ["Y", ["SANS-SERIF", "BOLD"]], "\ud835\udded": ["Z", ["SANS-SERIF", "BOLD"]], "\ud835\uddee": ["a", ["SANS-SERIF", "BOLD"]], "\ud835\uddef": ["b", ["SANS-SERIF", "BOLD"]], "\ud835\uddf0": ["c", ["SANS-SERIF", "BOLD"]], "\ud835\uddf1": ["d", ["SANS-SERIF", "BOLD"]], "\ud835\uddf2": ["e", ["SANS-SERIF", "BOLD"]], "\ud835\uddf3": ["f", ["SANS-SERIF", "BOLD"]], "\ud835\uddf4": ["g", ["SANS-SERIF", "BOLD"]], "\ud835\uddf5": ["h", ["SANS-SERIF", "BOLD"]], "\ud835\uddf6": ["i", ["SANS-SERIF", "BOLD"]], "\ud835\uddf7": ["j", ["SANS-SERIF", "BOLD"]], "\ud835\uddf8": ["k", ["SANS-SERIF", "BOLD"]], "\ud835\uddf9": ["l", ["SANS-SERIF", "BOLD"]], "\ud835\uddfa": ["m", ["SANS-SERIF", "BOLD"]], "\ud835\uddfb": ["n", ["SANS-SERIF", "BOLD"]], "\ud835\uddfc": ["o", ["SANS-SERIF", "BOLD"]], "\ud835\uddfd": ["p", ["SANS-SERIF", "BOLD"]], "\ud835\uddfe": ["q", ["SANS-SERIF", "BOLD"]], "\ud835\uddff": ["r", ["SANS-SERIF", "BOLD"]], "\ud835\ude00": ["s", ["SANS-SERIF", "BOLD"]], "\ud835\ude01": ["t", ["SANS-SERIF", "BOLD"]], "\ud835\ude02": ["u", ["SANS-SERIF", "BOLD"]], "\ud835\ude03": ["v", ["SANS-SERIF", "BOLD"]], "\ud835\ude04": ["w", ["SANS-SERIF", "BOLD"]], "\ud835\ude05": ["x", ["SANS-SERIF", "BOLD"]], "\ud835\ude06": ["y", ["SANS-SERIF", "BOLD"]], "\ud835\ude07": ["z", ["SANS-SERIF", "BOLD"]], "\ud835\ude08": ["A", ["SANS-SERIF", "ITALIC"]], "\ud835\ude09": ["B", ["SANS-SERIF", "ITALIC"]], "\ud835\ude0a": ["C", ["SANS-SERIF", "ITALIC"]], "\ud835\ude0b": ["D", ["SANS-SERIF", "ITALIC"]], "\ud835\ude0c": ["E", ["SANS-SERIF", "ITALIC"]], "\ud835\ude0d": ["F", ["SANS-SERIF", "ITALIC"]], "\ud835\ude0e": ["G", ["SANS-SERIF", "ITALIC"]], "\ud835\ude0f": ["H", ["SANS-SERIF", "ITALIC"]], "\ud835\ude10": ["I", ["SANS-SERIF", "ITALIC"]], "\ud835\ude11": ["J", ["SANS-SERIF", "ITALIC"]], "\ud835\ude12": ["K", ["SANS-SERIF", "ITALIC"]], "\ud835\ude13": ["L", ["SANS-SERIF", "ITALIC"]], "\ud835\ude14": ["M", ["SANS-SERIF", "ITALIC"]], "\ud835\ude15": ["N", ["SANS-SERIF", "ITALIC"]], "\ud835\ude16": ["O", ["SANS-SERIF", "ITALIC"]], "\ud835\ude17": ["P", ["SANS-SERIF", "ITALIC"]], "\ud835\ude18": ["Q", ["SANS-SERIF", "ITALIC"]], "\ud835\ude19": ["R", ["SANS-SERIF", "ITALIC"]], "\ud835\ude1a": ["S", ["SANS-SERIF", "ITALIC"]], "\ud835\ude1b": ["T", ["SANS-SERIF", "ITALIC"]], "\ud835\ude1c": ["U", ["SANS-SERIF", "ITALIC"]], "\ud835\ude1d": ["V", ["SANS-SERIF", "ITALIC"]], "\ud835\ude1e": ["W", ["SANS-SERIF", "ITALIC"]], "\ud835\ude1f": ["X", ["SANS-SERIF", "ITALIC"]], "\ud835\ude20": ["Y", ["SANS-SERIF", "ITALIC"]], "\ud835\ude21": ["Z", ["SANS-SERIF", "ITALIC"]], "\ud835\ude22": ["a", ["SANS-SERIF", "ITALIC"]], "\ud835\ude23": ["b", ["SANS-SERIF", "ITALIC"]], "\ud835\ude24": ["c", ["SANS-SERIF", "ITALIC"]], "\ud835\ude25": ["d", ["SANS-SERIF", "ITALIC"]], "\ud835\ude26": ["e", ["SANS-SERIF", "ITALIC"]], "\ud835\ude27": ["f", ["SANS-SERIF", "ITALIC"]], "\ud835\ude28": ["g", ["SANS-SERIF", "ITALIC"]], "\ud835\ude29": ["h", ["SANS-SERIF", "ITALIC"]], "\ud835\ude2a": ["i", ["SANS-SERIF", "ITALIC"]], "\ud835\ude2b": ["j", ["SANS-SERIF", "ITALIC"]], "\ud835\ude2c": ["k", ["SANS-SERIF", "ITALIC"]], "\ud835\ude2d": ["l", ["SANS-SERIF", "ITALIC"]], "\ud835\ude2e": ["m", ["SANS-SERIF", "ITALIC"]], "\ud835\ude2f": ["n", ["SANS-SERIF", "ITALIC"]], "\ud835\ude30": ["o", ["SANS-SERIF", "ITALIC"]], "\ud835\ude31": ["p", ["SANS-SERIF", "ITALIC"]], "\ud835\ude32": ["q", ["SANS-SERIF", "ITALIC"]], "\ud835\ude33": ["r", ["SANS-SERIF", "ITALIC"]], "\ud835\ude34": ["s", ["SANS-SERIF", "ITALIC"]], "\ud835\ude35": ["t", ["SANS-SERIF", "ITALIC"]], "\ud835\ude36": ["u", ["SANS-SERIF", "ITALIC"]], "\ud835\ude37": ["v", ["SANS-SERIF", "ITALIC"]], "\ud835\ude38": ["w", ["SANS-SERIF", "ITALIC"]], "\ud835\ude39": ["x", ["SANS-SERIF", "ITALIC"]], "\ud835\ude3a": ["y", ["SANS-SERIF", "ITALIC"]], "\ud835\ude3b": ["z", ["SANS-SERIF", "ITALIC"]], "\ud835\ude3c": ["A", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude3d": ["B", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude3e": ["C", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude3f": ["D", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude40": ["E", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude41": ["F", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude42": ["G", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude43": ["H", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude44": ["I", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude45": ["J", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude46": ["K", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude47": ["L", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude48": ["M", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude49": ["N", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude4a": ["O", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude4b": ["P", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude4c": ["Q", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude4d": ["R", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude4e": ["S", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude4f": ["T", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude50": ["U", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude51": ["V", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude52": ["W", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude53": ["X", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude54": ["Y", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude55": ["Z", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude56": ["a", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude57": ["b", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude58": ["c", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude59": ["d", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude5a": ["e", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude5b": ["f", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude5c": ["g", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude5d": ["h", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude5e": ["i", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude5f": ["j", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude60": ["k", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude61": ["l", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude62": ["m", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude63": ["n", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude64": ["o", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude65": ["p", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude66": ["q", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude67": ["r", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude68": ["s", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude69": ["t", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude6a": ["u", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude6b": ["v", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude6c": ["w", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude6d": ["x", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude6e": ["y", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude6f": ["z", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\ude70": ["A", ["MONOSPACE"]], "\ud835\ude71": ["B", ["MONOSPACE"]], "\ud835\ude72": ["C", ["MONOSPACE"]], "\ud835\ude73": ["D", ["MONOSPACE"]], "\ud835\ude74": ["E", ["MONOSPACE"]], "\ud835\ude75": ["F", ["MONOSPACE"]], "\ud835\ude76": ["G", ["MONOSPACE"]], "\ud835\ude77": ["H", ["MONOSPACE"]], "\ud835\ude78": ["I", ["MONOSPACE"]], "\ud835\ude79": ["J", ["MONOSPACE"]], "\ud835\ude7a": ["K", ["MONOSPACE"]], "\ud835\ude7b": ["L", ["MONOSPACE"]], "\ud835\ude7c": ["M", ["MONOSPACE"]], "\ud835\ude7d": ["N", ["MONOSPACE"]], "\ud835\ude7e": ["O", ["MONOSPACE"]], "\ud835\ude7f": ["P", ["MONOSPACE"]], "\ud835\ude80": ["Q", ["MONOSPACE"]], "\ud835\ude81": ["R", ["MONOSPACE"]], "\ud835\ude82": ["S", ["MONOSPACE"]], "\ud835\ude83": ["T", ["MONOSPACE"]], "\ud835\ude84": ["U", ["MONOSPACE"]], "\ud835\ude85": ["V", ["MONOSPACE"]], "\ud835\ude86": ["W", ["MONOSPACE"]], "\ud835\ude87": ["X", ["MONOSPACE"]], "\ud835\ude88": ["Y", ["MONOSPACE"]], "\ud835\ude89": ["Z", ["MONOSPACE"]], "\ud835\ude8a": ["a", ["MONOSPACE"]], "\ud835\ude8b": ["b", ["MONOSPACE"]], "\ud835\ude8c": ["c", ["MONOSPACE"]], "\ud835\ude8d": ["d", ["MONOSPACE"]], "\ud835\ude8e": ["e", ["MONOSPACE"]], "\ud835\ude8f": ["f", ["MONOSPACE"]], "\ud835\ude90": ["g", ["MONOSPACE"]], "\ud835\ude91": ["h", ["MONOSPACE"]], "\ud835\ude92": ["i", ["MONOSPACE"]], "\ud835\ude93": ["j", ["MONOSPACE"]], "\ud835\ude94": ["k", ["MONOSPACE"]], "\ud835\ude95": ["l", ["MONOSPACE"]], "\ud835\ude96": ["m", ["MONOSPACE"]], "\ud835\ude97": ["n", ["MONOSPACE"]], "\ud835\ude98": ["o", ["MONOSPACE"]], "\ud835\ude99": ["p", ["MONOSPACE"]], "\ud835\ude9a": ["q", ["MONOSPACE"]], "\ud835\ude9b": ["r", ["MONOSPACE"]], "\ud835\ude9c": ["s", ["MONOSPACE"]], "\ud835\ude9d": ["t", ["MONOSPACE"]], "\ud835\ude9e": ["u", ["MONOSPACE"]], "\ud835\ude9f": ["v", ["MONOSPACE"]], "\ud835\udea0": ["w", ["MONOSPACE"]], "\ud835\udea1": ["x", ["MONOSPACE"]], "\ud835\udea2": ["y", ["MONOSPACE"]], "\ud835\udea3": ["z", ["MONOSPACE"]], "\ud835\udea4": ["\u0131", ["ITALIC"]], "\ud835\udea5": ["\u0237", ["ITALIC"]], "\ud835\udea8": ["\u0391", ["BOLD"]], "\ud835\udea9": ["\u0392", ["BOLD"]], "\ud835\udeaa": ["\u0393", ["BOLD"]], "\ud835\udeab": ["\u0394", ["BOLD"]], "\ud835\udeac": ["\u0395", ["BOLD"]], "\ud835\udead": ["\u0396", ["BOLD"]], "\ud835\udeae": ["\u0397", ["BOLD"]], "\ud835\udeaf": ["\u0398", ["BOLD"]], "\ud835\udeb0": ["\u0399", ["BOLD"]], "\ud835\udeb1": ["\u039a", ["BOLD"]], "\ud835\udeb2": ["\u039b", ["BOLD"]], "\ud835\udeb3": ["\u039c", ["BOLD"]], "\ud835\udeb4": ["\u039d", ["BOLD"]], "\ud835\udeb5": ["\u039e", ["BOLD"]], "\ud835\udeb6": ["\u039f", ["BOLD"]], "\ud835\udeb7": ["\u03a0", ["BOLD"]], "\ud835\udeb8": ["\u03a1", ["BOLD"]], "\ud835\udeb9": ["\u0398", ["BOLD"]], "\ud835\udeba": ["\u03a3", ["BOLD"]], "\ud835\udebb": ["\u03a4", ["BOLD"]], "\ud835\udebc": ["\u03a5", ["BOLD"]], "\ud835\udebd": ["\u03a6", ["BOLD"]], "\ud835\udebe": ["\u03a7", ["BOLD"]], "\ud835\udebf": ["\u03a8", ["BOLD"]], "\ud835\udec0": ["\u03a9", ["BOLD"]], "\ud835\udec2": ["\u03b1", ["BOLD"]], "\ud835\udec3": ["\u03b2", ["BOLD"]], "\ud835\udec4": ["\u03b3", ["BOLD"]], "\ud835\udec5": ["\u03b4", ["BOLD"]], "\ud835\udec6": ["\u03b5", ["BOLD"]], "\ud835\udec7": ["\u03b6", ["BOLD"]], "\ud835\udec8": ["\u03b7", ["BOLD"]], "\ud835\udec9": ["\u03b8", ["BOLD"]], "\ud835\udeca": ["\u03b9", ["BOLD"]], "\ud835\udecb": ["\u03ba", ["BOLD"]], "\ud835\udecc": ["\u03bb", ["BOLD"]], "\ud835\udecd": ["\u03bc", ["BOLD"]], "\ud835\udece": ["\u03bd", ["BOLD"]], "\ud835\udecf": ["\u03be", ["BOLD"]], "\ud835\uded0": ["\u03bf", ["BOLD"]], "\ud835\uded1": ["\u03c0", ["BOLD"]], "\ud835\uded2": ["\u03c1", ["BOLD"]], "\ud835\uded3": ["\u03c2", ["BOLD"]], "\ud835\uded4": ["\u03c3", ["BOLD"]], "\ud835\uded5": ["\u03c4", ["BOLD"]], "\ud835\uded6": ["\u03c5", ["BOLD"]], "\ud835\uded7": ["\u03c6", ["BOLD"]], "\ud835\uded8": ["\u03c7", ["BOLD"]], "\ud835\uded9": ["\u03c8", ["BOLD"]], "\ud835\udeda": ["\u03c9", ["BOLD"]], "\ud835\udedc": ["\u03b5", ["BOLD"]], "\ud835\udedd": ["\u03b8", ["BOLD"]], "\ud835\udede": ["\u03ba", ["BOLD"]], "\ud835\udedf": ["\u03c6", ["BOLD"]], "\ud835\udee0": ["\u03c1", ["BOLD"]], "\ud835\udee1": ["\u03c0", ["BOLD"]], "\ud835\udee2": ["\u0391", ["ITALIC"]], "\ud835\udee3": ["\u0392", ["ITALIC"]], "\ud835\udee4": ["\u0393", ["ITALIC"]], "\ud835\udee5": ["\u0394", ["ITALIC"]], "\ud835\udee6": ["\u0395", ["ITALIC"]], "\ud835\udee7": ["\u0396", ["ITALIC"]], "\ud835\udee8": ["\u0397", ["ITALIC"]], "\ud835\udee9": ["\u0398", ["ITALIC"]], "\ud835\udeea": ["\u0399", ["ITALIC"]], "\ud835\udeeb": ["\u039a", ["ITALIC"]], "\ud835\udeec": ["\u039b", ["ITALIC"]], "\ud835\udeed": ["\u039c", ["ITALIC"]], "\ud835\udeee": ["\u039d", ["ITALIC"]], "\ud835\udeef": ["\u039e", ["ITALIC"]], "\ud835\udef0": ["\u039f", ["ITALIC"]], "\ud835\udef1": ["\u03a0", ["ITALIC"]], "\ud835\udef2": ["\u03a1", ["ITALIC"]], "\ud835\udef3": ["\u0398", ["ITALIC"]], "\ud835\udef4": ["\u03a3", ["ITALIC"]], "\ud835\udef5": ["\u03a4", ["ITALIC"]], "\ud835\udef6": ["\u03a5", ["ITALIC"]], "\ud835\udef7": ["\u03a6", ["ITALIC"]], "\ud835\udef8": ["\u03a7", ["ITALIC"]], "\ud835\udef9": ["\u03a8", ["ITALIC"]], "\ud835\udefa": ["\u03a9", ["ITALIC"]], "\ud835\udefc": ["\u03b1", ["ITALIC"]], "\ud835\udefd": ["\u03b2", ["ITALIC"]], "\ud835\udefe": ["\u03b3", ["ITALIC"]], "\ud835\udeff": ["\u03b4", ["ITALIC"]], "\ud835\udf00": ["\u03b5", ["ITALIC"]], "\ud835\udf01": ["\u03b6", ["ITALIC"]], "\ud835\udf02": ["\u03b7", ["ITALIC"]], "\ud835\udf03": ["\u03b8", ["ITALIC"]], "\ud835\udf04": ["\u03b9", ["ITALIC"]], "\ud835\udf05": ["\u03ba", ["ITALIC"]], "\ud835\udf06": ["\u03bb", ["ITALIC"]], "\ud835\udf07": ["\u03bc", ["ITALIC"]], "\ud835\udf08": ["\u03bd", ["ITALIC"]], "\ud835\udf09": ["\u03be", ["ITALIC"]], "\ud835\udf0a": ["\u03bf", ["ITALIC"]], "\ud835\udf0b": ["\u03c0", ["ITALIC"]], "\ud835\udf0c": ["\u03c1", ["ITALIC"]], "\ud835\udf0d": ["\u03c2", ["ITALIC"]], "\ud835\udf0e": ["\u03c3", ["ITALIC"]], "\ud835\udf0f": ["\u03c4", ["ITALIC"]], "\ud835\udf10": ["\u03c5", ["ITALIC"]], "\ud835\udf11": ["\u03c6", ["ITALIC"]], "\ud835\udf12": ["\u03c7", ["ITALIC"]], "\ud835\udf13": ["\u03c8", ["ITALIC"]], "\ud835\udf14": ["\u03c9", ["ITALIC"]], "\ud835\udf16": ["\u03b5", ["ITALIC"]], "\ud835\udf17": ["\u03b8", ["ITALIC"]], "\ud835\udf18": ["\u03ba", ["ITALIC"]], "\ud835\udf19": ["\u03c6", ["ITALIC"]], "\ud835\udf1a": ["\u03c1", ["ITALIC"]], "\ud835\udf1b": ["\u03c0", ["ITALIC"]], "\ud835\udf1c": ["\u0391", ["BOLD", "ITALIC"]], "\ud835\udf1d": ["\u0392", ["BOLD", "ITALIC"]], "\ud835\udf1e": ["\u0393", ["BOLD", "ITALIC"]], "\ud835\udf1f": ["\u0394", ["BOLD", "ITALIC"]], "\ud835\udf20": ["\u0395", ["BOLD", "ITALIC"]], "\ud835\udf21": ["\u0396", ["BOLD", "ITALIC"]], "\ud835\udf22": ["\u0397", ["BOLD", "ITALIC"]], "\ud835\udf23": ["\u0398", ["BOLD", "ITALIC"]], "\ud835\udf24": ["\u0399", ["BOLD", "ITALIC"]], "\ud835\udf25": ["\u039a", ["BOLD", "ITALIC"]], "\ud835\udf26": ["\u039b", ["BOLD", "ITALIC"]], "\ud835\udf27": ["\u039c", ["BOLD", "ITALIC"]], "\ud835\udf28": ["\u039d", ["BOLD", "ITALIC"]], "\ud835\udf29": ["\u039e", ["BOLD", "ITALIC"]], "\ud835\udf2a": ["\u039f", ["BOLD", "ITALIC"]], "\ud835\udf2b": ["\u03a0", ["BOLD", "ITALIC"]], "\ud835\udf2c": ["\u03a1", ["BOLD", "ITALIC"]], "\ud835\udf2d": ["\u0398", ["BOLD", "ITALIC"]], "\ud835\udf2e": ["\u03a3", ["BOLD", "ITALIC"]], "\ud835\udf2f": ["\u03a4", ["BOLD", "ITALIC"]], "\ud835\udf30": ["\u03a5", ["BOLD", "ITALIC"]], "\ud835\udf31": ["\u03a6", ["BOLD", "ITALIC"]], "\ud835\udf32": ["\u03a7", ["BOLD", "ITALIC"]], "\ud835\udf33": ["\u03a8", ["BOLD", "ITALIC"]], "\ud835\udf34": ["\u03a9", ["BOLD", "ITALIC"]], "\ud835\udf36": ["\u03b1", ["BOLD", "ITALIC"]], "\ud835\udf37": ["\u03b2", ["BOLD", "ITALIC"]], "\ud835\udf38": ["\u03b3", ["BOLD", "ITALIC"]], "\ud835\udf39": ["\u03b4", ["BOLD", "ITALIC"]], "\ud835\udf3a": ["\u03b5", ["BOLD", "ITALIC"]], "\ud835\udf3b": ["\u03b6", ["BOLD", "ITALIC"]], "\ud835\udf3c": ["\u03b7", ["BOLD", "ITALIC"]], "\ud835\udf3d": ["\u03b8", ["BOLD", "ITALIC"]], "\ud835\udf3e": ["\u03b9", ["BOLD", "ITALIC"]], "\ud835\udf3f": ["\u03ba", ["BOLD", "ITALIC"]], "\ud835\udf40": ["\u03bb", ["BOLD", "ITALIC"]], "\ud835\udf41": ["\u03bc", ["BOLD", "ITALIC"]], "\ud835\udf42": ["\u03bd", ["BOLD", "ITALIC"]], "\ud835\udf43": ["\u03be", ["BOLD", "ITALIC"]], "\ud835\udf44": ["\u03bf", ["BOLD", "ITALIC"]], "\ud835\udf45": ["\u03c0", ["BOLD", "ITALIC"]], "\ud835\udf46": ["\u03c1", ["BOLD", "ITALIC"]], "\ud835\udf47": ["\u03c2", ["BOLD", "ITALIC"]], "\ud835\udf48": ["\u03c3", ["BOLD", "ITALIC"]], "\ud835\udf49": ["\u03c4", ["BOLD", "ITALIC"]], "\ud835\udf4a": ["\u03c5", ["BOLD", "ITALIC"]], "\ud835\udf4b": ["\u03c6", ["BOLD", "ITALIC"]], "\ud835\udf4c": ["\u03c7", ["BOLD", "ITALIC"]], "\ud835\udf4d": ["\u03c8", ["BOLD", "ITALIC"]], "\ud835\udf4e": ["\u03c9", ["BOLD", "ITALIC"]], "\ud835\udf50": ["\u03b5", ["BOLD", "ITALIC"]], "\ud835\udf51": ["\u03b8", ["BOLD", "ITALIC"]], "\ud835\udf52": ["\u03ba", ["BOLD", "ITALIC"]], "\ud835\udf53": ["\u03c6", ["BOLD", "ITALIC"]], "\ud835\udf54": ["\u03c1", ["BOLD", "ITALIC"]], "\ud835\udf55": ["\u03c0", ["BOLD", "ITALIC"]], "\ud835\udf56": ["\u0391", ["SANS-SERIF", "BOLD"]], "\ud835\udf57": ["\u0392", ["SANS-SERIF", "BOLD"]], "\ud835\udf58": ["\u0393", ["SANS-SERIF", "BOLD"]], "\ud835\udf59": ["\u0394", ["SANS-SERIF", "BOLD"]], "\ud835\udf5a": ["\u0395", ["SANS-SERIF", "BOLD"]], "\ud835\udf5b": ["\u0396", ["SANS-SERIF", "BOLD"]], "\ud835\udf5c": ["\u0397", ["SANS-SERIF", "BOLD"]], "\ud835\udf5d": ["\u0398", ["SANS-SERIF", "BOLD"]], "\ud835\udf5e": ["\u0399", ["SANS-SERIF", "BOLD"]], "\ud835\udf5f": ["\u039a", ["SANS-SERIF", "BOLD"]], "\ud835\udf60": ["\u039b", ["SANS-SERIF", "BOLD"]], "\ud835\udf61": ["\u039c", ["SANS-SERIF", "BOLD"]], "\ud835\udf62": ["\u039d", ["SANS-SERIF", "BOLD"]], "\ud835\udf63": ["\u039e", ["SANS-SERIF", "BOLD"]], "\ud835\udf64": ["\u039f", ["SANS-SERIF", "BOLD"]], "\ud835\udf65": ["\u03a0", ["SANS-SERIF", "BOLD"]], "\ud835\udf66": ["\u03a1", ["SANS-SERIF", "BOLD"]], "\ud835\udf67": ["\u0398", ["SANS-SERIF", "BOLD"]], "\ud835\udf68": ["\u03a3", ["SANS-SERIF", "BOLD"]], "\ud835\udf69": ["\u03a4", ["SANS-SERIF", "BOLD"]], "\ud835\udf6a": ["\u03a5", ["SANS-SERIF", "BOLD"]], "\ud835\udf6b": ["\u03a6", ["SANS-SERIF", "BOLD"]], "\ud835\udf6c": ["\u03a7", ["SANS-SERIF", "BOLD"]], "\ud835\udf6d": ["\u03a8", ["SANS-SERIF", "BOLD"]], "\ud835\udf6e": ["\u03a9", ["SANS-SERIF", "BOLD"]], "\ud835\udf70": ["\u03b1", ["SANS-SERIF", "BOLD"]], "\ud835\udf71": ["\u03b2", ["SANS-SERIF", "BOLD"]], "\ud835\udf72": ["\u03b3", ["SANS-SERIF", "BOLD"]], "\ud835\udf73": ["\u03b4", ["SANS-SERIF", "BOLD"]], "\ud835\udf74": ["\u03b5", ["SANS-SERIF", "BOLD"]], "\ud835\udf75": ["\u03b6", ["SANS-SERIF", "BOLD"]], "\ud835\udf76": ["\u03b7", ["SANS-SERIF", "BOLD"]], "\ud835\udf77": ["\u03b8", ["SANS-SERIF", "BOLD"]], "\ud835\udf78": ["\u03b9", ["SANS-SERIF", "BOLD"]], "\ud835\udf79": ["\u03ba", ["SANS-SERIF", "BOLD"]], "\ud835\udf7a": ["\u03bb", ["SANS-SERIF", "BOLD"]], "\ud835\udf7b": ["\u03bc", ["SANS-SERIF", "BOLD"]], "\ud835\udf7c": ["\u03bd", ["SANS-SERIF", "BOLD"]], "\ud835\udf7d": ["\u03be", ["SANS-SERIF", "BOLD"]], "\ud835\udf7e": ["\u03bf", ["SANS-SERIF", "BOLD"]], "\ud835\udf7f": ["\u03c0", ["SANS-SERIF", "BOLD"]], "\ud835\udf80": ["\u03c1", ["SANS-SERIF", "BOLD"]], "\ud835\udf81": ["\u03c2", ["SANS-SERIF", "BOLD"]], "\ud835\udf82": ["\u03c3", ["SANS-SERIF", "BOLD"]], "\ud835\udf83": ["\u03c4", ["SANS-SERIF", "BOLD"]], "\ud835\udf84": ["\u03c5", ["SANS-SERIF", "BOLD"]], "\ud835\udf85": ["\u03c6", ["SANS-SERIF", "BOLD"]], "\ud835\udf86": ["\u03c7", ["SANS-SERIF", "BOLD"]], "\ud835\udf87": ["\u03c8", ["SANS-SERIF", "BOLD"]], "\ud835\udf88": ["\u03c9", ["SANS-SERIF", "BOLD"]], "\ud835\udf8a": ["\u03b5", ["SANS-SERIF", "BOLD"]], "\ud835\udf8b": ["\u03b8", ["SANS-SERIF", "BOLD"]], "\ud835\udf8c": ["\u03ba", ["SANS-SERIF", "BOLD"]], "\ud835\udf8d": ["\u03c6", ["SANS-SERIF", "BOLD"]], "\ud835\udf8e": ["\u03c1", ["SANS-SERIF", "BOLD"]], "\ud835\udf8f": ["\u03c0", ["SANS-SERIF", "BOLD"]], "\ud835\udf90": ["\u0391", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udf91": ["\u0392", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udf92": ["\u0393", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udf93": ["\u0394", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udf94": ["\u0395", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udf95": ["\u0396", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udf96": ["\u0397", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udf97": ["\u0398", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udf98": ["\u0399", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udf99": ["\u039a", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udf9a": ["\u039b", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udf9b": ["\u039c", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udf9c": ["\u039d", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udf9d": ["\u039e", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udf9e": ["\u039f", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udf9f": ["\u03a0", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfa0": ["\u03a1", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfa1": ["\u0398", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfa2": ["\u03a3", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfa3": ["\u03a4", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfa4": ["\u03a5", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfa5": ["\u03a6", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfa6": ["\u03a7", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfa7": ["\u03a8", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfa8": ["\u03a9", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfaa": ["\u03b1", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfab": ["\u03b2", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfac": ["\u03b3", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfad": ["\u03b4", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfae": ["\u03b5", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfaf": ["\u03b6", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfb0": ["\u03b7", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfb1": ["\u03b8", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfb2": ["\u03b9", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfb3": ["\u03ba", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfb4": ["\u03bb", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfb5": ["\u03bc", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfb6": ["\u03bd", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfb7": ["\u03be", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfb8": ["\u03bf", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfb9": ["\u03c0", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfba": ["\u03c1", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfbb": ["\u03c2", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfbc": ["\u03c3", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfbd": ["\u03c4", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfbe": ["\u03c5", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfbf": ["\u03c6", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfc0": ["\u03c7", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfc1": ["\u03c8", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfc2": ["\u03c9", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfc4": ["\u03b5", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfc5": ["\u03b8", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfc6": ["\u03ba", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfc7": ["\u03c6", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfc8": ["\u03c1", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfc9": ["\u03c0", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfca": ["\u03dc", ["BOLD"]], "\ud835\udfcb": ["\u03dd", ["BOLD"]], "\ud83b\ude00": ["\u0627", []], "\ud83b\ude01": ["\u0628", []], "\ud83b\ude02": ["\u062c", []], "\ud83b\ude03": ["\u062f", []], "\ud83b\ude05": ["\u0648", []], "\ud83b\ude06": ["\u0632", []], "\ud83b\ude07": ["\u062d", []], "\ud83b\ude08": ["\u0637", []], "\ud83b\ude09": ["\u064a", []], "\ud83b\ude0a": ["\u0643", []], "\ud83b\ude0b": ["\u0644", []], "\ud83b\ude0c": ["\u0645", []], "\ud83b\ude0d": ["\u0646", []], "\ud83b\ude0e": ["\u0633", []], "\ud83b\ude0f": ["\u0639", []], "\ud83b\ude10": ["\u0641", []], "\ud83b\ude11": ["\u0635", []], "\ud83b\ude12": ["\u0642", []], "\ud83b\ude13": ["\u0631", []], "\ud83b\ude14": ["\u0634", []], "\ud83b\ude15": ["\u062a", []], "\ud83b\ude16": ["\u062b", []], "\ud83b\ude17": ["\u062e", []], "\ud83b\ude18": ["\u0630", []], "\ud83b\ude19": ["\u0636", []], "\ud83b\ude1a": ["\u0638", []], "\ud83b\ude1b": ["\u063a", []], "\ud83b\ude1c": ["\u066e", ["DOTLESS"]], "\ud83b\ude1d": ["\u06ba", ["DOTLESS"]], "\ud83b\ude1e": ["\u06a1", ["DOTLESS"]], "\ud83b\ude1f": ["\u066f", ["DOTLESS"]], "\ud83b\ude21": ["\u0628", ["INITIAL"]], "\ud83b\ude22": ["\u062c", ["INITIAL"]], "\ud83b\ude24": ["\u0647", ["INITIAL"]], "\ud83b\ude27": ["\u062d", ["INITIAL"]], "\ud83b\ude29": ["\u064a", ["INITIAL"]], "\ud83b\ude2a": ["\u0643", ["INITIAL"]], "\ud83b\ude2b": ["\u0644", ["INITIAL"]], "\ud83b\ude2c": ["\u0645", ["INITIAL"]], "\ud83b\ude2d": ["\u0646", ["INITIAL"]], "\ud83b\ude2e": ["\u0633", ["INITIAL"]], "\ud83b\ude2f": ["\u0639", ["INITIAL"]], "\ud83b\ude30": ["\u0641", ["INITIAL"]], "\ud83b\ude31": ["\u0635", ["INITIAL"]], "\ud83b\ude32": ["\u0642", ["INITIAL"]], "\ud83b\ude34": ["\u0634", ["INITIAL"]], "\ud83b\ude35": ["\u062a", ["INITIAL"]], "\ud83b\ude36": ["\u062b", ["INITIAL"]], "\ud83b\ude37": ["\u062e", ["INITIAL"]], "\ud83b\ude39": ["\u0636", ["INITIAL"]], "\ud83b\ude3b": ["\u063a", ["INITIAL"]], "\ud83b\ude42": ["\u062c", ["TAILED"]], "\ud83b\ude47": ["\u062d", ["TAILED"]], "\ud83b\ude49": ["\u064a", ["TAILED"]], "\ud83b\ude4b": ["\u0644", ["TAILED"]], "\ud83b\ude4d": ["\u0646", ["TAILED"]], "\ud83b\ude4e": ["\u0633", ["TAILED"]], "\ud83b\ude4f": ["\u0639", ["TAILED"]], "\ud83b\ude51": ["\u0635", ["TAILED"]], "\ud83b\ude52": ["\u0642", ["TAILED"]], "\ud83b\ude54": ["\u0634", ["TAILED"]], "\ud83b\ude57": ["\u062e", ["TAILED"]], "\ud83b\ude59": ["\u0636", ["TAILED"]], "\ud83b\ude5b": ["\u063a", ["TAILED"]], "\ud83b\ude5d": ["\u06ba", ["TAILED", "DOTLESS"]], "\ud83b\ude5f": ["\u066f", ["TAILED", "DOTLESS"]], "\ud83b\ude61": ["\u0628", ["STRETCHED"]], "\ud83b\ude62": ["\u062c", ["STRETCHED"]], "\ud83b\ude64": ["\u0647", ["STRETCHED"]], "\ud83b\ude67": ["\u062d", ["STRETCHED"]], "\ud83b\ude68": ["\u0637", ["STRETCHED"]], "\ud83b\ude69": ["\u064a", ["STRETCHED"]], "\ud83b\ude6a": ["\u0643", ["STRETCHED"]], "\ud83b\ude6c": ["\u0645", ["STRETCHED"]], "\ud83b\ude6d": ["\u0646", ["STRETCHED"]], "\ud83b\ude6e": ["\u0633", ["STRETCHED"]], "\ud83b\ude6f": ["\u0639", ["STRETCHED"]], "\ud83b\ude70": ["\u0641", ["STRETCHED"]], "\ud83b\ude71": ["\u0635", ["STRETCHED"]], "\ud83b\ude72": ["\u0642", ["STRETCHED"]], "\ud83b\ude74": ["\u0634", ["STRETCHED"]], "\ud83b\ude75": ["\u062a", ["STRETCHED"]], "\ud83b\ude76": ["\u062b", ["STRETCHED"]], "\ud83b\ude77": ["\u062e", ["STRETCHED"]], "\ud83b\ude79": ["\u0636", ["STRETCHED"]], "\ud83b\ude7a": ["\u0638", ["STRETCHED"]], "\ud83b\ude7b": ["\u063a", ["STRETCHED"]], "\ud83b\ude7c": ["\u066e", ["STRETCHED", "DOTLESS"]], "\ud83b\ude7e": ["\u06a1", ["STRETCHED", "DOTLESS"]], "\ud83b\ude80": ["\u0627", ["LOOPED"]], "\ud83b\ude81": ["\u0628", ["LOOPED"]], "\ud83b\ude82": ["\u062c", ["LOOPED"]], "\ud83b\ude83": ["\u062f", ["LOOPED"]], "\ud83b\ude84": ["\u0647", ["LOOPED"]], "\ud83b\ude85": ["\u0648", ["LOOPED"]], "\ud83b\ude86": ["\u0632", ["LOOPED"]], "\ud83b\ude87": ["\u062d", ["LOOPED"]], "\ud83b\ude88": ["\u0637", ["LOOPED"]], "\ud83b\ude89": ["\u064a", ["LOOPED"]], "\ud83b\ude8b": ["\u0644", ["LOOPED"]], "\ud83b\ude8c": ["\u0645", ["LOOPED"]], "\ud83b\ude8d": ["\u0646", ["LOOPED"]], "\ud83b\ude8e": ["\u0633", ["LOOPED"]], "\ud83b\ude8f": ["\u0639", ["LOOPED"]], "\ud83b\ude90": ["\u0641", ["LOOPED"]], "\ud83b\ude91": ["\u0635", ["LOOPED"]], "\ud83b\ude92": ["\u0642", ["LOOPED"]], "\ud83b\ude93": ["\u0631", ["LOOPED"]], "\ud83b\ude94": ["\u0634", ["LOOPED"]], "\ud83b\ude95": ["\u062a", ["LOOPED"]], "\ud83b\ude96": ["\u062b", ["LOOPED"]], "\ud83b\ude97": ["\u062e", ["LOOPED"]], "\ud83b\ude98": ["\u0630", ["LOOPED"]], "\ud83b\ude99": ["\u0636", ["LOOPED"]], "\ud83b\ude9a": ["\u0638", ["LOOPED"]], "\ud83b\ude9b": ["\u063a", ["LOOPED"]], "\ud83b\udea1": ["\u0628", ["DOUBLE-STRUCK"]], "\ud83b\udea2": ["\u062c", ["DOUBLE-STRUCK"]], "\ud83b\udea3": ["\u062f", ["DOUBLE-STRUCK"]], "\ud83b\udea5": ["\u0648", ["DOUBLE-STRUCK"]], "\ud83b\udea6": ["\u0632", ["DOUBLE-STRUCK"]], "\ud83b\udea7": ["\u062d", ["DOUBLE-STRUCK"]], "\ud83b\udea8": ["\u0637", ["DOUBLE-STRUCK"]], "\ud83b\udea9": ["\u064a", ["DOUBLE-STRUCK"]], "\ud83b\udeab": ["\u0644", ["DOUBLE-STRUCK"]], "\ud83b\udeac": ["\u0645", ["DOUBLE-STRUCK"]], "\ud83b\udead": ["\u0646", ["DOUBLE-STRUCK"]], "\ud83b\udeae": ["\u0633", ["DOUBLE-STRUCK"]], "\ud83b\udeaf": ["\u0639", ["DOUBLE-STRUCK"]], "\ud83b\udeb0": ["\u0641", ["DOUBLE-STRUCK"]], "\ud83b\udeb1": ["\u0635", ["DOUBLE-STRUCK"]], "\ud83b\udeb2": ["\u0642", ["DOUBLE-STRUCK"]], "\ud83b\udeb3": ["\u0631", ["DOUBLE-STRUCK"]], "\ud83b\udeb4": ["\u0634", ["DOUBLE-STRUCK"]], "\ud83b\udeb5": ["\u062a", ["DOUBLE-STRUCK"]], "\ud83b\udeb6": ["\u062b", ["DOUBLE-STRUCK"]], "\ud83b\udeb7": ["\u062e", ["DOUBLE-STRUCK"]], "\ud83b\udeb8": ["\u0630", ["DOUBLE-STRUCK"]], "\ud83b\udeb9": ["\u0636", ["DOUBLE-STRUCK"]], "\ud83b\udeba": ["\u0638", ["DOUBLE-STRUCK"]], "\ud83b\udebb": ["\u063a", ["DOUBLE-STRUCK"]], "\u00b5": ["\u03bc", []], "\u2107": ["E", []], "\u210e": ["h", []], "\u210f": ["hbar", []], "\u2126": ["omega", []], "\u2127": ["ohm", []], "\u212b": ["A", ["RING"]], "\u2102": ["C", ["DOUBLE-STRUCK"]], "\u210d": ["H", ["DOUBLE-STRUCK"]], "\u2115": ["N", ["DOUBLE-STRUCK"]], "\u2119": ["P", ["DOUBLE-STRUCK"]], "\u211a": ["Q", ["DOUBLE-STRUCK"]], "\u211d": ["R", ["DOUBLE-STRUCK"]], "\u2124": ["Z", ["DOUBLE-STRUCK"]], "\u213c": ["pi", ["DOUBLE-STRUCK"]], "\u213d": ["gamma", ["DOUBLE-STRUCK"]], "\u213e": ["gamma", ["DOUBLE-STRUCK"]], "\u213f": ["Pi", []], "\u2145": ["D", ["DOUBLE-STRUCK", "ITALIC"]], "\u2146": ["d", ["DOUBLE-STRUCK", "ITALIC"]], "\u2147": ["e", ["DOUBLE-STRUCK", "ITALIC"]], "\u2148": ["i", ["DOUBLE-STRUCK", "ITALIC"]], "\u2149": ["j", ["DOUBLE-STRUCK", "ITALIC"]], "\u210a": ["g", ["SCRIPT"]], "\u210b": ["H", ["SCRIPT"]], "\u2110": ["I", ["SCRIPT"]], "\u2112": ["L", ["SCRIPT"]], "\u2113": ["l", ["SCRIPT"]], "\u211b": ["R", ["SCRIPT"]], "\u212c": ["B", ["SCRIPT"]], "\u212f": ["e", ["SCRIPT"]], "\u2130": ["E", ["SCRIPT"]], "\u2131": ["F", ["SCRIPT"]], "\u2133": ["M", ["SCRIPT"]], "\u2134": ["o", ["SCRIPT"]], "\u210c": ["H", ["BLACK-LETTER"]], "\u2111": ["I", ["BLACK-LETTER"]], "\u211c": ["R", ["BLACK-LETTER"]], "\u2128": ["Z", ["BLACK-LETTER"]], "\u212d": ["C", ["BLACK-LETTER"]], "\u2135": ["alef", []], "\u2136": ["bet", []], "\u2137": ["gimel", []], "\u2138": ["dalet", []], "\u221e": ["infinity", []], "\u2205": ["emptyset", []], "\u29b0": ["emptyset", []]}, "symbols": {"~": ["~", []], "\u00ac": ["not", []], "\u00d7": ["*", []], "\u00f7": ["/", []], "\u2208": ["in", []], "\u2213": ["pm", []], "\u2227": ["and", []], "\u2228": ["or", []], "\u00b1": ["pm", []], "\u0606": ["cube_root", []], "\u0607": ["fourth_root", []], "\u2044": ["/", []], "\u2052": ["-", []], "\u208b": ["-", []], "\u2118": ["P", ["SCRIPT"]], "\u2140": ["sum", ["DOUBLE-STRUCK"]], "\u2200": ["forall", []], "\u2201": ["complement", []], "\u2202": ["pdiff", []], "\u2203": ["exists", []], "\u2204": ["not exists", []], "\u2206": ["increment", []], "\u2207": ["nabla", []], "\u2209": ["not in", []], "\u220a": ["in", []], "\u220b": ["contains", []], "\u220c": ["not contains", []], "\u220d": ["contains", []], "\u220f": ["product", []], "\u2210": ["coproduct", []], "\u2211": ["sum", []], "\u2212": ["-", []], "\u2214": ["+", ["DOT"]], "\u2215": ["/", []], "\u2216": ["setminus", []], "\u2217": ["*", []], "\u2218": ["circ", []], "\u2219": ["cdot", []], "\u221a": ["sqrt", []], "\u221b": ["cube_root", []], "\u221c": ["fourth_root", []], "\u221d": ["propto", []], "\u221f": ["right_angle", []], "\u2220": ["angle", []], "\u2223": ["divides", []], "\u2224": ["not divides", []], "\u2225": ["parallel_to", []], "\u2226": ["not parallel_to", []], "\u2229": ["intersection", []], "\u222a": ["union", []], "\u222b": ["integral", []], "\u222e": ["contour_integral", []], "\u222f": ["surface_integral", []], "\u2230": ["volume_integral", []], "\u2231": ["clockwise_integral", []], "\u2232": ["clockwise_contour_integral", []], "\u2233": ["anticlockwise_contour_integral", []], "\u2234": ["therefore", []], "\u2235": ["because", []], "\u2236": [":", []], "\u2237": ["::", []], "\u2238": ["-", ["DOT"]], "\u223c": ["~", []], "\u223d": ["~", []], "\u2240": ["wreath", []], "\u2241": ["not ~", []], "\u2245": ["approx", []], "\u2260": ["<>", []], "\u2261": ["identical", []], "\u2262": ["not identical", []], "\u227a": ["prec", []], "\u227b": ["succ", []], "\u227c": ["prec_eq", []], "\u227d": ["succ_eq", []], "\u2280": ["not prec", []], "\u2281": ["not succ", []], "\u2282": ["subset", []], "\u2283": ["superset", []], "\u2284": ["not subset", []], "\u2285": ["not superset", []], "\u2286": ["subset_eq", []], "\u2287": ["superset_eq", []], "\u2288": ["not subset_eq", []], "\u2289": ["not superset_eq", []], "\u228a": ["subset_neq", []], "\u228b": ["superset_neq", []], "\u2293": ["cap", ["SQUARE"]], "\u2294": ["cup", ["SQUARE"]], "\u2295": ["+", ["CIRCLE"]], "\u2296": ["-", ["CIRCLE"]], "\u2297": ["*", ["CIRCLE"]], "\u2298": ["/", ["CIRCLE"]], "\u2299": ["cdot", ["CIRCLE"]], "\u229a": ["circ", ["CIRCLE"]], "\u229b": ["*", ["CIRCLE"]], "\u229c": ["=", ["CIRCLE"]], "\u229d": ["-", ["CIRCLE"]], "\u229e": ["+", ["SQUARE"]], "\u229f": ["-", ["SQUARE"]], "\u22a0": ["*", ["SQUARE"]], "\u22a1": ["cdot", ["SQUARE"]], "\u22b0": ["prec", ["RELATION"]], "\u22b1": ["prec", ["RELATION"]], "\u22b2": ["normal_subgroup", []], "\u22b3": ["contains_normal_subgroup", []], "\u22b4": ["normal_subgroup_eq", []], "\u22b5": ["contains_normal_subgroup_eq", []], "\u22bb": ["xor", []], "\u22bc": ["nand", []], "\u22bd": ["nor", []], "\u22be": ["right_angle ARC", []], "\u22bf": ["right_triangle", []], "\u22c0": ["and", []], "\u22c1": ["or", []], "\u22c2": ["intersection", []], "\u22c3": ["union", []], "\u22c4": ["diamond", []], "\u22c5": ["cdot", []], "\u22c6": ["star", []], "\u22c7": ["divide_times", []], "\u22c8": ["bowtie", []], "\u22ce": ["or", ["CURLY"]], "\u22cf": ["and", ["CURLY"]], "\u22d0": ["subset", ["DOUBLE"]], "\u22d1": ["superset", ["DOUBLE"]], "\u22d2": ["intersection", ["DOUBLE"]], "\u22d3": ["union", ["DOUBLE"]], "\u2264": ["<=", []], "\u2265": [">=", []], "\u22d6": ["<", ["DOT"]], "\u22d7": [">", ["DOT"]], "\u22dc": ["<=", []], "\u22dd": [">=", []], "\u22de": ["prec_eq", []], "\u22df": ["succ_eq", []], "\u22e0": ["not prec_eq", []], "\u22e1": ["not succ_eq", []], "\u22ea": ["not normal_subgroup", []], "\u22eb": ["not contains_normal_subgroup", []], "\u22ec": ["not normal_subgroup_eq", []], "\u22ed": ["not contains_normal_subgroup_eq", []], "\u27c0": ["angle", ["THREE-DIMENSIONAL"]], "\u27c2": ["perpendicular", []], "\u27c3": ["subset", ["OPEN"]], "\u27c4": ["superset", ["OPEN"]], "\u27c7": ["or", ["DOT"]], "\u27cc": ["/", []], "\u27ce": ["and", ["SQUARE"]], "\u27cf": ["or", ["SQUARE"]], "\u27d1": ["and", ["DOT"]], "\u27d2": ["in", ["UPWARDS"]], "\u27f9": ["implies", []], "\u27fa": ["iff", []], "\u299c": ["right_angle", ["SQUARE"]], "\u299d": ["right_angle", ["DOT"]], "\u299e": ["angle", []], "\u299f": ["angle", ["ACUTE"]], "\u29b6": ["|", ["CIRCLE"]], "\u29b7": ["parallel_to", ["CIRCLE"]], "\u29b8": ["/", ["CIRCLE", "REVERSE"]], "\u29b9": ["perpendicular", ["CIRCLE"]], "\u29c0": ["<", ["CIRCLE"]], "\u29c1": [">", ["CIRCLE"]], "\u29c6": ["*", ["SQUARE"]], "\u29c7": ["circ", ["SQUARE"]], "\u29fa": ["+", ["DOUBLE"]], "\u29fb": ["+", ["TRIPLE"]], "\u2a00": ["dot", ["CIRCLE"]], "\u2a01": ["+", ["CIRCLE"]], "\u2a02": ["*", ["CIRCLE"]], "\u2a05": ["intersection", []], "\u2a06": ["union", ["SQUARE"]], "\u2a07": ["and", ["DOUBLE"]], "\u2a08": ["or", ["DOUBLE"]], "\u2a09": ["*", []], "\u2a1d": ["join", []], "\u2a2f": ["cross", []], "\u2a33": ["smash", []], "\u2a51": ["and", ["DOT"]], "\u2a52": ["or", ["DOT"]], "\u2a53": ["and", ["DOUBLE"]], "\u2a54": ["or", ["DOUBLE"]], "\u2a57": ["or", ["SLOPING"]], "\u2a58": ["and", ["SLOPING"]], "\u2a66": ["=", ["DOT"]], "\u2a67": ["identical", ["DOT"]], "\u2a6a": ["~", ["DOT"]], "\u2a6d": ["congruent", ["DOT"]], "\u2aaa": ["<", []], "\u2aab": [">", []], "\u2aac": ["<=", []], "\u2aad": [">=", []], "\u2abb": ["prec", ["DOUBLE"]], "\u2abc": ["succ", ["DOUBLE"]], "\u2abd": ["subset", ["DOT"]], "\u2abe": ["superset", ["DOT"]], "\u2acf": ["subset", ["CLOSED"]], "\u2ad0": ["superset", ["CLOSED"]], "\u2ad1": ["subset_eq", ["CLOSED"]], "\u2ad2": ["superset_eq", ["CLOSED"]], "\u2ad9": ["in", ["DOWNWARDS"]], "\uff5e": ["~", []], "\ud835\udec1": ["nabla", ["BOLD"]], "\ud835\udedb": ["pdiff", ["BOLD"]], "\ud835\udefb": ["nabla", ["ITALIC"]], "\ud835\udf15": ["pdiff", ["ITALIC"]], "\ud835\udf35": ["nabla", ["BOLD", "ITALIC"]], "\ud835\udf4f": ["pdiff", ["BOLD", "ITALIC"]], "\ud835\udf6f": ["nabla", ["SANS-SERIF", "BOLD"]], "\ud835\udf89": ["pdiff", ["SANS-SERIF", "BOLD"]], "\ud835\udfa9": ["nabla", ["SANS-SERIF", "BOLD", "ITALIC"]], "\ud835\udfc3": ["pdiff", ["SANS-SERIF", "BOLD", "ITALIC"]], "\u02c6": ["^", []], "\u00b7": ["*", []], "\u0387": ["*", []], "\u055a": ["'", []], "\u055c": ["!", []], "\u055d": [",", []], "\u055e": ["?", []], "\u060c": [",", []], "\u060d": [",", []], "\u061b": [";", []], "\u061f": ["?", []], "\u066a": ["%", []], "\u066d": ["*", []], "\u0704": [":", []], "\u0705": [":", []], "\u0706": [":", []], "\u0707": [":", []], "\u0708": [":", []], "\u0709": [":", []], "\u07f8": [",", []], "\u07f9": ["!", []], "\u1363": [",", []], "\u1364": [";", []], "\u1365": [":", []], "\u1366": [":", []], "\u1367": ["?", []], "\u16eb": ["*", []], "\u16ec": [":", []], "\u16ed": ["+", []], "\u1802": [",", []], "\u1804": [":", []], "\u1808": [",", []], "\u180a": ["-", []], "\u1944": ["!", []], "\u1945": ["?", []], "\u1c3d": ["*", []], "\u2022": ["*", []], "\u2027": ["*", []], "\u2032": ["'", []], "\u2035": ["'", []], "\u2043": ["-", []], "\u204e": ["*", []], "\u204f": [";", []], "\u2e31": ["*", []], "\u2e32": [",", []], "\u2e33": ["*", []], "\u2e34": [",", []], "\u2e35": [";", []], "\ua60d": [",", []], "\ua60f": ["?", []], "\ua6f4": [":", []], "\ua6f5": [",", []], "\ua6f6": [";", []], "\ua6f7": ["?", []], "\ufe11": [",", []], "\uff65": ["*", []], "\ud802\udd1f": ["*", []]}, "punctuation": {"\u00b7": ["*", []], "\u0387": ["*", []], "\u055a": ["'", []], "\u055c": ["!", []], "\u055d": [",", []], "\u055e": ["?", []], "\u060c": [",", []], "\u060d": [",", []], "\u061b": [";", []], "\u061f": ["?", []], "\u066a": ["%", []], "\u066d": ["*", []], "\u0704": [":", []], "\u0705": [":", []], "\u0706": [":", []], "\u0707": [":", []], "\u0708": [":", []], "\u0709": [":", []], "\u07f8": [",", []], "\u07f9": ["!", []], "\u1363": [",", []], "\u1364": [";", []], "\u1365": [":", []], "\u1366": [":", []], "\u1367": ["?", []], "\u16eb": ["*", []], "\u16ec": [":", []], "\u16ed": ["+", []], "\u1802": [",", []], "\u1804": [":", []], "\u1808": [",", []], "\u180a": ["-", []], "\u1944": ["!", []], "\u1945": ["?", []], "\u1c3d": ["*", []], "\u2022": ["*", []], "\u2027": ["*", []], "\u2032": ["'", []], "\u2035": ["'", []], "\u2043": ["-", []], "\u204e": ["*", []], "\u204f": [";", []], "\u2e31": ["*", []], "\u2e32": [",", []], "\u2e33": ["*", []], "\u2e34": [",", []], "\u2e35": [";", []], "\ua60d": [",", []], "\ua60f": ["?", []], "\ua6f4": [":", []], "\ua6f5": [",", []], "\ua6f6": [";", []], "\ua6f7": ["?", []], "\ufe11": [",", []], "\uff65": ["*", []], "\ud802\udd1f": ["*", []]}, "brackets": {"\u2768": ["(", []], "\u276a": ["(", []], "\u2774": ["{", []], "\u27e6": ["[", []], "\u27ee": ["(", []], "\u2983": ["{", []], "\u2985": ["(", []], "\u2e28": ["(", []], "\u301a": ["[", []], "\ufd3f": ["]", []], "\uff5f": ["(", []], "\u2769": [")", []], "\u276b": [")", []], "\u2775": ["}", []], "\u27e7": ["]", []], "\u27ef": [")", []], "\u2984": ["}", []], "\u2986": [")", []], "\u2e29": [")", []], "\u301b": ["]", []], "\ufd3e": ["(", []], "\uff60": [")", []]}}
 });
 
+/*
+Copyright 2011-14 Newcastle University
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+/** @file Wrappers for the various navigation actions the user can do.
+ *
+ * The assumption is that these should only be called in response to some event the user triggers, by clicking or whatever.
+ *
+ * Provides {@link Numbas.controls}
+ */
+Numbas.queueScript('controls', ['base', 'schedule'], function() {
+/** @namespace Numbas.controls */
+Numbas.controls = /** @lends Numbas.controls */ {
+    /** Start the exam - triggered when user clicks "Start" button on frontpage.
+     *
+     * @see Numbas.Exam#begin
+     */
+    beginExam: function() {
+        Numbas.exam.begin();
+    },
+    /** Pause the exam.
+     *
+     * @see Numbas.Exam#pause
+     */
+    pauseExam: function() {
+        Numbas.exam.pause();
+    },
+    /** Resume the paused exam.
+     *
+     * @see Numbas.Exam#resume
+     */
+    resumeExam: function() {
+        Numbas.exam.resume();
+    },
+
+    /** Show the introduction text, while the exam is in progress.
+     */
+    showIntroduction: function() {
+        Numbas.exam.display.showInfoPage('introduction');
+    },
+
+    /** Try to end the exam.
+     *
+     * @see Numbas.Exam#tryEnd
+     */
+    endExam: function() {
+        Numbas.exam.tryEnd();
+    },
+    /** In an ended exam, go back from reviewing a question the results page. */
+    backToResults: function() {
+        Numbas.exam.display.showInfoPage('result');
+    },
+    /** Go back to the question menu.
+     */
+    backToMenu: function() {
+        Numbas.exam.showMenu();
+    },
+    /** Try to move to the next question.
+     *
+     * @param {Numbas.Exam} exam
+     * @see Numbas.Exam#tryChangeQuestion
+     */
+    nextQuestion: function(exam) {
+        exam = arguments.length == 1 ? exam : Numbas.exam;
+        exam.tryChangeQuestion(exam.currentQuestion.number + 1);
+    },
+    /** Try to move to the previous question.
+     *
+     * @param {Numbas.Exam} exam
+     * @see Numbas.Exam#tryChangeQuestion
+     */
+    previousQuestion: function(exam) {
+        exam = arguments.length == 1 ? exam : Numbas.exam;
+        exam.tryChangeQuestion(exam.currentQuestion.number - 1);
+    },
+    /** Make a function which tries to jump to question N.
+     *
+     * @param {number} n - Number of the question to jump to.
+     * @param {Numbas.Exam} exam
+     * @returns {Function}
+     * @see Numbas.controls.jumpQuestion
+     */
+    makeQuestionJumper: function(n, exam) {
+        exam = exam || Numbas.exam;
+        return function() {
+            Numbas.controls.jumpQuestion(n, exam);
+        }
+    },
+    /** Try to move directly to a particular question.
+     *
+     * @param {number} jumpTo - Number of the question to jump to.
+     * @param {Numbas.Exam} exam
+     * @see Numbas.Exam#tryChangeQuestion
+     */
+    jumpQuestion: function(jumpTo, exam) {
+        exam = exam || Numbas.exam;
+        if(exam.currentQuestion && jumpTo == exam.currentQuestion.number) {
+            exam.display.showQuestion();
+            return;
+        }
+        exam.tryChangeQuestion(jumpTo);
+    },
+    /** Regenerate the current question.
+     *
+     * @param {Numbas.Exam} exam
+     * @see Numbas.Exam#regenQuestion
+     */
+    regenQuestion: function(exam) {
+        exam = arguments.length == 1 ? exam : Numbas.exam;
+        exam.display.root_element.showConfirm(
+            R('control.confirm regen' + (exam.mark == 0 ? ' no marks' : '')),
+            function() {
+                exam.regenQuestion();
+            }
+        );
+    },
+    /** Show the advice for the current question.
+     *
+     * @param {Numbas.Exam} exam
+     * @see Numbas.Question#getAdvice
+     */
+    getAdvice: function(exam) {
+        exam = arguments.length == 1 ? exam : Numbas.exam;
+        exam.currentQuestion.getAdvice();
+    },
+    /** Reveal the answers to the current question.
+     *
+     * @param {Numbas.Exam} exam
+     * @see Numbas.Question#revealAnswer
+     */
+    revealAnswer: function(exam) {
+        exam = arguments.length == 1 ? exam : Numbas.exam;
+        exam.display.root_element.showConfirm(R('control.confirm reveal' + (exam.mark == 0 ? ' no marks' : '')),
+            function() {
+                exam.currentQuestion.revealAnswer();
+            }
+        );
+    },
+
+    /** Submit a part.
+     *
+     * @param {Numbas.parts.Part} part
+     */
+    submitPart: function(part) {
+        /** Actually submit the part.
+         */
+        function go() {
+            if(part.locked) {
+                return;
+            }
+            part.submit();
+            part.question?.exam?.store?.save();
+        }
+        if(part.question.partsMode == 'explore') {
+            var uses_answer = part.nextParts.some(function(np) {
+                return np.instance !== null && np.usesStudentAnswer();
+            })
+            if(uses_answer) {
+                part.question.exam.display.root_element.showConfirm(R('control.submit part.confirm remove next parts'), go);
+                return;
+            }
+        }
+        go();
+    },
+
+    /** Submit student's answers to all parts in the current question.
+     *
+     * @param {Numbas.Exam} exam
+     * @see Numbas.Question#submit
+     */
+    submitQuestion: function(exam) {
+        exam = arguments.length == 1 ? exam : Numbas.exam;
+        exam.currentQuestion.submit();
+    }
+};
+});
+
+/*
+Copyright 2011-14 Newcastle University
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+/** @file A few functions to do with time and date, and also performance timing. Provides {@link Numbas.timing}. */
+
+/** A duration of time.
+ * @typedef {object} duration
+ * @property {number} seconds - Number of seconds.
+ * @property {number} minutes - Number of minutes.
+ * @property {number} hours - Number of hours.
+ * @property {number} days - Number of days.
+ */
+
+Numbas.queueScript('timing', ['base'], function() {
+/** @namespace Numbas.timing */
+var timing = Numbas.timing = /** @lends Numbas.timing */ {
+    /** Get the current date as a string in the user's locale.
+     *
+     * @returns {string}
+     */
+    displayDate: function() {
+        return (new Date()).toLocaleDateString();
+    },
+
+    /** Convert a number of seconds to an object with seconds, minutes, hours and days.
+     *
+     * @param {number} time
+     * @returns {duration}
+     */
+    secsToUnits: function(time) {
+        time = Math.floor(time);
+        const seconds = time % 60;
+        time = (time - seconds) / 60;
+        const minutes = time % 60;
+        time = (time - minutes) / 60;
+        const hours = time % 24;
+        time = (time - hours) / 24;
+        const days = time;
+
+        return {seconds, minutes, hours, days};
+    },
+
+    /** Convert a number of seconds to a string in `HH:MM:SS` format.
+     *
+     * @param {number} time
+     * @returns {string}
+     */
+    secsToDisplayTime: function(time) {
+        if(time < 0) {
+            return '-' + Numbas.timing.secsToDisplayTime(-time);
+        }
+
+        const {seconds, minutes, hours} = timing.secsToUnits(time);
+
+        /** Interpolate numbers into a string template, padding each number to two characters.
+         *
+         * @param {Array.<string>} text
+         * @param {Array.<number>} numbers
+         * @returns {string}
+         */
+        function padded(text, ...numbers) {
+            let out = text[0];
+            for(let i = 0;i < text.length - 1;i++) {
+                out += numbers[i].toString().padStart(2, '0') + text[i + 1];
+            }
+            return out;
+        }
+
+        return padded`${hours}:${minutes}:${seconds}`;
+    },
+
+    /** Convert a number of seconds to an ISO8601 duration string in the format `PdDThHmMsS`
+     *
+     * @param {number} time
+     * @returns {string}
+     */
+    secsToMachineDuration: function(time) {
+        const {seconds, minutes, hours, days} = timing.secsToUnits(time);
+
+        return `P${days}DT${hours}H${minutes}M${seconds}S`;
+    },
+
+    /** A queue of timers.
+     *
+     * @type {Date[]}
+     */
+    timers: [],
+    /** Timing messages - how long did each timer take?
+     *
+     * @type {Array.<string>}
+     */
+    messages: [],
+
+    /** Start a new timer.
+     *
+     * @see {Numbas.timing.timers}
+     */
+    start: function() {
+        timing.timers.push(new Date());
+    },
+    /** End the top timer on the queue.
+     *
+     * @param {string} label - A description of the timer.
+     */
+    end: function(label) {
+        var s = '';
+        for(let i = 0;i < timing.timers.length;i++) {
+            s += '   ';
+        }
+        s += (new Date()) - timing.timers.pop();
+        s += ' ' + label;
+        timing.messages.push(s);
+        if(!timing.timers.length) {
+            timing.show();
+        }
+    },
+    /** Show all timing messages through {@link Numbas.debug}.
+     */
+    show: function() {
+        for(const [k, v] of Object.entries(timing.accs)) {
+            Numbas.debug(v.total + ' ' + k, true);
+        }
+        timing.accs = {};
+        for(let i = 0;i < timing.messages.length;i++) {
+            Numbas.debug(timing.messages[i], true);
+        }
+        timing.messages = [];
+    },
+    /** Stress test a function by running it a lot of times and seeing how long it takes.
+     *
+     * @param {Function} f
+     * @param {number} times
+     */
+    stress: function(f, times) {
+        timing.start();
+        for(let i = 0;i < times;i++) {
+            f();
+        }
+        timing.end();
+    },
+    /** Timing accumulators.
+     *
+     * @see Numbas.timing.startacc
+     */
+    accs: {},
+    /** Accumulators are for counting time spent in functions which don't take long to evaluate, but are called repeatedly.
+     *
+     * Call this with the function's name when you start the function, and {@link Numbas.timing.endacc} with the same name just before returning a value.
+     *
+     * It copes with recursion automatically, so you don't need to worry about double counting.
+     *
+     * @param {string} name
+     */
+    startacc: function(name) {
+        if(timing.accs[name] == undefined) {
+            timing.accs[name] = {
+                total: 0,
+                go: 0
+            }
+        }
+        var acc = timing.accs[name];
+        acc.go += 1;
+        if(acc.go > 1) {
+            return;
+        }
+        acc.start = new Date();
+    },
+    /** Stop accumulating runtime for a function.
+     *
+     * @param {string} name
+     * @see Numbas.timing.startacc
+     */
+    endacc: function(name) {
+        var acc = timing.accs[name];
+        if(!acc) {
+            throw(new Numbas.Error('timing.no accumulator', {name:name}));
+        }
+        acc.go -= 1;
+        if(acc.go == 0) {
+            var end = new Date();
+            acc.total += (end - acc.start);
+        }
+    }
+};
+});
+
 Numbas.queueScript('parsel',[],function(module) {
     var exports = module.exports;
 
@@ -29075,7 +29455,7 @@ Numbas.signals.on('localisation initialised', () => {
     Knockout.components.register('answer-widget', {
         viewModel: function(params) {
             this.answerJSON = params.answer;
-            this.part = params.part;
+            this.part = Knockout.unwrap(params.part);
             this.id = params.id;
             this.disable = params.disable;
             this.widget = params.widget || Knockout.computed(function() {
@@ -29103,7 +29483,7 @@ Numbas.signals.on('localisation initialised', () => {
             var init = Knockout.unwrap(this.answerJSON) || {valid: false};
             this.input = Knockout.observable(init.valid ? init.value || '' : '');
             this.id = params.id;
-            this.part = params.part;
+            this.part = Knockout.unwrap(params.part);
             this.disable = params.disable;
             this.options = Knockout.unwrap(params.options);
             this.events = params.events;
@@ -29139,7 +29519,7 @@ Numbas.signals.on('localisation initialised', () => {
         viewModel: function(params) {
             var vm = this;
             this.answerJSON = params.answerJSON;
-            this.part = params.part;
+            this.part = Knockout.unwrap(params.part);
             this.id = params.id;
             this.options = Knockout.unwrap(params.options);
             this.returnString = defaultObservable(this.options.returnString, false);
@@ -29245,7 +29625,7 @@ Numbas.signals.on('localisation initialised', () => {
     Knockout.components.register('answer-widget-jme', {
         viewModel: function(params) {
             this.answerJSON = params.answerJSON;
-            var p = this.part = params.part;
+            var p = this.part = Knockout.unwrap(params.part);
             this.id = params.id;
             this.options = Knockout.unwrap(params.options);
             this.showPreview = this.options.showPreview || false;
@@ -29432,7 +29812,7 @@ Numbas.signals.on('localisation initialised', () => {
         viewModel: function(params) {
             var vm = this;
             this.answerJSON = params.answerJSON;
-            this.part = params.part;
+            this.part = Knockout.unwrap(params.part);
             this.id = params.id;
             this.options = Knockout.unwrap(params.options);
             this.disable = params.disable;
@@ -29874,7 +30254,7 @@ Numbas.signals.on('localisation initialised', () => {
 
     Knockout.components.register('answer-widget-radios', {
         viewModel: function(params) {
-            this.part = params.part;
+            this.part = Knockout.unwrap(params.part);
             this.id = params.id;
             this.disable = params.disable;
             this.options = Knockout.unwrap(params.options);
@@ -29970,7 +30350,7 @@ Numbas.signals.on('localisation initialised', () => {
     });
     Knockout.components.register('answer-widget-dropdown', {
         viewModel: function(params) {
-            this.part = params.part;
+            this.part = Knockout.unwrap(params.part);
             this.id = params.id;
             this.disable = params.disable;
             this.options = Knockout.unwrap(params.options);
@@ -30020,6 +30400,9 @@ Numbas.signals.on('localisation initialised', () => {
                 }, this)
             ];
             this.setAnswerJSON = Knockout.computed(function() {
+                if(Knockout.unwrap(this.disable)) {
+                    return;
+                }
                 var choice = this.choice();
                 if(choice && choice.index !== null) {
                     var value;
@@ -30055,7 +30438,7 @@ Numbas.signals.on('localisation initialised', () => {
     Knockout.components.register('answer-widget-checkboxes', {
         viewModel: function(params) {
             var vm = this;
-            this.part = params.part;
+            this.part = Knockout.unwrap(params.part);
             this.id = params.id;
             this.disable = params.disable;
             this.options = Knockout.unwrap(params.options);
@@ -30159,7 +30542,7 @@ Numbas.signals.on('localisation initialised', () => {
     Knockout.components.register('answer-widget-m_n_x', {
         viewModel: function(params) {
             var vm = this;
-            this.part = params.part;
+            this.part = Knockout.unwrap(params.part);
             this.id = params.id;
             this.answerJSON = params.answerJSON;
             this.disable = params.disable;
@@ -30477,7 +30860,8 @@ Numbas.queueScript('display-util', ['math'], function() {
         }
 
         var keys = ['font-size', 'font-style', 'font-weight', 'font-family', 'line-height', 'text-transform', 'letter-spacing'];
-        var id = element.value + ';' + keys.map(function(key) {
+        const value = element.value || element.placeholder;
+        var id = value + ';' + keys.map(function(key) {
             return styles[key];
         }).join(';');
         if(measureText_cache[id]) {
@@ -30486,7 +30870,7 @@ Numbas.queueScript('display-util', ['math'], function() {
         keys.forEach(function(key) {
             measurer.style[key] = styles[key];
         });
-        measurer.textContent = element.value;
+        measurer.textContent = value;
         document.body.appendChild(measurer);
         var box = measurer.getBoundingClientRect();
         measureText_cache[id] = box;
@@ -30851,6 +31235,4851 @@ Numbas.queueScript('display-util', ['math'], function() {
         set_jme_scope,
         find_root_ancestor,
     };
+});
+
+Numbas.queueScript('display-base', ['display-util', 'display-color', 'controls', 'math', 'util', 'timing', 'jme', 'jme-display'], function() {
+var jme = Numbas.jme;
+var display_util = Numbas.display_util;
+var display_color = Numbas.display_color;
+
+var mj_promise = globalThis.MathJax?.startup?.promise || Promise.resolve();
+
+/** A . controller for user style customisations.
+ */
+class StyleCustomiser {
+    static style_variables = ['--text-size', '--spacing-scale', '--font-weight', '--main-font'];
+
+    static color_groups = [
+        'background',
+        'text',
+        'main',
+        'primary',
+        'link',
+        'success',
+        'info',
+        'warning',
+        'danger',
+        'muted',
+        'highlight',
+    ];
+
+    constructor(root_element) {
+        this.root_element = root_element;
+        this.initial_style = getComputedStyle(root_element);
+
+        this.style = this.make_style_object();
+        this.staged_style = this.make_style_object();
+
+        this.constructor.color_groups.forEach((name) => {
+            this.style[`--custom-${name}-color`] = this.styleObservable(`--light-${name}-color`);
+        });
+
+        this.color_scheme = Knockout.observable('automatic');
+        this.color_scheme.initial_value = this.color_scheme();
+
+        this.using_custom_color_scheme = Knockout.pureComputed(() => this.color_scheme() == 'custom');
+
+        /** Make an observable which watches the given media query. Its value is `true` if the media query is matches.
+         *
+         * @param {string} query
+         * @returns {observable.<boolean>}
+         */
+        function media_observable(query) {
+            const match = window.matchMedia(query);
+            const obs = Knockout.observable(match.matches);
+            match.addEventListener('change', () => {
+                obs(match.matches);
+            });
+            return obs;
+        }
+
+        this.forced_colors = media_observable('(forced-colors: active)');
+        this.prefers_dark = media_observable('(prefers-color-scheme: dark)');
+
+        this.invert_images = Knockout.observable(false);
+
+        this.font_options = Numbas.display.font_options.map(({name, label}) => {
+            return {name, label: R(label)};
+        });
+
+        this.reset();
+
+        this.load();
+
+        Knockout.computed(() => {
+            const root = this.root_element;
+
+            var css_vars = this.css_vars();
+
+            const color_scheme = this.color_scheme();
+            if(color_scheme == 'automatic') {
+                root.dataset.prefersColorScheme = this.prefers_dark() ? 'dark' : 'light';
+            } else {
+                root.dataset.prefersColorScheme = color_scheme;
+            }
+
+            const invert_images = this.invert_images();
+            root.dataset.invertImages = invert_images;
+
+            for(const [k, v] of Object.entries(css_vars)) {
+                root.style.setProperty(k, v);
+            }
+
+            const custom_bg = this.style['--custom-background-color']();
+            const custom_text = this.style['--custom-text-color']();
+            const target_contrast = display_color.dpsContrast(display_color.parseRGB(custom_bg), display_color.parseRGB(custom_text));
+
+            this.constructor.color_groups.forEach((name) => {
+                const property_name = `--custom-${name}-color`;
+                const col = this.style[property_name]();
+                const rgb = display_color.parseRGB(col);
+                root.style.setProperty(property_name, col);
+                const text = display_color.text_for(rgb, target_contrast);
+                root.style.setProperty(`--custom-${name}-text-color`, text);
+                if(name == 'background') {
+                    root.classList.toggle('dark-background', color_scheme == 'custom' && display_color.is_dark(rgb));
+                }
+            });
+
+            var options = {
+                color_scheme,
+                invert_images
+            };
+
+            for(const [k, v] of Object.entries(this.style)) {
+                options[k] = v();
+            }
+
+            try {
+                localStorage.setItem(Numbas.display.style_options_localstorage_key, JSON.stringify(options));
+            } catch {
+            }
+        });
+
+    }
+
+    css_vars() {
+        return {
+            '--text-size': parseFloat(this.style['--text-size']()),
+            '--spacing-scale': parseFloat(this.style['--spacing-scale']()),
+            '--font-weight': parseFloat(this.style['--font-weight']()),
+            '--main-font': this.style['--main-font'](),
+            '--staged-text-size': parseFloat(this.staged_style['--text-size']()),
+            '--staged-spacing-scale': parseFloat(this.staged_style['--spacing-scale']()),
+            '--staged-font-weight': parseFloat(this.staged_style['--font-weight']()),
+            '--staged-main-font': this.staged_style['--main-font'](),
+        };
+    }
+
+    /** Make a Knockout observable whose initial value is taken from the CSS custom property with the given name.
+     *
+     * @param {string} property_name
+     * @returns {observable.<string>}
+     */
+    styleObservable(property_name) {
+        const value = this.initial_style.getPropertyValue(property_name);
+        const obs = Knockout.observable();
+        obs.initial_value = value;
+        return obs;
+    }
+
+    /** Make an object with an observable for each name in `this.style_variables`.
+     *
+     * @returns {Object<observable<string>>}
+     */
+    make_style_object() {
+        return Object.fromEntries(this.constructor.style_variables.map((name) => [name, name.startsWith('--') ? this.styleObservable(name) : Knockout.observable('')]));
+    }
+
+    /** Save the changes to the style options.
+     */
+    save() {
+        Object.entries(this.staged_style).forEach(([k, obs]) => {
+            this.style[k](obs());
+        });
+    }
+
+    /** Load the style options from localStorage.
+     */
+    load() {
+        try {
+            const saved_style_options = JSON.parse(localStorage.getItem(Numbas.display.style_options_localstorage_key)) || {};
+            if(saved_style_options.color_scheme) {
+                this.color_scheme(saved_style_options.color_scheme);
+            }
+            if(saved_style_options.invert_images !== undefined) {
+                this.invert_images(saved_style_options.invert_images);
+            }
+            for(const [k, v] of Object.entries(this.style)) {
+                if(k in saved_style_options) {
+                    v(saved_style_options[k]);
+                }
+            }
+            for(const [k, v] of Object.entries(this.staged_style)) {
+                v(this.style[k]());
+            }
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    /** Reset the style variables to their initial values.
+     */
+    reset() {
+        Object.values(this.style).forEach((obs) => {
+            if(obs.initial_value !== undefined) {
+                obs(obs.initial_value);
+            }
+        });
+        Object.values(this.staged_style).forEach((obs) => {
+            if(obs.initial_value !== undefined) {
+                obs(obs.initial_value);
+            }
+        });
+        this.color_scheme(this.color_scheme.initial_value);
+    }
+}
+
+/** A container element for a self-contained Numbas exam.
+ */
+class NumbasExamElement extends HTMLElement {
+    //alert / confirm boxes
+    //
+    /** Callback functions for the modals.
+     *
+     * @type {Object<Function>}
+     */
+    modal = {
+        ok: Knockout.observable(function() {}),
+        cancel: Knockout.observable(function() {}),
+    }
+
+    lightbox_pressing_state = 'none';
+
+    constructor() {
+        super();
+
+        this.attachShadow({mode:'open'});
+        MathJax.config.style_manager.register(this.shadowRoot);
+    }
+
+    connectedCallback() {
+        if(this.getAttribute('noload') !== null) {
+            return;
+        }
+        if(document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.load_exam());
+        } else {
+            this.load_exam();
+        }
+    }
+
+    /** Has this exam been loaded?
+     */
+    has_loaded = false;
+
+    async load_exam() {
+        if(this.has_loaded) {
+            return;
+        }
+
+        this.has_loaded = true;
+
+        await Numbas.awaitScripts(['start-exam', 'display']);
+
+        const template_id = this.getAttribute('template') || 'numbas-exam-template';
+
+        const template = document.getElementById(template_id);
+        this.shadowRoot.append(template.content.cloneNode(true));
+
+        this.load();
+    }
+
+    showLoadProgress(scheduler) {
+        var p = 100 * scheduler.completed_jobs / scheduler.num_jobs;
+        this.shadowRoot.querySelector('#loading progress').value = p;
+    }
+
+    async load() {
+        try {
+            const options = {
+                exam_url: this.getAttribute('source_url'),
+                storage:  this.getAttribute('storage')?.toLowerCase(),
+                seed:  this.getAttribute('seed'),
+                element: this
+            };
+            const exam_source_element = this.querySelector('script[type="application/numbas-exam"]');
+            if(exam_source_element) {
+                options.exam_source = exam_source_element.textContent;
+            }
+
+            if(!(options.exam_url || options.exam_source)) {
+                return;
+            }
+
+            const {exam_data} = await Numbas.load_exam(options);
+
+            let extension_data_json = this.getAttribute('extensions');
+            const extension_data_element = this.querySelector('script[slot="extension-data"]');
+            if(extension_data_element) {
+                extension_data_json = extension_data_element.textContent.trim();
+            }
+            const extension_data = JSON.parse(extension_data_json);
+
+            for(const extension of exam_data.extensions) {
+                const data = extension_data[extension];
+                Numbas.extension_url_root[extension] = data.root;
+                for(const js of data.javascripts) {
+                    const src = `${data.root}/${js}`;
+                    if(!document.head.querySelector(`script[data-numbas-extension="${extension}"][src="${src}"]`)) {
+                        const script = document.createElement('script');
+                        script.src = src;
+                        script.dataset.numbasExtension = extension;
+                        document.head.appendChild(script);
+                    }
+                }
+                for(const css of data.stylesheets) {
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    const src = `${data.root}/${css}`;
+                    link.href = src;
+                    this.shadowRoot.appendChild(link);
+                }
+            }
+        } catch(err) {
+            Numbas.display.die(err);
+        }
+    }
+
+    init(exam) {
+        const lightbox = this.lightbox = this.shadowRoot.getElementById('lightbox');
+        lightbox.addEventListener('click', () => this.hide_lightbox());
+        document.addEventListener('keyup', () => {
+            if(lightbox.classList.contains('shown')) {
+                this.hide_lightbox();
+            }
+        });
+
+        display_util.localisePage(this.shadowRoot);
+
+        // bind buttons in the modals
+
+        for(const b of this.shadowRoot.querySelectorAll('button[aria-controls="navMenu"]')) {
+            b.addEventListener('click', () => {
+                this.shadowRoot.querySelector('exam-container').classList.toggle('show-sidebar');
+            });
+        }
+
+        display_util.set_jme_scope(this.shadowRoot.querySelector('#infoDisplay'), exam.scope);
+        display_util.set_jme_scope(this.shadowRoot.querySelector('#diagnostic-feedback'), exam.scope);
+
+
+        const style_customiser = new StyleCustomiser(this.shadowRoot.querySelector('exam-container'));
+        this.style_customiser = style_customiser;
+
+        var vm = this.viewModel = {
+            exam: Knockout.observable(exam.display),
+            style_customiser,
+            saveStyle: () => {
+                style_customiser.save();
+                this.shadowRoot.getElementById('style-modal').close();
+            },
+            modal: this.modal,
+            loaded: Knockout.observable(false),
+
+            showStyleModal: () => this.showStyleModal(),
+
+            closeModal: function(_, e) {
+                let el = e.target;
+                while(el && el.tagName != 'DIALOG') {
+                    el = el.parentElement;
+                }
+                if(el) {
+                    el.close();
+                }
+            }
+        };
+
+
+        vm.css = Knockout.pureComputed(function() {
+            var exam = vm.exam();
+            var classes = {
+                'show-nav': exam.viewType() == 'question' || (exam.viewType() == 'infopage' && exam.infoPage() == 'introduction'),
+                'show-sidebar': false,
+                'no-printing': !exam.allowPrinting(),
+                'info-page': exam.viewType() == 'infopage',
+                'no-printing-questions': !exam.exam.settings.resultsprintquestions,
+                'no-printing-advice': !exam.exam.settings.resultsprintadvice,
+                'loaded': vm.loaded(),
+            }
+            return classes;
+        });
+
+        exam.signals.on('ready', () => {
+            vm.loaded(true);
+            this.dispatchEvent(new CustomEvent('numbas:loaded', {detail: {exam: this.exam}}));
+        })
+
+
+        vm.attr = Knockout.pureComputed(() => {
+            var exam = vm.exam();
+            return {
+                'data-navigatemode': exam.exam.settings.navigateMode,
+            }
+        });
+
+        this.setExam(exam);
+
+        Knockout.applyBindings(this.viewModel, this.shadowRoot.querySelector('exam-container'));
+    }
+
+    setExam(exam) {
+        this.viewModel.exam(exam.display);
+        for(var i = 0;i < exam.questionList.length;i++) {
+            exam.display.applyQuestionBindings(exam.questionList[i]);
+        }
+        exam.display.questions().map(function(q) {
+            q.question.signals.on('HTMLAttached', function() {
+                q.init();
+            });
+        });
+        exam.signals.on_any((name) => {
+            this.dispatchEvent(new CustomEvent('numbas:signal:' + name));
+        });
+        exam.events.on('', (name, ...args) => {
+            this.dispatchEvent(new CustomEvent('numbas:event:' + name, {detail: args}));
+        });
+        Numbas.signals.trigger('display ready');
+        this.dispatchEvent(new CustomEvent('numbas:setExam', {detail: {exam}}));
+    }
+
+    /** Show an alert dialog.
+     *
+     * @param {string} msg - message to show the user
+     * @param {Function} fnOK - callback when OK is clicked
+     */
+    showAlert(msg, fnOK) {
+        this.modal.ok(fnOK);
+        this.shadowRoot.getElementById('alert-modal-body').innerHTML = msg;
+        this.shadowRoot.getElementById('alert-modal').showModal();
+    }
+
+    /** Show the modal with styling options.
+     */
+    showStyleModal() {
+        this.shadowRoot.getElementById('style-modal').showModal();
+    }
+
+    /** Show a confirmation dialog box.
+     *
+     * @param {string} msg - message to show the user
+     * @param {Function} fnOK - callback if OK is clicked
+     * @param {Function} fnCancel - callback if cancelled
+     */
+    showConfirm(msg, fnOK, fnCancel) {
+        this.modal.ok(fnOK);
+        this.modal.cancel(fnCancel);
+        this.shadowRoot.getElementById('confirm-modal-body').innerHTML = msg;
+        this.shadowRoot.getElementById('confirm-modal').showModal();
+    }
+
+    /** Show the end exam confirmation dialog box.
+     *
+     * @param {string} msg - message to show the user
+     * @param {Function} fnEnd - callback to end the exam
+     * @param {Function} fnCancel - callback if cancelled
+     */
+    showConfirmEndExam(msg, fnEnd, fnCancel) {
+        this.modal.ok(fnEnd);
+        this.modal.cancel(fnCancel);
+        const confirmationInputMsg = R('modal.confirm end exam', {endConfirmation : R('control.confirm end.password')});
+        this.shadowRoot.getElementById('confirm-end-exam-modal-message').innerHTML = msg;
+        this.shadowRoot.getElementById('confirm-end-exam-modal-input-message').innerHTML = confirmationInputMsg;
+        this.shadowRoot.getElementById('confirm-end-exam-modal').showModal();
+    }
+
+    /** Register event listeners to show the lightbox when images in this element are clicked.
+     *
+     * @param {Element} element
+     */
+    register_lightbox(element) {
+        const register_image = (img) => {
+
+            var wrapper = document.createElement('span');
+            wrapper.setAttribute('class', 'lightbox-image-wrapper');
+            var align = img.getAttribute('align');
+            switch(align) {
+                case 'bottom':
+                case 'middle':
+                case 'top':
+                    wrapper.style['vertical-align'] = align;
+                    break;
+                case 'left':
+                case 'right':
+                    wrapper.style['float'] = align;
+                    break;
+            }
+
+            img.replaceWith(wrapper);
+
+            wrapper.appendChild(img);
+
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = '🔍';
+            button.title = button.ariaLabel = R('lightbox.zoom in on image');
+
+            const activate = () => {
+                const {lightbox} = this;
+                lightbox.innerHTML = '';
+                var elem = img.cloneNode();
+                const scope = display_util.find_jme_scope(img);
+                if(scope) {
+                    jme.variables.DOMcontentsubvars(elem, scope);
+                }
+                lightbox.appendChild(elem);
+                this.show_lightbox(wrapper);
+            }
+
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if(this.lightbox_pressing_state != 'key') {
+                    activate();
+                } else {
+                    this.lightbox_pressing_state = 'click';
+                }
+            });
+            button.addEventListener('keydown', (e) => {
+                this.lightbox_pressing_state = 'key';
+            })
+            button.addEventListener('keyup', (e) => {
+                if(this.lightbox_pressing_state == 'click') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    activate();
+                }
+                this.lightbox_pressing_state = 'none';
+            })
+            button.addEventListener('blur', (e) => {
+                this.lightbox_pressing_state = 'none';
+            });
+
+            button.addEventListener
+
+            wrapper.appendChild(button);
+        }
+        Array.from(element.querySelectorAll('img,object')).forEach(function(img) {
+            if(img.complete) {
+                register_image(img);
+            } else {
+                img.addEventListener('load', function() {
+                    register_image(img);
+                }, {once: true});
+            }
+        });
+    }
+
+    /** Show the lightbox.
+     *
+     * @param {Element} original - The original image element which is going to be copied into the lightbox.
+     */
+    show_lightbox(original) {
+        this.lightbox.showModal();
+        this.lightbox_original_element = original;
+    }
+
+    /** Hide the lightbox.
+     *
+     */
+    hide_lightbox() {
+        this.lightbox.close();
+        this.lightbox.innerHTML = '';
+        this.lightbox_pressing_state = 'none';
+        if(this.lightbox_original_element) {
+            this.lightbox_original_element.querySelector('button').focus();
+        }
+    }
+
+}
+customElements.define('numbas-exam', NumbasExamElement);
+
+/** @namespace Numbas.display */
+var display = Numbas.display = /** @lends Numbas.display */ {
+    /**
+     * Should Numbas control the browser's scroll and focus?
+     * Set to true if the page only contains this Numbas exam.
+     * Disable this if the exam is embedded in a page.
+     */
+    control_focus: true,
+
+    /** Initialise the display.
+     */
+    init: function() {
+        document.body.classList.add('loaded');
+
+        display_util.localisePage(document.body);
+    },
+
+    /** Update the progress bar when loading.
+     */
+    showLoadProgress: function() {
+        const progress_element = document.querySelector('#loading progress');
+        if(!progress_element) {
+            return;
+        }
+
+        var p = 100 * Numbas.schedule.completed / Numbas.schedule.total;
+        progress_element.value = p;
+    },
+
+    style_options_localstorage_key: 'numbas-style-options',
+
+    /** List of options for the display font.
+     */
+    font_options: [
+        {name: 'sans-serif', label: 'modal.style.font.sans serif'},
+        {name: 'serif', label: 'modal.style.font.serif'},
+        {name: 'monospace', label: 'modal.style.font.monospace'},
+    ],
+
+    /** Make MathJax typeset any maths in the selector.
+     *
+     * @param {Element} [element] - Element to typeset. If not given, the whole page is typeset.
+     * @param {Function} callback - Function to call when typesetting is finished.
+     */
+    typeset: function(element, callback) {
+        var delay = 10;
+
+        /**
+         * Try to typeset the given elements.
+         * An element is typeset if it is attached to the main document, and has a parent which specifies a JME scope to use.
+         *
+         * After each attempt, if there are any elements still waiting to be typeset, there's an exponentially growing delay before trying again.
+         *
+         * Once all elements have been typeset, the callback is called.
+         */
+        function try_to_typeset() {
+            var root = display.find_root_ancestor(element);
+            var scope = display_util.find_jme_scope(element);
+
+            if((root.nodeType == root.DOCUMENT_FRAGMENT_NODE || root.nodeType == root.DOCUMENT_NODE) && scope) {
+                mj_promise = mj_promise.then(() => {
+                    MathJax.typesetPromise([element]).then(() => {
+                        if(callback) {
+                            callback();
+                        }
+                    });
+                }).catch((e) => {
+                    if(MathJax === undefined && !display.failedMathJax) {
+                        display.failedMathJax = true;
+                    } else {
+                        Numbas.schedule.halt(e);
+                    }
+                });
+                return;
+            }
+
+            delay *= 1.1;
+            setTimeout(try_to_typeset, delay);
+        }
+
+        setTimeout(try_to_typeset, 1);
+    },
+
+    /** Make HTML from a template.
+     *
+     * @param {string} template_name - The ID of the `<template>` element to use.
+     * @param {string} contextDescription - Description of the JME context, for error messages.
+     * @returns {Element} - Resolves to the produced HTML element after variables have been substituted.
+     */
+    makeHTMLFromTemplate(template_name, contextDescription) {
+        const template = document.getElementById(template_name);
+        const content = template.content.cloneNode(true).children[0];
+        content.setAttribute('data-jme-context-description', contextDescription);
+        display_util.localisePage(content);
+        return content;
+    },
+
+    /** The Numbas exam has failed so much it can't continue - show an error message and the error.
+     *
+     * @param {Error} e
+     */
+    die: function(e) {
+        var message = (e || e.message) + '';
+        var stack = e.stack.replace(/\n/g, '<br>\n');
+        Numbas.debug(message, false, e);
+        //hide all the non-error stuff
+        for(const element of document.querySelectorAll('numbas-exam')) {
+            element.hidden = true;
+        }
+        //show the error stuff
+        const die_element = document.getElementById('die');
+        if(!die_element) {
+            return;
+        }
+        die_element.hidden = false;
+        document.body.querySelector('#die .error .message').innerHTML = message;
+        document.body.querySelector('#die .error .stack').innerHTML = stack;
+    },
+
+    // References to functions in Numbas.display_util, for backwards compatibility.
+    measureText: display_util.measureText,
+
+    showScoreFeedback: display_util.showScoreFeedback,
+
+    passwordHandler: display_util.passwordHandler,
+
+    localisePage: display_util.localisePage,
+
+    getLocalisedAttribute: display_util.getLocalisedAttribute,
+
+    setJMEScope: display_util.set_jme_scope,
+
+    find_root_ancestor: display_util.find_root_ancestor,
+
+};
+
+display.StyleCustomiser = StyleCustomiser;
+display.NumbasExamElement = NumbasExamElement;
+
+});
+
+Numbas.queueScript('display-color', [], function() {
+    /** Based on culori.js
+     *
+     * MIT License
+     * 
+     * Copyright (c) 2018 Dan Burzo
+     * 
+     * Permission is hereby granted, free of charge, to any person obtaining a copy
+     * of this software and associated documentation files (the "Software"), to deal
+     * in the Software without restriction, including without limitation the rights
+     * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+     * copies of the Software, and to permit persons to whom the Software is
+     * furnished to do so, subject to the following conditions:
+     * 
+     * The above copyright notice and this permission notice shall be included in all
+     * copies or substantial portions of the Software.
+     * 
+     * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+     * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+     * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+     * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+     * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+     * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+     * SOFTWARE.
+     */
+
+    var k = Math.pow(29, 3) / Math.pow(3, 3);
+    var e = Math.pow(6, 3) / Math.pow(29, 3);
+
+    var D65 = {
+        X: 0.3127 / 0.329,
+        Y: 1,
+        Z: (1 - 0.3127 - 0.329) / 0.329
+    };
+
+    var f = (value) => value > e ? Math.cbrt(value) : (k * value + 16) / 116;
+
+    /** Convert a colour in XYZ65 format to LAB65.
+     */
+    var convertXyz65ToLab65 = ({ x, y, z, alpha }) => {
+        let f0 = f(x / D65.X);
+        let f1 = f(y / D65.Y);
+        let f22 = f(z / D65.Z);
+        let res = {
+            mode: "lab65",
+            l: 116 * f1 - 16,
+            a: 500 * (f0 - f1),
+            b: 200 * (f1 - f22)
+        };
+        if (alpha !== void 0) {
+            res.alpha = alpha;
+        }
+        return res;
+    };
+    var convertXyz65ToLab65_default = convertXyz65ToLab65;
+
+    /** Convert a colour in RGB format to XYZ65.
+     */
+    var convertRgbToXyz65 = (rgb4) => {
+        let { r: r2, g, b, alpha } = convertRgbToLrgb_default(rgb4);
+        let res = {
+            mode: "xyz65",
+            x: 0.4123907992659593 * r2 + 0.357584339383878 * g + 0.1804807884018343 * b,
+            y: 0.2126390058715102 * r2 + 0.715168678767756 * g + 0.0721923153607337 * b,
+            z: 0.0193308187155918 * r2 + 0.119194779794626 * g + 0.9505321522496607 * b
+        };
+        if (alpha !== void 0) {
+            res.alpha = alpha;
+        }
+        return res;
+    };
+    var convertRgbToXyz65_default = convertRgbToXyz65;
+
+    /** Convert a colour in RGB format to LAB65.
+     */
+    var convertRgbToLab65 = (rgb4) => {
+        let res = convertXyz65ToLab65_default(convertRgbToXyz65_default(rgb4));
+        if (rgb4.r === rgb4.b && rgb4.b === rgb4.g) {
+            res.a = res.b = 0;
+        }
+        return res;
+    };
+    var convertRgbToLab65_default = convertRgbToLab65;
+
+
+    /** Convert a colour in lRGB format to Oklab.
+     */
+    var convertLrgbToOklab = ({ r: r2, g, b, alpha }) => {
+        let L = Math.cbrt(
+            0.41222147079999993 * r2 + 0.5363325363 * g + 0.0514459929 * b
+        );
+        let M2 = Math.cbrt(
+            0.2119034981999999 * r2 + 0.6806995450999999 * g + 0.1073969566 * b
+        );
+        let S = Math.cbrt(
+            0.08830246189999998 * r2 + 0.2817188376 * g + 0.6299787005000002 * b
+        );
+        let res = {
+            mode: "oklab",
+            l: 0.2104542553 * L + 0.793617785 * M2 - 0.0040720468 * S,
+            a: 1.9779984951 * L - 2.428592205 * M2 + 0.4505937099 * S,
+            b: 0.0259040371 * L + 0.7827717662 * M2 - 0.808675766 * S
+        };
+        if (alpha !== void 0) {
+            res.alpha = alpha;
+        }
+        return res;
+    };
+    var convertLrgbToOklab_default = convertLrgbToOklab;
+
+    var rgb_lrgb_fn = (c4) => {
+        const abs3 = Math.abs(c4);
+        if (abs3 <= 0.04045) {
+            return c4 / 12.92;
+        }
+        return (Math.sign(c4) || 1) * Math.pow((abs3 + 0.055) / 1.055, 2.4);
+    };
+
+    /** Convert a colour in RGB format to lRGB.
+     */
+    var convertRgbToLrgb = ({ r: r2, g, b, alpha }) => {
+        let res = {
+            mode: "lrgb",
+            r: rgb_lrgb_fn(r2),
+            g: rgb_lrgb_fn(g),
+            b: rgb_lrgb_fn(b)
+        };
+        if (alpha !== void 0)
+            res.alpha = alpha;
+        return res;
+    };
+    var convertRgbToLrgb_default = convertRgbToLrgb;
+
+    /** Convert a colour in RGB format to Oklab.
+     */
+    var convertRgbToOklab = (rgb4) => {
+        let res = convertLrgbToOklab_default(convertRgbToLrgb_default(rgb4));
+        if (rgb4.r === rgb4.b && rgb4.b === rgb4.g) {
+            res.a = res.b = 0;
+        }
+        return res;
+    };
+    var convertRgbToOklab_default = convertRgbToOklab;
+
+    /** Convert a colour in Oklab format to Lrgb.
+     */
+    var convertOklabToLrgb = ({ l, a, b, alpha }) => {
+        let L = Math.pow(
+            l * 0.9999999984505198 + 0.39633779217376786 * a + 0.2158037580607588 * b,
+            3
+        );
+        let M2 = Math.pow(
+            l * 1.0000000088817609 - 0.10556134232365635 * a - 0.06385417477170591 * b,
+            3
+        );
+        let S = Math.pow(
+            l * 1.0000000546724108 - 0.08948418209496575 * a - 1.2914855378640917 * b,
+            3
+        );
+        let res = {
+            mode: "lrgb",
+            r: 4.076741661347994 * L - 3.307711590408193 * M2 + 0.230969928729428 * S,
+            g: -1.2684380040921763 * L + 2.6097574006633715 * M2 - 0.3413193963102197 * S,
+            b: -0.004196086541837188 * L - 0.7034186144594493 * M2 + 1.7076147009309444 * S
+        };
+        if (alpha !== void 0) {
+            res.alpha = alpha;
+        }
+        return res;
+    };
+
+    var convertLrgbToRgb = ({ r, g, b, alpha }, mode = 'rgb') => {
+        const fn = (c = 0) => {
+            const abs = Math.abs(c);
+            if (abs > 0.0031308) {
+                return (Math.sign(c) || 1) * (1.055 * Math.pow(abs, 1 / 2.4) - 0.055);
+            }
+            return c * 12.92;
+        };
+
+        let res = {
+            mode,
+            r: fn(r),
+            g: fn(g),
+            b: fn(b)
+        };
+        if (alpha !== undefined) res.alpha = alpha;
+        return res;
+    };
+
+    /** Convert a colour in Oklab format to Oklch.
+     */
+    var convertLabToLch = ({ l, a, b, alpha }, mode = "lch") => {
+        let c4 = Math.sqrt(a * a + b * b);
+        let res = { mode, l, c: c4 };
+        if (c4)
+            res.h = normalizeHue_default(Math.atan2(b, a) * 180 / Math.PI);
+        if (alpha !== void 0)
+            res.alpha = alpha;
+        return res;
+    };
+
+    var normalizeHue = (hue3) => (hue3 = hue3 % 360) < 0 ? hue3 + 360 : hue3;
+    var normalizeHue_default = normalizeHue;
+
+    /** Convert a colour in Oklch format to Oklab.
+     */
+    function convertLchToLab({ l, c: c4, h, alpha }, mode = "lab") {
+        let res = {
+            mode,
+            l,
+            a: c4 ? c4 * Math.cos(h / 180 * Math.PI) : 0,
+            b: c4 ? c4 * Math.sin(h / 180 * Math.PI) : 0
+        };
+        if (alpha !== void 0)
+            res.alpha = alpha;
+        return res;
+    };
+
+    /** Convert a colour in RGB format to Oklch.
+     */
+    function convertRgbToOklch(col) {
+        return convertLabToLch(convertRgbToOklab(col));
+    }
+
+    /** Convert a colour in Oklch format to RGB.
+     */
+    function convertOklchToRgb(col) {
+        return convertLabToRgb(convertLchToLab(col));
+    }
+
+    /** Linear interpolation between `a` and `b`.
+     *
+     * @param {number} a
+     * @param {number} b
+     * @param {number} t
+     * @returns {number}
+     */
+    function lerp(a, b, t) {
+        if(a===undefined) {
+            return b;
+        }
+        if(b===undefined) {
+            return a;
+        }
+        return (1-t)*a + t*b;
+    }
+
+    /** By Christian Lawson-Perfect
+    */
+
+    /** Parse a hex string to an RGB colour object.
+     *
+     * @param {string} hex
+     * @returns {Color.rgb}
+     */
+    function parseRGB(hex) {
+        var r = parseInt(hex.slice(1,3),16);
+        var g = parseInt(hex.slice(3,5),16);
+        var b = parseInt(hex.slice(5,7),16);
+        return {r: r/255, g: g/255, b: b/255, mode: 'rgb'} ;
+    }
+
+    /** Mix two colours in Oklch colour space.
+     *
+     * @param {Color.oklab} oklab1
+     * @param {Color.oklab} oklab2
+     * @param {number} t
+     *
+     * @returns {Color}
+     */
+    function mix(oklab1, oklab2, t) {
+        const {l: l1, c: c1, h: h1} = oklab1;
+        const {l: l2, c: c2, h: h2} = oklab2;
+
+        return {l: lerp(l1,l2,t), c: lerp(c1,c2,t), h: c2==0 ? h1 : lerp(h1,h2,t), mode: 'oklch'};
+    }
+
+    /*
+      Delta Phi Star perceptual lightness contrast by Andrew Somers:
+      https://github.com/Myndex/deltaphistar 
+    */
+    const PHI = (1 + Math.sqrt(5))/2;
+
+    /** Perceptual contrast between two colours.
+     *
+     * @param {Color.rgb} a
+     * @param {Color.rgb} b
+     * @returns {number}
+     */
+    function dpsContrast(a, b) {
+      const dps = Math.abs(Math.pow(convertRgbToLab65(a).l, PHI) - Math.pow(convertRgbToLab65(b).l, PHI));
+      const contrast = Math.pow(dps, 1/PHI) * Math.SQRT2 - 40;
+      return contrast < 7.5 ? 0 : contrast;
+    }
+
+    /** Is the given colour "dark"? True if the contrast against white is more than the contrast against black.
+     *
+     * @param {Color.rgb} col
+     * @returns {boolean}
+     */
+    function is_dark(col) {
+        const black_contrast = dpsContrast(col, {r:0, g:0, b:0, mode: 'rgb'});
+        const white_contrast = dpsContrast(col, {r:1, g:1, b:1, mode: 'rgb'});
+        return black_contrast < white_contrast;
+    }
+
+    /** Format an RGB color as a hex code.
+     *
+     * @param {Color.rgb} rgb
+     * @returns {string}
+     */
+    function rgbToHex({r, g, b}) {
+        function f(n) {
+            return Math.floor(Math.max(0,Math.min(1,n))*255).toString(16).padStart(2,'0');
+        }
+        return `#${f(r)}${f(g)}${f(b)}`;
+    }
+
+    /** Which text colour should be used for a given background?
+     *
+     * @param {Color.rgb} col
+     * @returns {string} `"black"` or `"white"`.
+     */
+    function text_for(col, target_contrast) {
+        const col_oklab = convertRgbToOklab(col);
+
+        target_contrast = target_contrast === undefined ? 1 : target_contrast;
+
+        function clamp(n) {
+            return Math.max(0,Math.min(1,n));
+        }
+
+        let best;
+        let mindist = Infinity;
+
+        for(let l=0; l<=1; l += 0.01) {
+            const oklab = {mode:'lab65', l, a: col_oklab.a, b: col_oklab.b};
+            const {r,g,b} = convertLrgbToRgb(convertOklabToLrgb(oklab));
+            const rgb = {r: clamp(r), g: clamp(g), b: clamp(b)};
+            const contrast = dpsContrast(col, rgb);
+            const d = Math.abs(contrast - target_contrast);
+            if(d < mindist) {
+                mindist = d;
+                best = rgb;
+            }
+        }
+
+        if(!best) {
+            return 'black';
+        }
+
+        return rgbToHex(best);
+    }
+
+    Numbas.display_color = {
+        dpsContrast,
+        is_dark,
+        text_for,
+        parseRGB,
+        convertRgbToLab65,
+        convertOklabToLrgb,
+        convertRgbToOklab,
+        convertLrgbToRgb,
+        rgbToHex
+    }
+});
+
+/*
+Copyright 2011-16 Newcastle University
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+/** @file Display code. Provides {@link Numbas.display} */
+Numbas.queueScript('display', ['display-base', 'knockout-handlers', 'exam-display', 'question-display', 'part-display', 'display/parts/extension', 'display/parts/gapfill', 'display/parts/information', 'display/parts/jme', 'display/parts/matrix', 'display/parts/multipleresponse', 'display/parts/numberentry', 'display/parts/patternmatch'], function() {
+});
+
+Numbas.queueScript('knockout-handlers', ['display-util', 'display-base', 'answer-widgets'], function() {
+    Knockout.onError = function(err) {
+        Numbas.display.die(err);
+    };
+
+    Knockout.bindingHandlers.niceNumber = {
+        update: function(element, valueAccessor) {
+            var n = Knockout.utils.unwrapObservable(valueAccessor());
+            element.textContent = Numbas.math.niceNumber(n);
+        }
+    }
+    Knockout.bindingHandlers.percentage = {
+        update: function(element, valueAccessor) {
+            var n = Knockout.utils.unwrapObservable(valueAccessor());
+            element.textContent = Numbas.math.niceNumber(n * 100, {precisionType: 'dp', precision: 1}) + '%';
+        }
+    }
+
+    /** Set the text content and `datetime` attribute of a `<time>` tag based on the given Date object.
+     *
+     * @see Numbas.display_util.duration_observable
+     */
+    Knockout.bindingHandlers.datetime = {
+        update: function(element, valueAccessor) {
+            var time = Knockout.unwrap(valueAccessor());
+
+            if(!time) {
+                element.textContent = '';
+                element.removeAttribute('datetime');
+                return;
+            }
+
+            element.textContent = Numbas.util.formatTime(time);
+            element.setAttribute('datetime', time.toISOString());
+        }
+    }
+
+    /** Set the text content and `datetime` attribute of a `<time>` tag based on the given duration, a `Numbas.display_util.duration_observable` object.
+     *
+     * @see Numbas.display_util.duration_observable
+     */
+    Knockout.bindingHandlers.duration = {
+        update: function(element, valueAccessor) {
+            var obs = valueAccessor();
+            element.textContent = obs.display();
+            element.setAttribute('datetime', obs.machine());
+        }
+    }
+
+    /** Resize an input element to fit its value.
+     *
+     * @param {Element} element
+     */
+    function resize_input_to_value(element) {
+        var w = Numbas.display_util.measureText(element).width;
+        element.style['width'] = Math.max(w + 30, 60) + 'px';
+    };
+
+    Knockout.bindingHandlers.autosize = {
+        init: function(element) {
+            //resize text inputs to just fit their contents
+            element.addEventListener('keyup', () => resize_input_to_value(element));
+            element.addEventListener('keydown', () => resize_input_to_value(element));
+            element.addEventListener('change', () => resize_input_to_value(element));
+            element.addEventListener('input', () => resize_input_to_value(element));
+            resize_input_to_value(element);
+        },
+        update: function(element, valueAccessor, allBindings) {
+            var textInput = allBindings.get('textInput');
+            if(textInput) {
+                textInput();
+            }
+            var value = allBindings.get('value');
+            if(value) {
+                value();
+            }
+            const attr = allBindings.get('attr');
+            if(attr) {
+                const placeholder = Knockout.unwrap(attr.placeholder);
+            }
+            resize_input_to_value(element);
+        }
+    }
+    Knockout.bindingHandlers.test = {
+        update: function(element, valueAccessor) {
+            console.log(Knockout.utils.unwrapObservable(valueAccessor()));
+        }
+    }
+    Knockout.bindingHandlers.dom = {
+        update: function(element, valueAccessor) {
+            var nodes = Knockout.utils.unwrapObservable(valueAccessor());
+            element.innerHTML = '';
+            if(!Array.isArray(nodes)) {
+                nodes = [nodes];
+            }
+            for(const node of nodes) {
+                if(typeof node == 'string') {
+                    const span = document.createElement('span');
+                    span.innerHTML = node;
+                    for(const subnode of [...span.childNodes]) {
+                        element.appendChild(subnode);
+                    }
+                } else {
+                    element.append(node);
+                }
+            }
+            Numbas.display.typeset(element);
+        }
+    }
+    Knockout.bindingHandlers.latex = {
+        update: function(element, valueAccessor) {
+            var value = Knockout.unwrap(valueAccessor());
+            Knockout.bindingHandlers.html.update.apply(this, arguments);
+
+            if(value && value.toString().trim()) {
+                Numbas.display.typeset(element);
+            }
+        }
+    }
+
+    /**
+     * Render a TeX expression inside this element.
+     * The element is hidden while MathJax typesets the TeX.
+     */
+    Knockout.bindingHandlers.maths = {
+        update: function(element, valueAccessor) {
+            var val = Knockout.utils.unwrapObservable(valueAccessor());
+            element.innerHTML = '';
+            const span = document.createElement('span');
+            element.append(span);
+            span.hidden = true;
+            span.innerHTML = '\\(' + val + '\\)';
+            Numbas.display.typeset(element, () => {
+                span.hidden = false;
+            });
+        }
+    }
+    Knockout.bindingHandlers.jmescope = {
+        update: function(element, valueAccessor) {
+            Numbas.display_util.set_jme_scope(element, Knockout.unwrap(valueAccessor()));
+        }
+    };
+    Knockout.bindingHandlers.typeset = {
+        update: function(element, valueAccessor) {
+            Knockout.utils.unwrapObservable(valueAccessor());
+            Numbas.display.typeset(element);
+        }
+    }
+
+    Knockout.bindingHandlers.realVisible = Knockout.bindingHandlers.visible;
+
+    Knockout.bindingHandlers.visible = {
+        init: function(element, valueAccessor) {
+            element.style.display = '';
+            Knockout.utils.domData.set(element, 'tabindex', element.getAttribute('tabindex'));
+        },
+        update: function(element, valueAccessor) {
+            var val = Knockout.unwrap(valueAccessor());
+            element.classList.toggle('invisible', !val);
+            !val ? element.setAttribute('disabled', true) : element.removeAttribute('disabled');
+            if(val) {
+                const tabindex = Knockout.utils.domData.get(element, 'tabindex');
+                if(tabindex !== null) {
+                    element.setAttribute('tabindex', tabindex);
+                }
+            } else {
+                element.removeAttribute('tabindex');
+            }
+        }
+    }
+    Knockout.bindingHandlers.visibleIf = Knockout.bindingHandlers.visible; // removed because it didn't work, but aliased to `visible` for backwards compatibility
+
+    Knockout.bindingHandlers.promise = {
+        init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+            var promise = Knockout.unwrap(valueAccessor());
+            promise.then(function(html) {
+                if(!html) {
+                    return;
+                }
+                element.appendChild(html);
+                Knockout.applyBindingsToDescendants(bindingContext, element);
+            });
+            return {controlsDescendantBindings: true};
+        }
+    }
+    Knockout.bindingHandlers.reorder_table = {
+        // reorder the rows and columns of a table, including the header
+        // value is an object {rows, columns, leaders}
+        // rows and columns are permutations
+        // leaders is the number of columns at the start of each row to ignore (so column headers aren't moved)
+        init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+            Knockout.applyBindingsToDescendants(bindingContext, element);
+
+            var value = Knockout.unwrap(valueAccessor());
+            var row_order = Knockout.unwrap(value.rows);
+            var column_order = Knockout.unwrap(value.columns);
+            var leaders = value.leaders || 0;
+            [...element.querySelectorAll('tr:not([data-shuffle="no"])')].forEach(function(r) {
+                var columns = [...r.querySelectorAll(':is(td,th):not([data-shuffle="no"])')].slice(leaders);
+                for(var i = 0;i < column_order.length;i++) {
+                    r.appendChild(columns[column_order[i]]);
+                }
+            });
+            [...element.querySelectorAll('tbody')].forEach(function(body) {
+                var rows = [...body.querySelectorAll('tr')];
+                for(var i = 0;i < row_order.length;i++) {
+                    body.appendChild(rows[row_order[i]]);
+                }
+            });
+            const choice_header = element.querySelector('.choice-heading');
+            if(choice_header) {
+                const first_row = element.querySelector('tbody tr:first-child');
+                first_row.insertBefore(choice_header, first_row.firstChild);
+            }
+
+            return {controlsDescendantBindings: true};
+        }
+    }
+    Knockout.bindingHandlers.reorder_list = {
+        init: function(element, valueAccessor) {
+            var value = Knockout.unwrap(valueAccessor());
+            var order = Knockout.unwrap(value.order);
+            var leaders = element.children.length - order.length;
+            var items = Array.prototype.slice.call(element.children, leaders);
+            for(var i = 0;i < order.length;i++) {
+                element.appendChild(items[order[i]]);
+            }
+        }
+    }
+
+
+    Knockout.bindingHandlers.treeView = {
+        init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+            var trees = (bindingContext.$trees || []).slice();
+            trees.push({
+                element: element,
+                context: bindingContext
+            })
+            var innerBindingContext = bindingContext.extend(valueAccessor).extend({
+                '$trees': trees
+            });
+
+            var options = {
+              templateEngine: Knockout.nativeTemplateEngine.instance
+            };
+
+            element.addEventListener('keydown', (e) => {
+                if(e.target == element) {
+                    return;
+                }
+
+                const focused = document.activeElement;
+
+                let el = focused;
+                while(el.parentElement && el.parentElement.role != 'group' && el.parentElement.role != 'tree') {
+                    el = el.parentElement;
+                }
+                if(!el.parentElement) {
+                    return;
+                }
+                const all_items = Array.from(element.querySelectorAll('[role="treeitem"]'));
+                const siblings = Array.from(el.parentElement.children);
+                const i = siblings.indexOf(el);
+
+                /** Focus the treeitem at the given index.
+                 * @param {number} j
+                 */
+                function focus_item(j) {
+                    if(el.parentElement.role == 'tree') {
+                        return;
+                    }
+                    const item = siblings[j];
+                    if(!item) {
+                        return;
+                    }
+                    item.querySelector('[role="treeitem"]').focus();
+                }
+
+                const handlers = {
+                    'ArrowLeft': () => {
+                        let el = focused;
+                        while(el && el.role != 'group') {
+                            el = el.parentElement;
+                        };
+                        if(!el) {
+                            return;
+                        }
+                        const item = el.parentElement.querySelector('[role="treeitem"]');
+                        if(!item) {
+                            return;
+                        }
+                        item.focus();
+                    },
+                    'ArrowRight': () => {
+                        let el = focused;
+                        let group;
+                        while(el && !group) {
+                            el = el.parentElement;
+                            group = el.querySelector('[role="group"]');
+                        }
+                        if(!group) {
+                            return;
+                        }
+                        const first_child = group.querySelector('[role="group"] [role="treeitem"]');
+                        if(!first_child) {
+                            return;
+                        }
+                        first_child.focus();
+                    },
+                    'ArrowUp': () => {
+                        focus_item(i - 1);
+                    },
+                    'ArrowDown': () => {
+                        focus_item(i + 1);
+                    },
+                    'Home': () => {
+                        const first_item = element.querySelector('[role="treeitem"]');
+                        if(!first_item) {
+                            return;
+                        }
+                        first_item.focus();
+                    },
+                    'End': () => {
+                        const last_item = all_items[all_items.length - 1];
+                        if(!last_item) {
+                            return;
+                        }
+                        last_item.focus();
+                    },
+                }
+                if(handlers[e.key]) {
+                    handlers[e.key]();
+                    e.preventDefault();
+                } else if(e.key.length == 1) {
+                    const j = all_items.indexOf(focused);
+                    const cycled_items = all_items.slice(j + 1).concat(all_items.slice(0, j));
+                    const search = e.key.toLowerCase();
+                    const item = cycled_items.find((item) => item.textContent.toLowerCase().includes(search));
+                    if(item) {
+                        item.focus();
+                        e.preventDefault();
+                    }
+                }
+            });
+
+            return Knockout.bindingHandlers.template.init(element, function() {
+                return options
+            }, allBindings, viewModel, innerBindingContext);
+
+        },
+        'update': function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+            var v = Knockout.unwrap(valueAccessor());
+            if(v === undefined) {
+                return;
+            }
+            var trees = (bindingContext.$trees || []).slice();
+            var innerBindingContext = bindingContext.createChildContext(valueAccessor).extend({
+                '$trees': trees,
+            });
+            trees.push({
+                element: element,
+                context: bindingContext.extend({'$trees':trees})
+            })
+            var options = {
+                templateEngine: Knockout.nativeTemplateEngine.instance
+            }
+            return Knockout.bindingHandlers.template.update(element, function() {
+                return options
+            }, allBindings, viewModel, innerBindingContext)
+        }
+    };
+
+    Knockout.bindingHandlers.treeNode = {
+        init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+            return {controlsDescendantBindings: true};
+        },
+
+        update: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+            var trees = bindingContext.$trees;
+            var tree = trees[trees.length - 1];
+            var innerBindingContext = tree.context.createChildContext(valueAccessor);
+            var options = {
+              name: tree.element,
+                templateEngine: Knockout.nativeTemplateEngine.instance
+            }
+            return Knockout.bindingHandlers.template.update(element, function() {
+                return options
+            }, allBindings, viewModel, innerBindingContext)
+        }
+    }
+
+    Knockout.bindingHandlers.download_file = {
+        update: function(element, valueAccessor) {
+            const file = Knockout.unwrap(valueAccessor());
+            try {
+                URL.revokeObjectURL(element.getAttribute('href'));
+            } catch {
+            }
+            element.setAttribute('href', window.URL.createObjectURL(file));
+            element.setAttribute('download', file.name);
+        }
+    }
+
+    Knockout.bindingHandlers.part_aria_validity = {
+        update: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+            const pd = Knockout.unwrap(allBindings().part);
+            const valid = Knockout.unwrap(valueAccessor());
+            if(valid) {
+                element.setAttribute('aria-invalid', true);
+                element.setAttribute('aria-errormessage', pd.part.full_path + '-warnings');
+            } else {
+                element.removeAttribute('aria-invalid');
+                element.removeAttribute('aria-errormessage');
+            }
+        }
+    }
+
+    /** Bind the `open` attribute of a `<details>` element.
+     */
+    Knockout.bindingHandlers.open = {
+        init: function(element, valueAccessor) {
+            const value = valueAccessor();
+            if(typeof value == 'function') {
+                element.addEventListener('toggle', function(e) {
+                    value(element.open);
+                });
+            }
+        },
+
+        update: function(element, valueAccessor) {
+            const open = Knockout.unwrap(valueAccessor());
+            element.open = open;
+        }
+    }
+
+    Knockout.bindingHandlers.modal = {
+        init: function(element, valueAccessor) {
+            const options = valueAccessor();
+
+            element.addEventListener('close', (e) => {
+                const submit = Knockout.unwrap(options.submit);
+                const cancel = Knockout.unwrap(options.cancel);
+                element.close();
+                if(element.returnValue != 'cancel') {
+                    if(submit) {
+                        submit();
+                    }
+                } else {
+                    if(cancel) {
+                        cancel();
+                    }
+                }
+            });
+        },
+        update: function(element, valueAccessor) {
+            const {show} = Knockout.unwrap(valueAccessor());
+            if(show === undefined) {
+                return;
+            }
+            if(show) {
+                element.showModal();
+            } else {
+                element.close();
+            }
+        }
+    };
+
+    Knockout.bindingHandlers.feedbackicon = {
+        init: function(element, valueAccessor) {
+        },
+
+        update: function(element, valueAccessor) {
+            const scoreFeedback = Knockout.unwrap(valueAccessor());
+            const state = Knockout.unwrap(scoreFeedback.state) || '';
+            const attr = Knockout.unwrap(scoreFeedback.iconAttr);
+            const title = Knockout.unwrap(attr?.title) || '';
+            element.classList.toggle('invisible', state === undefined || state == 'none');
+            if(state) {
+                element.innerHTML = `<span data-feedback="${state}" class="feedback-icon" aria-hidden="true">${R('icon.' + state)}</span><span class="sr-only">${title}</span>`;
+            } else {
+                element.innerHTML = '<span class="feedback-icon"></span>';
+            }
+            if(attr) {
+                Object.entries(attr).forEach(([k, v]) => element.setAttribute(k, v));
+            }
+        }
+    }
+
+    Knockout.bindingHandlers.tablist = {
+        init: function(element, valueAccessor) {
+
+            let search = '';
+
+            element.addEventListener('keydown', (e) => {
+                if(e.target == element) {
+                    return;
+                }
+                const tabs = Array.from(element.querySelectorAll('[role="tab"]'));
+                const i = tabs.indexOf(e.target);
+                const cycled_tabs = tabs.slice(i + 1).concat(tabs.slice(0, i + 1));
+
+                if(!tabs.length) {
+                    return;
+                }
+
+                /** Focus the tab at the given index. Also resets the search.
+                 *
+                 * @param {number} j
+                 */
+                function focus_tab(j) {
+                    tabs[j].focus();
+                    search = '';
+                    e.preventDefault();
+                }
+
+                /** Find a tab whose name starts with or includes the search term.
+                 * @returns {Element}
+                 */
+                function search_for_tab() {
+                    const tab = cycled_tabs.find((tab) => tab.dataset.name && tab.dataset.name.toLowerCase().startsWith(search)) || cycled_tabs.find((tab) => tab.dataset.name && tab.dataset.name.toLowerCase().includes(search));
+                    if(tab) {
+                        tab.focus();
+                    }
+                    return tab;
+                }
+
+                const handlers = {
+                    'ArrowUp': () => {
+                        focus_tab((i + tabs.length - 1) % tabs.length);
+                    },
+                    'ArrowDown': () => {
+                        focus_tab((i + 1) % tabs.length);
+                    },
+                    'Home': () => {
+                        focus_tab(0);
+                    },
+                    'End': () => {
+                        focus_tab(tabs.length - 1);
+                    },
+                    ' ': () => {
+                        e.target.dispatchEvent(new Event('click'));
+                        e.preventDefault();
+                    }
+                };
+
+                if(handlers[e.key]) {
+                    handlers[e.key]();
+                } else if(e.key.length == 1) {
+                    e.preventDefault();
+                    search += e.key;
+                    while(search.length) {
+                        const moved = search_for_tab();
+                        if(moved) {
+                            break;
+                        }
+                        search = search.slice(1);
+                    }
+                }
+            });
+        }
+    }
+
+    Knockout.bindingHandlers['content-html'] = {
+        init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+            const res = Knockout.unwrap(valueAccessor());
+            const {html, scope} = res;
+            element.innerHTML = html;
+            element.classList.add('content-area');
+            Numbas.display_util.set_jme_scope(element, scope);
+            Numbas.jme.variables.DOMcontentsubvars(element, scope);
+            let root_element;
+            for(let ctx of bindingContext['$parents']) {
+                root_element = ctx['root_element'];
+                if(root_element) {
+                    break;
+                }
+            }
+            if(root_element) {
+                root_element.register_lightbox(element);
+            }
+            Numbas.display.typeset(element);
+        }
+    }
+
+    Knockout.components.register('content-block', {
+        viewModel: function(params) {
+            this.html = params.html;
+            this.scope = params.scope;
+        },
+        template: '<span data-bind="content-html: {html: html, scope: scope}"></span>',
+    });
+});
+
+Numbas.queueScript('part-display', ['display-util', 'display-base', 'util', 'jme'], function() {
+    var display = Numbas.display;
+    var util = Numbas.util;
+
+    /** Display methods for a generic question part.
+     *
+     * @name PartDisplay
+     * @memberof Numbas.display
+     * @class
+     * @param {Numbas.parts.Part} p - The associated part object.
+     */
+    display.PartDisplay = function(p) {
+        var pd = this;
+        /** The associated part object.
+         *
+         * @member {Numbas.parts.Part} part
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.part = p;
+        /** The display name of this part.
+         *
+         * @member {observable|string} name
+         * @memberof Numbas.display.PartDisplay
+         * @see Numbas.parts.Part#name
+         */
+        this.name = Knockout.observable('');
+
+        /** The part's prompt text, as a string of HTML.
+         * @member {string} prompt
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.prompt = p.prompt || '';
+
+        /** Title text for this part's answer input.
+         *
+         * @member {observable.<string>} input_title
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.input_title = Knockout.computed(function() {
+            return R('part.input title', {name: this.name()});
+        }, this);
+
+        /** Title text for this part's expected answer input.
+         *
+         * @member {observable.<string>} correct_title
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.correct_title = Knockout.computed(function() {
+            return R('part.correct answer title', {name: this.name()});
+        }, this);
+
+        /** Observable for the value received from the answer input widget.
+         *
+         * @member {{value: anything, valid: boolean, warnings: Array.<string>}} input_answer
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.input_answer = Knockout.observable({valid: false});
+
+        /** Observable for the correct answer to this part, to give to the input widget.
+         *
+         * @member {{value: anything, valid: boolean, warnings: Array.<string>}} input_answer
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.correct_answer = Knockout.observable({valid: false});
+
+        Knockout.computed(function() {
+            const {warnings, value} = this.input_answer();
+            if(value !== undefined) {
+                this.setStudentAnswer(value);
+            }
+            if(warnings?.length) {
+                for(let warning of warnings) {
+                    p.giveWarning(warning);
+                }
+            }
+        }, this);
+
+        this.feedback_title = Knockout.computed(function() {
+            return R('part.feedback title', {name: this.name()});
+        }, this);
+
+        /** Should the name of this part be displayed?
+         *
+         * @member {observable|boolean} showName
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.showName = Knockout.computed(function() {
+            return this.name() && !this.part.isGap && (this.part.question.partsMode == 'all' || this.revealed());
+        }, this);
+
+        /** The question this part belongs to.
+         *
+         * @member {Numbas.Question} question
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.question = p.question;
+
+        this.inline = p.isGap && !((p.type == '1_n_2'&& p.settings.displayType != 'dropdownlist') || p.type == 'm_n_2' || p.type == 'm_n_x');
+
+        /** Should this part be shown?
+         *
+         * @member {boolean} visible
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.visible = Knockout.computed(function() {
+            switch(this.question?.partsMode) {
+                case 'explore':
+                    var part = this.part;
+                    while(part.parentPart) {
+                        part = part.parentPart;
+                    }
+                    return this.question?.showAllParts || this.question.display?.currentPart() == part.display || this.question.exam.display.mode() == 'review';
+                default:
+                    return true;
+            }
+        }, this);
+
+        /** The student's current score.
+         *
+         * @see Numbas.parts.Part#score
+         * @member {observable|number} score
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.score = Knockout.observable(p.score);
+        /** The total marks available for this part.
+         *
+         * @see Numbas.parts.Part#marks
+         * @member {observable|number} marks
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.marks = Knockout.observable(p.marks);
+        /** Proportion of available marks awarded to the student - i.e. `score/marks`. Penalties will affect this instead of the raw score, because of things like the steps marking algorithm.
+         *
+         * @member {observable|number} credit
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.credit = Knockout.observable(p.credit);
+        /** Does this part do any marking?
+         *
+         * @member {observable|boolean} doesMarking
+         * @see Numbas.parts.Part#doesMarking
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.doesMarking = Knockout.observable(p.doesMarking);
+        /** Has the student answered this part?
+         *
+         * @member {observable|boolean} answered
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.answered = Knockout.observable(p.answered);
+        /** Has the student changed their answer since the last submission?
+         *
+         * @member {observable|boolean} isDirty
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.isDirty = Knockout.observable(false);
+
+        this.isDirty.subscribe(function() {
+            if(!pd.isDirty()) {
+                return;
+            }
+            setTimeout(function() {
+                pd.controls.auto_submit();
+            }, 1000);
+        });
+
+        /** Is this part waiting for some pre-submit tasks to finish before submitting?
+         *
+         * @member {observable|boolean} waiting_for_pre_submit
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.waiting_for_pre_submit = Knockout.observable(false);
+
+        var _warnings = Knockout.observableArray([]);
+
+        /** Warnings based on the student's answer.
+         *
+         * @member {observable | Array.<{message: string}>} warnings
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.warnings = Knockout.computed({
+            read: function() {
+                return _warnings().filter(function(w) {
+                    return util.isNonemptyHTML(w.message);
+                });
+            },
+            write: _warnings
+        });
+        this.warnings.push = function() {
+            return _warnings.push.apply(_warnings, arguments);
+        }
+
+        /** Does the part have any warnings to show?
+         * Changes to false immediately.
+         * Only changes to true after a delay if the part is dirty, but immediately if the part is not (i.e. it's just been submitted).
+         *
+         * @member {observable|boolean} hasWarnings
+         */
+        this.hasWarnings = Knockout.observable(false);
+        var lastWarningReset;
+        Knockout.computed(function() {
+            if(this.warnings().length == 0) {
+                this.hasWarnings(false);
+                if(lastWarningReset) {
+                    clearTimeout(lastWarningReset);
+                    lastWarningReset = null;
+                }
+            }
+        }, this);
+        Knockout.computed(function() {
+            if(this.warnings().length > 0) {
+                if(lastWarningReset) {
+                    clearTimeout(lastWarningReset);
+                }
+                if(this.isDirty()) {
+                    lastWarningReset = setTimeout(function() {
+                        pd.hasWarnings(true);
+                    }, 500);
+                } else {
+                    pd.hasWarnings(true);
+                }
+            }
+        }, this);
+
+        var _warningsShown = Knockout.observable(false);
+        /** Should the warning box be shown?
+         *
+         * @member {observable|boolean} warningsShown
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.warningsShown = Knockout.computed({
+            read: function() {
+                return this.hasWarnings() && (_warningsShown() || this.alwaysShowWarnings);
+            },
+            write: function(v) {
+                return _warningsShown(v);
+            }
+        }, this);
+
+        /** Position the warnings box.
+         */
+        function position_warnings() {
+            if(!pd.html || !pd.warningsShown.peek()) {
+                return;
+            }
+            var margin = 10;
+
+            var answer = pd.html.querySelector(':scope .student.answer');
+            var warnings_box = answer.querySelector('.warnings');
+            var offsetTop = 0;
+            var offsetLeft = 0;
+            var el = answer;
+            if(!el) {
+                return;
+            }
+            while(el.offsetParent && !el.classList.contains('question')) {
+                offsetTop += el.offsetTop;
+                offsetLeft += el.offsetLeft;
+                el = el.offsetParent;
+            }
+            var answer_height = answer.getBoundingClientRect().height;
+            var answer_width = answer.getBoundingClientRect().width;
+
+            var wtop = offsetTop + (p.isGap ? 0 : answer_height);
+            var wleft = (offsetLeft + (p.isGap ? margin + answer_width : 0));
+
+            warnings_box.style.top = wtop + 'px';
+            warnings_box.style.left = wleft + 'px';
+
+            var box = warnings_box.getBoundingClientRect();
+            const question_html = pd.part.question.display.html;
+            var question_box = question_html.getBoundingClientRect();
+            var docWidth = question_box.width;
+            var dr = box.right - question_box.left - docWidth + margin;
+            warnings_box.classList.remove('shifted-down');
+            if(dr > 0) {
+                wleft -= dr;
+                if(p.isGap) {
+                    wtop += answer_height;
+                    warnings_box.classList.add('shifted-down');
+                }
+                warnings_box.style.left = wleft + 'px';
+                warnings_box.style.top = wtop + 'px';
+            }
+            warnings_box.style.width = '';
+            const ideal_width = parseFloat(window.getComputedStyle(warnings_box).width.replace('px', ''));
+            var maxWidth = docWidth - 3 * margin;
+            if(ideal_width > maxWidth) {
+                warnings_box.style.width = maxWidth + 'px';
+            }
+        }
+
+
+        /** Show the warnings.
+         *
+         * @member {Function} showWarnings
+         * @function
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.showWarnings = function() {
+            this.warningsShown(true);
+            position_warnings();
+        }
+
+        setInterval(position_warnings, 200);
+
+        /** Hide the warnings.
+         *
+         * @member {Function} hideWarnings
+         * @function
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.hideWarnings = function() {
+            this.warningsShown(false);
+        }
+        /** Feedback messages.
+         *
+         * @member {observable} feedbackMessages
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.feedbackMessages = Knockout.observableArray([]);
+
+
+        /** The values of marking notes.
+         *
+         * @member {observable} marking_values
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.marking_values = Knockout.observable({});
+
+        /** Are there other parts in line with this one? (Used to decide whether to show the submit button and feedback text)
+         * True if there's more than one part in the question, or this is a step.
+         *
+         * @member {observable|boolean} isNotOnlyPart
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.isNotOnlyPart = Knockout.computed(function() {
+            return this.question.display?.numParts() > 1 || this.part.isStep;
+        }, this);
+
+        /** Does this part belong to an explore mode question?
+         *
+         * @member {boolean} isExplore
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.isExplore = this.question?.partsMode == 'explore';
+
+        var _feedbackShown = Knockout.observable(false);
+
+        /** Is the box containing the feedback messages open?
+         *
+         * @member {observable.<boolean>} feedbackShown
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.feedbackShown = Knockout.computed({
+            read: function() {
+                return _feedbackShown() || !this.isNotOnlyPart()
+            },
+
+            write: function(v) {
+                _feedbackShown(v);
+            }
+        }, this);
+
+        /** Text for the button to toggle the display of the feedback messages.
+         *
+         * @member {observable|string} feedbackToggleText
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.feedbackToggleText = Knockout.pureComputed(function() {
+            if(this.waiting_for_pre_submit()) {
+                return R('part.waiting for pre submit');
+            }
+            return R('part.feedback');
+        }, this);
+
+        /** Have the steps ever been shown?
+         *
+         * @see Numbas.parts.Part#stepsShown
+         * @member {observable|boolean} stepsShown
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.stepsShown = Knockout.observable(p.stepsShown);
+        /** Are the steps currently open?
+         *
+         * @see Numbas.parts.Part#stepsOpen
+         * @member {observable|boolean} stepsOpen
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.stepsOpen = Knockout.observable(p.stepsOpen);
+
+        this.ended = this.question?.exam?.display?.ended || Knockout.observable(false);
+
+        /** Have the correct answers been revealed?
+         *
+         * @member {observable|boolean} revealed
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.revealed = Knockout.observable(false);
+        /** Has this part been locked?
+         *
+         * @member {observable|boolean} locked
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.locked = Knockout.observable(false);
+        /** Is this part disabled? True if revealed or locked.
+         *
+         * @member {observable|boolean} locked
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.disabled = Knockout.computed(function() {
+            return this.revealed() || this.locked();
+        }, this);
+        /** Show the "submit part" button?
+         *
+         * @member {observable|boolean} showSubmitPart
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.showSubmitPart = Knockout.computed(function() {
+            return this.doesMarking() && !this.disabled();
+        }, this);
+        /** Text to describe the state of the steps penalty.
+         *
+         * @member {observable|string} stepsPenaltyMessage
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.stepsPenaltyMessage = Knockout.computed(function() {
+            if(this.stepsOpen()) {
+                return R('question.hide steps no penalty');
+            } else if(this.part.settings.stepsPenalty == 0 || this.revealed()) {
+                return R('question.show steps no penalty');
+            } else if(this.stepsShown()) {
+                return R('question.show steps already penalised');
+            } else {
+                return R('question.show steps penalty', {count:this.part.settings.stepsPenalty});
+            }
+        }, this);
+        /** Should the correct answer be shown? True if revealed and {@link Numbas.parts.Part#settings.showCorrectAnswer}) is true.
+         *
+         * @member {observable|boolean} showCorrectAnswer
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.showCorrectAnswer = Knockout.computed(function() {
+            if(!pd.revealed()) {
+                return false;
+            }
+            if(p.isGap && !p.parentPart.settings.inlineCorrectAnswer) {
+                return false;
+            }
+            return Numbas.is_instructor || (p.doesMarking && p.settings.showCorrectAnswer && p.question?.display?.expectedAnswersRevealed());
+        });
+
+        var feedback_settings = Numbas.util.copyobj(p.question?.exam?.settings || {});
+
+        feedback_settings.showFeedbackIcon = p.settings.showFeedbackIcon;
+        if(p.parentPart && p.parentPart.type == 'gapfill' && p.parentPart.settings.sortAnswers) {
+            feedback_settings.showFeedbackIcon = false;
+            feedback_settings.showAnswerState = false;
+        }
+
+        this.previousPart = p.previousPart ? p.previousPart.display : null;
+
+        /** Display of this parts's current score / answered status.
+         *
+         * @member {observable|Numbas.display.scoreFeedback} scoreFeedback
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.scoreFeedback = Numbas.display_util.showScoreFeedback(this, feedback_settings);
+
+        /** Should feedback icons be shown for this part?
+         *
+         * @member {observable|boolean} showFeedbackIcon
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.showFeedbackIcon = Knockout.observable(feedback_settings.showFeedbackIcon);
+
+        /** Show the marks feedback?
+         *
+         * @member {observable|boolean} showMarks
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.showMarks = Knockout.computed(function() {
+            return this.scoreFeedback.message() && (this.isNotOnlyPart() || !(this.scoreFeedback.iconClass() == '' || this.scoreFeedback.iconClass() == 'invisible'));
+        }, this);
+
+        /** Should the box containing part marks and the submit and feedback buttons be shown?
+         *
+         * @member {observable|boolean} showFeedbackBox
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.showFeedbackBox = Knockout.computed(function() {
+            return this.doesMarking();
+        }, this);
+
+        /** Should the feedback messages be shown?
+         *
+         * @member {observable|boolean} showFeedbackMessages
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.showFeedbackMessages = Numbas.display_util.resolve_feedback_setting(this, p.question?.exam?.settings.showPartFeedbackMessages);
+
+        /** Has the feedback changed since it was last looked at?
+         * @member {observable|boolean} showFeedbackMessages
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.changedFeedback = Knockout.observable(false);
+
+        this.feedbackShown.subscribe(function(shown) {
+            if(shown) {
+                pd.changedFeedback(false);
+            }
+        });
+
+        /**
+         * Feedback messages that are shown to the student.
+         * If all feedback should be shown, then returns the entire list. If not, then only messages relating to invalid input are shown.
+         *
+         * @member {observable.<Array>} shownFeedbackMessages
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.shownFeedbackMessages = Knockout.computed(function() {
+            var messages = this.feedbackMessages();
+
+            // If not showing part feedback messages, only show messages about invalid input.
+            if(!this.showFeedbackMessages()) {
+                messages = messages.filter(function(m) {
+                    return m.credit_change == 'invalid';
+                });
+            }
+
+            // If not showing the answer correctness, don't show messages that give positive or negative feedback.
+            if(!this.scoreFeedback.showAnswerState()) {
+                messages = messages.filter(function(m) {
+                    return !(m.credit_change == 'positive' || m.credit_change == 'negative');
+                });
+            }
+
+            var only_message_gives_score = messages.length == 1 && messages[0].credit_message == R('feedback.you were awarded', {count:p.score});
+
+            // If showing the current score and this part is marked, add a message giving the total score.
+            if(feedback_settings.showFeedbackIcon && this.marks() != 0 && this.scoreFeedback.showActualMark() && this.answered() && !only_message_gives_score) {
+                messages.push({
+                    credit_change: '',
+                    message: '',
+                    icon: '',
+                    credit_message: R('part.marking.total score', {count:p.score}),
+                    format: 'string'
+                });
+            }
+            return messages;
+        }, this);
+
+        this.shownFeedbackMessages.subscribe(function(messages) {
+            pd.changedFeedback(!pd.feedbackShown() && messages.length > 0);
+        })
+
+        /**
+         * Does this part have any shown feedback messages?
+         *
+         * @member {observable.<boolean>} hasFeedbackMessages
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.hasFeedbackMessages = Knockout.pureComputed(function() {
+            return this.shownFeedbackMessages().length > 0 || this.waiting_for_pre_submit();
+        }, this);
+
+        /** Options for the next part.
+         *
+         * @member {observable} nextParts
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.nextParts = Knockout.observableArray([]);
+        this.updateNextParts();
+
+        /** Should the list of next parts be shown?
+         *
+         * @member {observable.<boolean>} showNextParts
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.showNextParts = Knockout.computed(function() {
+            if(!this.isExplore) {
+                return false;
+            }
+            if(!(this.part.settings.suggestGoingBack || this.nextParts().length > 0)) {
+                return false;
+            }
+            if(this.part.question.showAllParts && this.nextParts().length == 1) {
+                return false;
+            }
+            if(this.revealed()) {
+                return false;
+            }
+            return true;
+        }, this);
+
+        /** Header for the menu of next parts.
+         *
+         * @member {observable.<string>} whatNextMessage
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.whatNextMessage = Knockout.computed(function() {
+            return R(this.answered() ? "part.choose next part.answered" : "part.choose next part.unanswered");
+        }, this);
+
+        /** Is this part a dead end? True if answered or doesn't do marking, and there are no next parts.
+         *
+         * @member {observable.<boolean>} reachedDeadEnd
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.reachedDeadEnd = Knockout.computed(function() {
+            return this.isExplore && (this.answered() || !this.doesMarking()) && !(this.part.question.showAllParts && this.nextParts().length > 0) && !this.showNextParts() && !this.revealed();
+        }, this);
+
+        /** Is this part the current part in an explore mode question?
+         *
+         * @member {observable.<boolean>} isCurrentPart
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.isCurrentPart = Knockout.pureComputed(function() {
+            return this == this.question.display?.currentPart();
+        }, this);
+
+        /** Next parts that have been made.
+         *
+         * @member {observableArray.<Numbas.display.PartDisplay>} madeNextParts
+         * @memberof Numbas.display.PartDisplay
+         */
+
+        this.madeNextParts = Knockout.computed(function() {
+            var parts = this.nextParts().filter(function(np) {
+                return np.made;
+            }).map(function(np) {
+                return np.instance;
+            });
+            return parts.sort(function(a, b) {
+                return a.part.path < b.part.path ? -1 : a.part.path > b.part.path ? 1 : 0
+            });
+        }, this);
+
+        /** Control functions.
+         *
+         * @member {object} controls
+         * @memberof Numbas.display.PartDisplay
+         * @property {Function} submit - Submit the student's answers for marking.
+         * @property {Function} showSteps - Show the steps.
+         * @property {Function} hideSteps - Hide the steps.
+         */
+        this.controls = {
+            auto_submit: function() {
+                if(!p.question?.exam?.settings.autoSubmit) {
+                    return;
+                }
+                var clicking_inside = pd.clicking_inside;
+
+                setTimeout(function() {
+                    if(!pd.will_autoSubmit) {
+                        return;
+                    }
+                    pd.will_autoSubmit = false;
+
+                    if(clicking_inside && p.type == 'gapfill') {
+                        if(!p.gaps.every((g) => g.isDirty || g.answered)) {
+                            return;
+                        }
+                    }
+                    pd.controls.submit(!clicking_inside);
+                }, 100);
+            },
+            submit: function(auto) {
+                if(auto !== true) {
+                    pd.feedbackShown(true);
+                }
+                var ps = p;
+                while(ps.isGap) {
+                    ps = ps.parentPart;
+                }
+                Numbas.controls.submitPart(ps);
+            },
+            showSteps: function() {
+                if(!p.stepsShown && p.settings.stepsPenalty > 0) {
+                    p.question?.exam?.display.root_element.showConfirm(
+                        R('question.show steps.confirm penalty', {count: p.settings.stepsPenalty}),
+                        function() {
+                            p.showSteps();
+                        }
+                    );
+                } else {
+                    p.showSteps();
+                }
+            },
+            hideSteps: function() {
+                p.hideSteps();
+            }
+        }
+
+        var autoSubmit_part = this.autoSubmit_part = p.parentPart && p.parentPart.type == 'gapfill' ? p.parentPart : p;
+        this.will_autoSubmit = false;
+
+        /** Event bindings.
+         *
+         * @member {object} inputEvents
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.inputEvents = {
+            keyup: function(context, e) {
+                if (e.key == 'Escape') {
+                    pd.hideWarnings();
+                } else {
+                    return true;    // allow the event to be handled as normal
+                }
+            },
+            keypress: function(context, e) {
+                if (e.key == 'Enter') {
+                    pd.controls.submit();
+                } else {
+                    return true;    // allow the event to be handled as normal
+                }
+            },
+            blur: function() {
+                pd.hideWarnings();
+
+                if(pd.isDirty()) {
+                    autoSubmit_part.display.will_autoSubmit = true;
+                    autoSubmit_part.display.controls.auto_submit();
+                }
+            },
+            focus: function() {
+                autoSubmit_part.display.will_autoSubmit = false;
+                pd.showWarnings();
+            },
+            click: function(context, e) {
+                if(e.target.tagName.toLowerCase() == 'input') {
+                    e.target.focus();
+                }
+                return true;
+            }
+        };
+
+        this.css_classes = Knockout.pureComputed(() => {
+            const classes = {
+                inline: this.inline,
+                block: p.type == 'm_n_2' || p.type == 'm_n_x' || (p.type == '1_n_2' && p.settings.displayType == 'radiogroup'),
+                step: p.isStep,
+                gap: p.isGap,
+                dirty: this.isDirty(),
+                'has-name': this.showName(),
+                answered: this.answered(), 
+                'has-feedback-messages': this.hasFeedbackMessages()
+            }
+            classes[`type-${p.type}`] = true;
+            return classes;
+        });
+
+        /** A promise resolving to the part's HTML element.
+         *
+         * @see Numbas.display.makeHTMLFromTemplate
+         * @type {Promise}
+         * @memberof Numbas.display.PartDisplay
+         */
+        pd.html_promise = new Promise(function(resolve) {
+            pd.resolve_html_promise = resolve;
+        });
+
+        /** Called when Knockout has finished binding the HTML for this part to the DOM.
+         *
+         * @memberof Numbas.display.PartDisplay
+         */
+        this.htmlBound = function() {
+            p.signals.trigger('HTMLAttached');
+        };
+    }
+    display.PartDisplay.prototype = /** @lends Numbas.display.PartDisplay.prototype */
+    {
+        /** Set this part's name.
+         *
+         * @param {string} name
+         */
+        setName: function(name) {
+            this.name(name || this.part.name);
+        },
+        /** Show a warning message about this part.
+         *
+         * @param {string} warning
+         * @memberof Numbas.display.PartDisplay
+         */
+        warning: function(warning) {
+            this.warnings.push({message:warning + ''});
+        },
+        /** Set the list of warnings.
+         *
+         * @param {Array.<string>} warnings
+         * @memberof Numbas.display.PartDisplay
+         */
+        setWarnings: function(warnings) {
+            this.warnings(warnings.map(function(warning) {
+                return {message: warning + ''}
+            }));
+        },
+        /** Remove all previously displayed warnings.
+         *
+         * @memberof Numbas.display.PartDisplay
+         */
+        removeWarnings: function() {
+            this.part.removeWarnings();
+        },
+        /** Called when the part is displayed (basically when question is changed).
+         *
+         * @see Numbas.display.QuestionDisplay.show
+         * @memberof Numbas.display.PartDisplay
+         */
+        show: function() {
+            this.showScore(this.part.answered, true);
+        },
+
+        /** Make HTML for this part.
+         */
+        makeHTML: async function() {
+            const p = this.part;
+            const question = p.question;
+            const qd = question.display;
+            await question.signals.on('mainHTMLAttached');
+            const html = display.makeHTMLFromTemplate('numbas-part-template', qd.contextDescription + ' ' + (p.display.name() || p.name));
+            Numbas.display.typeset(html);
+            return html;
+        },
+
+        /** Called when the correct answer to the question has changed (particularly when this part uses adaptive marking).
+         * The displayed correct answer should update.
+         *
+         * @memberof Numbas.display.PartDisplay
+         * @param {*} answer
+         * @abstract
+         */
+        updateCorrectAnswer: function(answer) {
+            this.correct_answer({valid: true, value: answer});
+        },
+        /**
+         * Show/update the student's score and answer status on this part.
+         *
+         * @param {boolean} valid
+         * @param {boolean} noUpdate
+         * @memberof Numbas.display.PartDisplay
+         */
+        showScore: function(valid, noUpdate) {
+            var p = this.part;
+            this.score(p.score);
+            this.marks(p.marks);
+            this.credit(p.credit);
+            if(!noUpdate) {
+                this.scoreFeedback.update(true);
+            }
+            if(valid === undefined) {
+                valid = this.part.answered;
+            }
+            this.answered(valid);
+            if(this.part.markingFeedback.length) {
+                var messages = this.part.markingFeedback.filter(function(action) {
+                    return util.isNonemptyHTML(action.message) || action.credit != 0;
+                }).map(function(action) {
+                    var icons = {
+                        'positive': 'icon-ok',
+                        'negative': 'icon-remove',
+                        'neutral': '',
+                        'invalid': 'icon-exclamation-sign'
+                    }
+                    var states = {
+                        'positive': 'correct',
+                        'negative': 'wrong',
+                        'neutral': 'none',
+                        'invalid': 'warning',
+                    }
+                    return {
+                        credit_change: action.credit_change,
+                        message: action.message,
+                        credit_message: action.credit_message,
+                        icon: icons[action.credit_change],
+                        state: states[action.credit_change],
+                        scope: action.scope?.scope,
+                        format: action.format || 'string'
+                    };
+                });
+                this.feedbackMessages(messages);
+            } else {
+                this.feedbackMessages([]);
+            }
+            this.marking_values(p.marking_values);
+        },
+        /** Called when 'show steps' button is pressed, or coming back to a part after steps shown.
+         *
+         * @memberof Numbas.display.PartDisplay
+         */
+        showSteps: function() {
+            this.stepsShown(this.part.stepsShown);
+            this.stepsOpen(this.part.stepsOpen);
+            for(var i = 0;i < this.part.steps.length;i++) {
+                this.part.steps[i].display.show();
+            }
+        },
+        /** Hide the steps.
+         *
+         * @memberof Numbas.display.PartDisplay
+         */
+        hideSteps: function() {
+            this.stepsOpen(this.part.stepsOpen);
+        },
+
+        /** Fill the student's last submitted answer into inputs.
+         *
+         * @abstract
+         * @param {object} studentAnswer
+         * @memberof Numbas.display.PartDisplay
+         */
+        restoreAnswer: function(studentAnswer) {
+            this.input_answer({valid: !!studentAnswer, value: studentAnswer});
+        },
+
+        /** Store the answer received from the input widget.
+         *
+         * @abstract
+         * @param {object} studentAnswer
+         * @memberof Numbas.display.PartDisplay
+         */
+        setStudentAnswer: function(studentAnswer) {
+            this.part.storeAnswer(studentAnswer);
+        },
+
+        /** Show the correct answers to this part.
+         *
+         * @memberof Numbas.display.PartDisplay
+         */
+        revealAnswer: function() {
+            this.revealed(true);
+            this.removeWarnings();
+            this.showScore();
+        },
+
+        /** Lock this part.
+         *
+         * @memberof Numbas.display.PartDisplay
+         */
+        lock: function() {
+            this.locked(true);
+        },
+
+        event_handlers: {
+            pointerdown: function(e) {
+                this.clicking_inside = true;
+                return true;
+            },
+
+            pointerup: function(e) {
+                this.clicking_inside = false;
+                return true;
+            },
+
+            focusin: function(e) {
+                this.will_autoSubmit = false;
+                return true;
+            },
+
+            focusout: function(e) {
+                if(this.isDirty()) {
+                    this.autoSubmit_part.display.will_autoSubmit = true;
+                    this.autoSubmit_part.display.controls.auto_submit();
+                }
+                return true;
+            },
+        },
+
+        /** Update the list of next parts.
+         * Called when an instance of a next part is created or removed.
+         *
+         * @memberof Numbas.display.PartDisplay
+         */
+        updateNextParts: function() {
+            var p = this.part;
+            this.nextParts(p.availableNextParts().map(function(np) {
+                var penaltyAmount = np.penalty ? np.penaltyAmount : 0;
+                var label = np.label;
+                if(!np.instance && np.showPenaltyHint && penaltyAmount != 0) {
+                    label += ' ' + R('part.next part.penalty amount', {count:penaltyAmount});
+                }
+                return {
+                    label: label,
+                    made: np.instance !== null,
+                    instance: np.instance !== null ? np.instance.display : null,
+                    penaltyAmount: penaltyAmount,
+                    lockAfterLeaving: np.lockAfterLeaving,
+                    select: function() {
+                        if(np.instance) {
+                            p.question.setCurrentPart(np.instance)
+                        } else {
+                            var penaltyAmount = np.penalty ? np.penaltyAmount : 0;
+                            if(penaltyAmount > 0) {
+                                p.question?.exam?.display.root_element.showConfirm(
+                                    R('part.next part.confirm penalty', {count: penaltyAmount}),
+                                    function() {
+                                        p.makeNextPart(np);
+                                    }
+                                );
+                            } else {
+                                p.makeNextPart(np);
+                            }
+                        }
+                    }
+                };
+            }));
+        },
+
+        /** Initialise this part's display.
+         *
+         * @see Numbas.display.QuestionDisplay.init
+         * @memberof Numbas.display.PartDisplay
+         */
+        init: function() {
+            this.part.setDirty(false);
+            for(var i = 0;i < this.part.steps.length;i++) {
+                this.part.steps[i].display.init();
+            }
+        },
+        /** Called when the exam ends.
+         *
+         * @memberof Numbas.display.PartDisplay
+         */
+        end: function() {
+            this.restoreAnswer(this.part.studentAnswer);
+        }
+    };
+});
+
+Numbas.queueScript('question-display', ['display-util', 'display-base', 'jme-variables', 'schedule', 'jme', 'util'], function() {
+    var display = Numbas.display;
+    /** Display properties of a question object.
+     *
+     * @name QuestionDisplay
+     * @memberof Numbas.display
+     * @class
+     * @param {Numbas.Question} q - the associated question object
+     */
+    display.QuestionDisplay = function(q) {
+        var qd = this;
+        this.question = q;
+        var exam = q.exam;
+
+        this.contextDescription = R('question.header', {number:q.number + 1});
+
+        /** The question statement, as a string of HTML.
+         * @member {HTML} statement
+         * @memberof Numbas.display.QuestionDisplay;
+         */
+        this.statement = q.statement || '';
+
+        /** The question advice, as a string of HTML.
+         * @member {HTML} advice
+         * @memberof Numbas.display.QuestionDisplay;
+         */
+        this.advice = q.advice || '';
+
+        /** Does this question have non-empty statement text?
+         *
+         * @member {observable|string} hasStatement
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.hasStatement = Knockout.observable(Numbas.util.isNonemptyHTML(this.statement));
+        /** Does this question have non-empty advice text?
+         *
+         * @member {observable|string} hasAdvice
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.hasAdvice = Knockout.observable(Numbas.util.isNonemptyHTML(q.advice));
+        /** Has the advice been shown?
+         *
+         * @member {observable|boolean} adviceDisplayed
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.adviceDisplayed = Knockout.observable(false);
+        /** Get the {@link Numbas.display.PartDisplay} object for the given path.
+         *
+         * @param {Numbas.parts.partpath} path
+         * @returns {Numbas.display.PartDisplay}
+         * @function getPart
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.getPart = function(path) {
+            return q.getPart(path).display;
+        }
+        /** The name to display for this question - in default locale, it's "Question {N}".
+         *
+         * @member {observable|string} displayName
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.displayName = Knockout.observable(q.exam.settings.navigateMode == 'sequence' && q.customName.trim() == '' ? R('question.header', {'number':q.displayNumber + 1}) : q.name);
+        /** Has the student looked at this question?
+         *
+         * @see Numbas.Question#visited
+         * @member {observable|boolean} visited
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.visited = Knockout.observable(q.visited);
+
+        this.isCurrentQuestion = Knockout.computed(function() {
+            return exam.display.currentQuestionNumber() == q.number;
+        }, this);
+
+        /** Is this question visible in the list?
+         *
+         * @member {observable|boolean} visible
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.visible = Knockout.computed(function() {
+            var q = this.question;
+            var currentQuestionNumber = exam.display.currentQuestionNumber();
+            return (
+                   exam.display.mode() == 'review'
+                || q.number == currentQuestionNumber
+                || exam.settings.navigateBrowse                                                 // is browse navigation enabled?
+                || this.visited()                            // if not, we can still move backwards to questions already seen if reverse navigation is enabled
+                || (currentQuestionNumber !== null && q.number > currentQuestionNumber && exam.display.questions()[q.number - 1].visited())    // or you can always move to the next question
+            )
+        }, this);
+
+        /** Display objects for all parts in this question.
+         *
+         * @member {observable.<Array.<Numbas.display.PartDisplay>>} parts
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.parts = Knockout.observableArray(this.question.parts.map(function(p) {
+            return p.display;
+        }));
+
+        /** Text for the "submit all answers" button.
+         *
+         * @member {observable|string} submitMessage
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.submitMessage = Knockout.pureComputed(function() {
+            if(this.parts().every(function(pd) {
+                return pd.answered() && !pd.isDirty();
+            })) {
+                return R(q.parts.length <= 1 ? 'question.answer saved' : 'question.all answers saved');
+            } else {
+                return R(q.parts.length <= 1 ? 'control.submit answer' : 'control.submit all parts');
+            }
+        }, this);
+
+        /** The first part in the question.
+         *
+         * @member {observable.<Numbas.display.PartDisplay>} firstPart
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.firstPart = Knockout.computed(function() {
+            return this.parts()[0];
+        }, this);
+
+        /** Number of parts in this question.
+         *
+         * @member {observable|number} numParts
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.numParts = Knockout.observable(q.parts.length);
+
+        /** The currently visible part, in explore mode.
+         *
+         * @member {observable|Numbas.display.PartDisplay} currentPart
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.currentPart = Knockout.observable(null);
+
+        this.currentPart.subscribe(function(pd) {
+            pd.html_promise.then(function(html) {
+                html.scrollIntoView({behavior: 'smooth'});
+                Numbas.display_util.force_focus(html);
+                document.querySelector('main.mainDisplay')?.scrollTo(0, 0);
+            });
+        }, this);
+
+        /** The part that created the current part.
+         *
+         * @member {observable|Numbas.display.PartDisplay} previousPart
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.previousPart = Knockout.computed(function() {
+            var p = this.currentPart();
+            if(!(p && p.part.previousPart)) {
+                return null;
+            }
+            return p.part.previousPart.display;
+        }, this);
+
+        /** Set the current part to the previous part, if it's defined.
+         *
+         * @see Numbas.display.QuestionDisplay.currentPart
+         */
+        this.goToPreviousPart = function() {
+            var p = qd.previousPart();
+            if(p) {
+                q.setCurrentPart(p.part);
+            }
+        };
+
+        /** Set the current part.
+         *
+         * @param {Numbas.display.PartDisplay} pd
+         */
+        this.setCurrentPart = function(pd) {
+            q.setCurrentPart(pd.part);
+        }
+
+        /** Student's current score.
+         *
+         * @see Numbas.Question#score
+         * @member {observable|number} score
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.score = Knockout.observable(q.score);
+        /** Total marks available for this question.
+         *
+         * @see Numbas.Question#marks
+         * @member {observable|number} marks
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.marks = Knockout.observable(q.marks);
+        /** Proportion of available marks awarded to the student.
+         *
+         * @member {observable|number} credit
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.credit = Knockout.computed(function() {
+            return this.score() / this.marks();
+        }, this);
+        /** Does this question do any marking?
+         *
+         * @member {observable|boolean} doesMarking
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.doesMarking = Knockout.computed(function() {
+            return this.marks() > 0
+        }, this);
+        /** Has this question been answered?
+         *
+         * @see Numbas.Question#answered
+         * @member {observable|boolean} answered
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.answered = Knockout.observable(q.answered);
+        /** Has this question been locked?
+         *
+         * @see Numbas.Question#locked
+         * @member {observable|boolean} locked
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.locked = Knockout.observable(q.locked);
+
+        this.ended = exam.display.ended;
+
+        /** Have the correct answers been revealed?
+         *
+         * @see Numbas.Question#revealed
+         * @member {observable|boolean} revealed
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.revealed = Knockout.observable(q.revealed);
+
+        /** Should expected answers to parts be shown?
+         */
+        this.expectedAnswersRevealed = Knockout.pureComputed(function() {
+            if(!this.revealed()) {
+                return false;
+            }
+            return exam.settings.revealExpectedAnswers == 'inreview';
+        }, this);
+
+        /** Have any of this question's parts been answered?
+         *
+         * @member {observable|boolean} anyAnswered
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.anyAnswered = Knockout.observable(false);
+        /** Has the student changed any of their answers since submitting?
+         *
+         * @member {observable|boolean} isDirty
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.isDirty = Knockout.observable(false);
+        /** Is the student able to reveal the correct answers?
+         *
+         * @member {observable|boolean} canReveal
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.canReveal = Knockout.computed(function() {
+            return exam.settings.allowRevealAnswer && !this.revealed();
+        }, this);
+        /** Score feedback string.
+         *
+         * @member {Numbas.display_util.showScoreFeedback} scoreFeedback
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.scoreFeedback = Numbas.display_util.showScoreFeedback(this, q.exam.settings);
+
+        /** Explore mode objectives.
+         *
+         * @member {Array.<object>} objectives
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.objectives = q.objectives.map(function(o) {
+            var od = {
+                objective: o,
+                name: o.name,
+                marks: Knockout.observable(o.limit),
+                score: Knockout.observable(o.score),
+                doesMarking: Knockout.observable(true),
+                revealed: qd.revealed,
+                ended: qd.ended,
+                answered: Knockout.observable(false)
+            }
+            od.credit = Knockout.computed(function() {
+                return od.score() / od.marks();
+            });
+            od.visible = Knockout.computed(function() {
+                return q.objectiveVisibility == 'always' || od.answered() || od.revealed();
+            }, this);
+            od.feedback = Numbas.display_util.showScoreFeedback(od, q.exam.settings);
+            return od;
+        });
+        /** Explore mode penalties.
+         *
+         * @member {Array.<object>} penalties
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.penalties = q.penalties.map(function(p) {
+            var pd = {
+                penalty: p,
+                name: p.name,
+                limit: p.limit,
+                score: Knockout.observable(p.score),
+                revealed: qd.revealed,
+                applied: Knockout.observable(false),
+            };
+            pd.visible = Knockout.computed(function() {
+                return q.penaltyVisibility == 'always' || pd.applied() || pd.revealed();
+            })
+            pd.scoreDisplay = Knockout.computed(function() {
+                return Numbas.math.niceNumber(pd.score());
+            });
+            return pd;
+        });
+
+        /** Should the score breakdown table be shown?
+         *
+         * @member {Observable.<boolean>} showScoreBreakdown
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.showScoreBreakdown = Knockout.computed(function() {
+            return q.partsMode == 'explore' && q.objectives.length > 0;
+        }, this);
+
+        /** Show the tree of parts for navigation?
+         *
+         * @member {Observable.<boolean>} showPartsTree
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.showPartsTree = Knockout.computed(function() {
+            return q.partsMode == 'explore' && !q.showAllParts;
+        }, this);
+
+        /** Show this question in review mode.
+         *
+         * @member review
+         * @function
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.review = function() {
+            exam.reviewQuestion(q.number);
+        }
+
+        /** CSS classes for this question's HTML element.
+         *
+         * @member {Observable.<object>} css_classes
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.css_classes = Knockout.computed(function() {
+            var css = {};
+            css['partsmode-' + q.partsMode] = true;
+            if(q.showAllParts) {
+                css['show-all-parts'] = true;
+            }
+            return css;
+        }, this);
+
+        /** Called when Knockout has finished binding all the HTML for this question to the DOM.
+         *
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.htmlBound = function() {
+            q.signals.on(['partsGenerated'], function() {
+                q.signals.trigger('HTMLAttached');
+            });
+        }
+        /** A promise resolving to the question's HTML element.
+         *
+         * @see Numbas.display.makeHTMLFromTemplate
+         * @type {Promise}
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        this.html_promise = new Promise(function(resolve) {
+            qd.resolve_html_promise = resolve;
+        });
+        this.html_promise.then(function(html) {
+            q.signals.trigger('mainHTMLAttached');
+        });
+    }
+    display.QuestionDisplay.prototype = /** @lends Numbas.display.QuestionDisplay.prototype */
+    {
+        /** The associated question object.
+         *
+         * @type {Numbas.Question}
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        question: undefined,            //reference back to the main question object
+
+        /** HTML representing the question.
+         *
+         * @type {Element}
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        html: '',                        //HTML for displaying question
+
+        /** Make the HTML to display the question.
+         *
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        makeHTML: function() {
+            var q = this.question;
+            var qd = this;
+
+            qd.html = display.makeHTMLFromTemplate('numbas-question-template', qd.contextDescription);
+
+            qd.resolve_html_promise(qd.html);
+
+            qd.css = document.createElement('style');
+            qd.css.setAttribute('type', 'text/css');
+            const css = `@layer question {\n#question-${q.path} {\n${q.preamble.css}\n}\n}`;
+            qd.css.appendChild(document.createTextNode(css));
+            // TODO - use Stylesheet instead of making a <style> element
+
+            Numbas.display_util.set_jme_scope(qd.html, q.getScope());
+
+            qd.html.append(qd.css);
+        },
+
+        /** Update the list of parts.
+         */
+        updateParts: function() {
+            this.parts(this.question.parts.map(function(p) {
+                return p.display;
+            }));
+            this.marks(this.question.marks);
+        },
+
+        /** Add a new part to the display.
+         *
+         * @param {Numbas.parts.Part} p
+         */
+        addPart: function(p) {
+            var qd = this;
+            this.updateParts();
+            p.display.makeHTML().then((html) => {
+                p.display.html = html;
+                p.display.resolve_html_promise(html);
+            });
+            p.allChildren().forEach(function(cp) {
+                qd.addPart(cp);
+            });
+        },
+
+        /** Remove a part from the display.
+         *
+         * @param {Numbas.parts.Part} p
+         */
+        removePart: function(p) {
+            this.updateParts();
+            this.question.signals.on('mainHTMLAttached', function() {
+                p.display.html_promise.then(function(html) {
+                    html.remove();
+                });
+            });
+        },
+
+        /** Show the question.
+         *
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        show: function() {
+            var q = this.question;
+            var exam = q.exam;
+            this.visited(q.visited);
+            //update the question menu - highlight this question, etc.
+            exam.display.updateQuestionMenu();
+            switch(exam.mode) {
+            case 'normal':
+                break;
+            case 'review':
+                break;
+            }
+            //show parts
+            for(var i = 0;i < q.parts.length;i++) {
+                q.parts[i].display.show();
+            }
+            //display advice if appropriate
+            this.showAdvice();
+            //show correct answers if appropriate
+            this.revealAnswer();
+            //display score if appropriate
+            this.showScore(true);
+            //scroll back to top of page
+            Numbas.display.control_focus && scroll(0, 0);
+            // make mathjax process the question text (render the maths)
+            Numbas.display.typeset(this.html);
+
+            // move focus to the top of this question's HTML
+            Numbas.display_util.force_focus(this.html);
+        },
+        /** Called when the student leaves the question.
+         *
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        leave: function() {
+        },
+        /**
+         * Show this question's advice.
+         *
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        showAdvice: function() {
+            this.adviceDisplayed(this.question.adviceDisplayed);
+        },
+        /** Reveal the answers to this question.
+         *
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        revealAnswer: function() {
+            this.revealed(this.question.revealed);
+            if(!this.question.revealed) {
+                return;
+            }
+            Numbas.display.control_focus && scroll(0, 0);
+        },
+        /**
+         * Display question score and answer state.
+         *
+         * @param {boolean} noUpdate
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        showScore: function(noUpdate) {
+            var q = this.question;
+            this.score(q.score);
+            this.marks(q.marks);
+            this.answered(q.answered);
+            if(!noUpdate) {
+                this.scoreFeedback.update(true);
+            }
+            var anyAnswered = false;
+            for(var i = 0;i < q.parts.length;i++) {
+                anyAnswered = anyAnswered || (q.parts[i].doesMarking && q.parts[i].answered);
+            }
+            this.anyAnswered(anyAnswered);
+            this.objectives.forEach(function(o) {
+                o.score(o.objective.score);
+                o.answered(o.objective.answered);
+                o.feedback.update(true);
+            });
+            this.penalties.forEach(function(p) {
+                p.score(-p.penalty.score);
+                p.applied(p.penalty.applied);
+            });
+        },
+        /** Initialise this question's display.
+         *
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        init: function() {
+            var q = this.question;
+            for(var i = 0;i < q.parts.length;i++) {
+                q.parts[i].display.init();
+            }
+            this.numParts(q.parts.length);
+        },
+        /** Called when the attempt is resumed.
+         *
+         * @see Numbas.Question#resume
+         */
+        resume: function() {
+            var q = this.question;
+            this.adviceDisplayed(q.adviceDisplayed);
+            this.answered(q.answered);
+            this.locked(q.locked);
+            this.revealed(q.revealed);
+            this.visited(q.visited);
+        },
+        /** Called when the exam ends.
+         *
+         * @memberof Numbas.display.QuestionDisplay
+         */
+        end: function() {
+            var q = this.question;
+            this.locked(true);
+            q.allParts().forEach(function(part) {
+                part.display.end();
+            });
+            Numbas.display.typeset(this.html);
+        }
+    };
+})
+
+Numbas.queueScript('exam-display', ['display-util', 'display-base', 'math', 'util', 'timing'], function() {
+    var display = Numbas.display;
+    var util = Numbas.util;
+    /** Display properties of the {@link Numbas.Exam} object.
+     *
+     * @name ExamDisplay
+     * @memberof Numbas.display
+     * @class
+     * @param {Numbas.Exam} e - associated exam
+     * @param {Element} root_element
+     *
+     */
+    display.ExamDisplay = function(e, root_element) {
+        this.exam = e;
+
+        this.root_element = root_element;
+        root_element.exam = this.exam;
+
+        /** The exam's mode.
+         *
+         * @see Numbas.Exam#mode
+         * @member {observable|string} mode
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.mode = Knockout.observable(e.mode);
+
+        /** Has the exam ended?
+         *
+         * @member {observable|boolean} ended
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.ended = Knockout.observable(false);
+
+        /** Have the correct answers been revealed?
+         *
+         * @see Numbas.Exam#revealed
+         * @member {observable|boolean} revealed
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.revealed = Knockout.observable(e.revealed);
+
+        /** Should expected answers to parts be shown?
+         */
+        this.expectedAnswersRevealed = Knockout.pureComputed(function() {
+            if(!this.revealed()) {
+                return false;
+            }
+            return this.exam.settings.revealExpectedAnswers == 'inreview';
+        }, this);
+
+        /** Is {@link Numbas.store} currently saving?
+         *
+         * @member {observable|boolean} saving
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.saving = Knockout.observable(false);
+        /** The name of the currently displayed info page.
+         *
+         * @member {observable|string} infoPage
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.infoPage = Knockout.observable(null);
+        /** The current question.
+         *
+         * @see Numbas.Exam#currentQuestion
+         * @member {observable|Numbas.display.QuestionDisplay} currentQuestion
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.currentQuestion = Knockout.observable(null);
+        /** What kind of view are we in at the moment? 'infopage' or 'question'.
+         *
+         * @member {observable|string} viewType
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.viewType = Knockout.computed(function() {
+            if(this.infoPage()) {
+                return 'infopage';
+            } else if(this.currentQuestion()) {
+                return 'question';
+            }
+        }, this);
+
+        /** The ID of the header to use for the label of the <main> tag.
+         *
+         * @member {observable|string} main_labelledby
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.main_labelledby = Knockout.computed(function() {
+            if(this.infoPage()) {
+                return `infopage-${this.infoPage()}-header`;
+            } else if(this.currentQuestion()) {
+                return `${this.currentQuestion().question.path}-header`;
+            }
+        }, this);
+
+        /** The number of the current question.
+         *
+         * @member {observable|number} currentQuestionNumber
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.currentQuestionNumber = Knockout.computed(function() {
+            var q = this.currentQuestion();
+            if(q) {
+                return q.question.number;
+            } else {
+                return null;
+            }
+        }, this);
+        /** All the exam's question display objects.
+         *
+         * @member {observable|Numbas.display.QuestionDisplay[]} questions
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.questions = Knockout.observableArray([]);
+
+        /** The number of questions in the exam.
+         *
+         * @member {observable|number} numQuestions
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.numQuestions = Knockout.pureComputed(function() {
+            return this.questions().length;
+        }, this);
+
+        /** How many questions do some assessment, i.e. have one or more parts that aren't information-only, or are explore mode?
+         */
+        this.numAssessedQuestions = Knockout.computed(function() {
+            return this.questions().filter(function(qd) {
+                return qd.question.partsMode == 'explore' || qd.question.parts.some(function(p) {
+                    return p.type != 'information';
+                });
+            }).length;
+        }, this);
+        /** Can the student go back to the previous question, or to the introduction? False if the current question is the first one and there's no introduction.
+         *
+         * @member {observable|boolean} canReverse
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.canReverse = Knockout.computed(function() {
+            return (this.mode() == 'review' || this.exam.settings.navigateReverse) && this.currentQuestionNumber() > 0 || (this.viewType() == 'question' && this.exam.hasIntro);
+        }, this);
+        /** Can the student go forward to the next question? False if the current question is the last one.
+         *
+         * @member {observable|boolean} canAdvance
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.canAdvance = Knockout.computed(function() {
+            switch(this.exam.settings.navigateMode) {
+                case 'diagnostic':
+                    return true;
+                default:
+                    return this.currentQuestionNumber() < this.exam.settings.numQuestions - 1 || (this.viewType() == 'infopage' && this.infoPage() == 'introduction');
+            }
+        }, this);
+
+        /** Move backwards, to the previous question or to the introduction if already on the first question.
+         *
+         * @member {observable|boolean} reverse
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.reverse = () => {
+            if(this.viewType() == 'question') {
+                if(this.currentQuestionNumber() == 0) {
+                    this.showInfoPage('introduction');
+                } else {
+                    Numbas.controls.previousQuestion(this.exam);
+                }
+            }
+        };
+
+        /** Move forwards, to the next question or just switch back to viewing questions if viewing an info page.
+         *
+         * @member {observable|boolean} advance
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.advance = () => {
+            if(this.viewType() == 'question') {
+                Numbas.controls.nextQuestion(this.exam);
+            } else {
+                this.resumeExam();
+            }
+        };
+
+        /** The student's total score.
+         *
+         * @see Numbas.Exam#score
+         * @member {observable|number} score
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.score = Knockout.observable(e.score);
+
+        /** The total marks available for the exam.
+         *
+         * @see Numbas.Exam#mark
+         * @member {observable|number} marks
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.marks = Knockout.observable(e.mark);
+
+        /** Score feedback for the whole exam.
+         *
+         * @member {Numbas.display_util.scoreFeedback} scoreFeedback
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.scoreFeedback = Numbas.display_util.showScoreFeedback({
+            answered: function() {
+                return false;
+            },
+            isDirty: function() {
+                return false;
+            },
+            score: this.score,
+            marks: this.marks,
+            credit: Knockout.computed(function() {
+                    var score = this.score();
+                    var marks = this.marks();
+                    return marks == 0 ? 0 : score / marks;
+                }, this),
+            doesMarking: function() {
+                return true;
+            },
+            revealed: this.revealed,
+            ended: this.ended
+        }, this.exam.settings);
+
+        /** Show the student their total score?
+         *
+         * @member {observable|boolean} showActualMark
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.showActualMark = this.scoreFeedback.showActualMark;
+
+        /** Allow the student to print an exam transcript?
+         *
+         * @see Numbas.Exam#settings#percentPass
+         * @member {observable|boolean} allowPrinting
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.allowPrinting = Knockout.observable(e.settings.allowPrinting);
+
+        /** Key to use for encrypting student data
+         *
+         * @member {observable|string} downloadEncryptionKey
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.downloadEncryptionKey = Knockout.observable(e.settings.downloadEncryptionKey);
+        /** Label to use for the "print your transcript" button on the results page.
+         *
+         * @member {observable|string} printLabel
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.printLabel = Knockout.computed(function() {
+            return R(this.showActualMark() || !this.allowPrinting() ? "result.print" : "end.print");
+        }, this);
+        /** The percentage score the student needs to achieve to pass, formatted as a string.
+         *
+         * @see Numbas.Exam#settings#percentPass
+         * @member {observable|string} percentPass
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.percentPass = Knockout.observable(Numbas.math.niceNumber(e.settings.percentPass * 100) + '%');
+        /** String displaying the student's current score, and the total marks available, if allowed.
+         *
+         * @member {observable|string} examScoreDisplay
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.examScoreDisplay = Knockout.computed(function() {
+            var niceNumber = Numbas.math.niceNumber;
+            var score = niceNumber(this.score());
+            var marks = niceNumber(this.marks());
+            let totalExamScoreDisplay;
+            if(this.scoreFeedback.showTotalMark()) {
+                totalExamScoreDisplay = score + '/' + marks;
+            } else {
+                totalExamScoreDisplay = score;
+            }
+            return totalExamScoreDisplay;
+        }, this);
+        /** The student's total score as a percentage of the total marks available.
+         *
+         * @member {observable|number} percentScore
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.percentScore = Knockout.observable(0);
+
+        /** The header for the column on the results page that might show the score, the marks available, or just the answered state.
+         *
+         * @member {observable|string} resultsScoreColumnHeader
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.resultsScoreColumnHeader = Knockout.computed(function() {
+            if(this.scoreFeedback.showActualMark()) {
+                return R('result.question score');
+            } else if(this.scoreFeedback.showTotalMark()) {
+                return R('result.question marks available');
+            } else {
+                return R('result.question answered');
+            }
+        }, this);
+
+
+        /** The time left in the exam, in seconds.
+         *
+         * @member {observable|number} timeRemaining
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.timeRemaining = Numbas.display_util.duration_observable(0);
+
+        /** Show the time remaining?
+         *
+         * @member {observable|boolean} showTime
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.showTime = Knockout.observable(true);
+
+        /** Show the names of question groups in the menu?
+         *
+         * @member {observable|string} showQuestionGroupNames
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.showQuestionGroupNames = Knockout.observable(e.settings.showQuestionGroupNames);
+
+        /** Time the exam started, formatted for display.
+         *
+         * @member {observable|Date} startTime
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.startTime = Knockout.observable();
+
+        /** Time the exam ended, formatted for display.
+         *
+         * @member {observable|Date} endTime
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.endTime = Knockout.observable();
+
+        /** The time allowed for the exam, in seconds.
+         *
+         * @member {observable|number} duration
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.duration = Numbas.display_util.duration_observable(e.settings.duration);
+
+        /** The total time the student has spent in the exam.
+         *
+         * @member {observable|string} timeSpent
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.timeSpent = Numbas.display_util.duration_observable(0);
+
+        /** Is the student allowed to pause the exam?
+         *
+         * @member {boolean} allowPause
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.allowPause = e.settings.allowPause;
+        /** Total number of questions the student attempted.
+         *
+         * @member {observable|number} questionsAttempted
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.questionsAttempted = Knockout.computed(function() {
+            return this.questions().filter((q) => q.answered() ? 1 : 0).length;
+        }, this);
+        /** Total number of questions the student attempted, formatted as a fraction of the total number of questions.
+         *
+         * @member {observable|string} questionsAttemptedDisplay
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.questionsAttemptedDisplay = Knockout.computed(function() {
+            return R('exam.questions answered', {numAnsweredQuestions: this.questionsAttempted(), numQuestions: this.numAssessedQuestions()});
+        }, this);
+        /** The result of the exam - passed or failed?
+         *
+         * @member {observable|string} result
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.result = Knockout.observable('');
+        /** Did the student pass the exam?
+         *
+         * @member {observable|boolean} passed
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.passed = Knockout.observable(false);
+        /** Message shown to the student based on their total score.
+         *
+         * @member {observable|string} feedbackMessage
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.feedbackMessage = Knockout.observable(null);
+
+        /** Does this exam need a password to begin?
+         *
+         * @member {boolean} needsPassword
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.needsPassword = e.settings.startPassword != '';
+
+        /** Does this exam allow the student to download their attempt data?
+         *
+         * @member {boolean} allowAttemptDownload
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.allowAttemptDownload = e.settings.allowAttemptDownload;
+
+        /** Must the student write their name before the exam can begin?
+         *
+         * @member {boolean} needsStudentName
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.needsStudentName = this.allowAttemptDownload;
+
+        /**
+         * Show a warning that downloading attempt data won't work?
+         * True if the window is not in a secure context.
+         *
+         * @member {boolean} showAttemptDownloadSecurityWarning
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.showAttemptDownloadSecurityWarning = this.allowAttemptDownload && !window.isSecureContext;
+
+        /** Key for encrypting student data.
+         *
+         * @member {string} downloadEncryptionKey
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.downloadEncryptionKey = e.settings.downloadEncryptionKey;
+
+        /** The student's name, as entered by the student.
+         *
+         * @member {observable|string} student_name
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.student_name = Knockout.observable(this.exam.student_name || '');
+
+        /**
+         * Handler for the password on the front page.
+         */
+        this.passwordHandler = Numbas.display_util.passwordHandler({
+            accept: (password) => this.exam.acceptPassword(password),
+            correct_message: R('exam.password.correct'),
+            incorrect_message: R('exam.password.incorrect')
+        });
+
+        /** Can the exam begin? True if no password is required, or if the student has entered the right password, and no name is required or the student has entered a name.
+         *
+         * @member {observable|boolean} canBegin
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.canBegin = Knockout.computed(function() {
+            return this.passwordHandler.valid() && !(this.needsStudentName && this.student_name().trim() == '');
+        }, this);
+
+        /** The student's progress through a diagnostic test.
+         */
+        this.diagnostic_progress = Knockout.observableArray([]);
+        this.diagnostic_feedback = Knockout.observable('');
+        this.diagnostic_next_actions = Knockout.observable({feedback: '', actions:[]});
+
+        this.current_topic = Knockout.observable(null);
+
+        /** Confirmation text entered by the student to end the exam.
+         *
+         * @member {observable|string} confirmEnd
+         * @memberof Numbas.display.ExamDisplay
+         */
+        this.confirmEndHandler = Numbas.display_util.passwordHandler({
+            accept: (value) => util.caselessCompare(value, R('control.confirm end.password')),
+            correct_message: R('control.confirm end.correct'),
+            incorrect_message: R('control.confirm end.incorrect')
+        });
+    }
+    display.ExamDisplay.prototype = /** @lends Numbas.display.ExamDisplay.prototype */
+    {
+        /** Reference to the associated exam object.
+         *
+         * @type {Numbas.Exam}
+         * @memberof Numbas.display.ExamDisplay
+         */
+        exam: undefined,
+
+        /** Try to begin the exam.
+         *
+         * @memberof Numbas.display.ExamDisplay
+         */
+        beginExam: function() {
+            if(!this.canBegin()) {
+                return;
+            }
+            if(this.needsStudentName) {
+                this.exam.student_name = this.exam.student_name || this.student_name();
+            }
+            this.exam.begin();
+        },
+
+        /** Update the timer.
+         *
+         * @memberof Numbas.display.ExamDisplay
+         */
+        showTiming: function() {
+            this.showTime(true);
+            this.duration(this.exam.settings.duration);
+            this.timeRemaining(this.exam.timeRemaining);
+            this.timeSpent(this.exam.timeSpent);
+        },
+
+        /**
+         * Show the question menu.
+         *
+         * @see Numbas.Exam.showMenu
+         */
+        showMenu: function() {
+            this.exam.showMenu();
+        },
+
+        /** Initialise the question list display.
+         *
+         * @memberof Numbas.display.ExamDisplay
+         */
+        initQuestionList: function() {
+            var exam = this.exam;
+            var ended = this.ended;
+            this.question_groups = this.exam.question_groups.map(function(g) {
+                var questions = Knockout.observable(g.questionList.map(function(q) {
+                    return q.display
+                }));
+                var show_name = Knockout.computed(function() {
+                    return questions().some(function(q) {
+                        return q.visible();
+                    });
+                });
+                var qg = {
+                    name: g.settings.name,
+                    group: g,
+                    questions: questions,
+                    show_name: show_name,
+                    doesMarking: Knockout.observable(true)
+                }
+                qg.marks = Knockout.computed(function() {
+                    var total = 0;
+                    questions().forEach(function(qd) {
+                        total += qd.marks();
+                    });
+                    return total;
+                });
+                qg.score = Knockout.computed(function() {
+                    var score = 0;
+                    questions().forEach(function(qd) {
+                        score += qd.score();
+                    });
+                    return score;
+                });
+                qg.credit = Knockout.computed(function() {
+                    var score = qg.score();
+                    var marks = qg.marks();
+                    return marks == 0 ? 0 : score / marks;
+                });
+                qg.revealed = Knockout.computed(function() {
+                    return questions().every(function(qd) {
+                        return qd.revealed();
+                    });
+                });
+                qg.ended = ended;
+                qg.anyAnswered = Knockout.computed(function() {
+                    return questions().some(function(qd) {
+                        return qd.anyAnswered();
+                    });
+                })
+                qg.answered = Knockout.computed(function() {
+                    return questions().every(function(qd) {
+                        return qd.answered();
+                    });
+                });
+                qg.feedback = Numbas.display_util.showScoreFeedback(qg, exam.settings);
+                return qg;
+            });
+            for(var i = 0; i < this.exam.questionList.length; i++) {
+                this.questions.push(this.exam.questionList[i].display);
+            }
+        },
+
+        /** Called when a question is added to the exam.
+         *
+         * @param {Numbas.Question} question
+         */
+        addQuestion: function(question) {
+            this.updateQuestionList();
+        },
+
+        updateQuestionList: function() {
+            if(!this.question_groups) {
+                return;
+            }
+            this.question_groups.forEach(function(qg) {
+                qg.questions(qg.group.questionList.map(function(q) {
+                    return q.display;
+                }));
+            });
+            this.questions(this.exam.questionList.map(function(q) {
+                return q.display;
+            }));
+        },
+
+        pause: function() {
+            this.exam.pause();
+        },
+
+        resumeExam: function() {
+            this.exam.resume();
+        },
+
+        endExam: function() {
+            this.exam.tryEnd();
+        },
+
+        /** Hide the timer.
+         *
+         * @memberof Numbas.display.ExamDisplay
+         */
+        hideTiming: function() {
+            this.showTime(false);
+        },
+
+        /** Set the exam start time.
+         *
+         * @memberof Numbas.display.ExamDisplay
+         */
+        setStartTime: function() {
+            this.startTime(this.exam.start);
+        },
+
+        /** Set the exam end time.
+         *
+         * @memberof Numbas.display.ExamDisplay
+         */
+        setEndTime: function() {
+            this.endTime(this.exam.stop);
+        },
+
+        /** Show/update the student's total score.
+         *
+         * @memberof Numbas.display.ExamDisplay
+         */
+        showScore: function() {
+            var exam = this.exam;
+            this.marks(exam.mark);
+            this.score(exam.score);
+            this.percentScore(exam.percentScore);
+
+            if(exam.settings.navigateMode == 'diagnostic' && exam.diagnostic_progress) {
+                this.diagnostic_feedback(exam.diagnostic_feedback);
+                this.diagnostic_progress(exam.diagnostic_progress.map(function(a) {
+                    return {
+                        name: a.name,
+                        progress: a.progress,
+                        credit: a.credit
+                    };
+                }));
+            }
+        },
+        /** Update the question list display - typically, scroll so the current question is visible.
+         *
+         * @memberof Numbas.display.ExamDisplay
+         */
+        updateQuestionMenu: function() {
+            var exam = this.exam;
+            //scroll question list to centre on current question
+            if(display.carouselGo) {
+                display.carouselGo(exam.currentQuestion.number - 1, 300);
+            }
+        },
+        /** Show an info page (one of the front page, pause, or results).
+         *
+         * @param {string} page - Name of the page to show.
+         * @memberof Numbas.display.ExamDisplay
+         */
+        showInfoPage: function(page) {
+            window.onbeforeunload = null;
+
+            var exam = this.exam;
+
+            //scroll back to top of screen
+            Numbas.display.control_focus && scroll(0, 0);
+
+            switch(page) {
+                case "frontpage":
+                    this.marks(exam.mark);
+                    break;
+                case "result":
+                    this.ended(true);
+                    this.result(exam.result);
+                    this.passed(exam.passed);
+                    this.feedbackMessage(Numbas.util.isNonemptyHTML(exam.feedbackMessage) ? exam.feedbackMessage : null);
+                    break;
+                case "paused":
+                case "resumed":
+                    this.showScore();
+                    break;
+            }
+
+            this.infoPage(page);
+            this.currentQuestion(null);
+
+            this.hideNavMenu();
+        },
+
+        /** Show the modal dialog with actions the student can take to move on from the current question.
+         */
+        showDiagnosticActions: function() {
+            var ed = this;
+            var res = this.exam.diagnostic_actions();
+            var actions = {
+                feedback: res.feedback,
+                actions: res.actions.map(function(action) {
+                    var out = {
+                        label: action.label,
+                        go: function() {
+                            ed.do_diagnostic_action(action);
+                        }
+                    }
+                    return out;
+                })
+            };
+            this.diagnostic_next_actions(actions);
+            this.root_element.shadowRoot.getElementById('next-actions-modal').showModal();
+        },
+
+        /** Show the current question.
+         *
+         * @memberof Numbas.display.ExamDisplay
+         */
+        showQuestion: function() {
+            var exam = this.exam;
+            this.infoPage(null);
+            this.currentQuestion(exam.currentQuestion.display);
+            if(exam.settings.preventLeave && this.mode() != 'review') {
+                window.onbeforeunload = function() {
+                    return R('control.confirm leave')
+                };
+            } else {
+                window.onbeforeunload = null;
+            }
+            exam.currentQuestion.display.show();
+            if(exam.settings.navigateMode == 'diagnostic') {
+                this.current_topic(exam.diagnostic_controller.current_topic());
+            }
+            this.hideNavMenu();
+        },
+        /** Hide the sliding side menu.
+         *
+         * @memberof Numbas.display.ExamDisplay
+         */
+        hideNavMenu: function() {
+            this.root_element.classList.remove('show-sidebar');
+        },
+        /** Called just before the current question is regenerated.
+         *
+         * @memberof Numbas.display.ExamDisplay
+         */
+        startRegen: function() {
+            this.root_element.shadowRoot.getElementById('questionDisplay').hidden = true;
+            var html = this.exam.currentQuestion.display.html;
+            html.parentElement.removeChild(html);
+            this.oldQuestion = this.exam.currentQuestion.display;
+        },
+        /** Called after the current question has been regenerated.
+         *
+         * @memberof Numbas.display.ExamDisplay
+         */
+        endRegen: function() {
+            var currentQuestion = this.exam.currentQuestion;
+            this.questions.splice(currentQuestion.number, 1, currentQuestion.display);
+            var group = this.question_groups.filter(function(g) {
+                return g.group == currentQuestion.group
+            })[0];
+            var n_in_group = currentQuestion.group.questionList.indexOf(currentQuestion);
+            var group_questions = group.questions();
+            group_questions.splice(n_in_group, 1, currentQuestion.display);
+            group.questions(group_questions);
+            this.applyQuestionBindings(currentQuestion);
+            this.root_element.shadowRoot.getElementById('questionDisplay').hidden = false;
+        },
+
+        do_diagnostic_action: function(action) {
+            this.root_element.shadowRoot.getElementById('next-actions-modal').close();
+            this.exam.do_diagnostic_action(action);
+        },
+        /**
+         * Apply knockout bindings to the given question.
+         *
+         * @param {Numbas.Question} question
+         * @memberof Numbas.display.ExamDisplay
+         */
+        applyQuestionBindings: function(question) {
+        },
+        /** Reveal the answers to every question in the exam.
+         *
+         * @memberof Numbas.display.ExamDisplay
+         */
+        revealAnswers: function() {
+            this.revealed(this.exam.revealed);
+        },
+
+        /** Called when the exam ends.
+         *
+         * @memberof Numbas.display.ExamDisplay
+         */
+        end: function() {
+            this.ended(true);
+            this.timeSpent(this.exam.timeSpent);
+            this.mode(this.exam.mode);
+            this.questions().map(function(q) {
+                q.end();
+            });
+        },
+
+        /** Download the attempt data.
+         */
+        download_attempt_data: async function() {
+            /** Remove newlines from a string used in the preamble.
+             * @param {string} s
+             * @returns {string}
+             */
+            function sanitise_preamble(s) {
+                return (s || '').replace(/\n/g, '');
+            }
+            const preamble = `Numbas attempt data
+Exam: ${sanitise_preamble(this.exam.settings.name)}
+Student name: ${sanitise_preamble(this.exam.student_name)}
+Start time: ${sanitise_preamble(this.exam.start.toISOString())}
+----\n`;
+
+            const exam_object = this.exam.store.examSuspendData();
+            const contents = JSON.stringify(exam_object); //this will need to be a json of the exam object, which seems like it should be created somewhere already as we have ways to access it?
+            let encryptedContents;
+            try {
+                encryptedContents = await Numbas.download.encrypt(contents, this.exam.settings.downloadEncryptionKey);
+            } catch {
+                this.root_element.showAlert(R('exam.attempt download security warning'));
+                return;
+            }
+            encryptedContents = util.b64encode(encryptedContents);
+            const exam_slug = util.slugify(this.exam.settings.name) ;
+            const student_name_slug = util.slugify(this.exam.student_name);
+            const start_time = this.exam.start.toISOString().replace(':', '-');
+
+            const filename = `${exam_slug}-${student_name_slug}-${start_time}.txt`;
+
+            Numbas.download.download_file(preamble + encryptedContents, filename);
+        }
+    };
+});
+
+Numbas.queueScript('display/parts/custom',['display-base','part-display','util','jme'],function() {
+    var display = Numbas.display;
+    var extend = Numbas.util.extend;
+
+    /** An answer to a custom part type.
+     *
+     * @typedef Numbas.custom_part_answer
+     * @property {boolean} valid - Is the answer valid?
+     * @property {Object} value - The answer.
+     * @property {boolean} empty - Is the answer empty?
+     */
+
+    /** Display code for a {@link Numbas.parts.CustomPart}
+     * @augments Numbas.display.PartDisplay
+     * @constructor
+     * @name CustomPartDisplay
+     * @memberof Numbas.display
+     */
+    display.CustomPartDisplay = function() {
+        var p = this.part;
+        /** The type of input widget to use for this part.
+         * @member {observable|string} input_widget
+         * @memberof Numbas.display.CustomPartDisplay
+         */
+        this.input_widget = p.input_widget();
+        /** Options for the input widget.
+         * @member {observable|Object} input_options
+         * @memberof Numbas.display.CustomPartDisplay
+         */
+        this.input_options = p.input_options();
+        /** The student's current answer (not necessarily submitted)
+         * @member {observable|Numbas.custom_part_answer} studentAnswer
+         * @memberof Numbas.display.CustomPartDisplay
+         */
+        this.studentAnswer = Knockout.observable({valid: false, value: this.part.studentAnswer});
+        this.input_answer = this.studentAnswer;
+        this.correctAnswer = Knockout.observable({});
+        this.updateCorrectAnswer(p.getCorrectAnswer(p.getScope()));
+        Knockout.computed(function() {
+            var answer = this.studentAnswer();
+
+            p.removeWarnings();
+
+            p.widget_warnings = answer.warnings;
+
+            if(answer.warnings) {
+                answer.warnings.forEach(function(warning){ p.giveWarning(warning); });
+            }
+
+            if(Numbas.util.objects_equal(answer.value, p.stagedAnswer) || !answer.valid && p.stagedAnswer===undefined) {
+                return;
+            }
+            if(answer.valid) {
+                p.storeAnswer(answer.value);
+            } else {
+                p.storeAnswer(undefined);
+            }
+        },this);
+        this.alwaysShowWarnings = {radios: true, checkboxes: true, dropdown: true}[this.input_widget] || false;
+    };
+    display.CustomPartDisplay.prototype = {
+        updateCorrectAnswer: function(answer) {
+            this.correctAnswer({valid: true, value: answer});
+        },
+        restoreAnswer: function(studentAnswer) {
+            this.studentAnswer({valid: studentAnswer !== undefined, value: studentAnswer});
+        }
+    };
+    display.CustomPartDisplay = extend(display.PartDisplay,display.CustomPartDisplay,true);
+});
+
+Numbas.queueScript('display/parts/extension',['display-base','part-display','util'],function() {
+    var display = Numbas.display;
+    var extend = Numbas.util.extend;
+    /** Display code for a {@link Numbas.parts.ExtensionPart}
+     * @augments Numbas.display.PartDisplay
+     * @constructor
+     * @name ExtensionPartDisplay
+     * @memberof Numbas.display
+     */
+    display.ExtensionPartDisplay= function() {
+        this.showCorrectAnswer = Knockout.computed(function() {
+            return false;
+        },this);
+    };
+    display.ExtensionPartDisplay= extend(display.PartDisplay,display.ExtensionPartDisplay,true);
+});
+
+Numbas.queueScript('display/parts/gapfill',['display-base','part-display','util'],function() {
+    var display = Numbas.display;
+    var extend = Numbas.util.extend;
+    /** Display code for a {@link Numbas.parts.GapFillPart}
+     * @augments Numbas.display.PartDisplay
+     * @constructor
+     * @name GapFillPartDisplay
+     * @memberof Numbas.display
+     */
+    display.GapFillPartDisplay = function() {
+        var base_showCorrectAnswer = this.showCorrectAnswer;
+        this.showCorrectAnswer = Knockout.computed(function() {
+            return base_showCorrectAnswer() && !this.part.settings.inlineCorrectAnswer;
+        },this);
+
+        this.gap_htmls = [];
+
+        this.prompt = this.part.prompt.replace(/\[\[(\d+?)\]\]/g, (_, d) => {
+            d = parseInt(d);
+            if(d >= this.part.gaps.length) {
+                throw(new ExamError(`Reference to an undefined gap in a gapfill part (${d})`));
+            }
+            const part = this.part.gaps[d];
+            const html_promise = part.display.makeHTML();
+            const i = this.gap_htmls.length;
+            this.gap_htmls.push(html_promise);
+            return `
+                <!-- ko with: scope.question.getPart('${this.part.path}g${d}').display -->
+                    <span class="part-wrapper" data-bind="promise: $parents[1].gap_htmls[${i}]"></span>
+                <!-- /ko -->
+             `;
+        });
+
+        this.correct_prompt = this.part.prompt.replace(/\[\[(\d+?)\]\]/g, (_, d) => {
+            d = parseInt(d);
+            if(d >= this.part.gaps.length) {
+                throw(new ExamError(`Reference to an undefined gap in a gapfill part (${d})`));
+            }
+            return `
+                <!-- ko with: scope.question.getPart('${this.part.path}g${d}').display -->
+                    <answer-widget params="{
+                        answer: correct_answer,
+                        widget: input_widget,
+                        widget_options: $data.correct_input_options || input_options,
+                        part: part,
+                        disable: true,
+                        title: correct_title,
+                        id: part.full_path+'-expected-input'
+                    }"></answer-widget>
+                <!-- /ko -->
+             `;
+        });
+    }
+    display.GapFillPartDisplay.prototype =
+    {
+        show: function()
+        {
+            for(var i=0;i<this.part.gaps.length; i++)
+                this.part.gaps[i].display.show();
+        },
+        restoreAnswer: function(studentAnswer)
+        {
+            if(!studentAnswer) {
+                return;
+            }
+            for(var i=0;i<this.part.gaps.length; i++) {
+                if(studentAnswer[i]!==undefined) {
+                    this.part.gaps[i].display.restoreAnswer(studentAnswer[i]);
+                }
+            }
+        },
+        revealAnswer: function()
+        {
+        },
+        init: function() {
+            for(var i=0;i<this.part.gaps.length; i++)
+                this.part.gaps[i].display.init();
+        },
+        end: function() {
+            for(var i=0;i<this.part.gaps.length; i++)
+                this.part.gaps[i].display.end();
+        }
+    };
+    display.GapFillPartDisplay = extend(display.PartDisplay,display.GapFillPartDisplay,true);
+});
+
+Numbas.queueScript('display/parts/information',['display-base','part-display','util'],function() {
+    var display = Numbas.display;
+    var extend = Numbas.util.extend;
+    /** Display code for a {@link Numbas.parts.InformationPart}
+     * @augments Numbas.display.PartDisplay
+     * @constructor
+     * @name InformationPartDisplay
+     * @memberof Numbas.display
+     */
+    display.InformationPartDisplay = function() {};
+    display.InformationPartDisplay = extend(display.PartDisplay,display.InformationPartDisplay,true);
+});
+Numbas.queueScript('display/parts/jme',['display-base','part-display','util','jme-display','jme'],function() {
+    var display = Numbas.display;
+    var extend = Numbas.util.extend;
+    var jme = Numbas.jme;
+
+    /** Display code for a {@link Numbas.parts.JMEPart}
+     * @constructor
+     * @augments Numbas.display.PartDisplay
+     * @name JMEPartDisplay
+     * @memberof Numbas.display
+     */
+    display.JMEPartDisplay = function() {
+        var p = this.part;
+
+        /** Should the LaTeX rendering of the student's answer be shown?
+         * @member {boolean} showPreview
+         * @memberof Numbas.display.JMEPartDisplay
+         */
+        this.showPreview = p.settings.showPreview;
+
+        this.expand_settings = {
+            singleLetterVariables: p.settings.singleLetterVariables,
+            noUnknownFunctions: !p.settings.allowUnknownFunctions,
+            implicitFunctionComposition: p.settings.implicitFunctionComposition
+        };
+
+        Knockout.computed(() => {
+            const scope = new jme.Scope([p.getScope(), {caseSensitive: p.settings.caseSensitive}]);
+
+            const answer = this.input_answer();
+
+            if(!answer.valid) {
+                return;
+            }
+
+            const studentTree = answer.tree;
+
+            if(p.settings.checkVariableNames) {
+                const usedvars = jme.findvars(studentTree, [], scope);
+
+                const notation = p.getNotation();
+
+                let correctTree = notation.compile(this.correct_answer().value);
+                correctTree = scope.expandJuxtapositions(correctTree, this.expand_settings);
+
+                const expectedVariableNames = jme.findvars(correctTree, [], scope);
+                const unexpectedVariableName = usedvars.find((name) => !expectedVariableNames.contains(name));
+
+                if( unexpectedVariableName !== undefined ) {
+                    p.giveWarning(R('part.jme.unexpected variable name', {name:unexpectedVariableName}));
+                }
+            }
+            if(p.settings.mustMatchPattern && p.settings.mustMatchWarningTime=='input' || p.settings.mustMatchWarningTime == 'prevent') {
+                const r = new Numbas.jme.rules.Rule(p.settings.mustMatchPattern, null, 'ac');
+                const m = r.match(studentTree, scope);
+                if(!m) {
+                    p.giveWarning(R('part.jme.must-match.warning', {message: p.settings.mustMatchMessage}));
+                }
+            }
+        });
+
+        /** Does the input box have focus?
+         * @member {observable|boolean} inputHasFocus
+         * @memberof Numbas.display.JMEPartDisplay
+         */
+        this.inputHasFocus = Knockout.observable(false);
+
+        /** Give the input box focus
+         * @member {function} focusInput
+         * @method
+         * @memberof Numbas.display.JMEPartDisplay
+         */
+        this.focusInput = function() {
+            this.inputHasFocus(true);
+        }
+
+        this.input_widget = 'jme';
+        this.input_options = {
+            returnString: true,
+            showPreview: this.showPreview,
+            notation: p.getNotation(),
+            expand_settings: this.expand_settings,
+        };
+
+        this.updateCorrectAnswer(p.getCorrectAnswer(p.getScope()));
+    }
+    display.JMEPartDisplay.prototype = {
+        setStudentAnswer: function(studentAnswer) {
+            this.part.storeAnswer(studentAnswer || '');
+        }
+    };
+    display.JMEPartDisplay = extend(display.PartDisplay,display.JMEPartDisplay,true);
+})
+
+Numbas.queueScript('display/parts/matrix',['display-base','part-display','util','jme','jme-display'],function() {
+    var display = Numbas.display;
+    var jme = Numbas.jme;
+    var extend = Numbas.util.extend;
+    var util = Numbas.util;
+    /** Display code for a {@link Numbas.parts.MatrixEntryPart}
+     * @augments Numbas.display.PartDisplay
+     * @constructor
+     * @name MatrixEntryPartDisplay
+     * @memberof Numbas.display
+     */
+    display.MatrixEntryPartDisplay = function()
+    {
+        var p = this.part;
+
+        /** The correct answer
+         * @member {observable|matrix} correctAnswer
+         * @memberof Numbas.display.MatrixEntryPartDisplay
+         */
+        this.correctAnswer = Knockout.observable();
+        this.updateCorrectAnswer(p.getCorrectAnswer(p.getScope()));
+        this.correctAnswerRows = ko.computed({
+            read() {
+                return this.correctAnswer().rows;
+            },
+            write: (v) => {}
+        },this);
+        this.correctAnswerColumns = ko.computed({
+            read() {
+                return this.correctAnswer().columns;
+            },
+            write: (v) => {}
+        },this);
+        this.studentAnswerRows = Knockout.observable(p.settings.numRows || this.correctAnswerRows());
+        this.studentAnswerColumns = Knockout.observable(p.settings.numColumns || this.correctAnswerColumns());
+        this.allowResize = Knockout.observable(p.settings.allowResize);
+        this.minColumns = Knockout.observable(p.settings.minColumns);
+        this.maxColumns = Knockout.observable(p.settings.maxColumns);
+        this.minRows = Knockout.observable(p.settings.minRows);
+        this.maxRows = Knockout.observable(p.settings.maxRows);
+        this.prefilledCells = Knockout.observable(p.settings.prefilledCells);
+        this.cellFeedback = Knockout.pureComputed(function() {
+            const answer = this.input_answer() || {};
+            if(!answer.valid) {
+                return [];
+            }
+            let feedback = answer.value.map((row) => row.map(c => ''));
+            if(!p.settings.markPerCell || !this.showCorrectAnswer()) {
+                return feedback;
+            }
+
+            const correct_cells = this.marking_values()?.correct_cells;
+
+            if(!correct_cells) {
+                return feedback;
+            }
+
+            feedback = feedback.map(row => row.map(c => 'incorrect'));
+
+            jme.unwrapValue(correct_cells).map(([r,c]) => {
+                feedback[r][c] = 'correct';
+            });
+            return feedback;
+        }, this);
+
+        this.gridlines = Knockout.pureComputed(function() {
+            var numRows = this.studentAnswerRows();
+            var numColumns = this.studentAnswerColumns();
+
+            var rowExpression = {
+                'afterFirstRow': '[true]+repeat(false, numRows-2)',
+                'beforeLastRow': 'repeat(false, numRows-2)+[true]',
+                'custom': p.settings.gridlinesCustomRows
+            }[p.settings.gridlines] || 'repeat(false, numRows-1)';
+
+            var columnExpression = {
+                'afterFirstColumn': '[true]+repeat(false, numColumns-2)',
+                'beforeLastColumn': 'repeat(false, numColumns-2)+[true]',
+                'custom': p.settings.gridlinesCustomColumns
+            }[p.settings.gridlines] || 'repeat(false, numColumns-1)';
+
+            const scope = new jme.Scope([p.getScope(), {variables: {numRows: jme.wrapValue(numRows), numColumns: jme.wrapValue(numColumns)}}]);
+
+            let rowLines, columnLines;
+            try {
+                rowLines = scope.evaluate(rowExpression);
+                rowLines = jme.castToType(rowLines, 'list');
+                rowLines = jme.unwrapValue(rowLines);
+            } catch(e) {
+                p.giveWarning(R('display.part.matrix.error in gridline rows expression', {message: e}));
+                rowLines = [];
+            }
+            try {
+                columnLines = scope.evaluate(columnExpression);
+                columnLines = jme.castToType(columnLines, 'list');
+                columnLines = jme.unwrapValue(columnLines);
+            } catch(e) {
+                throw(new Numbas.Error('display.part.matrix.error in gridline columns expression', {message: e}));
+                columnLines = [];
+            }
+
+            return {rows: rowLines, columns: columnLines};
+        }, this);
+
+        this.gridlinesRows = Knockout.pureComputed(function() {
+            return this.gridlines().rows;
+        }, this);
+
+        this.gridlinesColumns = Knockout.pureComputed(function() {
+            return this.gridlines().columns;
+        }, this);
+
+        this.input_widget = 'matrix';
+        this.input_options = {
+            allowResize: this.allowResize,
+            parseCells: false,
+            numRows: this.studentAnswerRows,
+            numColumns: this.studentAnswerColumns,
+            minColumns: this.minColumns,
+            maxColumns: this.maxColumns,
+            minRows: this.minRows,
+            maxRows: this.maxRows,
+            prefilledCells: this.prefilledCells,
+            gridlinesRows: Knockout.computed(() => this.gridlines().rows),
+            gridlinesColumns: Knockout.computed(() => this.gridlines().columns),
+            showBrackets: true,
+            rowHeaders: [],
+            columnHeaders: [],
+        };
+
+        this.correct_input_options = util.copyobj(this.input_options);
+        Object.assign(this.correct_input_options, {
+            numRows: this.correctAnswerRows,
+            numColumns: this.correctAnswerColumns,
+        });
+
+        this.input_options.cellFeedback = this.cellFeedback;
+    }
+    display.MatrixEntryPartDisplay.prototype =
+    {
+        updateCorrectAnswer: function(answer) {
+            this.correctAnswer(answer);
+        },
+    };
+    display.MatrixEntryPartDisplay = extend(display.PartDisplay,display.MatrixEntryPartDisplay,true);
+});
+
+Numbas.queueScript('display/parts/multipleresponse',['display-base','part-display','util'],function() {
+    var display = Numbas.display;
+    var extend = Numbas.util.extend;
+    var util = Numbas.util;
+    /** Display code for a {@link Numbas.parts.MultipleResponsePart}
+     * @augments Numbas.display.PartDisplay
+     * @constructor
+     * @name MultipleResponsePartDisplay
+     * @memberof Numbas.display
+     */
+    display.MultipleResponsePartDisplay = function()
+    {
+        var pd = this;
+        var p = this.part;
+
+        this.displayColumns = Knockout.observable(p.settings.displayColumns);
+
+        this.showCellAnswerState = Knockout.pureComputed(() => p.settings.showCellAnswerState && this.showCorrectAnswer());
+
+        switch(p.type) {
+        case '1_n_2':
+            const choices = p.settings.choices;
+            switch(p.settings.displayType) {
+                case 'radiogroup':
+                    this.input_widget = 'radios';
+                    break;
+                case 'dropdownlist':
+                    this.input_widget = 'dropdown';
+                    break;
+            }
+
+            this.cellFeedback = Knockout.pureComputed(() => {
+                const answer = this.input_answer() || [];
+                if(!answer.valid) {
+                    return [];
+                }
+                let feedback = answer.value.map((row) => '');
+                if(!this.showCellAnswerState()) {
+                    return feedback;
+                }
+
+                const correct_answer = this.correct_answer()?.value || [];
+                feedback = answer.value.map((row,i) => {
+                    return row[0] == (correct_answer[i] || [])[0] ? 'correct' : 'incorrect';
+                });
+
+                return feedback;
+            },this);
+
+            this.correct_input_options = {
+                choices,
+                shuffle: p.shuffleAnswers,
+                displayColumns: p.settings.displayColumns,
+                showBlankOption: p.settings.showBlankOption,
+                answerAsArray: true,
+            };
+
+            break;
+        case 'm_n_2':
+            this.input_widget = 'checkboxes';
+
+            this.cellFeedback = Knockout.pureComputed(() => {
+                const answer = this.input_answer() || [];
+                if(!answer.valid) {
+                    return [];
+                }
+                let feedback = answer.value.map((row) => '');
+                if(!this.showCellAnswerState()) {
+                    return feedback;
+                }
+
+                const correct_answer = this.correct_answer()?.value || [];
+                feedback = answer.value.map((row,i) => {
+                    return row[0] == (correct_answer[i] || [])[0] ? 'correct' : 'incorrect';
+                });
+
+                return feedback;
+            },this);
+
+            this.correct_input_options = {
+                choices: p.settings.choices,
+                shuffle: p.shuffleAnswers,
+                displayColumns: p.settings.displayColumns,
+                minAnswers: p.settings.minAnswers,
+                maxAnswers: p.settings.maxAnswers,
+                answerAsArray: true,
+            }
+            break;
+        case 'm_n_x':
+            this.input_widget = 'm_n_x';
+            this.correct_input_options = {
+                choices: p.settings.choices,
+                answers: p.settings.answers,
+                shuffleChoices: p.shuffleChoices,
+                shuffleAnswers: p.shuffleAnswers,
+                minAnswers: p.settings.minAnswers,
+                maxAnswers: p.settings.maxAnswers,
+                displayType: p.settings.displayType,
+                layout: p.layout,
+                choicesHeader: p.settings.choicesHeader,
+                answersHeader: p.settings.answersHeader,
+            };
+
+            this.cellFeedback = Knockout.pureComputed(() => {
+                const answer = this.input_answer() || [];
+                if(!answer.valid) {
+                    return [];
+                }
+                let feedback = answer.value.map((row) => row.map(() => ''));
+                if(!this.showCellAnswerState()) {
+                    return feedback;
+                }
+
+                const correct_answer = this.correct_answer()?.value || [];
+                feedback = answer.value.map((row,i) => row.map((cell,j) => {
+                    return cell == (correct_answer[i] || [])[j] ? 'correct' : 'incorrect';
+                }));
+
+                return feedback;
+            },this);
+
+            break;
+        }
+
+        this.input_options = Object.assign(
+            {
+                cellFeedback: this.cellFeedback,
+                showCellAnswerState: this.showCellAnswerState,
+            },
+            this.correct_input_options
+        );
+
+        this.updateCorrectAnswer(p.getCorrectAnswer(p.getScope()));
+    }
+    display.MultipleResponsePartDisplay.prototype =
+    {
+        alwaysShowWarnings: true,
+
+        restoreAnswer: function(studentAnswer) {
+            this.input_answer({valid: !!studentAnswer, value: studentAnswer});
+        },
+    };
+    display.MultipleResponsePartDisplay = extend(display.PartDisplay,display.MultipleResponsePartDisplay,true);
+});
+
+Numbas.queueScript('display/parts/numberentry',['display-base','part-display','util'],function() {
+    var display = Numbas.display;
+    var extend = Numbas.util.extend;
+    var util = Numbas.util;
+    /** Display code for a {@link Numbas.parts.NumberEntryPart}
+     * @augments Numbas.display.PartDisplay
+     * @constructor
+     * @name NumberEntryPartDisplay
+     * @memberof Numbas.display
+     */
+    display.NumberEntryPartDisplay = function()
+    {
+        var p = this.part;
+
+        this.updateCorrectAnswer(p.getCorrectAnswer(p.getScope()));
+
+        /** Some text describing how the student should enter their answer
+         * @member {observable|string} inputHint
+         * @memberof Numbas.display.NumberEntryPartDisplay
+         */
+        this.inputHint = Knockout.computed(function() {
+            if(this.part.settings.precisionType=='none') {
+                if(this.part.settings.mustBeReduced) {
+                    return R('part.numberentry.give your answer as a reduced fraction');
+                } else if(this.part.settings.allowFractions) {
+                    return R('part.numberentry.write your answer as a fraction');
+                } else {
+                    return '';
+                }
+            } else {
+                var precision = this.part.settings.precision;
+                var precisionType = R('part.numberentry.precision type.'+this.part.settings.precisionType,{count:precision});
+                if (precision === 0) {
+                  return R('part.numberentry.give your answer to precision_0',{count: precision,precisionType: precisionType});
+                } else {
+                  return R('part.numberentry.give your answer to precision',{count: precision,precisionType: precisionType});
+                }
+            }
+        },this);
+        /** Show the input hint?
+         * @member {observable|string} showInputHint
+         * @memberof Numbas.display.NumberEntryPartDisplay
+         */
+        this.showInputHint = Knockout.computed(function() {
+            if(!this.inputHint()) {
+                return false;
+            }
+            if(this.part.settings.precisionType=='none') {
+                return this.part.settings.showFractionHint;
+            } else {
+                return this.part.settings.showPrecisionHint;
+            }
+        },this);
+
+        this.input_widget = 'number';
+        this.input_options = {
+            returnString: true,
+            allowEmpty: true,
+            cleanNumber: false,
+            allowFractions: p.settings.allowFractions,
+            allowedNotationStyles: p.settings.notationStyles,
+            hint: Knockout.pureComputed(() => this.showInputHint() ? this.inputHint() : ''),
+        };
+    }
+    display.NumberEntryPartDisplay.prototype = {
+    };
+    display.NumberEntryPartDisplay = extend(display.PartDisplay,display.NumberEntryPartDisplay,true);
+});
+
+Numbas.queueScript('display/parts/patternmatch',['display-base','part-display','util'],function() {
+    var display = Numbas.display;
+    var extend = Numbas.util.extend;
+    /** Display code for a {@link Numbas.parts.PatternMatchPart}
+     * @augments Numbas.display.PartDisplay
+     * @constructor
+     * @name PatternMatchPartDisplay
+     * @memberof Numbas.display
+     */
+    display.PatternMatchPartDisplay = function()
+    {
+        var p = this.part;
+        /** The student's current answer (not necessarily submitted)
+         * @member {observable|string} studentAnswer
+         * @memberof Numbas.display.PatternMatchPartDisplay
+         */
+        this.studentAnswer = Knockout.observable(this.part.studentAnswer);
+        /** The correct answer regular expression
+         * @member {observable|RegExp} correctAnswer
+         * @memberof Numbas.display.PatternMatchPartDisplay
+         */
+        this.correctAnswer = Knockout.observable('');
+        /** A representative correct answer to display when answers are revealed
+         * @member {observable|string} displayAnswer
+         * @memberof Numbas.display.PatternMatchPartDisplay
+         */
+        this.displayAnswer = Knockout.observable();
+
+        this.updateCorrectAnswer(p.getCorrectAnswer(p.getScope()));
+
+        Knockout.computed(function() {
+            p.storeAnswer(this.studentAnswer());
+        },this);
+
+        this.input_widget = 'string';
+        this.input_options = {
+            allowEmpty: p.settings.allowEmpty,
+        };
+    }
+    display.PatternMatchPartDisplay.prototype =
+    {
+        updateCorrectAnswer: function(answer) {
+            this.correctAnswer(this.part.settings.correctAnswer);
+            this.displayAnswer(answer);
+        },
+        restoreAnswer: function(studentAnswer) {
+            this.studentAnswer(studentAnswer);
+        }
+    };
+    display.PatternMatchPartDisplay = extend(display.PartDisplay,display.PatternMatchPartDisplay,true);
 });
 
 /*
@@ -31713,23 +36942,6 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         disabledFunctions: [],
         notation: 'standard',
     },
-    /** The name of the input widget this part uses, if any.
-     *
-     * @returns {string}
-     */
-    input_widget: function() {
-        return 'jme';
-    },
-    /** Options for this part's input widget.
-     *
-     * @returns {object}
-     */
-    input_options: function() {
-        return {
-            showPreview: this.settings.showPreview,
-            returnString: true
-        };
-    },
 
     /** Get the notation used by this part.
      *
@@ -32051,32 +37263,6 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
         gridlines: 'none',
         gridlinesCustomRows: '',
         gridlinesCustomColumns: '',
-    },
-    /** The name of the input widget this part uses, if any.
-     *
-     * @returns {string}
-     */
-    input_widget: function() {
-        return 'matrix';
-    },
-    /** Options for this part's input widget.
-     *
-     * @returns {object}
-     */
-    input_options: function() {
-        return {
-            allowFractions: this.settings.allowFractions,
-            allowedNotationStyles: ['plain', 'en', 'si-en'],
-            prefilledCells: this.settings.prefilledCells,
-            allowResize: this.settings.allowResize,
-            numRows: this.settings.numRows,
-            numColumns: this.settings.numColumns,
-            minColumns: this.settings.minColumns,
-            maxColumns: this.settings.maxColumns,
-            minRows: this.settings.minRows,
-            maxRows: this.settings.maxRows,
-            parseCells: false
-        };
     },
     /** Compute the correct answer, based on the given scope.
      *
@@ -32480,37 +37666,6 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         interpretedAnswerForm: 'list of list of boolean',
         choicesHeader: '',
         answersHeader: '',
-    },
-    /** The name of the input widget this part uses, if any.
-     *
-     * @returns {string}
-     */
-    input_widget: function() {
-        switch(this.type) {
-            case '1_n_2':
-                if(this.settings.displayType == 'dropdownlist') {
-                    return 'dropdown';
-                } else {
-                    return 'radios';
-                }
-            case 'm_n_2':
-                return 'checkboxes';
-            case 'm_n_x':
-                return 'm_n_x';
-        }
-    },
-    /** Options for this part's input widget.
-     *
-     * @returns {object}
-     */
-    input_options: function() {
-        return {
-            choices: this.settings.choices,
-            answers: this.settings.answers,
-            displayType: this.settings.displayType,
-            layout: this.layout,
-            answerAsArray: true
-        };
     },
     /** Compute the correct answer, based on the given scope - a matrix filled with 1 for choices that should be selected, and 0 otherwise.
      *

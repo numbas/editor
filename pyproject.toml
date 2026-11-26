@@ -25,6 +25,11 @@ dependencies = [
     "python-slugify>=9.0",
 ]
 
+[project.optional-dependencies]
+rest-api = [
+    "djangorestframework>=3.18.3",
+]
+
 [tool.uv.sources]
 django-html-sanitizer = { git = "https://github.com/christianp/django-html_sanitizer.git", rev = "django4compat" }
 django-thumbs = { git = "https://github.com/numbas/django-thumbs", rev = "1cc56a7efab78c51cee6323b761e835d480a9cf1" }

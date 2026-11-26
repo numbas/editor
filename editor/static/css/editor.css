@@ -245,6 +245,12 @@ editor-pager nav {
     margin-top: 4rem;
 }
 
+.empty-basket.action {
+    text-align: end;
+    width: 100%;
+    padding: 3px 20px;
+}
+
 .pager li.ready a {
   color: black;
   background-color: #5cb85c;

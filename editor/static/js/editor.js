@@ -2466,19 +2466,20 @@ $(document).ready(function() {
             ;
         }
 
-        const empty_basket_button = question_basket.querySelector('.empty-basket');
-        if(empty_basket_button) {
-            empty_basket_button.addEventListener('click', e => {
-                e.preventDefault();
+        question_basket.addEventListener('click', e => {
+            if(!e.target.classList.contains('empty-basket')) {
+                return;
+            }
+            
+            e.preventDefault();
 
-                Editor.empty_basket();
-            });
-        }
+            Editor.empty_basket();
+        });
 
         question_basket.addEventListener('click', e => {
             let el = e.target;
             while(el) {
-                if(el.classList.contains('btn-remove')) {
+                if(el.classList.contains('btn-remove') && el.dataset.id) {
                     e.preventDefault();
                     Editor.remove_question_from_basket(el.dataset.id);
                     return;

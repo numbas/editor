@@ -17,7 +17,8 @@ from django.shortcuts import redirect
 
 from editor import forms
 from editor.models import IndividualAccess
-from editor.views.generic import AuthorRequiredMixin, CanEditMixin, CanViewMixin, forbidden_response
+from .generic import AuthorRequiredMixin, CanEditMixin, CanViewMixin
+from .errors import forbidden
 
 class ShowPackageFilesMixin:
 
@@ -110,7 +111,7 @@ class EditView(SinglePackageFileMixin, ShowPackageFilesMixin, CanViewMixin, gene
     def dispatch(self,request,*args,**kwargs):
         package = self.package = self.get_object()
         if not package.editable:
-            return forbidden_response(self.request,"This package is not editable.")
+            return forbidden(self.request,"This package is not editable.")
         return super().dispatch(request,*args,**kwargs)
 
     def load_source(self, path, package_path=None):
@@ -177,7 +178,7 @@ class EditView(SinglePackageFileMixin, ShowPackageFilesMixin, CanViewMixin, gene
 
     def form_valid(self,form):
         if not self.object.can_be_edited_by(self.request.user):
-            return forbidden_response(self.request, "You may not edit this package.")
+            return forbidden(self.request, "You may not edit this package.")
 
         messages.info(self.request,
             "The file <code>{filename}</code> has been saved. "
@@ -245,7 +246,7 @@ class AddAccessView(generic.CreateView):
     def dispatch(self, request, *args, **kwargs):
         package = self.get_package()
         if request.user != package.author:
-            return forbidden_response("You may not grant other users access to this package.")
+            return forbidden(request, "You may not grant other users access to this package.")
         return super().dispatch(request,*args,**kwargs)
 
 class DocumentationView(CanViewMixin, generic.DetailView):

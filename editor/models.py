@@ -132,6 +132,23 @@ class ControlledObject(object):
                     | Q(project__owner=user)
                    )
 
+
+class ControlledEditorItem(ControlledObject):
+    """
+        A subclass of ControlledObject for use by NewExam and NewQuestion, which proxy all the access-checking methods to the underlying editoritem.
+    """
+
+    @property
+    def owner(self):
+        return self.editoritem.owner
+
+    def is_published(self):
+        return self.editoritem.is_published()
+
+    def has_access(self, user, accept_levels):
+        return self.editoritem.has_access(user, accept_levels)
+
+
 class TimelineMixin(object):
     """ 
     A model which produces a timeline item when it is created.
@@ -1764,7 +1781,7 @@ def create_timelineitem(sender, instance, created, **kwargs):
         TimelineItem.objects.create(object=instance, timeline=instance.timeline_object(), user=user)
 
 @reversion.register
-class NewQuestion(models.Model):
+class NewQuestion(models.Model, ControlledEditorItem):
     editoritem = models.OneToOneField(EditorItem, on_delete=models.CASCADE, related_name='question')
 
     resources = models.ManyToManyField(Resource, blank=True, related_name='questions')
@@ -1880,8 +1897,9 @@ def set_question_custom_part_types(instance, **kwargs):
     custom_part_types = CustomPartType.objects.filter(short_name__in=part_types)
     q.custom_part_types.add(*custom_part_types)
 
+
 @reversion.register
-class NewExam(models.Model):
+class NewExam(models.Model, ControlledEditorItem):
     editoritem = models.OneToOneField(EditorItem, on_delete=models.CASCADE, related_name='exam')
 
     questions = models.ManyToManyField(NewQuestion, through='NewExamQuestion', blank=True, editable=False, related_name='exams')

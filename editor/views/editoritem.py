@@ -69,12 +69,14 @@ class MustHaveAccessMixin():
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
 
+        ei = self.object if isinstance(self.object, EditorItem) else self.object.editoritem
+
         allowed = False
-        if self.object.editoritem.can_be_viewed_by(self.request.user):
+        if ei.can_be_viewed_by(self.request.user):
             allowed = True
         else:
             token = self.request.GET.get('token','')
-            if token==str(self.object.editoritem.share_uuid_view):
+            if token==str(ei.share_uuid_view):
                 allowed = True
 
         if allowed:
@@ -793,10 +795,10 @@ class PreviewFileView(PreviewView):
     def get_resource_url(self, file):
         raise NotImplementedError
 
-class MakeLockdownLinkView(generic.DetailView):
+class MakeLockdownLinkView(MustHaveAccessMixin, generic.DetailView):
     model = EditorItem
 
-    def get(self, *args, **kwargs):
+    def access_valid(self):
         password = self.request.GET.get('password')
         if password is None:
             return http.HttpResponseBadRequest("You must provide a password")
@@ -1015,6 +1017,9 @@ class CompareView(generic.TemplateView):
         except EditorItem.DoesNotExist:
             raise http.Http404("The item does not exist.")
 
+        if not (self.ei1.can_be_viewed_by(request.user) and self.ei2.can_be_viewed_by(request.user)):
+            return forbidden(request)
+
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, *args, **kwargs):
@@ -1038,6 +1043,9 @@ class CreatePullRequestView(generic.CreateView):
 
         source = form.instance.source
         destination = form.instance.destination
+        
+        if not (source.can_be_viewed_by(self.request.user) and destination.can_be_viewed_by(self.request.user)):
+            return forbidden(self.request)
 
         self.pr = PullRequest(owner=owner, source=source, destination=destination, comment=form.instance.comment)
         try:

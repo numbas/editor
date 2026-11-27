@@ -1,6 +1,7 @@
 import json
 
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect, render
 from django import http
@@ -16,13 +17,7 @@ from editor.models import NewStampOfApproval, Comment, RestorePoint, EditorItem,
 
 from accounts.util import user_json
 
-def forbidden_response(request,message=None):
-    return TemplateResponse(
-        request=request,
-        context={'message':message},
-        template='403.html',
-        status=403
-    )
+from .errors import forbidden
 
 class NoAccessError(PermissionDenied):
     pass
@@ -106,9 +101,12 @@ class TimelineItemViewMixin(object):
         html = template.render(RequestContext(self.request, {'item': self.item.timelineitem, 'can_delete': self.item.can_be_deleted_by(self.request.user)}).flatten())
         return html
 
-class StampView(generic.UpdateView, TimelineItemViewMixin):
+class StampView(generic.UpdateView, TimelineItemViewMixin, LoginRequiredMixin):
     def post(self, request, *args, **kwargs):
         obj = self.get_object()
+
+        if not obj.editoritem.can_be_viewed_by(self.request.user):
+            return forbidden(self.request)
 
         status = request.POST.get('status')
 
@@ -129,6 +127,9 @@ class CommentView(generic.UpdateView, TimelineItemViewMixin):
     def post(self, request, *args, **kwargs):
         obj = self.get_comment_object()
 
+        if not obj.can_be_viewed_by(self.request.user):
+            return forbidden(self.request)
+
         text = request.POST.get('text')
 
         self.item = Comment.objects.create(user=request.user, object=obj, text=text)
@@ -145,6 +146,9 @@ class SetRestorePointView(generic.UpdateView, TimelineItemViewMixin):
     def post(self, request, *args, **kwargs):
         obj = self.get_object()
     
+        if not obj.can_be_viewed_by(self.request.user):
+            return forbidden(self.request)
+
         description = request.POST.get('text')
 
         with reversion.create_revision():

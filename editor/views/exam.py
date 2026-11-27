@@ -391,9 +391,6 @@ class RevertView(generic.UpdateView):
 
         return redirect(reverse('exam_edit', args=(exam.pk, exam.editoritem.slug)))
 
-class CompareView(generic.TemplateView):
-    template_name = "exam/compare.html"
-
 class ShareLinkView(editor.views.generic.ShareLinkView):
     permanent = False
     model = NewExam
@@ -415,6 +412,11 @@ def question_lists(request, pk):
         raise Http404
 
     exam = NewExam.objects.get(pk=pk)
+
+    if not exam.editoritem.can_be_viewed_by(request.user):
+        return forbidden(request)
+
+
     exam_questions = exam.questions.all()
 
     user = request.user

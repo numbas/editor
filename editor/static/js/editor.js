@@ -2137,6 +2137,11 @@ $(document).ready(function() {
         this.mtime = ko.observable('');
         this.size = ko.observable(0);
 
+        this.suffix = ko.pureComputed(() => {
+            const m = this.filename().match(/\.([^.]+)$/);
+            return m ? `${m[1]} file` : 'unknown file type';
+        });
+
         this.too_big = ko.pureComputed(function() {
             return this.size() > 2 * (1 << 20);
         }, this);

@@ -29838,8 +29838,10 @@ Numbas.signals.on('localisation initialised', () => {
             var init = Knockout.unwrap(this.answerJSON);
             var value = init.value;
             if(value !== undefined) {
-                this.numRows(value.rows || 0);
-                this.numColumns(value.columns || (value || [[]])[0].length);
+                if(this.allowResize()) {
+                    this.numRows(value.rows || 0);
+                    this.numColumns(value.columns || (value.length ? value : [[]])[0].length);
+                }
                 value = value.map(function(r) {
                     return r.map(function(c) {
                         return vm.parseCells() ? Numbas.math.niceNumber(c, {style: vm.allowedNotationStyles[0]}) || '' : c
@@ -29906,8 +29908,10 @@ Numbas.signals.on('localisation initialised', () => {
                     }
                     if(v.valid) {
                         this.input(v.value);
-                        this.numRows(v.value.rows || v.value.length);
-                        this.numColumns(v.value.columns || (v.value || [[]])[0].length);
+                        if(this.allowResize()) {
+                            this.numRows(v.value.rows || v.value.length);
+                            this.numColumns(v.value.columns || (v.value.length ? v.value : [[]])[0].length);
+                        }
                     }
                 }, this)
             ];
@@ -29998,6 +30002,9 @@ Numbas.signals.on('localisation initialised', () => {
             this.numRows = Knockout.computed({
                 read: _numRows,
                 write: function(v) {
+                    if(!this.allowResize()) {
+                        return;
+                    }
                     v = parseInt(v);
                     var minRows = Knockout.unwrap(this.minRows);
                     var maxRows = Knockout.unwrap(this.maxRows);
@@ -30017,6 +30024,9 @@ Numbas.signals.on('localisation initialised', () => {
             this.numColumns = Knockout.computed({
                 read: _numColumns,
                 write: function(v) {
+                    if(!this.allowResize()) {
+                        return;
+                    }
                     var minColumns = Knockout.unwrap(this.minColumns);
                     var maxColumns = Knockout.unwrap(this.maxColumns);
                     v = minColumns == 0 ? v : Math.max(minColumns, v);
@@ -37304,9 +37314,16 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
             this.studentAnswerRows = m.length;
             this.studentAnswerColumns = this.studentAnswerRows > 0 ? m[0].length : 0;
         } else {
-            this.studentAnswerRows = 0;
-            this.studentAnswerColumns = 0;
+            this.studentAnswerRows = this.settings.numRows;
+            this.studentAnswerColumns = this.settings.numColumns;
             this.stagedAnswer = [];
+            for(let i=0; i<this.studentAnswerRows; i++) {
+                let row = [];
+                for(let j=0; j<this.studentAnswerColumns; j++) {
+                    row.push('');
+                }
+                this.stagedAnswer.push(row);
+            }
         }
         this.studentAnswer = this.stagedAnswer;
     },
